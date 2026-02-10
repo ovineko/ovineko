@@ -256,25 +256,6 @@ const params = route.useParams(); // Readonly<{ id: string }>
 const [searchParams] = route.useSearchParams(); // Readonly<{ page?: number }>
 ```
 
-## Migration from v0.x
-
-The library now uses valibot for validation instead of TypeScript generics:
-
-**Before:**
-
-```tsx
-const route = createRouteWithParams<{ id: string }, { q: string }>("/users/:id");
-```
-
-**After:**
-
-```tsx
-const route = createRouteWithParams("/users/:id", {
-  params: v.object({ id: v.string() }),
-  searchParams: v.object({ q: v.string() }),
-});
-```
-
 **Benefits:**
 
 - Runtime validation
