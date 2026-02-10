@@ -5,6 +5,7 @@
     "outDir": "dist",
     "module": "preserve",
     "sourceMap": false,
+    "declarationMap": false,
     "moduleResolution": "bundler"
   },
   "include": ["src"],
