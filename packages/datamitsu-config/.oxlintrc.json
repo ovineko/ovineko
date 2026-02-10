@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/@shibanet0/datamitsu-config/oxlint_configuration_schema.json",
+  "extends": ["./node_modules/@shibanet0/datamitsu-config/.oxlintrc.json"],
+  "rules": {
+    "new-cap": "off",
+    "no-duplicate-imports": "off",
+    "unicorn/prefer-top-level-await": "off",
+    "typescript/no-extraneous-class": "off"
+  }
+}

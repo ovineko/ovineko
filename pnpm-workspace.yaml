@@ -1,0 +1,12 @@
+enableGlobalVirtualStore: true
+enablePrePostScripts: false
+hoistPattern: []
+ignorePatchFailures: false
+optimisticRepeatInstall: true
+overrides:
+  vite: npm:rolldown-vite@7.2.5
+packages:
+  - apps/*
+  - packages/*
+resolutionMode: lowest-direct
+verifyDepsBeforeRun: install

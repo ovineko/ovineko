@@ -1,0 +1,52 @@
+{
+  "name": "@ovineko/datamitsu-config",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Internal configuration package for datamitsu tooling (linting, formatting, etc.)",
+  "keywords": [
+    "datamitsu",
+    "config",
+    "eslint",
+    "prettier",
+    "oxlint",
+    "linting",
+    "internal"
+  ],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/packages/datamitsu-config",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "packages/datamitsu-config"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "type": "module",
+  "exports": {
+    "./.oxlintrc.json": {
+      "default": "./.oxlintrc.json"
+    },
+    "./eslint-override-config.js": {
+      "default": "./eslint-override-config.js"
+    },
+    "./eslint.config.js": {
+      "default": "./eslint.config.js"
+    },
+    "./prettier.config.js": {
+      "default": "./prettier.config.js"
+    }
+  },
+  "scripts": {
+    "fix": "datamitsu fix",
+    "lint": "datamitsu lint"
+  },
+  "devDependencies": {
+    "@shibanet0/datamitsu-config": "0.0.1-alpha-33",
+    "react": "19"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

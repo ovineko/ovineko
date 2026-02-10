@@ -1,0 +1,26 @@
+{
+  "semverGroups": [
+    {
+      "dependencies": ["**"],
+      "dependencyTypes": ["peer"],
+      "packages": ["**"],
+      "range": "^",
+      "label": "use caret range for all peerDependencies"
+    },
+    {
+      "dependencies": ["**"],
+      "dependencyTypes": ["!peer", "!local"],
+      "packages": ["**"],
+      "range": "",
+      "label": "use exact versions for regular dependencies"
+    }
+  ],
+  "versionGroups": [
+    {
+      "dependencies": ["$LOCAL"],
+      "dependencyTypes": ["!local"],
+      "label": "use workspace protocol for local packages",
+      "pinVersion": "workspace:*"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "name": "@ovineko/react-router",
+  "version": "0.0.1",
+  "description": "Type-safe wrapper for React Router v7 with typed params, query params, and Link components",
+  "keywords": [
+    "react",
+    "react-router",
+    "router",
+    "type-safe",
+    "typed-routes",
+    "typed-params",
+    "query-params",
+    "routing",
+    "typescript",
+    "react19",
+    "link"
+  ],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/packages/react-router",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "packages/react-router"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup && rm tsconfig.tsbuildinfo && tsc --emitDeclarationOnly",
+    "fix": "datamitsu fix",
+    "lint": "datamitsu lint",
+    "prepack": "clean-pkg-json clean",
+    "postpack": "clean-pkg-json restore",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@ovineko/clean-pkg-json": "workspace:*",
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.1-alpha-33",
+    "@testing-library/dom": "10.4.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
+    "@types/react": "19.2.10",
+    "@vitejs/plugin-react": "5.1.3",
+    "@vitest/coverage-v8": "4.0.18",
+    "@vitest/ui": "4.0.18",
+    "happy-dom": "20.5.0",
+    "tsup": "8.5.1",
+    "vitest": "4.0.18"
+  },
+  "peerDependencies": {
+    "react": "^19",
+    "react-router": "^7",
+    "valibot": "^1"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "name": "@ovineko/clean-pkg-json",
+  "version": "0.0.1",
+  "description": "Zero-config tool to clean package.json before publishing and restore it after",
+  "keywords": [
+    "clean",
+    "package.json",
+    "publish",
+    "npm",
+    "prepack",
+    "postpack"
+  ],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/packages/clean-pkg-json",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "packages/clean-pkg-json"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "type": "module",
+  "bin": {
+    "clean-pkg-json": "./bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build:lib": "tsup",
+    "fix": "datamitsu fix",
+    "lint": "datamitsu lint",
+    "prepack": "./bin/cli.js clean",
+    "postpack": "./bin/cli.js restore",
+    "prepublishOnly": "pnpm build:lib",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.1-alpha-33",
+    "@types/node": "24.10.12",
+    "tsup": "8.5.1",
+    "vitest": "4.0.18"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

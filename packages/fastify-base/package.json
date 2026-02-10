@@ -1,0 +1,50 @@
+{
+  "name": "@ovineko/fastify-base",
+  "version": "0.0.0",
+  "description": "Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, and healthcheck integrations",
+  "keywords": [
+    "fastify",
+    "server",
+    "sentry",
+    "prometheus",
+    "opentelemetry",
+    "observability",
+    "monitoring",
+    "healthcheck",
+    "typescript"
+  ],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/packages/fastify-base",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "packages/fastify-base"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "fix": "datamitsu fix",
+    "lint": "datamitsu lint"
+  },
+  "devDependencies": {
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.1-alpha-33"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
