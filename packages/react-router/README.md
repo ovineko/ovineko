@@ -16,20 +16,22 @@ Peer dependencies: `react@^19`, `react-router@^7`, `valibot@^1`.
 - ✅ **Two hook variants** - Normal hooks (auto-redirect on error) and Raw hooks (manual error handling)
 - ✅ **Smart validation** - Ignores extra query params and invalid optional params
 - ✅ **Global error handling** - Configure fallback redirect URLs globally or per-route
+- ✅ **Conditional redirects** - `useRedirect` hook for declarative navigation with infinite loop prevention
+- ✅ **Optional search params helper** - `optionalSearchParams` utility to avoid repetitive `v.optional()` calls
 - ✅ **Type-safe** - Full TypeScript support with inferred types
 - ✅ **Hash support** - Generate paths with hash fragments
 
 ## Quick Start
 
 ```tsx
-import { createRouteWithParams } from "@ovineko/react-router";
+import { createRouteWithParams, optionalSearchParams } from "@ovineko/react-router";
 import * as v from "valibot";
 
 const userRoute = createRouteWithParams("/users/:id", {
   params: v.object({ id: v.pipe(v.string(), v.uuid()) }),
-  searchParams: v.object({
-    tab: v.optional(v.string()),
-    page: v.optional(v.pipe(v.string(), v.transform(Number), v.number())),
+  searchParams: optionalSearchParams({
+    tab: v.string(),
+    page: v.pipe(v.string(), v.transform(Number), v.number()),
   }),
   errorRedirect: "/404", // Optional: redirect on validation error
 });
@@ -206,6 +208,95 @@ setSearchParams({ q: "vue" }, { replace: true });
 ```
 
 ### Utilities
+
+#### `useRedirect(path, condition, replace?)`
+
+Declarative hook for conditional redirects with built-in infinite loop prevention.
+
+**Parameters:**
+
+- `path: string` - Target redirect URL
+- `condition: boolean` - Whether to trigger the redirect
+- `replace?: boolean` - Use replace instead of push (default: `true`)
+
+**Features:**
+
+- Prevents infinite redirect loops using `useRef` tracking
+- Only redirects once when condition becomes `true`
+- Resets automatically when condition becomes `false`
+- Uses `replace: true` by default to prevent back-button issues
+
+```tsx
+import { useRedirect } from "@ovineko/react-router";
+
+function ProtectedPage() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Redirect to login if not authenticated
+  useRedirect("/login", !isAuthenticated && !isLoading);
+
+  if (isLoading) return <Spinner />;
+  return <div>Protected Content</div>;
+}
+
+// Advanced usage with custom options
+function UserProfile() {
+  const { user, error } = useUser();
+
+  // Redirect without replacing history
+  useRedirect("/users", !user && !error, false);
+
+  return <div>{user?.name}</div>;
+}
+```
+
+#### `optionalSearchParams(entries)`
+
+Utility to make all search param fields optional automatically, avoiding repetitive `v.optional()` calls.
+
+**Parameters:**
+
+- `entries: ObjectEntries` - Valibot schema entries for search params
+
+**Returns:** Valibot object schema with all fields wrapped in `v.optional()`
+
+```tsx
+import { optionalSearchParams } from "@ovineko/react-router";
+import * as v from "valibot";
+
+// ❌ Before: Manual v.optional() for each field
+const route = createRouteWithParams("/search", {
+  params: v.object({ id: v.string() }),
+  searchParams: v.object({
+    q: v.optional(v.string()),
+    page: v.optional(v.pipe(v.string(), v.transform(Number), v.number())),
+    sort: v.optional(v.string()),
+    filter: v.optional(v.string()),
+  }),
+});
+
+// ✅ After: Clean and concise
+const route = createRouteWithParams("/search", {
+  params: v.object({ id: v.string() }),
+  searchParams: optionalSearchParams({
+    q: v.string(),
+    page: v.pipe(v.string(), v.transform(Number), v.number()),
+    sort: v.string(),
+    filter: v.string(),
+  }),
+});
+
+// All fields are automatically optional!
+const [searchParams] = route.useSearchParams();
+// Type: Readonly<{ q?: string; page?: number; sort?: string; filter?: string }>
+```
+
+**Benefits:**
+
+- Cleaner, more readable code
+- Less boilerplate for search params (which are typically optional)
+- Full TypeScript support with proper type inference
+- Works with any Valibot schema (transformations, pipes, etc.)
 
 #### `setGlobalErrorRedirect(url)`
 

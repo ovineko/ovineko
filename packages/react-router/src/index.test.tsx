@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import {
   createRouteWithoutParams,
   createRouteWithParams,
+  optionalSearchParams,
   setGlobalErrorRedirect,
   URLParseError,
 } from "./index";
@@ -887,5 +888,107 @@ describe("setGlobalErrorRedirect", () => {
 
     // @ts-expect-error - jest-dom matcher
     expect(screen.getByTestId("home")).toBeInTheDocument();
+  });
+});
+
+describe("optionalSearchParams", () => {
+  it("should make all fields optional", () => {
+    const route = createRouteWithParams("/users/:id", {
+      params: v.object({ id: v.string() }),
+      searchParams: optionalSearchParams({
+        filter: v.string(),
+        page: v.pipe(v.string(), v.transform(Number), v.number()),
+        sort: v.string(),
+      }),
+    });
+
+    // Should work without any search params
+    expect(route.path({ id: "123" })).toBe("/users/123");
+
+    // Should work with some search params
+    expect(route.path({ id: "123" }, { filter: "active" })).toBe("/users/123?filter=active");
+
+    // Should work with all search params
+    const path = route.path({ id: "123" }, { filter: "active", page: 2, sort: "name" });
+    expect(path).toContain("/users/123?");
+    expect(path).toContain("filter=active");
+    expect(path).toContain("page=2");
+    expect(path).toContain("sort=name");
+  });
+
+  it("should work with useSearchParams hook", () => {
+    const route = createRouteWithParams("/users/:id", {
+      params: v.object({ id: v.string() }),
+      searchParams: optionalSearchParams({
+        filter: v.string(),
+        sort: v.string(),
+      }),
+    });
+
+    function TestComponent() {
+      const [searchParams] = route.useSearchParams();
+      return (
+        <div>
+          <div data-testid="filter">{searchParams.filter ?? "none"}</div>
+          <div data-testid="sort">{searchParams.sort ?? "none"}</div>
+        </div>
+      );
+    }
+
+    render(
+      <MemoryRouter initialEntries={["/users/123?filter=active&sort=name"]}>
+        <TestComponent />
+      </MemoryRouter>,
+    );
+
+    // @ts-expect-error - jest-dom matcher
+    expect(screen.getByTestId("filter")).toHaveTextContent("active");
+    // @ts-expect-error - jest-dom matcher
+    expect(screen.getByTestId("sort")).toHaveTextContent("name");
+  });
+
+  it("should handle missing optional params gracefully", () => {
+    const route = createRouteWithParams("/users/:id", {
+      params: v.object({ id: v.string() }),
+      searchParams: optionalSearchParams({
+        filter: v.string(),
+        sort: v.string(),
+      }),
+    });
+
+    function TestComponent() {
+      const [searchParams] = route.useSearchParams();
+      return (
+        <div>
+          <div data-testid="filter">{searchParams.filter ?? "none"}</div>
+          <div data-testid="sort">{searchParams.sort ?? "none"}</div>
+        </div>
+      );
+    }
+
+    // No search params provided
+    render(
+      <MemoryRouter initialEntries={["/users/123"]}>
+        <TestComponent />
+      </MemoryRouter>,
+    );
+
+    // @ts-expect-error - jest-dom matcher
+    expect(screen.getByTestId("filter")).toHaveTextContent("none");
+    // @ts-expect-error - jest-dom matcher
+    expect(screen.getByTestId("sort")).toHaveTextContent("none");
+  });
+
+  it("should work with createRouteWithoutParams", () => {
+    const route = createRouteWithoutParams("/home", {
+      searchParams: optionalSearchParams({
+        tab: v.string(),
+        view: v.string(),
+      }),
+    });
+
+    expect(route.path()).toBe("/home");
+    expect(route.path({ tab: "settings" })).toBe("/home?tab=settings");
+    expect(route.path({ tab: "settings", view: "grid" })).toContain("/home?");
   });
 });

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import type { NavigateOptions } from "react-router";
 import {
   generatePath,
@@ -41,6 +41,9 @@ export type {
   UseParamsRawResult,
   UseSearchParamsRawResult,
 } from "./types";
+// eslint-disable-next-line react-refresh/only-export-components
+export { optionalSearchParams } from "./utils";
+// eslint-disable-next-line react-refresh/only-export-components
 export { URLParseError } from "./validation";
 
 let globalErrorRedirect = "/";
@@ -52,6 +55,22 @@ export const setGlobalErrorRedirect = (url: string): void => {
 
 const getErrorRedirectUrl = (routeLevel?: string): string => {
   return routeLevel ?? globalErrorRedirect;
+};
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const useRedirect = (path: string, is: boolean, replace = true) => {
+  const navigate = useNavigate();
+  const hasRedirectedRef = useRef(false);
+
+  useEffect(() => {
+    if (is && !hasRedirectedRef.current) {
+      hasRedirectedRef.current = true;
+      navigate(path, { replace });
+    } else if (!is) {
+      // Reset the ref when condition becomes false
+      hasRedirectedRef.current = false;
+    }
+  }, [is, navigate, path, replace]);
 };
 
 const createSearchParamsHook = <TSchema extends v.GenericSchema>(schema: TSchema) => {
@@ -106,15 +125,9 @@ const createSearchParamsHook = <TSchema extends v.GenericSchema>(schema: TSchema
   const useSearchParamsHook = (
     errorRedirectUrl?: string,
   ): readonly [Readonly<Output>, SetSearchParams<Output>] => {
-    const navigate = useNavigate();
     const { data, error, setter } = useSearchParamsRaw();
-
-    useEffect(() => {
-      if (error) {
-        const redirectUrl = getErrorRedirectUrl(errorRedirectUrl);
-        navigate(redirectUrl, { replace: true });
-      }
-    }, [error, navigate, errorRedirectUrl]);
+    const redirectUrl = getErrorRedirectUrl(errorRedirectUrl);
+    useRedirect(redirectUrl, Boolean(error));
 
     return [data ?? ({} as Readonly<Output>), setter] as const;
   };
@@ -172,15 +185,9 @@ export const createRouteWithParams = <
   };
 
   const useParamsHook = (): Readonly<Params> => {
-    const navigate = useNavigate();
     const [params, error] = useParamsRaw();
-
-    useEffect(() => {
-      if (error) {
-        const redirectUrl = getErrorRedirectUrl(config.errorRedirect);
-        navigate(redirectUrl, { replace: true });
-      }
-    }, [error, navigate]);
+    const redirectUrl = getErrorRedirectUrl(config.errorRedirect);
+    useRedirect(redirectUrl, Boolean(error));
 
     return params ?? ({} as Readonly<Params>);
   };
