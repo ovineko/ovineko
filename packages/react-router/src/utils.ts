@@ -156,6 +156,13 @@ export const cleanOptionalParams = <T extends v.ObjectSchema<any, any>>(
 };
 
 /**
+ * Utility type to make all entries in an object schema optional.
+ */
+type OptionalEntries<T extends v.ObjectEntries> = {
+  [K in keyof T]: v.OptionalSchema<T[K], undefined>;
+};
+
+/**
  * Wraps all fields in a Valibot object schema with v.optional().
  * Useful for search params where all fields should be optional by default.
  *
@@ -176,9 +183,9 @@ export const cleanOptionalParams = <T extends v.ObjectSchema<any, any>>(
  * })
  * ```
  */
-export const optionalSearchParams = <TEntries extends v.ObjectEntries>(
+export const optionalSearchParams = <const TEntries extends v.ObjectEntries>(
   entries: TEntries,
-): v.ObjectSchema<any, undefined> => {
+): v.ObjectSchema<OptionalEntries<TEntries>, undefined> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const optionalEntries: Record<string, any> = {};
 
@@ -189,5 +196,6 @@ export const optionalSearchParams = <TEntries extends v.ObjectEntries>(
     }
   }
 
-  return v.object(optionalEntries);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return v.object(optionalEntries) as any;
 };
