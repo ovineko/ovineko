@@ -13,7 +13,7 @@ import {
   URLParseError,
 } from "./index";
 
-describe("queryParamsToString", () => {
+describe("searchParamsToString", () => {
   const route = createRouteWithParams("/users/:id", {
     params: v.object({ id: v.string() }),
     searchParams: v.object({
@@ -22,23 +22,23 @@ describe("queryParamsToString", () => {
     }),
   });
 
-  it("should generate path without query params", () => {
+  it("should generate path without search params", () => {
     expect(route.path({ id: "123" })).toBe("/users/123");
   });
 
-  it("should generate path with single query param", () => {
+  it("should generate path with single search param", () => {
     const path = route.path({ id: "123" }, { sort: "name" });
     expect(path).toBe("/users/123?sort=name");
   });
 
-  it("should generate path with multiple query params", () => {
+  it("should generate path with multiple search params", () => {
     const path = route.path({ id: "123" }, { filter: "active", sort: "name" });
     expect(path).toContain("/users/123?");
     expect(path).toContain("sort=name");
     expect(path).toContain("filter=active");
   });
 
-  it("should handle array values in query params", () => {
+  it("should handle array values in search params", () => {
     const routeWithArray = createRouteWithParams("/users/:id", {
       params: v.object({ id: v.string() }),
       searchParams: v.object({ tags: v.optional(v.array(v.string())) }),
@@ -52,12 +52,12 @@ describe("queryParamsToString", () => {
     expect(path).toBe("/users/123");
   });
 
-  it("should handle empty query params object", () => {
+  it("should handle empty search params object", () => {
     const path = route.path({ id: "123" }, {});
     expect(path).toBe("/users/123");
   });
 
-  it("should handle special characters in query params", () => {
+  it("should handle special characters in search params", () => {
     const path = route.path({ id: "123" }, { sort: "hello world" });
     expect(path).toContain("sort=hello+world");
   });
@@ -67,7 +67,7 @@ describe("queryParamsToString", () => {
     expect(path).toBe("/users/123#section");
   });
 
-  it("should generate path with query params and hash", () => {
+  it("should generate path with search params and hash", () => {
     const path = route.path({ id: "123" }, { sort: "name" }, "top");
     expect(path).toBe("/users/123?sort=name#top");
   });
@@ -219,17 +219,17 @@ describe("createRouteWithParams", () => {
       expect(link).toHaveAttribute("href", "/users/123");
     });
 
-    it("should include query params in href", () => {
+    it("should include search params in href", () => {
       const route = createRouteWithParams("/users/:id", {
         params: v.object({ id: v.string() }),
         searchParams: v.object({ tab: v.string() }),
       });
       const params = { id: "123" };
-      const queryParams = { tab: "settings" };
+      const searchParams = { tab: "settings" };
 
       render(
         <MemoryRouter>
-          <route.Link params={params} queryParams={queryParams}>
+          <route.Link params={params} searchParams={searchParams}>
             View User
           </route.Link>
         </MemoryRouter>,
@@ -337,14 +337,14 @@ describe("createRouteWithoutParams", () => {
       expect(link).toHaveAttribute("href", "/home");
     });
 
-    it("should render link with query params", () => {
+    it("should render link with search params", () => {
       const route = createRouteWithoutParams("/home", {
         searchParams: v.object({ tab: v.string() }),
       });
-      const queryParams = { tab: "settings" };
+      const searchParams = { tab: "settings" };
       render(
         <MemoryRouter>
-          <route.Link queryParams={queryParams}>Home</route.Link>
+          <route.Link searchParams={searchParams}>Home</route.Link>
         </MemoryRouter>,
       );
 
@@ -392,7 +392,7 @@ describe("Edge cases", () => {
     expect(route.path({ id: "123" })).toBe("/users/123");
   });
 
-  it("should handle complex query param arrays", () => {
+  it("should handle complex search param arrays", () => {
     const route = createRouteWithParams("/items/:id", {
       params: v.object({ id: v.string() }),
       searchParams: v.object({
@@ -574,7 +574,7 @@ describe("useParamsRaw error handling", () => {
 });
 
 describe("useSearchParamsRaw error handling", () => {
-  it("should ignore extra query params", () => {
+  it("should ignore extra search params", () => {
     const route = createRouteWithParams("/users/:id", {
       params: v.object({ id: v.string() }),
       searchParams: v.object({ sort: v.optional(v.string()) }),

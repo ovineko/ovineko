@@ -4,7 +4,7 @@ import type { SearchParamsInput } from "./types";
 
 import { safeDecodeURIComponent, URLParseError } from "./validation";
 
-export const queryParamsToString = (params?: SearchParamsInput): string => {
+export const searchParamsToString = (params?: SearchParamsInput): string => {
   if (!params || typeof params !== "object" || Array.isArray(params)) {
     return "";
   }
@@ -106,7 +106,7 @@ export const parseURLParamsRaw = (pattern: string, url: string): Record<string, 
 
 /**
  * Filters an object to only include keys that exist in the valibot object schema.
- * Ignores extra query parameters not defined in the schema.
+ * Ignores extra search parameters not defined in the schema.
  */
 export const filterBySchemaKeys = <T extends v.ObjectSchema<any, any>>(
   obj: Record<string, unknown>,

@@ -174,7 +174,7 @@ userRoute.path({ id: "42" }, { tab: "settings" }, "profile");
 #### Type-safe Links
 
 ```tsx
-<userRoute.Link params={{ id: "42" }} queryParams={{ tab: "profile" }}>
+<userRoute.Link params={{ id: "42" }} searchParams={{ tab: "profile" }}>
   View Profile
 </userRoute.Link>
 

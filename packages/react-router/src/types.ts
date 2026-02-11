@@ -7,7 +7,7 @@ export type InferSearchParams<T> = T extends v.GenericSchema ? v.InferOutput<T> 
 export interface LinkPropsWithoutParams<SearchParams> extends Omit<LinkPropsLib, "to"> {
   children: React.ReactNode | string;
   className?: string;
-  queryParams?: SearchParams;
+  searchParams?: SearchParams;
   state?: State;
   style?: React.CSSProperties;
 }

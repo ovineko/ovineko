@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/react-router",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Type-safe wrapper for React Router v7 with typed params, query params, and Link components",
   "keywords": [
     "react",

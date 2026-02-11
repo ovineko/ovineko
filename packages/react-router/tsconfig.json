@@ -5,7 +5,8 @@
     "types": ["@testing-library/jest-dom/vitest"],
     "outDir": "dist",
     "sourceMap": false,
-    "declarationMap": false
+    "declarationMap": false,
+    "jsx": "react-jsx"
   },
   "include": ["src"],
   "exclude": ["src/**/*.test.tsx*"]

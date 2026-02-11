@@ -29,8 +29,8 @@ import {
   filterBySchemaKeys,
   objectToSearchParams,
   parseURLParamsRaw,
-  queryParamsToString,
   searchParamsToObject,
+  searchParamsToString,
 } from "./utils";
 
 export type {
@@ -134,7 +134,7 @@ export const createRouteWithParams = <
   type SearchParams = InferSearchParams<TSearchParams>;
 
   const getPath = (params: Params, searchParams?: SearchParams, hash?: string) =>
-    `${generatePath(pattern, params as Record<string, string>)}${queryParamsToString(searchParams as SearchParamsInput | undefined)}${hash ? `#${hash}` : ""}`;
+    `${generatePath(pattern, params as Record<string, string>)}${searchParamsToString(searchParams as SearchParamsInput | undefined)}${hash ? `#${hash}` : ""}`;
 
   const searchParamsHooks = config.searchParams
     ? createSearchParamsHook(config.searchParams)
@@ -144,7 +144,7 @@ export const createRouteWithParams = <
     ({
       children,
       params,
-      queryParams,
+      searchParams,
       state,
       ...props
     }: LinkPropsWithParams<Params, SearchParams>) => {
@@ -154,7 +154,7 @@ export const createRouteWithParams = <
         [pathname, state],
       );
       return (
-        <Link {...props} state={mergedState} to={getPath(params, queryParams)}>
+        <Link {...props} state={mergedState} to={getPath(params, searchParams)}>
           {children}
         </Link>
       );
@@ -214,21 +214,21 @@ export const createRouteWithoutParams = <
   type SearchParams = InferSearchParams<TSearchParams>;
 
   const getPath = (searchParams?: SearchParams, hash?: string) =>
-    `${pattern}${queryParamsToString(searchParams as SearchParamsInput | undefined)}${hash ? `#${hash}` : ""}`;
+    `${pattern}${searchParamsToString(searchParams as SearchParamsInput | undefined)}${hash ? `#${hash}` : ""}`;
 
   const searchParamsHooks = config?.searchParams
     ? createSearchParamsHook(config.searchParams)
     : null;
 
   const LinkComponent = memo(
-    ({ children, queryParams, state, ...props }: LinkPropsWithoutParams<SearchParams>) => {
+    ({ children, searchParams, state, ...props }: LinkPropsWithoutParams<SearchParams>) => {
       const { pathname } = useLocation();
       const mergedState = useMemo<State>(
         () => ({ prevPath: pathname, ...state }),
         [pathname, state],
       );
       return (
-        <Link {...props} state={mergedState} to={getPath(queryParams)}>
+        <Link {...props} state={mergedState} to={getPath(searchParams)}>
           {children}
         </Link>
       );
