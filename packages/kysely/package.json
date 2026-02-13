@@ -1,0 +1,85 @@
+{
+  "name": "@ovineko/kysely",
+  "version": "0.0.4",
+  "description": "",
+  "keywords": [],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/packages/kysely",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "packages/kysely"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    "./kysely": {
+      "types": "./dist/kysely/index.d.ts",
+      "default": "./dist/kysely/index.js"
+    },
+    "./kysely/helpers/postgres": {
+      "types": "./dist/kysely/helpers/postgres.d.ts",
+      "default": "./dist/kysely/helpers/postgres.js"
+    },
+    "./kysely/helpers/mysql": {
+      "types": "./dist/kysely/helpers/mysql.d.ts",
+      "default": "./dist/kysely/helpers/mysql.js"
+    },
+    "./kysely/helpers/mssql": {
+      "types": "./dist/kysely/helpers/mssql.d.ts",
+      "default": "./dist/kysely/helpers/mssql.js"
+    },
+    "./kysely/helpers/sqlite": {
+      "types": "./dist/kysely/helpers/sqlite.d.ts",
+      "default": "./dist/kysely/helpers/sqlite.js"
+    },
+    "./kysely-ctl": {
+      "types": "./dist/kysely-ctl/index.d.ts",
+      "default": "./dist/kysely-ctl/index.js"
+    }
+  },
+  "bin": {
+    "kysely": "./bin/kysely.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "fix": "datamitsu fix",
+    "lint": "datamitsu lint",
+    "prepack": "clean-pkg-json clean",
+    "postpack": "clean-pkg-json restore",
+    "kysely": "pnpm build && ./bin/kysely.js",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.12",
+    "@ovineko/clean-pkg-json": "workspace:*",
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.1-alpha-33",
+    "@vitest/ui": "4.0.18",
+    "tsup": "8.5.1",
+    "vitest": "4.0.18"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "kysely": "0.28.11",
+    "kysely-ctl": "0.20.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
