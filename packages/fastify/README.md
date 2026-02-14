@@ -1,4 +1,4 @@
-# @ovineko/fastify-base
+# @ovineko/fastify
 
 Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck, and other common integrations.
 
@@ -54,7 +54,7 @@ Production-ready health check endpoints:
 ## Planned Usage
 
 ```typescript
-import { createFastifyServer } from "@ovineko/fastify-base";
+import { createFastifyServer } from "@ovineko/fastify";
 
 const server = await createFastifyServer({
   sentry: {

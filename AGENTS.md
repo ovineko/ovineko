@@ -26,7 +26,7 @@ This monorepo contains the following packages:
 - **@ovineko/react-error-boundary**: Error boundary utilities for React with optional Sentry integration
 - **@ovineko/clean-pkg-json**: Zero-config tool to clean package.json before publishing and restore it after
 - **@ovineko/datamitsu-config**: Internal configuration package for datamitsu tooling (linting, formatting, etc.)
-- **@ovineko/fastify-base**: Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck, and other common integrations
+- **@ovineko/fastify**: Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck, and other common integrations
 
 ## Repository Structure
 
@@ -37,7 +37,7 @@ ovineko/
 │   ├── react-error-boundary/   # Error boundaries with Sentry integration
 │   ├── clean-pkg-json/         # Package.json cleanup tool for publishing
 │   ├── datamitsu-config/       # Shared config for datamitsu tooling
-│   └── fastify-base/           # Pre-configured Fastify server with observability
+│   └── fastify/           # Pre-configured Fastify server with observability
 ├── test/                       # Shared test utilities and setup files
 ├── turbo.json                  # Turborepo build orchestration config
 ├── pnpm-workspace.yaml         # pnpm workspace configuration

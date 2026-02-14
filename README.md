@@ -23,7 +23,7 @@ This follows the same philosophy as `@shibanet0/datamitsu-config` (opinionated c
 | [@ovineko/react-router](./packages/react-router)                 | Type-safe wrapper for React Router v7 with valibot schema validation              | ✅ Published      |
 | [@ovineko/react-error-boundary](./packages/react-error-boundary) | Error boundary utilities for React with optional Sentry integration               | 🚧 In Development |
 | [@ovineko/clean-pkg-json](./packages/clean-pkg-json)             | Zero-config tool to clean package.json before publishing                          | ✅ Published      |
-| [@ovineko/fastify-base](./packages/fastify-base)                 | Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck | 🚧 In Development |
+| [@ovineko/fastify](./packages/fastify)                           | Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck | 🚧 In Development |
 | [@ovineko/datamitsu-config](./packages/datamitsu-config)         | Internal configuration package for datamitsu tooling                              | 🔒 Private        |
 
 ## Installation
@@ -139,7 +139,7 @@ ovineko/
 │   ├── react-error-boundary/   # Error boundaries with Sentry integration
 │   ├── clean-pkg-json/         # Package.json cleanup tool
 │   ├── datamitsu-config/       # Shared config for datamitsu tooling
-│   └── fastify-base/           # Pre-configured Fastify server (planned)
+│   └── fastify/           # Pre-configured Fastify server (planned)
 ├── test/                       # Shared test utilities
 ├── turbo.json                  # Turborepo config
 ├── pnpm-workspace.yaml         # pnpm workspace config

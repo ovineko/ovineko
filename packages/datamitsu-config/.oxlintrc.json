@@ -5,6 +5,7 @@
     "new-cap": "off",
     "no-duplicate-imports": "off",
     "unicorn/prefer-top-level-await": "off",
+    "max-statements": "off",
     "typescript/no-extraneous-class": "off"
   }
 }
