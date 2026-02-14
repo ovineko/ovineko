@@ -6,10 +6,19 @@ import fp from "fastify-plugin";
 
 import type { CreateServerOptions } from "../types";
 
+import { getServerOptionsSafe } from "../utils";
+
 export const setupSwagger = fp((async (fastify, options) => {
+  const safeOptions = getServerOptionsSafe(options);
+
   const swaggerOptions: SwaggerOptions = {
     openapi: {
-      ...options.swagger?.openapi,
+      ...options.plugins?.swagger?.openapi,
+      info: {
+        title: "@ovineko/fastify",
+        version: "1.0.0",
+        ...options.plugins?.swagger?.openapi?.info,
+      },
       openapi: "3.1.1",
     },
 
@@ -28,13 +37,13 @@ export const setupSwagger = fp((async (fastify, options) => {
   await fastify.register(fastifySwagger, swaggerOptions);
 
   const swaggerUiOptions: FastifySwaggerUiOptions = {
-    routePrefix: "/swagger",
-    ...options.swagger?.ui,
+    routePrefix: safeOptions.plugins.swagger.prefix,
+    ...options.plugins?.swagger?.ui,
     uiConfig: {
       deepLinking: false,
       displayRequestDuration: true,
       docExpansion: "list",
-      ...options.swagger?.ui?.uiConfig,
+      ...options.plugins?.swagger?.ui?.uiConfig,
     },
   };
   await fastify.register(fastifySwaggerUI, swaggerUiOptions);

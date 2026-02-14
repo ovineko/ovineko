@@ -6,6 +6,7 @@ import type { CreateServerOptions, ServerInstance } from "./types";
 
 import { setupCompress } from "./plugins/compress";
 import { createLogger } from "./plugins/logger";
+import { setupPortIsolation } from "./plugins/port-isolation";
 import { getServerOptionsSafe } from "./utils";
 
 export const createServer = async (options: CreateServerOptions): Promise<ServerInstance> => {
@@ -25,14 +26,14 @@ export const createServer = async (options: CreateServerOptions): Promise<Server
 
   await fastify.register(setupCompress, options);
 
+  if (options.plugins?.swagger?.enabled) {
+    const { setupSwagger } = await import("./plugins/swagger");
+    await fastify.register(setupSwagger, options);
+  }
+
   if (!options.listen?.disableEchoHandler) {
     const { echoHandler } = await import("./plugins/echoHandler");
     await fastify.register(echoHandler, options);
-  }
-
-  if (options.swagger?.enabled) {
-    const { setupSwagger } = await import("./plugins/swagger");
-    await fastify.register(setupSwagger, options);
   }
 
   if (options.hooks) {
@@ -46,6 +47,8 @@ export const createServer = async (options: CreateServerOptions): Promise<Server
     }
   }
 
+  await fastify.register(setupPortIsolation, options);
+
   const listen = async (): Promise<ReturnType<typeof closeWithGrace>> => {
     logger.info(`Log level: ${serverOptionsSafe.logger.level}`);
 
@@ -55,10 +58,13 @@ export const createServer = async (options: CreateServerOptions): Promise<Server
       console.debug(fastify.printRoutes());
     }
 
-    await fastify.listen({
-      host: serverOptionsSafe.listen.host,
-      port: serverOptionsSafe.listen.port,
-    });
+    // Явный вызов метода из плагина!
+    await (serverOptionsSafe.listen.managementPort
+      ? (fastify as any).listenWithIsolation()
+      : fastify.listen({
+          host: serverOptionsSafe.listen.host,
+          port: serverOptionsSafe.listen.port,
+        }));
 
     return closeWithGrace({ ...options.listen?.grace, logger }, async () => {
       fastify.log.info("closing");

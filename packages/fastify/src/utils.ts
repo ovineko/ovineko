@@ -12,6 +12,11 @@ export interface CreateServerOptionsListen {
   logger: {
     level: LogLevel;
   };
+  plugins: {
+    swagger: {
+      prefix: string;
+    };
+  };
 }
 
 export const getServerOptionsSafe = (options: CreateServerOptions): CreateServerOptionsListen => {
@@ -23,6 +28,11 @@ export const getServerOptionsSafe = (options: CreateServerOptions): CreateServer
     },
     logger: {
       level: options?.logger?.level ?? "info",
+    },
+    plugins: {
+      swagger: {
+        prefix: options.plugins?.swagger?.prefix ?? "/swagger",
+      },
     },
   };
 };

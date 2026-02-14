@@ -30,8 +30,8 @@ export interface CreateServerOptions {
   logger?: CreateServerOptionsLogger;
   plugins?: {
     compress?: FastifyCompressOptions;
+    swagger?: CreateServerOptionsSwagger;
   };
-  swagger?: CreateServerOptionsSwagger;
 }
 
 export interface CreateServerOptionsListen {
@@ -53,6 +53,8 @@ export interface CreateServerOptionsLogger {
 export interface CreateServerOptionsSwagger {
   enabled?: boolean;
   openapi?: Partial<OpenAPIV3_1.Document>;
+  /** @def */
+  prefix?: string;
   ui?: FastifySwaggerUiOptions;
 }
 

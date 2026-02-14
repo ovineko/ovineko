@@ -8,8 +8,10 @@ const { fastify, getSwaggerJSON, listen } = await createServer({
   logger: {
     mode: "human",
   },
-  swagger: {
-    enabled: true,
+  plugins: {
+    swagger: {
+      enabled: true,
+    },
   },
 });
 
