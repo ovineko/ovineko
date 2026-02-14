@@ -1,3 +1,4 @@
+import type { FastifyCompressOptions } from "@fastify/compress";
 import type { FastifySwaggerUiOptions } from "@fastify/swagger-ui";
 import type { Static, TSchema } from "@fastify/type-provider-typebox";
 import type {
@@ -27,6 +28,9 @@ export interface CreateServerOptions {
   };
   listen?: CreateServerOptionsListen;
   logger?: CreateServerOptionsLogger;
+  plugins?: {
+    compress?: FastifyCompressOptions;
+  };
   swagger?: CreateServerOptionsSwagger;
 }
 
@@ -34,6 +38,7 @@ export interface CreateServerOptionsListen {
   disableEchoHandler?: boolean;
   grace?: Omit<CloseWithGraceOptions, "logger">;
   host?: string;
+  managementPort?: number;
   port?: number;
   printRoutes?: boolean;
 }

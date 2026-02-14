@@ -1,5 +1,5 @@
-import fastifySwagger from "@fastify/swagger";
-import fastifySwaggerUI from "@fastify/swagger-ui";
+import fastifySwagger, { type SwaggerOptions } from "@fastify/swagger";
+import fastifySwaggerUI, { type FastifySwaggerUiOptions } from "@fastify/swagger-ui";
 import type { FastifyPluginAsync } from "fastify";
 
 import fp from "fastify-plugin";
@@ -7,7 +7,7 @@ import fp from "fastify-plugin";
 import type { CreateServerOptions } from "../types";
 
 export const setupSwagger = fp((async (fastify, options) => {
-  await fastify.register(fastifySwagger, {
+  const swaggerOptions: SwaggerOptions = {
     openapi: {
       ...options.swagger?.openapi,
       openapi: "3.1.1",
@@ -24,9 +24,10 @@ export const setupSwagger = fp((async (fastify, options) => {
 
       return openapi;
     },
-  });
+  };
+  await fastify.register(fastifySwagger, swaggerOptions);
 
-  await fastify.register(fastifySwaggerUI, {
+  const swaggerUiOptions: FastifySwaggerUiOptions = {
     routePrefix: "/swagger",
     ...options.swagger?.ui,
     uiConfig: {
@@ -35,5 +36,6 @@ export const setupSwagger = fp((async (fastify, options) => {
       docExpansion: "list",
       ...options.swagger?.ui?.uiConfig,
     },
-  });
+  };
+  await fastify.register(fastifySwaggerUI, swaggerUiOptions);
 }) satisfies FastifyPluginAsync<CreateServerOptions>);

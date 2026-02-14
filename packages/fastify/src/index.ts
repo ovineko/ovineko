@@ -4,6 +4,7 @@ import closeWithGrace from "close-with-grace";
 
 import type { CreateServerOptions, ServerInstance } from "./types";
 
+import { setupCompress } from "./plugins/compress";
 import { createLogger } from "./plugins/logger";
 import { getServerOptionsSafe } from "./utils";
 
@@ -21,6 +22,8 @@ export const createServer = async (options: CreateServerOptions): Promise<Server
     loggerInstance: logger,
     requestIdLogLabel: "x_request_id",
   });
+
+  await fastify.register(setupCompress, options);
 
   if (!options.listen?.disableEchoHandler) {
     const { echoHandler } = await import("./plugins/echoHandler");
