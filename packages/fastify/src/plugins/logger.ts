@@ -1,8 +1,9 @@
 import { pino } from "pino";
 
-import type { CreateServerOptions, Logger } from "../types";
+import type { ServerOptions } from "../options";
+import type { Logger } from "../types";
 
-import { getServerOptionsSafe } from "../utils";
+import { getSafeOptions } from "../options.safe";
 
 const stringify = (v: any) => {
   if (v) {
@@ -10,7 +11,7 @@ const stringify = (v: any) => {
   }
 };
 
-export const createLogger = (options: CreateServerOptions): Logger =>
+export const createLogger = (options: ServerOptions): Logger =>
   pino({
     formatters: {
       level: (label) => ({ level: label.toUpperCase() }),
@@ -25,7 +26,7 @@ export const createLogger = (options: CreateServerOptions): Logger =>
         };
       },
     },
-    level: getServerOptionsSafe(options).logger.level,
+    level: getSafeOptions(options).logger.level,
     redact: ["req.headers.authorization"],
     serializers: {
       err: (err) => {

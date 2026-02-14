@@ -1,12 +1,14 @@
 import type { LogLevel } from "fastify";
 
-import type { CreateServerOptions } from "./types";
+import type { ServerOptions } from "./options";
 
-export interface CreateServerOptionsListen {
+export interface SafeOptions {
   listen: {
-    /** @default :: */
     host: string;
-    managementPort: number;
+    management: {
+      port: number;
+      prefix: string;
+    };
     port: number;
   };
   logger: {
@@ -19,11 +21,14 @@ export interface CreateServerOptionsListen {
   };
 }
 
-export const getServerOptionsSafe = (options: CreateServerOptions): CreateServerOptionsListen => {
+export const getSafeOptions = (options: ServerOptions): SafeOptions => {
   return {
     listen: {
       host: options.listen?.host ?? "::",
-      managementPort: options.listen?.managementPort ?? 8081,
+      management: {
+        port: options.listen?.management?.port ?? 8081,
+        prefix: options.listen?.management?.prefix ?? "/management",
+      },
       port: options.listen?.port ?? 8080,
     },
     logger: {

@@ -3,9 +3,9 @@ import type { FastifyPluginAsync } from "fastify";
 import fp from "fastify-plugin";
 import http from "node:http";
 
-import type { CreateServerOptions } from "../types";
+import type { ServerOptions } from "../options";
 
-import { getServerOptionsSafe } from "../utils";
+import { getSafeOptions } from "../options.safe";
 
 interface PortConfig {
   allowedPrefixes?: string[];
@@ -18,41 +18,37 @@ interface PortConfig {
 export const setupPortIsolation = fp(
   (async (fastify, options) => {
     const serversMap = new Map<string, http.Server>();
-    const safeOptions = getServerOptionsSafe(options);
+    const safeOptions = getSafeOptions(options);
 
-    // Добавляем метод listenWithIsolation через декоратор
     fastify.decorate("listenWithIsolation", async () => {
-      const { host, managementPort, port } = safeOptions.listen;
+      const { host, management, port } = safeOptions.listen;
 
       const portsConfig: Record<string, PortConfig> = {
         api: {
-          deniedPrefixes: ["/management"],
+          deniedPrefixes: [management.prefix],
           host,
           order: 1,
           port,
         },
         management: {
-          allowedPrefixes: ["/management"],
+          allowedPrefixes: [management.prefix],
           host,
           order: 2,
-          port: managementPort,
+          port: management.port,
         },
       };
 
-      // Сортируем по order для запуска (ASC: 1 → 2)
+      // Sort by order for startup (ASC: 1 → 2)
       const startOrder = Object.entries(portsConfig).sort(([, a], [, b]) => a.order - b.order);
 
-      // Создаём сервер для каждого порта в правильном порядке
       for (const [name, config] of startOrder) {
         const server = http.createServer((req, res) => {
           const { allowedPrefixes = [], deniedPrefixes = [] } = config;
 
-          // Проверяем разрешённые префиксы
           const isAllowed =
             allowedPrefixes.length === 0 ||
             allowedPrefixes.some((prefix) => req.url?.startsWith(prefix));
 
-          // Проверяем запрещённые префиксы
           const isDenied = deniedPrefixes.some((prefix) => req.url?.startsWith(prefix));
 
           if (!isAllowed || isDenied) {
@@ -71,20 +67,16 @@ export const setupPortIsolation = fp(
             return;
           }
 
-          // Передаём запрос в Fastify
           fastify.routing(req, res);
         });
 
-        // Обработка WebSocket upgrade события
         server.on("upgrade", (req, socket, head) => {
           const { allowedPrefixes = [], deniedPrefixes = [] } = config;
 
-          // Проверяем разрешённые префиксы
           const isAllowed =
             allowedPrefixes.length === 0 ||
             allowedPrefixes.some((prefix) => req.url?.startsWith(prefix));
 
-          // Проверяем запрещённые префиксы
           const isDenied = deniedPrefixes.some((prefix) => req.url?.startsWith(prefix));
 
           if (!isAllowed || isDenied) {
@@ -104,7 +96,6 @@ export const setupPortIsolation = fp(
             return;
           }
 
-          // Передаём WebSocket upgrade в Fastify
           (fastify as any).routing(req, socket, head);
         });
 
@@ -128,27 +119,25 @@ export const setupPortIsolation = fp(
       if (serversMap.size > 0) {
         fastify.log.info("Closing multi-port servers...");
 
-        // Получаем конфиг для сортировки
-        const { host, managementPort, port } = safeOptions.listen;
+        const { host, management, port } = safeOptions.listen;
         const portsConfig: Record<string, PortConfig> = {
           api: {
-            deniedPrefixes: ["/management"],
+            deniedPrefixes: [management.prefix],
             host,
             order: 1,
             port,
           },
           management: {
-            allowedPrefixes: ["/management"],
+            allowedPrefixes: [management.prefix],
             host,
             order: 2,
-            port: managementPort,
+            port: management.port,
           },
         };
 
-        // Сортируем по order в обратном порядке для остановки (DESC: 2 → 1)
+        // Sort by order in reverse for shutdown (DESC: 2 → 1)
         const stopOrder = Object.entries(portsConfig).sort(([, a], [, b]) => b.order - a.order);
 
-        // Закрываем серверы последовательно в обратном порядке
         for (const [name] of stopOrder) {
           const server = serversMap.get(name);
           if (server) {
@@ -164,7 +153,7 @@ export const setupPortIsolation = fp(
         fastify.log.info("All servers closed");
       }
     });
-  }) satisfies FastifyPluginAsync<CreateServerOptions>,
+  }) satisfies FastifyPluginAsync<ServerOptions>,
   {
     name: "port-isolation",
   },

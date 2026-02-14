@@ -2,7 +2,7 @@ import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 
 import fp from "fastify-plugin";
 
-import type { CreateServerOptions } from "../types";
+import type { ServerOptions } from "../options";
 
 // oxlint-disable-next-line typescript/no-empty-interface
 interface EchoResponse extends Omit<
@@ -42,4 +42,4 @@ export const echoHandler = fp((async (fastify) => {
   await fastify.register((fastify) => {
     fastify.all("/echo", (req) => getEchoResponse(req));
   });
-}) satisfies FastifyPluginAsync<CreateServerOptions>);
+}) satisfies FastifyPluginAsync<ServerOptions>);

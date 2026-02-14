@@ -2,15 +2,16 @@ import Fastify, { type FastifyInstance } from "fastify";
 
 import closeWithGrace from "close-with-grace";
 
-import type { CreateServerOptions, ServerInstance } from "./types";
+import type { ServerOptions } from "./options";
+import type { ServerInstance } from "./types";
 
+import { getSafeOptions } from "./options.safe";
 import { setupCompress } from "./plugins/compress";
 import { createLogger } from "./plugins/logger";
 import { setupPortIsolation } from "./plugins/port-isolation";
-import { getServerOptionsSafe } from "./utils";
 
-export const createServer = async (options: CreateServerOptions): Promise<ServerInstance> => {
-  const serverOptionsSafe = getServerOptionsSafe(options);
+export const createServer = async (options: ServerOptions): Promise<ServerInstance> => {
+  const serverOptionsSafe = getSafeOptions(options);
 
   const logger = createLogger(options);
 
@@ -26,14 +27,14 @@ export const createServer = async (options: CreateServerOptions): Promise<Server
 
   await fastify.register(setupCompress, options);
 
-  if (options.plugins?.swagger?.enabled) {
-    const { setupSwagger } = await import("./plugins/swagger");
-    await fastify.register(setupSwagger, options);
-  }
-
   if (!options.listen?.disableEchoHandler) {
     const { echoHandler } = await import("./plugins/echoHandler");
     await fastify.register(echoHandler, options);
+  }
+
+  if (options.plugins?.swagger?.enabled) {
+    const { setupSwagger } = await import("./plugins/swagger");
+    await fastify.register(setupSwagger, options);
   }
 
   if (options.hooks) {
@@ -58,13 +59,12 @@ export const createServer = async (options: CreateServerOptions): Promise<Server
       console.debug(fastify.printRoutes());
     }
 
-    // Явный вызов метода из плагина!
-    await (serverOptionsSafe.listen.managementPort
-      ? (fastify as any).listenWithIsolation()
-      : fastify.listen({
+    await (options.listen?.management?.disable
+      ? fastify.listen({
           host: serverOptionsSafe.listen.host,
           port: serverOptionsSafe.listen.port,
-        }));
+        })
+      : (fastify as any).listenWithIsolation());
 
     return closeWithGrace({ ...options.listen?.grace, logger }, async () => {
       fastify.log.info("closing");

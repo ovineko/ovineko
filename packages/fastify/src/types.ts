@@ -1,5 +1,3 @@
-import type { FastifyCompressOptions } from "@fastify/compress";
-import type { FastifySwaggerUiOptions } from "@fastify/swagger-ui";
 import type { Static, TSchema } from "@fastify/type-provider-typebox";
 import type {
   ContextConfigDefault,
@@ -9,7 +7,6 @@ import type {
   FastifyRequest,
   FastifySchema,
   FastifyTypeProviderDefault,
-  LogLevel,
   RawReplyDefaultExpression,
   RawRequestDefaultExpression,
   RawServerDefault,
@@ -17,46 +14,7 @@ import type {
 } from "fastify";
 
 import type closeWithGrace from "close-with-grace";
-import type { Options as CloseWithGraceOptions } from "close-with-grace";
 import type { FastifyTypeProvider, ResolveFastifyRequestType } from "fastify/types/type-provider";
-import type { OpenAPIV3_1 } from "openapi-types";
-
-export interface CreateServerOptions {
-  hooks?: {
-    onListen?: (args: { logger: FastifyBaseLogger }) => Promise<void>;
-    onReady?: () => Promise<void>;
-  };
-  listen?: CreateServerOptionsListen;
-  logger?: CreateServerOptionsLogger;
-  plugins?: {
-    compress?: FastifyCompressOptions;
-    swagger?: CreateServerOptionsSwagger;
-  };
-}
-
-export interface CreateServerOptionsListen {
-  disableEchoHandler?: boolean;
-  grace?: Omit<CloseWithGraceOptions, "logger">;
-  host?: string;
-  managementPort?: number;
-  port?: number;
-  printRoutes?: boolean;
-}
-
-export interface CreateServerOptionsLogger {
-  /** @default info */
-  level?: LogLevel;
-  /** @default json */
-  mode?: "human" | "json";
-}
-
-export interface CreateServerOptionsSwagger {
-  enabled?: boolean;
-  openapi?: Partial<OpenAPIV3_1.Document>;
-  /** @def */
-  prefix?: string;
-  ui?: FastifySwaggerUiOptions;
-}
 
 export type FastifyHeaders = RawRequestDefaultExpression["headers"] &
   ResolveFastifyRequestType<

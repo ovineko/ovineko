@@ -4,12 +4,12 @@ import type { FastifyPluginAsync } from "fastify";
 
 import fp from "fastify-plugin";
 
-import type { CreateServerOptions } from "../types";
+import type { ServerOptions } from "../options";
 
-import { getServerOptionsSafe } from "../utils";
+import { getSafeOptions } from "../options.safe";
 
 export const setupSwagger = fp((async (fastify, options) => {
-  const safeOptions = getServerOptionsSafe(options);
+  const safeOptions = getSafeOptions(options);
 
   const swaggerOptions: SwaggerOptions = {
     openapi: {
@@ -47,4 +47,4 @@ export const setupSwagger = fp((async (fastify, options) => {
     },
   };
   await fastify.register(fastifySwaggerUI, swaggerUiOptions);
-}) satisfies FastifyPluginAsync<CreateServerOptions>);
+}) satisfies FastifyPluginAsync<ServerOptions>);

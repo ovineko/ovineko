@@ -3,7 +3,7 @@ import type { FastifyPluginAsync } from "fastify";
 
 import fp from "fastify-plugin";
 
-import type { CreateServerOptions } from "../types";
+import type { ServerOptions } from "../options";
 
 export const setupCompress = fp((async (fastify, options) => {
   const compressOptions: FastifyCompressOptions = {
@@ -11,4 +11,4 @@ export const setupCompress = fp((async (fastify, options) => {
   };
 
   await fastify.register(fastifyCompress, compressOptions);
-}) satisfies FastifyPluginAsync<CreateServerOptions>);
+}) satisfies FastifyPluginAsync<ServerOptions>);
