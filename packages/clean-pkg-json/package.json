@@ -44,11 +44,12 @@
   },
   "devDependencies": {
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.1-alpha-33",
+    "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
     "@types/node": "24.10.12",
     "tsup": "8.5.1",
     "vitest": "4.0.18"
   },
+  "packageManager": "pnpm@10.29.3",
   "engines": {
     "node": ">=20"
   },
