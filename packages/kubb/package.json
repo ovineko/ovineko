@@ -26,8 +26,6 @@
   "scripts": {
     "build:lib": "tsup",
     "dev": "pnpm build:lib && kubb generate",
-    "fix": "datamitsu fix",
-    "lint": "datamitsu lint",
     "prepack": "./bin/cli.js clean",
     "postpack": "./bin/cli.js restore",
     "prepublishOnly": "pnpm build:lib",
@@ -51,16 +49,12 @@
   "devDependencies": {
     "@faker-js/faker": "10.3.0",
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-26",
     "@types/node": "24.10.12",
     "msw": "2.12.10",
     "swr": "2.4.0",
     "tsup": "8.5.1",
     "vitest": "4.0.18"
-  },
-  "packageManager": "pnpm@10.29.3",
-  "engines": {
-    "node": ">=20"
   },
   "publishConfig": {
     "access": "public"

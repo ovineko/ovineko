@@ -42,7 +42,6 @@ export const defineConfig = (options: ConfigOptions): ReturnType<typeof defineCo
 
   return defineConfigLib({
     ...options.config,
-    hooks: options.config.hooks,
     output: {
       clean: true,
       ...options.config.output,

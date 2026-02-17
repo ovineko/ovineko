@@ -34,5 +34,10 @@ export default {
     "neko",
     "ovis",
     "opengraph",
+    "kubb",
+    "Petstore",
+    "petstore",
+    "fehguy",
+    "Palo",
   ],
 };
