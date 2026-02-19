@@ -1,8 +1,23 @@
 {
   "name": "@ovineko/spa-guard",
   "version": "0.0.0",
-  "description": "",
-  "keywords": [],
+  "description": "Chunk load error handling for SPAs with automatic recovery, beacon reporting, and deployment monitoring",
+  "keywords": [
+    "spa",
+    "chunk-load-error",
+    "vite",
+    "react",
+    "react-router",
+    "error-handling",
+    "error-boundary",
+    "deployment",
+    "beacon",
+    "monitoring",
+    "fastify",
+    "chunk",
+    "preload",
+    "dynamic-import"
+  ],
   "homepage": "https://github.com/ovineko/ovineko/tree/main/packages/spa-guard",
   "bugs": {
     "url": "https://github.com/ovineko/ovineko/issues"
