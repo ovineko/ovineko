@@ -6,15 +6,21 @@ import path from "node:path";
 import { name } from "../../package.json";
 import { type Options, optionsWindowKey } from "../common/options";
 
-const getInlineScript = async (options: Options) => {
+export interface VitePluginOptions extends Options {
+  trace?: boolean;
+}
+
+const getInlineScript = async (options: VitePluginOptions) => {
+  const buildDir = options.trace ? "dist-inline-trace" : "dist-inline";
+
   const script = await fsPromise
-    .readFile(path.join(import.meta.dirname, "../dist-inline/index.js"), "utf8")
+    .readFile(path.join(import.meta.dirname, `../${buildDir}/index.js`), "utf8")
     .then((r) => r.trim());
 
   return `window.${optionsWindowKey}=${JSON.stringify(options)};${script}`;
 };
 
-export const spaGuardVitePlugin = (options: Options): Plugin => {
+export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
   return {
     name: `${name}/vite-plugin`,
     transformIndexHtml: {

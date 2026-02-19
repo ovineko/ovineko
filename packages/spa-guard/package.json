@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard",
-  "version": "0.0.0",
+  "version": "0.0.1-alpha-1",
   "description": "Chunk load error handling for SPAs with automatic recovery, beacon reporting, and deployment monitoring",
   "keywords": [
     "spa",
@@ -68,11 +68,13 @@
   "files": [
     "dist",
     "dist-inline",
+    "dist-inline-trace",
     "README.md"
   ],
   "scripts": {
-    "build": "tsup --config tsup.inline.config.ts && tsup",
+    "build": "pnpm generate:fallback && tsup --config tsup.inline.config.ts && tsup --config tsup.inline.trace.config.ts && tsup",
     "fix": "datamitsu fix",
+    "generate:fallback": "tsx scripts/generate-fallback.ts",
     "lint": "datamitsu lint",
     "prepack": "clean-pkg-json clean",
     "postpack": "clean-pkg-json restore",
@@ -95,6 +97,7 @@
     "@vitest/coverage-v8": "4.0.18",
     "@vitest/ui": "4.0.18",
     "happy-dom": "20.5.0",
+    "html-minifier-terser": "7.2.0",
     "terser": "5.46.0",
     "tsup": "8.5.1",
     "vitest": "4.0.18"

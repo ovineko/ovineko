@@ -1,25 +1,26 @@
 import { optionsWindowKey } from "./constants";
+import { defaultFallbackHtml } from "./fallbackHtml.generated";
 
 export { optionsWindowKey } from "./constants";
 
 const defaultOptions: Options = {
-  checkVersion: {
-    interval: 60_000,
-  },
-  maxReloads: 3,
+  fallbackHtml: defaultFallbackHtml,
+  reloadDelays: [1000, 2000, 5000],
+  useRetryId: true,
 };
 
 export interface Options {
-  checkVersion?: {
-    endpoint?: string;
-    /** @default 60_000 */
-    interval?: number;
-  };
-  /** @default 3 */
-  maxReloads?: number;
+  fallbackHtml?: string;
+
+  /** @default [1000, 2000, 5000] */
+  reloadDelays?: number[];
+
   reportBeacon?: {
     endpoint?: string;
   };
+
+  /** @default true */
+  useRetryId?: boolean;
 }
 
 export const getOptions = (): Options => {
@@ -27,10 +28,7 @@ export const getOptions = (): Options => {
 
   return {
     ...defaultOptions,
-    checkVersion: {
-      ...defaultOptions.checkVersion,
-      ...windowOptions?.checkVersion,
-    },
+    ...windowOptions,
     reportBeacon: {
       ...defaultOptions.reportBeacon,
       ...windowOptions?.reportBeacon,

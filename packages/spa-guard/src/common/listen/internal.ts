@@ -1,17 +1,12 @@
 import { emitEvent } from "../events/internal";
+import { isChunkError } from "../isChunkError";
 import { logMessage } from "../log";
-import { getOptions } from "../options";
+import { attemptReload } from "../reload";
 import { sendBeacon } from "../sendBeacon";
+import { serializeError } from "../serializeError";
 
 export const listenInternal = () => {
   emitEvent({ name: "test" });
-
-  console.log("watchUnsafe");
-  console.log(getOptions());
-
-  sendBeacon({
-    errorMessage: "errorMessage",
-  });
 
   const wa = window.addEventListener;
 
@@ -19,6 +14,19 @@ export const listenInternal = () => {
     "error",
     (event) => {
       console.error(logMessage("error:capture:"), event);
+
+      if (isChunkError(event)) {
+        event.preventDefault();
+        attemptReload(event);
+        return;
+      }
+
+      const serialized = serializeError(event);
+      sendBeacon({
+        errorMessage: event.message,
+        eventName: "error",
+        serialized,
+      });
     },
     true,
   );
@@ -29,19 +37,46 @@ export const listenInternal = () => {
 
   wa("unhandledrejection", (event) => {
     console.error(logMessage("unhandledrejection:"), event);
+
+    if (isChunkError(event.reason)) {
+      event.preventDefault();
+      attemptReload(event.reason);
+      return;
+    }
+
+    const serialized = serializeError(event);
+    sendBeacon({
+      errorMessage: String(event.reason),
+      eventName: "unhandledrejection",
+      serialized,
+    });
   });
 
   wa("uncaughtException", (event) => {
     console.error(logMessage("uncaughtException:"), event);
+
+    const serialized = serializeError(event);
+    sendBeacon({
+      eventName: "uncaughtException",
+      serialized,
+    });
   });
 
   wa("securitypolicyviolation", (event) => {
     console.error(logMessage("CSP violation:"), event.blockedURI, event.violatedDirective);
+
+    const serialized = serializeError(event);
+    sendBeacon({
+      eventMessage: `${event.violatedDirective}: ${event.blockedURI}`,
+      eventName: "securitypolicyviolation",
+      serialized,
+    });
   });
 
-  // Handle preload errors that occur during dynamic imports (e.g., stale chunks after deployment)
-  // See: https://vite.dev/guide/build#load-error-handling
   wa("vite:preloadError", (event) => {
     console.error(logMessage("vite:preloadError:"), event);
+
+    event.preventDefault();
+    attemptReload(event);
   });
 };

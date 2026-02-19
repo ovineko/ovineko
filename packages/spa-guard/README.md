@@ -1,6 +1,6 @@
 # @ovineko/spa-guard
 
-Chunk load error handling for Single Page Applications with automatic error detection, beacon reporting, and deployment monitoring.
+Production-ready error handling for Single Page Applications with automatic chunk error recovery, intelligent retry logic, and comprehensive error reporting.
 
 ## Install
 
@@ -12,14 +12,17 @@ Peer dependencies vary by integration - see sections below for specific requirem
 
 ## Features
 
-- ✅ **Automatic chunk load error detection** - Handles `vite:preloadError`, dynamic imports, and chunk failures
+- ✅ **Automatic chunk load error detection** - Handles `vite:preloadError`, dynamic imports, and chunk failures across Chrome, Firefox, and Safari
+- ✅ **Intelligent retry with cache busting** - Uses query parameters with UUID to bypass HTML cache after deployments
+- ✅ **Configurable retry delays** - Flexible delay arrays (e.g., `[1000, 2000, 5000]`) instead of simple max attempts
+- ✅ **Graceful fallback UI** - Shows user-friendly error screen after all retry attempts are exhausted
+- ✅ **Deep error serialization** - Captures detailed error information for server-side analysis
+- ✅ **Smart beacon reporting** - Sends error reports only after retry exhaustion to prevent spam
+- ✅ **Dual build system** - Production minified (5KB) and trace verbose (10KB) builds for different environments
 - ✅ **Global error listeners** - Captures `error`, `unhandledrejection`, and `securitypolicyviolation` events
-- ✅ **Beacon-based error reporting** - Uses `navigator.sendBeacon()` with `fetch()` fallback for reliable error reporting
 - ✅ **Vite plugin for inline script injection** - Runs before all chunks to catch early errors
 - ✅ **Fastify server integration** - Ready-to-use plugin for handling error reports
-- ✅ **Version checking** - Detects stale cached code after deployments
 - ✅ **React Router v7 integration** - Works seamlessly with React Router error boundaries
-- ✅ **Configurable max reload attempts** - Prevents infinite reload loops
 - ✅ **TypeScript support** - Full type definitions with all exports
 - ✅ **Framework-agnostic core** - Works with or without React
 
@@ -36,14 +39,37 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [
     spaGuardVitePlugin({
-      maxReloads: 3,
+      // Production configuration
+      reloadDelays: [1000, 2000, 5000], // 3 attempts with increasing delays
+      fallbackHtml: `
+        <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
+          <div style="text-align:center">
+            <h1>Something went wrong</h1>
+            <p>Please refresh the page to continue.</p>
+            <button onclick="location.reload()">Refresh Page</button>
+          </div>
+        </div>
+      `,
       reportBeacon: {
         endpoint: "/api/beacon",
       },
-      checkVersion: {
-        endpoint: "/api/version",
-        interval: 60_000,
-      },
+      useRetryId: true, // Use query parameters for cache busting (default: true)
+    }),
+    react(),
+  ],
+});
+```
+
+### Development with Trace Mode
+
+```tsx
+// vite.config.ts
+export default defineConfig({
+  plugins: [
+    spaGuardVitePlugin({
+      trace: true, // Enable verbose logging (10KB instead of 5KB)
+      reloadDelays: [1000, 2000],
+      reportBeacon: { endpoint: "/api/beacon" },
     }),
     react(),
   ],
@@ -75,42 +101,122 @@ app.register(fastifySPAGuard, {
 await app.listen({ port: 3000 });
 ```
 
+## How It Works
+
+### Chunk Error Recovery Flow
+
+When a chunk load error occurs (typically after deployment):
+
+1. **Error Detection**: spa-guard detects chunk load error (e.g., "Failed to fetch dynamically imported module")
+2. **Cache Bypass**: Generates unique retry ID using `crypto.randomUUID()` (or secure fallback)
+3. **First Reload**: Adds query parameters `?spaGuardRetryId=uuid&spaGuardRetryAttempt=1`
+4. **Browser Refresh**: Browser sees new URL → bypasses cache → requests fresh HTML from server
+5. **Success or Retry**: If still failing, increases attempt count and tries again with longer delay
+6. **Fallback UI**: After all attempts exhausted, shows custom error screen and sends beacon to server
+
+**Why query parameters instead of sessionStorage?**
+
+- **Bypasses HTML cache**: Even if `index.html` has aggressive cache headers, unique URL forces fresh fetch
+- **No storage limitations**: Works in private browsing, cross-domain, and storage-disabled environments
+- **Cache-Control agnostic**: Doesn't rely on server cache configuration
+
+### Retry Delay Strategy
+
+```typescript
+reloadDelays: [1000, 2000, 5000]; // Default
+```
+
+- **Attempt 1**: Wait 1000ms (1s) → reload with `?spaGuardRetryAttempt=1`
+- **Attempt 2**: Wait 2000ms (2s) → reload with `?spaGuardRetryAttempt=2`
+- **Attempt 3**: Wait 5000ms (5s) → reload with `?spaGuardRetryAttempt=3`
+- **Exhausted**: Show fallback UI, send beacon to server
+
+### Secure Random ID Generation
+
+Three-tier fallback chain for maximum compatibility:
+
+1. **crypto.randomUUID()** - Modern browsers in secure contexts (HTTPS/localhost)
+2. **crypto.getRandomValues()** - Older browsers in secure contexts
+3. **Math.random()** - Last resort for insecure contexts (HTTP)
+
 ## Detailed Usage
 
-### Vite Plugin Setup
+### Vite Plugin Configuration
 
 The Vite plugin injects an inline script into your HTML `<head>` that runs **before all other chunks**. This ensures error handling is active even if the main bundle fails to load.
 
 ```typescript
 import { spaGuardVitePlugin } from "@ovineko/spa-guard/vite-plugin";
 
-// Basic usage
 spaGuardVitePlugin({
-  maxReloads: 3,
+  // Retry configuration
+  reloadDelays: [1000, 2000, 5000], // Array of delays in milliseconds
+  useRetryId: true, // Use query parameters for cache busting (default: true)
+
+  // Fallback UI configuration
+  fallbackHtml: `
+    <div style="...">
+      <h1>Something went wrong</h1>
+      <button onclick="location.reload()">Refresh</button>
+    </div>
+  `,
+
+  // Beacon reporting
   reportBeacon: {
-    endpoint: "/api/beacon",
+    endpoint: "/api/beacon", // Server endpoint for error reports
   },
+
+  // Build mode
+  trace: false, // Set to true for verbose debug build (10KB vs 5KB)
 });
 ```
 
 **How it works:**
 
-1. Reads minified inline script from `dist-inline/index.js`
+1. Reads minified inline script from `dist-inline/index.js` (or `dist-inline-trace/index.js` if trace mode)
 2. Injects `window.__SPA_GUARD_OPTIONS__` configuration object
 3. Prepends inline script to HTML `<head>` (before all other scripts)
 4. Script registers error listeners immediately on page load
 5. Captures errors even if main application bundle fails
 
-**Configuration:**
+### Options Interface
 
-- `maxReloads` - Maximum number of automatic reload attempts (default: 3)
-- `reportBeacon.endpoint` - Server endpoint to receive error reports
-- `checkVersion.endpoint` - Endpoint for version checking (optional)
-- `checkVersion.interval` - Version check interval in milliseconds (default: 60000)
+```typescript
+interface Options {
+  reloadDelays?: number[]; // Array of retry delays in ms (default: [1000, 2000, 5000])
+  useRetryId?: boolean; // Use query params for cache busting (default: true)
+  fallbackHtml?: string; // Custom error UI HTML (default: basic error screen)
+  reportBeacon?: {
+    endpoint?: string; // Server endpoint for beacon reports
+  };
+}
+
+interface VitePluginOptions extends Options {
+  trace?: boolean; // Enable verbose trace build (default: false)
+}
+```
+
+**Default values:**
+
+```typescript
+{
+  reloadDelays: [1000, 2000, 5000],
+  useRetryId: true,
+  fallbackHtml: `
+    <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
+      <div style="text-align:center">
+        <h1>Something went wrong</h1>
+        <p>Please refresh the page to continue.</p>
+        <button onclick="location.reload()">Refresh Page</button>
+      </div>
+    </div>
+  `,
+}
+```
 
 ### Fastify Integration
 
-The Fastify plugin provides a POST endpoint to receive beacon data from the client.
+The Fastify plugin provides a POST endpoint to receive beacon data from clients.
 
 ```typescript
 import { fastifySPAGuard } from "@ovineko/spa-guard/fastify";
@@ -144,59 +250,24 @@ app.register(fastifySPAGuard, {
 });
 ```
 
-**Default behavior** (without handlers):
-
-- `onBeacon`: Logs structured beacon data with Fastify logger
-- `onUnknownBeacon`: Logs warning with raw body
-
 **BeaconSchema structure:**
 
 ```typescript
 interface BeaconSchema {
   errorMessage?: string; // Error message
   eventMessage?: string; // Event-specific message
-  eventName?: string; // Event type (e.g., 'error', 'unhandledrejection')
-  serialized?: string; // Serialized error details
+  eventName?: string; // Event type (e.g., 'chunk_error_max_reloads', 'error', 'unhandledrejection')
+  serialized?: string; // Serialized error details (JSON string)
 }
 ```
 
-### Options Configuration
+**Beacon events:**
 
-The `Options` interface configures client-side behavior:
-
-```typescript
-interface Options {
-  checkVersion?: {
-    endpoint?: string; // Version check endpoint
-    interval?: number; // Check interval (default: 60000ms)
-  };
-  maxReloads?: number; // Max reload attempts (default: 3)
-  reportBeacon?: {
-    endpoint?: string; // Error reporting endpoint
-  };
-}
-```
-
-**Options are merged from:**
-
-1. Default values (hardcoded in library)
-2. Plugin configuration (passed to `spaGuardVitePlugin`)
-3. Runtime configuration via `window.__SPA_GUARD_OPTIONS__`
-
-**Example with all options:**
-
-```typescript
-spaGuardVitePlugin({
-  maxReloads: 5,
-  reportBeacon: {
-    endpoint: "/api/errors",
-  },
-  checkVersion: {
-    endpoint: "/api/app-version",
-    interval: 30_000, // Check every 30 seconds
-  },
-});
-```
+- `chunk_error_max_reloads` - All reload attempts exhausted for chunk error
+- `error` - Non-chunk global error
+- `unhandledrejection` - Non-chunk promise rejection
+- `uncaughtException` - Uncaught exception
+- `securitypolicyviolation` - CSP violation
 
 ### React Router Integration
 
@@ -229,9 +300,9 @@ function Root() {
 
 1. Chunk load error occurs (e.g., after deployment)
 2. spa-guard inline script detects error
-3. Sends beacon to server
-4. Attempts automatic reload (up to `maxReloads`)
-5. If reload fails, React Router error boundary catches error
+3. Attempts automatic reload with query parameters (up to `reloadDelays.length` times)
+4. If all reloads fail, sends beacon to server and shows fallback UI
+5. React Router error boundary catches error (if no fallback UI configured)
 6. `ErrorBoundaryReloadPage` displays fallback UI
 
 ### Core API (Framework-agnostic)
@@ -254,7 +325,7 @@ listen();
 
 // Get merged options
 const opts = options.getOptions();
-console.log("Max reloads:", opts.maxReloads);
+console.log("Reload delays:", opts.reloadDelays);
 ```
 
 **Event system:**
@@ -262,19 +333,106 @@ console.log("Max reloads:", opts.maxReloads);
 - `events.subscribe(listener)` - Subscribe to all spa-guard events
 - `events.emit(event)` - Emit event to all subscribers
 - Uses Symbol-based storage for isolation
-- Safe for server-side rendering (checks for `window` availability)
+- Safe for server-side rendering (checks for `globalThis.window` availability)
+
+## Error Detection
+
+spa-guard registers multiple event listeners to catch different error types:
+
+**`globalThis.window.addEventListener('error', ...)`**
+
+- Resource load failures (`<script>`, `<link>`, `<img>`)
+- Synchronous JavaScript errors
+- Uses capture phase (`{ capture: true }`) to catch early
+
+**`globalThis.window.addEventListener('unhandledrejection', ...)`**
+
+- Promise rejections
+- Dynamic `import()` failures
+- Async/await errors without try/catch
+
+**`globalThis.window.addEventListener('securitypolicyviolation', ...)`**
+
+- Content Security Policy violations
+- Blocked scripts/resources
+
+**`globalThis.window.addEventListener('vite:preloadError', ...)`** (Vite-specific)
+
+- Vite chunk preload failures
+- CSS preload errors
+
+### Chunk Error Patterns
+
+spa-guard detects chunk errors across browsers using regex patterns:
+
+```typescript
+const patterns = [
+  /Failed to fetch dynamically imported module/i, // Chrome/Edge
+  /Importing a module script failed/i, // Firefox
+  /error loading dynamically imported module/i, // Safari
+  /Unable to preload CSS/i, // CSS chunk errors
+  /Loading chunk \d+ failed/i, // Webpack
+  /Loading CSS chunk \d+ failed/i, // Webpack CSS
+  /ChunkLoadError/i, // Generic
+  /Failed to fetch/i, // Network failures
+];
+```
+
+## Deep Error Serialization
+
+spa-guard captures maximum error information for server analysis:
+
+**Error types:**
+
+- `Error` - Standard JavaScript errors (name, message, stack, custom properties)
+- `ErrorEvent` - DOM error events (message, filename, lineno, colno, error)
+- `PromiseRejectionEvent` - Unhandled promise rejections (reason, promise)
+- `SecurityPolicyViolationEvent` - CSP violations (blockedURI, violatedDirective, etc.)
+- `Event` - Generic events (type, target, timeStamp)
+
+**Example serialized output:**
+
+```json
+{
+  "type": "ErrorEvent",
+  "message": "Failed to fetch dynamically imported module",
+  "filename": "https://example.com/app.js",
+  "lineno": 42,
+  "colno": 15,
+  "error": {
+    "type": "Error",
+    "name": "TypeError",
+    "message": "Failed to fetch dynamically imported module",
+    "stack": "TypeError: Failed to fetch...\n    at loadChunk..."
+  }
+}
+```
+
+## Beacon Reporting
+
+Error data is sent to the server using a fire-and-forget pattern:
+
+1. **Primary:** `navigator.sendBeacon(endpoint, JSON.stringify(data))`
+   - Works even during page unload
+   - Non-blocking
+   - Reliable delivery
+2. **Fallback:** `fetch(endpoint, { method: 'POST', body: data, keepalive: true })`
+   - Used if beacon is unavailable
+   - `keepalive: true` ensures delivery during navigation
+
+**Important:** Beacons are sent **only after retry exhaustion** for chunk errors to prevent spam during normal recovery.
 
 ## API Reference
 
 ### Vite Plugin
 
-#### `spaGuardVitePlugin(options: Options): Plugin`
+#### `spaGuardVitePlugin(options: VitePluginOptions): Plugin`
 
 Creates a Vite plugin that injects inline error handling script.
 
 **Parameters:**
 
-- `options: Options` - Configuration object
+- `options: VitePluginOptions` - Configuration object
 
 **Returns:** Vite `Plugin` object
 
@@ -286,8 +444,9 @@ import { spaGuardVitePlugin } from "@ovineko/spa-guard/vite-plugin";
 export default defineConfig({
   plugins: [
     spaGuardVitePlugin({
-      maxReloads: 3,
+      reloadDelays: [1000, 2000, 5000],
       reportBeacon: { endpoint: "/api/beacon" },
+      trace: false,
     }),
   ],
 });
@@ -314,35 +473,26 @@ interface FastifySPAGuardOptions {
 }
 ```
 
-**Example:**
-
-```typescript
-import { fastifySPAGuard } from "@ovineko/spa-guard/fastify";
-
-app.register(fastifySPAGuard, {
-  path: "/api/beacon",
-  onBeacon: async (beacon, request) => {
-    await Sentry.captureException(new Error(beacon.errorMessage), {
-      extra: beacon,
-    });
-  },
-});
-```
-
 ### Types
 
 #### `Options`
 
 ```typescript
 interface Options {
-  checkVersion?: {
-    endpoint?: string;
-    interval?: number; // Default: 60000
-  };
-  maxReloads?: number; // Default: 3
+  fallbackHtml?: string; // Custom error UI HTML
+  reloadDelays?: number[]; // Retry delays in ms (default: [1000, 2000, 5000])
   reportBeacon?: {
-    endpoint?: string;
+    endpoint?: string; // Error reporting endpoint
   };
+  useRetryId?: boolean; // Use query params for cache busting (default: true)
+}
+```
+
+#### `VitePluginOptions`
+
+```typescript
+interface VitePluginOptions extends Options {
+  trace?: boolean; // Enable verbose trace build (default: false)
 }
 ```
 
@@ -353,7 +503,7 @@ interface BeaconSchema {
   errorMessage?: string;
   eventMessage?: string;
   eventName?: string;
-  serialized?: string;
+  serialized?: string; // JSON stringified error details
 }
 ```
 
@@ -364,7 +514,7 @@ From `@ovineko/spa-guard`:
 - `events.subscribe(listener)` - Subscribe to spa-guard events
 - `events.emit(event)` - Emit event to subscribers
 - `listen()` - Initialize error listeners
-- `options.getOptions()` - Get merged options from window
+- `options.getOptions()` - Get merged options from globalThis.window
 - `options.optionsWindowKey` - Window storage key constant
 
 ### Schema Exports
@@ -409,93 +559,118 @@ import { spaGuardVitePlugin } from "@ovineko/spa-guard/vite-plugin";
 import { fastifySPAGuard } from "@ovineko/spa-guard/fastify";
 ```
 
-## How It Works
+## Build Sizes
 
-### Inline Script Execution Flow
+- **Production:** `dist-inline/index.js` ~5KB minified (Terser)
+- **Trace:** `dist-inline-trace/index.js` ~10KB unminified (debug)
+- **Main library:** `dist/` varies by export
 
-1. **Build time:** Vite plugin reads minified script from `dist-inline/index.js`
-2. **Build time:** Plugin injects `window.__SPA_GUARD_OPTIONS__` configuration
-3. **Build time:** Plugin prepends inline script to HTML `<head>` (before all chunks)
-4. **Runtime:** Browser executes inline script immediately
-5. **Runtime:** Script registers error event listeners
-6. **Runtime:** Error handlers catch failures even if main bundle fails to load
+## Advanced Usage
 
-### Error Detection
+### Disable Query Parameters (PII Concerns)
 
-spa-guard registers multiple event listeners to catch different error types:
+If query parameters are problematic for your use case:
 
-**`window.addEventListener('error', ...)`**
-
-- Resource load failures (`<script>`, `<link>`, `<img>`)
-- Synchronous JavaScript errors
-- Uses capture phase (`{ capture: true }`) to catch early
-
-**`window.addEventListener('unhandledrejection', ...)`**
-
-- Promise rejections
-- Dynamic `import()` failures
-- Async/await errors without try/catch
-
-**`window.addEventListener('securitypolicyviolation', ...)`**
-
-- Content Security Policy violations
-- Blocked scripts/resources
-
-**`window.addEventListener('vite:preloadError', ...)`** (Vite-specific)
-
-- Vite chunk preload failures
-- CSS preload errors
-
-### Beacon Reporting
-
-Error data is sent to the server using a fire-and-forget pattern:
-
-1. **Primary:** `navigator.sendBeacon(endpoint, JSON.stringify(data))`
-   - Works even during page unload
-   - Non-blocking
-   - Reliable delivery
-2. **Fallback:** `fetch(endpoint, { method: 'POST', body: data, keepalive: true })`
-   - Used if beacon is unavailable
-   - `keepalive: true` ensures delivery during navigation
-
-**Beacon data structure:**
-
-```json
-{
-  "errorMessage": "Failed to fetch dynamically imported module",
-  "eventName": "unhandledrejection",
-  "eventMessage": "...",
-  "serialized": "{\"stack\":\"...\"}"
-}
+```typescript
+spaGuardVitePlugin({
+  useRetryId: false, // Disable query parameters
+  reloadDelays: [1000, 2000], // Still retries, but without cache busting
+});
 ```
 
-### Version Checking
+**Note:** Without `useRetryId`, retries use `globalThis.window.location.reload()` which may not bypass aggressive HTML cache.
 
-If configured, spa-guard periodically checks for new deployments:
+### Custom Fallback UI
 
-1. Poll `checkVersion.endpoint` at specified interval
-2. Compare response with cached version
-3. If version changed, notify user or trigger reload
-4. Prevents chunk errors by detecting stale code proactively
+Provide fully custom HTML for error screen (injected into `document.body`):
+
+```typescript
+spaGuardVitePlugin({
+  fallbackHtml: `
+    <style>
+      .spa-guard-error {
+        font-family: system-ui, -apple-system, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+      .spa-guard-container {
+        max-width: 500px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 40px;
+        border-radius: 20px;
+      }
+      .spa-guard-button {
+        background: white;
+        color: #667eea;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 20px;
+      }
+      .spa-guard-button:hover {
+        transform: scale(1.05);
+      }
+    </style>
+    <div class="spa-guard-error">
+      <div class="spa-guard-container">
+        <h1>⚠️ Application Error</h1>
+        <p>We're experiencing technical difficulties. Please try reloading the page.</p>
+        <button class="spa-guard-button" onclick="location.reload()">Reload Application</button>
+      </div>
+    </div>
+  `,
+});
+```
+
+### Custom Retry Strategy
+
+Adjust retry delays for different environments:
+
+```typescript
+// Aggressive retries for production
+spaGuardVitePlugin({
+  reloadDelays: [500, 1000, 2000, 5000, 10000], // 5 attempts
+});
+
+// Quick retries for development
+spaGuardVitePlugin({
+  trace: true,
+  reloadDelays: [100, 500], // 2 fast attempts
+});
+```
 
 ## TypeScript
 
 All exports are fully typed with TypeScript definitions:
 
 ```typescript
-import type { Options } from "@ovineko/spa-guard/vite-plugin";
+import type { Options, VitePluginOptions } from "@ovineko/spa-guard/vite-plugin";
 import type { BeaconSchema } from "@ovineko/spa-guard/schema";
 import type { FastifySPAGuardOptions } from "@ovineko/spa-guard/fastify";
 
-const options: Options = {
-  maxReloads: 3,
+const options: VitePluginOptions = {
+  reloadDelays: [1000, 2000, 5000],
   reportBeacon: {
     endpoint: "/api/beacon",
   },
+  trace: false,
 };
 
 const handleBeacon = (beacon: BeaconSchema) => {
   console.log(beacon.errorMessage);
+  console.log(beacon.serialized);
 };
 ```
 
@@ -505,6 +680,15 @@ const handleBeacon = (beacon: BeaconSchema) => {
 - BeaconSchema from TypeBox with runtime validation
 - Fastify plugin types for type-safe integration
 - Options interface with optional fields
+
+## Future Enhancements
+
+Detailed specifications for planned features are documented in [TODO.md](TODO.md):
+
+- **Version Checker Module** - Detect new deployments via HTML or JSON polling
+- **Enhanced Event Emitter Architecture** - Rich event system for SPA integration with React hooks
+
+These features are designed to extend spa-guard's capabilities while maintaining the minimal inline script footprint.
 
 ## License
 
