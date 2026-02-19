@@ -1,0 +1,4 @@
+{
+  "$schema": "./node_modules/@shibanet0/datamitsu-config/oxlint_configuration_schema.json",
+  "extends": ["../../packages/datamitsu-config/.oxlintrc.json"]
+}

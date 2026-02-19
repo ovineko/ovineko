@@ -1,0 +1,115 @@
+{
+  "name": "@ovineko/spa-guard",
+  "version": "0.0.0",
+  "description": "",
+  "keywords": [],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/packages/spa-guard",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "packages/spa-guard"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/common/index.d.ts",
+      "default": "./dist/common/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema/index.d.ts",
+      "default": "./dist/schema/index.js"
+    },
+    "./schema/parse": {
+      "types": "./dist/schema/parse.d.ts",
+      "default": "./dist/schema/parse.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
+    },
+    "./react-router": {
+      "types": "./dist/react-router/index.d.ts",
+      "default": "./dist/react-router/index.js"
+    },
+    "./fastify": {
+      "types": "./dist/fastify/index.d.ts",
+      "default": "./dist/fastify/index.js"
+    },
+    "./vite-plugin": {
+      "types": "./dist/vite-plugin/index.d.ts",
+      "default": "./dist/vite-plugin/index.js"
+    },
+    "./react-error-boundary": {
+      "types": "./dist/react-error-boundary/index.d.ts",
+      "default": "./dist/react-error-boundary/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "dist-inline",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup --config tsup.inline.config.ts && tsup",
+    "fix": "datamitsu fix",
+    "lint": "datamitsu lint",
+    "prepack": "clean-pkg-json clean",
+    "postpack": "clean-pkg-json restore",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@ovineko/clean-pkg-json": "workspace:*",
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
+    "@testing-library/dom": "10.4.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
+    "@types/react": "19.2.10",
+    "@vitejs/plugin-react": "5.1.3",
+    "@vitest/coverage-v8": "4.0.18",
+    "@vitest/ui": "4.0.18",
+    "happy-dom": "20.5.0",
+    "terser": "5.46.0",
+    "tsup": "8.5.1",
+    "vitest": "4.0.18"
+  },
+  "peerDependencies": {
+    "react": "^19",
+    "react-error-boundary": "^6",
+    "react-router": "^7",
+    "typebox": "^1",
+    "vite": "^8 || ^7"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-error-boundary": {
+      "optional": true
+    },
+    "react-router": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    }
+  },
+  "packageManager": "pnpm@10.29.3",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
