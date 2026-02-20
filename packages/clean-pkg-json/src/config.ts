@@ -15,6 +15,7 @@ export const FIELDS_WHITELIST = new Set([
   "name",
   "optionalDependencies",
   "peerDependencies",
+  "peerDependenciesMeta",
   "publishConfig",
   "repository",
   "type",
