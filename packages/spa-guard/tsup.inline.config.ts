@@ -1,34 +1,18 @@
-import type { Options } from "tsup";
-
 import { defineConfig } from "tsup";
 
-export const tsupInlineOptions: Options = {
-  clean: true,
+import { tsupInlineTraceOptions } from "./tsup.inline.trace.config";
+
+export default defineConfig({
+  ...tsupInlineTraceOptions,
   entry: ["src/inline/index.ts"],
-  format: "esm",
-  minify: "terser",
-  minifyIdentifiers: true,
-  minifySyntax: true,
-  minifyWhitespace: true,
   outDir: "dist-inline",
-  platform: "browser",
-  splitting: false,
   terserOptions: {
+    ...tsupInlineTraceOptions.terserOptions,
     compress: {
-      drop_console: false,
-      passes: 3,
-      pure_funcs: [],
-      unsafe: true,
-      unsafe_arrows: true,
-      unsafe_methods: true,
-    },
-    format: {
-      comments: false,
-    },
-    mangle: {
-      toplevel: true,
+      ...(typeof tsupInlineTraceOptions.terserOptions?.compress === "object"
+        ? tsupInlineTraceOptions.terserOptions.compress
+        : {}),
+      drop_console: true,
     },
   },
-};
-
-export default defineConfig(tsupInlineOptions);
+});

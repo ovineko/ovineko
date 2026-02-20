@@ -1,5 +1,12 @@
 import { RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
 import { emitEvent } from "./events/internal";
+import {
+  clearLastReloadTime,
+  getLastReloadTime,
+  setLastReloadTime,
+  setLastRetryResetInfo,
+  shouldResetRetryCycle,
+} from "./lastReloadTime";
 import { logMessage } from "./log";
 import { getOptions } from "./options";
 import {
@@ -22,10 +29,46 @@ export const attemptReload = (error: unknown): void => {
   const options = getOptions();
   const reloadDelays = options.reloadDelays ?? [1000, 2000, 5000];
   const useRetryId = options.useRetryId ?? true;
+  const enableRetryReset = options.enableRetryReset ?? true;
+  const minTimeBetweenResets = options.minTimeBetweenResets ?? 5000;
 
   const retryState = useRetryId ? getRetryStateFromUrl() : null;
 
-  const currentAttempt = retryState ? retryState.retryAttempt : 0;
+  let currentAttempt = retryState ? retryState.retryAttempt : 0;
+  let retryId = retryState?.retryId ?? generateRetryId();
+
+  if (
+    enableRetryReset &&
+    retryState &&
+    retryState.retryAttempt > 0 &&
+    shouldResetRetryCycle(retryState, reloadDelays, minTimeBetweenResets)
+  ) {
+    const lastReload = getLastReloadTime();
+    const timeSinceReload = lastReload ? Date.now() - lastReload.timestamp : 0;
+
+    clearRetryStateFromUrl();
+    clearLastReloadTime();
+    setLastRetryResetInfo(retryState.retryId);
+
+    const errorMsg = String(error);
+    if (!shouldIgnoreMessages([errorMsg])) {
+      console.log(
+        logMessage(
+          `Resetting retry cycle: ${timeSinceReload}ms passed since last reload (retryId: ${retryState.retryId})`,
+        ),
+      );
+    }
+
+    emitEvent({
+      name: "retry-reset",
+      previousAttempt: retryState.retryAttempt,
+      previousRetryId: retryState.retryId,
+      timeSinceReload,
+    });
+
+    currentAttempt = 0;
+    retryId = generateRetryId();
+  }
 
   if (currentAttempt === -1) {
     const errorMsg = String(error);
@@ -68,7 +111,6 @@ export const attemptReload = (error: unknown): void => {
   }
 
   const nextAttempt = currentAttempt + 1;
-  const retryId = retryState?.retryId ?? generateRetryId();
   const delay = reloadDelays[currentAttempt] ?? 1000;
 
   const errorMsg = String(error);
@@ -89,6 +131,10 @@ export const attemptReload = (error: unknown): void => {
   });
 
   setTimeout(() => {
+    if (useRetryId && enableRetryReset) {
+      setLastReloadTime(retryId, nextAttempt);
+    }
+
     if (useRetryId) {
       const reloadUrl = buildReloadUrl(retryId, nextAttempt);
       globalThis.window.location.href = reloadUrl;

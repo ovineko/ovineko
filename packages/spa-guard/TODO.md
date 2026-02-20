@@ -1400,7 +1400,3 @@ These two features represent the next evolution of spa-guard:
 2. **Enhanced Event Emitter:** Full control and visibility for SPA applications to implement custom error handling UX
 
 Both features are designed to be **optional** and **non-breaking** - existing implementations will continue to work with default inline retry behavior.
-
-## 3. Silent mode
-
-Add `silent: boolean` to options

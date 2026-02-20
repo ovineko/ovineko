@@ -1,32 +1,65 @@
 import type { UnsubscribeFn } from "../common/events/types";
 
 import { subscribe } from "../common/events/internal";
+import { getLastRetryResetInfo } from "../common/lastReloadTime";
 import { getRetryStateFromUrl } from "../common/retryState";
 
 export interface SpaGuardState {
   currentAttempt: number;
   isFallbackShown: boolean;
   isWaiting: boolean;
+  /**
+   * ID of the previous retry cycle before reset.
+   * Undefined if no reset has occurred yet.
+   */
+  lastResetRetryId?: string;
+  /**
+   * Timestamp of the last retry cycle reset.
+   * Undefined if no reset has occurred yet.
+   */
+  lastRetryResetTime?: number;
 }
 
 type StateSubscriber = (state: SpaGuardState) => void;
 
 const getInitialStateFromUrl = (): SpaGuardState => {
+  const resetInfo = getLastRetryResetInfo();
+
   if (globalThis.window === undefined) {
-    return { currentAttempt: 0, isFallbackShown: false, isWaiting: false };
+    return {
+      currentAttempt: 0,
+      isFallbackShown: false,
+      isWaiting: false,
+      lastResetRetryId: resetInfo?.previousRetryId,
+      lastRetryResetTime: resetInfo?.timestamp,
+    };
   }
 
   const retryState = getRetryStateFromUrl();
   if (!retryState) {
-    return { currentAttempt: 0, isFallbackShown: false, isWaiting: false };
+    return {
+      currentAttempt: 0,
+      isFallbackShown: false,
+      isWaiting: false,
+      lastResetRetryId: resetInfo?.previousRetryId,
+      lastRetryResetTime: resetInfo?.timestamp,
+    };
   }
   if (retryState.retryAttempt === -1) {
-    return { currentAttempt: 0, isFallbackShown: true, isWaiting: false };
+    return {
+      currentAttempt: 0,
+      isFallbackShown: true,
+      isWaiting: false,
+      lastResetRetryId: resetInfo?.previousRetryId,
+      lastRetryResetTime: resetInfo?.timestamp,
+    };
   }
   return {
     currentAttempt: retryState.retryAttempt,
     isFallbackShown: false,
     isWaiting: false,
+    lastResetRetryId: resetInfo?.previousRetryId,
+    lastRetryResetTime: resetInfo?.timestamp,
   };
 };
 
@@ -51,6 +84,7 @@ subscribe((event) => {
     }
     case "retry-attempt": {
       updateState({
+        ...currentState,
         currentAttempt: event.attempt,
         isFallbackShown: false,
         isWaiting: true,
@@ -60,9 +94,22 @@ subscribe((event) => {
     }
     case "retry-exhausted": {
       updateState({
+        ...currentState,
         currentAttempt: event.finalAttempt,
         isFallbackShown: false,
         isWaiting: false,
+      });
+
+      break;
+    }
+    case "retry-reset": {
+      updateState({
+        ...currentState,
+        currentAttempt: 0,
+        isFallbackShown: false,
+        isWaiting: false,
+        lastResetRetryId: event.previousRetryId,
+        lastRetryResetTime: Date.now(),
       });
 
       break;

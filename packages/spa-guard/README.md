@@ -14,13 +14,15 @@ Peer dependencies vary by integration - see sections below for specific requirem
 
 - ✅ **Automatic chunk load error detection** - Handles `vite:preloadError`, dynamic imports, and chunk failures across Chrome, Firefox, and Safari
 - ✅ **Intelligent retry with cache busting** - Uses query parameters with UUID to bypass HTML cache after deployments
+- ✅ **Smart retry cycle reset** - Automatically resets retry cycle when enough time has passed since last reload
 - ✅ **Configurable retry delays** - Flexible delay arrays (e.g., `[1000, 2000, 5000]`) instead of simple max attempts
+- ✅ **Infinite loop protection** - Prevents rapid retry resets with configurable minimum time between resets
 - ✅ **Graceful fallback UI** - Shows user-friendly error screen after all retry attempts are exhausted
 - ✅ **Configurable injection target** - Inject fallback UI into any element via CSS selector (default: `body`)
 - ✅ **Error filtering** - Filter out specific errors from logging and reporting via `ignoredErrors` option
 - ✅ **Deep error serialization** - Captures detailed error information for server-side analysis
 - ✅ **Smart beacon reporting** - Sends error reports only after retry exhaustion to prevent spam
-- ✅ **Dual build system** - Production minified (5KB) and trace verbose (10KB) builds for different environments
+- ✅ **Dual build system** - Production minified (~5.9 KB) and trace minified (~7.3 KB) builds for different environments
 - ✅ **Global error listeners** - Captures `error`, `unhandledrejection`, and `securitypolicyviolation` events
 - ✅ **Vite plugin for inline script injection** - Runs before all chunks to catch early errors
 - ✅ **HTML minification** - Automatically minifies fallback HTML to reduce bundle size
@@ -138,6 +140,48 @@ reloadDelays: [1000, 2000, 5000]; // Default
 - **Attempt 3**: Wait 5000ms (5s) → reload with `?spaGuardRetryAttempt=3`
 - **Exhausted**: Show fallback UI, send beacon to server
 
+### Smart Retry Cycle Reset
+
+When `enableRetryReset: true` (default), spa-guard automatically resets the retry cycle if enough time has passed since the last reload. This prevents retry attempts from accumulating unnecessarily.
+
+**How it works:**
+
+1. User is on `?spaGuardRetryAttempt=2` after waiting 2 seconds for a reload
+2. User successfully uses the app for 5 seconds (longer than the retry delay)
+3. A new error occurs
+4. Instead of continuing to attempt 3, spa-guard:
+   - Clears retry parameters from URL (without page reload)
+   - Starts a fresh retry cycle from attempt 0
+   - Generates a new retry ID
+
+**Benefits:**
+
+- Clean URLs when retries are successful
+- Each error context gets its own independent retry cycle
+- Better user experience for long-running sessions
+
+**Infinite loop protection:**
+
+The `minTimeBetweenResets` option (default: 5000ms) prevents infinite reset loops by ensuring a reset can only happen if the previous reset was at least this many milliseconds ago.
+
+**Example:**
+
+```typescript
+spaGuardVitePlugin({
+  enableRetryReset: true, // Enable smart reset (default)
+  minTimeBetweenResets: 5000, // Minimum 5s between resets (default)
+  reloadDelays: [1000, 2000, 5000],
+});
+```
+
+**Disable if needed:**
+
+```typescript
+spaGuardVitePlugin({
+  enableRetryReset: false, // Keep old behavior - retry params persist
+});
+```
+
 ### Secure Random ID Generation
 
 Three-tier fallback chain for maximum compatibility:
@@ -159,6 +203,8 @@ spaGuardVitePlugin({
   // Retry configuration
   reloadDelays: [1000, 2000, 5000], // Array of delays in milliseconds
   useRetryId: true, // Use query parameters for cache busting (default: true)
+  enableRetryReset: true, // Auto-reset retry cycle when enough time passes (default: true)
+  minTimeBetweenResets: 5000, // Min time between retry resets in ms (default: 5000)
 
   // Fallback UI configuration
   fallback: {
@@ -198,6 +244,8 @@ spaGuardVitePlugin({
 interface Options {
   reloadDelays?: number[]; // Array of retry delays in ms (default: [1000, 2000, 5000])
   useRetryId?: boolean; // Use query params for cache busting (default: true)
+  enableRetryReset?: boolean; // Auto-reset retry cycle when enough time passes (default: true)
+  minTimeBetweenResets?: number; // Min time between retry resets to prevent loops (default: 5000)
 
   fallback?: {
     html?: string; // Custom error UI HTML (default: basic error screen)
@@ -222,6 +270,8 @@ interface VitePluginOptions extends Options {
 {
   reloadDelays: [1000, 2000, 5000],
   useRetryId: true,
+  enableRetryReset: true,
+  minTimeBetweenResets: 5000,
   fallback: {
     html: `
       <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
@@ -505,6 +555,8 @@ interface FastifySPAGuardOptions {
 interface Options {
   reloadDelays?: number[]; // Retry delays in ms (default: [1000, 2000, 5000])
   useRetryId?: boolean; // Use query params for cache busting (default: true)
+  enableRetryReset?: boolean; // Auto-reset retry cycle when enough time passes (default: true)
+  minTimeBetweenResets?: number; // Min time between retry resets in ms (default: 5000)
 
   fallback?: {
     html?: string; // Custom error UI HTML
@@ -563,7 +615,7 @@ From `@ovineko/spa-guard/schema/parse`:
 
 From `@ovineko/spa-guard/runtime`:
 
-- `getState()` - Get current spa-guard state (currentAttempt, isFallbackShown, isWaiting)
+- `getState()` - Get current spa-guard state (currentAttempt, isFallbackShown, isWaiting, lastRetryResetTime, lastResetRetryId)
 - `subscribeToState(callback)` - Subscribe to state changes, returns unsubscribe function
 - `SpaGuardState` - TypeScript type for state object
 
@@ -577,6 +629,8 @@ const state = getState();
 console.log("Current attempt:", state.currentAttempt);
 console.log("Is fallback shown:", state.isFallbackShown);
 console.log("Is waiting for retry:", state.isWaiting);
+console.log("Last retry reset time:", state.lastRetryResetTime);
+console.log("Last reset retry ID:", state.lastResetRetryId);
 
 // Subscribe to state changes
 const unsubscribe = subscribeToState((state) => {
@@ -621,8 +675,8 @@ import { fastifySPAGuard } from "@ovineko/spa-guard/fastify";
 
 ## Build Sizes
 
-- **Production:** `dist-inline/index.js` ~5KB minified (Terser)
-- **Trace:** `dist-inline-trace/index.js` ~10KB unminified (debug)
+- **Production:** `dist-inline/index.js` ~5.9 KB minified (Terser)
+- **Trace:** `dist-inline-trace/index.js` ~7.3 KB minified (Terser)
 - **Main library:** `dist/` varies by export
 
 ## Advanced Usage

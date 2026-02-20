@@ -7,7 +7,11 @@ export type { SpaGuardState } from "../runtime";
 export const useSpaGuardState = () => {
   const [state, setState] = useState(() => {
     if (globalThis.window === undefined) {
-      return { currentAttempt: 0, isFallbackShown: false, isWaiting: false };
+      return {
+        currentAttempt: 0,
+        isFallbackShown: false,
+        isWaiting: false,
+      };
     }
     return getState();
   });
