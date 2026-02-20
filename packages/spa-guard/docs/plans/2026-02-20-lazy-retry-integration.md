@@ -128,11 +128,11 @@ interface Options {
 
 #### Task 3: Интегрировать retryImport с attemptReload при финальном провале
 
-- [ ] В [src/common/retryImport.ts](../src/common/retryImport.ts) добавить проверку `callReloadOnFailure` из options
-- [ ] После финального reject в `retryImport` проверить `isChunkError(error)` (импортировать из [src/common/isChunkError.ts](../src/common/isChunkError.ts))
-- [ ] Если это chunk error и `callReloadOnFailure === true` → вызвать `attemptReload(error)` из [src/common/reload.ts](../src/common/reload.ts)
-- [ ] Убедиться что error всё равно propagate дальше (throw) после вызова attemptReload
-- [ ] Проверить в браузере: провал lazy import должен триггерить page reload
+- [x] В [src/common/retryImport.ts](../src/common/retryImport.ts) добавить проверку `callReloadOnFailure` из options
+- [x] После финального reject в `retryImport` проверить `isChunkError(error)` (импортировать из [src/common/isChunkError.ts](../src/common/isChunkError.ts))
+- [x] Если это chunk error и `callReloadOnFailure === true` → вызвать `attemptReload(error)` из [src/common/reload.ts](../src/common/reload.ts)
+- [x] Убедиться что error всё равно propagate дальше (throw) после вызова attemptReload
+- [x] Проверить в браузере: провал lazy import должен триггерить page reload
 
 #### Task 4: Создать React lazyWithRetry функцию
 

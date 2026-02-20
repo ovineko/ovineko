@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("./reload", () => ({
+  attemptReload: vi.fn(),
+}));
+
+import { attemptReload } from "./reload";
 import { retryImport } from "./retryImport";
 
 describe("retryImport", () => {
@@ -109,5 +114,91 @@ describe("retryImport", () => {
     expect(onRetry).toHaveBeenNthCalledWith(3, 3, 300);
 
     vi.useRealTimers();
+  });
+
+  describe("callReloadOnFailure", () => {
+    it("calls attemptReload when all attempts fail with a chunk error and callReloadOnFailure is true", async () => {
+      vi.useFakeTimers();
+      const mockAttemptReload = vi.mocked(attemptReload);
+      mockAttemptReload.mockClear();
+
+      const error = new Error("Failed to fetch dynamically imported module");
+      const importFn = vi.fn().mockRejectedValue(error);
+
+      const promise = retryImport(importFn, [100], undefined, true);
+      promise.catch(() => {});
+
+      await vi.runAllTimersAsync();
+
+      await expect(promise).rejects.toThrow("Failed to fetch dynamically imported module");
+      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockAttemptReload).toHaveBeenCalledWith(error);
+
+      vi.useRealTimers();
+    });
+
+    it("does not call attemptReload when callReloadOnFailure is false", async () => {
+      vi.useFakeTimers();
+      const mockAttemptReload = vi.mocked(attemptReload);
+      mockAttemptReload.mockClear();
+
+      const error = new Error("Failed to fetch dynamically imported module");
+      const importFn = vi.fn().mockRejectedValue(error);
+
+      const promise = retryImport(importFn, [100], undefined, false);
+      promise.catch(() => {});
+
+      await vi.runAllTimersAsync();
+
+      await expect(promise).rejects.toThrow("Failed to fetch dynamically imported module");
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+
+      vi.useRealTimers();
+    });
+
+    it("does not call attemptReload when callReloadOnFailure is undefined", async () => {
+      vi.useFakeTimers();
+      const mockAttemptReload = vi.mocked(attemptReload);
+      mockAttemptReload.mockClear();
+
+      const error = new Error("Failed to fetch dynamically imported module");
+      const importFn = vi.fn().mockRejectedValue(error);
+
+      const promise = retryImport(importFn, [100]);
+      promise.catch(() => {});
+
+      await vi.runAllTimersAsync();
+
+      await expect(promise).rejects.toThrow("Failed to fetch dynamically imported module");
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+
+      vi.useRealTimers();
+    });
+
+    it("does not call attemptReload for non-chunk errors even when callReloadOnFailure is true", async () => {
+      const mockAttemptReload = vi.mocked(attemptReload);
+      mockAttemptReload.mockClear();
+
+      const error = new Error("SyntaxError: unexpected token");
+      const importFn = vi.fn().mockRejectedValue(error);
+
+      await expect(retryImport(importFn, [], undefined, true)).rejects.toThrow(
+        "SyntaxError: unexpected token",
+      );
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+    });
+
+    it("still throws error after calling attemptReload", async () => {
+      const mockAttemptReload = vi.mocked(attemptReload);
+      mockAttemptReload.mockClear();
+
+      const error = new Error("Failed to fetch dynamically imported module");
+      const importFn = vi.fn().mockRejectedValue(error);
+
+      await expect(retryImport(importFn, [], undefined, true)).rejects.toThrow(
+        "Failed to fetch dynamically imported module",
+      );
+      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+    });
   });
 });

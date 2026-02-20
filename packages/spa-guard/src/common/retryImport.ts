@@ -1,3 +1,6 @@
+import { isChunkError } from "./isChunkError";
+import { attemptReload } from "./reload";
+
 const wait = (ms: number): Promise<void> =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -9,6 +12,7 @@ const wait = (ms: number): Promise<void> =>
  * @param importFn - The function that performs the dynamic import
  * @param delays - Array of delays in milliseconds. Each entry represents one retry attempt.
  * @param onRetry - Optional callback called before each retry attempt
+ * @param callReloadOnFailure - If true and all retries fail with a chunk error, calls attemptReload before rethrowing
  * @returns Promise that resolves with the import result or rejects after all attempts are exhausted
  *
  * @example
@@ -21,6 +25,7 @@ export const retryImport = async <T>(
   importFn: () => Promise<T>,
   delays: number[],
   onRetry?: (attempt: number, delay: number) => void,
+  callReloadOnFailure?: boolean,
 ): Promise<T> => {
   let lastError: Error = new Error("Import failed after all retry attempts");
 
@@ -40,6 +45,10 @@ export const retryImport = async <T>(
       onRetry?.(attempt + 1, currentDelay);
       await wait(currentDelay);
     }
+  }
+
+  if (callReloadOnFailure === true && isChunkError(lastError)) {
+    attemptReload(lastError);
   }
 
   throw lastError;
