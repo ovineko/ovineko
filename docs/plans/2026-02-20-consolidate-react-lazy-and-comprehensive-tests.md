@@ -134,18 +134,18 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 4: Add tests for ErrorBoundary component
 
-- [ ] Create `src/react-error-boundary/ErrorBoundary.test.tsx`
-- [ ] Write tests for basic error catching (child throws → fallback rendered)
-- [ ] Write tests for chunk error detection (isChunkError prop in FallbackProps)
-- [ ] Write tests for auto-retry on chunk errors (autoRetryChunkErrors option)
-- [ ] Write tests for resetError functionality (error cleared → children re-render)
-- [ ] Write tests for resetKeys triggering reset
-- [ ] Write tests for custom fallback components (fallback, fallbackRender props)
-- [ ] Write tests for onError callback invocation
-- [ ] Write tests for sendBeaconOnError integration
-- [ ] Write tests for FallbackProps passed to fallbackRender (all fields present and correct)
-- [ ] Write tests for edge cases (no fallback provided, error in fallback, error during reset)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/react-error-boundary/ErrorBoundary.test.tsx`
+- [x] Write tests for basic error catching (child throws → fallback rendered)
+- [x] Write tests for chunk error detection (isChunkError prop in FallbackProps)
+- [x] Write tests for auto-retry on chunk errors (autoRetryChunkErrors option)
+- [x] Write tests for resetError functionality (error cleared → children re-render)
+- [x] Write tests for resetKeys triggering reset
+- [x] Write tests for custom fallback components (fallback, fallbackRender props)
+- [x] Write tests for onError callback invocation
+- [x] Write tests for sendBeaconOnError integration
+- [x] Write tests for FallbackProps passed to fallbackRender (all fields present and correct)
+- [x] Write tests for edge cases (no fallback provided, error in fallback, error during reset)
+- [x] Run project tests - must pass before next task
 
 ### Task 5: Add tests for ErrorBoundaryReactRouter component
 
