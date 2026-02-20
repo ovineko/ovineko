@@ -13,6 +13,7 @@ function getConfig(config: config.Config) {
   "extends": ["./node_modules/@shibanet0/datamitsu-config/.oxlintrc.json"],
   "rules": {
     "new-cap": "off",
+    "max-statements":"off",
     "no-duplicate-imports": "off",
     "unicorn/prefer-top-level-await": "off",
     "typescript/no-extraneous-class": "off"
