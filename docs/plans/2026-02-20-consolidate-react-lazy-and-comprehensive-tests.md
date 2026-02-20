@@ -207,14 +207,14 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 10: Add tests for sendBeacon
 
-- [ ] Create `src/common/sendBeacon.test.ts`
-- [ ] Write tests for beacon endpoint construction (reportBeacon.endpoint option)
-- [ ] Write tests for beacon payload structure (error, userAgent, timestamp, etc.)
-- [ ] Write tests for navigator.sendBeacon invocation
-- [ ] Write tests for fetch fallback when sendBeacon unavailable
-- [ ] Write tests for error serialization integration
-- [ ] Write tests for edge cases (no endpoint configured, sendBeacon fails, network offline)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/common/sendBeacon.test.ts`
+- [x] Write tests for beacon endpoint construction (reportBeacon.endpoint option)
+- [x] Write tests for beacon payload structure (error, userAgent, timestamp, etc.)
+- [x] Write tests for navigator.sendBeacon invocation
+- [x] Write tests for fetch fallback when sendBeacon unavailable
+- [x] Write tests for error serialization integration
+- [x] Write tests for edge cases (no endpoint configured, sendBeacon fails, network offline)
+- [x] Run project tests - must pass before next task
 
 ### Task 11: Add tests for error filtering
 
