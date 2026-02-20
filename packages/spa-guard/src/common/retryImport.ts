@@ -21,13 +21,25 @@ const wait = (ms: number, signal?: AbortSignal): Promise<void> =>
     );
   });
 
+/**
+ * Options for configuring the retry behaviour of {@link retryImport}.
+ */
 export interface RetryImportOptions {
   /**
    * If true and all retries fail with a chunk error, calls attemptReload before rethrowing.
    * @default false
    */
   callReloadOnFailure?: boolean;
-  /** Optional callback called before each retry attempt */
+  /**
+   * Optional callback invoked before each retry attempt.
+   * Useful for logging or analytics.
+   *
+   * @param attempt - The 1-based attempt number (1 = first retry)
+   * @param delay - The delay in milliseconds before this retry attempt
+   *
+   * @example
+   * onRetry: (attempt, delay) => console.log(`Retry ${attempt} after ${delay}ms`)
+   */
   onRetry?: (attempt: number, delay: number) => void;
   /**
    * AbortSignal to cancel pending retries and clear timers.

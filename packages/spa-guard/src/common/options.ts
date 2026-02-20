@@ -47,21 +47,25 @@ export interface Options {
    */
   ignoredErrors?: string[];
 
+  /**
+   * Options for the lazyWithRetry module-level retry logic.
+   * Controls retry behaviour for dynamic imports before falling back to a full page reload.
+   */
   lazyRetry?: {
     /**
-     * Вызывать attemptReload() после исчерпания всех retry попыток динамических импортов.
-     * Если true - после провала всех retryDelays включается логика page reload.
-     * Если false - просто throw error в error boundary без reload.
+     * Call attemptReload() after all retry attempts for dynamic imports are exhausted.
+     * If true, triggers page reload logic after all retryDelays fail.
+     * If false, only throws the error to the error boundary without a reload.
      * @default true
      */
     callReloadOnFailure?: boolean;
 
     /**
-     * Массив задержек в миллисекундах для retry попыток динамических импортов.
-     * Каждый элемент массива = одна retry попытка с указанной задержкой.
-     * Количество элементов = количество retry попыток.
+     * Array of delays in milliseconds for dynamic import retry attempts.
+     * Each element represents one retry attempt with the given delay.
+     * The number of elements determines the total number of retry attempts.
      * @default [1000, 2000]
-     * @example [500, 1500, 3000] // 3 попытки: 500ms, 1.5s, 3s
+     * @example [500, 1500, 3000] // 3 attempts: 500ms, 1.5s, 3s
      */
     retryDelays?: number[];
   };
