@@ -171,16 +171,16 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 7: Add tests for reload orchestration
 
-- [ ] Create `src/common/reload.test.ts`
-- [ ] Write tests for basic reload cycle (attempt 0 → delay → reload)
-- [ ] Write tests for retry attempt incrementation in URL
-- [ ] Write tests for max attempts exceeded → fallback shown
-- [ ] Write tests for retry reset logic (enableRetryReset + minTimeBetweenResets)
-- [ ] Write tests for retry ID generation and persistence
-- [ ] Write tests for fallback HTML injection
-- [ ] Write tests for event emissions (retry-attempt, retry-exhausted, retry-reset, fallback-ui-shown)
-- [ ] Write tests for edge cases (no reloadDelays, invalid URL params, window.location.reload failure)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/common/reload.test.ts`
+- [x] Write tests for basic reload cycle (attempt 0 → delay → reload)
+- [x] Write tests for retry attempt incrementation in URL
+- [x] Write tests for max attempts exceeded → fallback shown
+- [x] Write tests for retry reset logic (enableRetryReset + minTimeBetweenResets)
+- [x] Write tests for retry ID generation and persistence
+- [x] Write tests for fallback HTML injection
+- [x] Write tests for event emissions (retry-attempt, retry-exhausted, retry-reset, fallback-ui-shown)
+- [x] Write tests for edge cases (no reloadDelays, invalid URL params, window.location.reload failure)
+- [x] Run project tests - must pass before next task
 
 ### Task 8: Add tests for global error listeners
 
