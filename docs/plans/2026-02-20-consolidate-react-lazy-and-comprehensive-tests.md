@@ -268,14 +268,14 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 16: Integration tests for end-to-end error flow
 
-- [ ] Create `test/integration/error-flow.test.tsx`
-- [ ] Write test: chunk error in lazy component → retry → success
-- [ ] Write test: chunk error in lazy component → retry exhausted → reload
-- [ ] Write test: chunk error in ErrorBoundary → auto-retry → success
-- [ ] Write test: non-chunk error → beacon sent
-- [ ] Write test: max retries → fallback UI shown
-- [ ] Write test: retry reset after minTimeBetweenResets
-- [ ] Run project tests - must pass before next task
+- [x] Create `test/integration/error-flow.test.tsx`
+- [x] Write test: chunk error in lazy component → retry → success
+- [x] Write test: chunk error in lazy component → retry exhausted → reload
+- [x] Write test: chunk error in ErrorBoundary → auto-retry → success
+- [x] Write test: non-chunk error → beacon sent
+- [x] Write test: max retries → fallback UI shown
+- [x] Write test: retry reset after minTimeBetweenResets
+- [x] Run project tests - must pass before next task
 
 ### Task 17: Verify acceptance criteria
 
