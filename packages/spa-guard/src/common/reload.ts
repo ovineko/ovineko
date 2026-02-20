@@ -1,5 +1,5 @@
 import { RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
-import { emitEvent } from "./events/internal";
+import { emitEvent, isDefaultRetryEnabled } from "./events/internal";
 import {
   clearLastReloadTime,
   getLastReloadTime,
@@ -36,6 +36,18 @@ export const attemptReload = (error: unknown): void => {
 
   let currentAttempt = retryState ? retryState.retryAttempt : 0;
   let retryId = retryState?.retryId ?? generateRetryId();
+
+  const retryEnabled = isDefaultRetryEnabled();
+
+  emitEvent({
+    error,
+    isRetrying: retryEnabled && currentAttempt < reloadDelays.length,
+    name: "chunk-error",
+  });
+
+  if (!retryEnabled) {
+    return;
+  }
 
   if (
     enableRetryReset &&

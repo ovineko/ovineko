@@ -19,8 +19,10 @@ const loadModule = async () => {
 
 describe("common/checkVersion", () => {
   let mod: Awaited<ReturnType<typeof loadModule>>;
+  let originalFetch: typeof globalThis.fetch;
 
   beforeEach(async () => {
+    originalFetch = globalThis.fetch;
     vi.useFakeTimers();
     vi.resetModules();
     clearWindowOptions();
@@ -30,6 +32,7 @@ describe("common/checkVersion", () => {
 
   afterEach(() => {
     mod._resetForTesting();
+    globalThis.fetch = originalFetch;
     vi.useRealTimers();
     vi.restoreAllMocks();
     clearWindowOptions();
@@ -77,16 +80,18 @@ describe("common/checkVersion", () => {
 
     it("is a no-op in SSR (no window)", async () => {
       const originalWindow = globalThis.window;
-      // @ts-expect-error - simulate SSR
-      delete globalThis.window;
-      vi.resetModules();
+      try {
+        // @ts-expect-error - simulate SSR
+        delete globalThis.window;
+        vi.resetModules();
 
-      const ssrMod = await loadModule();
+        const ssrMod = await loadModule();
 
-      // Should not throw
-      expect(() => ssrMod.startVersionCheck()).not.toThrow();
-
-      globalThis.window = originalWindow;
+        // Should not throw
+        expect(() => ssrMod.startVersionCheck()).not.toThrow();
+      } finally {
+        globalThis.window = originalWindow;
+      }
     });
   });
 
@@ -95,6 +100,7 @@ describe("common/checkVersion", () => {
       setWindowOptions({ checkVersion: { interval: 1000, mode: "html" }, version: "1.0.0" });
 
       globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
         text: async () => 'window.__SPA_GUARD_OPTIONS__={"version":"1.0.1","other":"data"}',
       });
 
@@ -116,6 +122,7 @@ describe("common/checkVersion", () => {
       setWindowOptions({ checkVersion: { interval: 1000, mode: "html" }, version: "1.0.0" });
 
       globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
         text: async () => 'window.__SPA_GUARD_OPTIONS__={"version":"1.0.0"}',
       });
 
@@ -132,6 +139,7 @@ describe("common/checkVersion", () => {
       setWindowOptions({ checkVersion: { interval: 1000, mode: "html" }, version: "1.0.0" });
 
       globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
         text: async () => 'window.__SPA_GUARD_OPTIONS__={"version":"1.0.0"}',
       });
 
@@ -158,6 +166,7 @@ describe("common/checkVersion", () => {
 
       globalThis.fetch = vi.fn().mockResolvedValue({
         json: async () => ({ version: "1.0.1" }),
+        ok: true,
       });
 
       const dispatchEvent = vi.spyOn(globalThis, "dispatchEvent");
@@ -182,6 +191,7 @@ describe("common/checkVersion", () => {
 
       globalThis.fetch = vi.fn().mockResolvedValue({
         json: async () => ({ version: "1.0.0" }),
+        ok: true,
       });
 
       const dispatchEvent = vi.spyOn(globalThis, "dispatchEvent");
@@ -201,6 +211,7 @@ describe("common/checkVersion", () => {
 
       globalThis.fetch = vi.fn().mockResolvedValue({
         json: async () => ({ version: "1.0.0" }),
+        ok: true,
       });
 
       mod.startVersionCheck();
@@ -250,6 +261,7 @@ describe("common/checkVersion", () => {
         .mockRejectedValueOnce(new Error("Network error"))
         .mockResolvedValueOnce({
           json: async () => ({ version: "1.0.1" }),
+          ok: true,
         });
 
       const dispatchEvent = vi.spyOn(globalThis, "dispatchEvent");
@@ -279,6 +291,7 @@ describe("common/checkVersion", () => {
 
       globalThis.fetch = vi.fn().mockResolvedValue({
         json: async () => ({ version: "1.0.1" }),
+        ok: true,
       });
 
       mod.startVersionCheck();
@@ -325,6 +338,7 @@ describe("common/checkVersion", () => {
     it("returns null and warns when HTML does not contain version", async () => {
       setWindowOptions({});
       globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
         text: async () => "<html><head></head><body>Hello</body></html>",
       });
       const consoleWarn = vi.spyOn(console, "warn");
@@ -340,6 +354,7 @@ describe("common/checkVersion", () => {
     it("parses version from HTML with typical serialized options format", async () => {
       setWindowOptions({});
       globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
         text: async () =>
           'window.__SPA_GUARD_OPTIONS__={"checkVersion":{"interval":60000,"mode":"html"},"version":"2.5.0"};/* script */',
       });
@@ -353,6 +368,7 @@ describe("common/checkVersion", () => {
       setWindowOptions({ checkVersion: { endpoint: "/api/version" } });
       globalThis.fetch = vi.fn().mockResolvedValue({
         json: async () => ({ buildTime: "2025-01-01", version: "3.0.0" }),
+        ok: true,
       });
 
       const result = await mod.fetchRemoteVersion("json");
@@ -364,11 +380,44 @@ describe("common/checkVersion", () => {
       setWindowOptions({ checkVersion: { endpoint: "/api/version" } });
       globalThis.fetch = vi.fn().mockResolvedValue({
         json: async () => ({ buildTime: "2025-01-01" }),
+        ok: true,
       });
 
       const result = await mod.fetchRemoteVersion("json");
 
       expect(result).toBeNull();
+    });
+
+    it("returns null and warns on non-OK HTTP response in JSON mode", async () => {
+      setWindowOptions({ checkVersion: { endpoint: "/api/version" } });
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+      const consoleWarn = vi.spyOn(console, "warn");
+
+      const result = await mod.fetchRemoteVersion("json");
+
+      expect(result).toBeNull();
+      expect(consoleWarn).toHaveBeenCalledWith(
+        expect.stringContaining("Version check HTTP error: 500"),
+      );
+    });
+
+    it("returns null and warns on non-OK HTTP response in HTML mode", async () => {
+      setWindowOptions({});
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
+      const consoleWarn = vi.spyOn(console, "warn");
+
+      const result = await mod.fetchRemoteVersion("html");
+
+      expect(result).toBeNull();
+      expect(consoleWarn).toHaveBeenCalledWith(
+        expect.stringContaining("Version check HTTP error: 404"),
+      );
     });
   });
 });

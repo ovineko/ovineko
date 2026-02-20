@@ -18,6 +18,10 @@ export const fetchRemoteVersion = async (mode: "html" | "json"): Promise<null | 
       cache: "no-store",
       headers: { Accept: "application/json" },
     });
+    if (!response.ok) {
+      console.warn(logMessage(`Version check HTTP error: ${response.status}`));
+      return null;
+    }
     const data = await response.json();
     return data.version ?? null;
   }
@@ -27,6 +31,10 @@ export const fetchRemoteVersion = async (mode: "html" | "json"): Promise<null | 
     cache: "no-store",
     headers: { Accept: "text/html" },
   });
+  if (!response.ok) {
+    console.warn(logMessage(`Version check HTTP error: ${response.status}`));
+    return null;
+  }
   const html = await response.text();
 
   // Parse: window.__SPA_GUARD_OPTIONS__={...,"version":"1.2.3",...}

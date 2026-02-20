@@ -37,7 +37,10 @@ const rule: Rule.RuleModule = {
             if (otherSpecifiers.length === 0) {
               yield fixer.replaceText(node, spaGuardLine);
             } else {
-              const remainingNames = otherSpecifiers.map((s) => {
+              const defaultSpec = otherSpecifiers.find((s) => s.type === "ImportDefaultSpecifier");
+              const namedSpecs = otherSpecifiers.filter((s) => s.type === "ImportSpecifier");
+
+              const namedNames = namedSpecs.map((s) => {
                 if (s.type === "ImportSpecifier" && s.imported.type === "Identifier") {
                   return s.imported.name === s.local.name
                     ? s.local.name
@@ -46,7 +49,14 @@ const rule: Rule.RuleModule = {
                 return s.local.name;
               });
 
-              const reactLine = `import { ${remainingNames.join(", ")} } from "react";`;
+              let reactLine: string;
+              if (defaultSpec && namedNames.length > 0) {
+                reactLine = `import ${defaultSpec.local.name}, { ${namedNames.join(", ")} } from "react";`;
+              } else if (defaultSpec) {
+                reactLine = `import ${defaultSpec.local.name} from "react";`;
+              } else {
+                reactLine = `import { ${namedNames.join(", ")} } from "react";`;
+              }
 
               yield fixer.replaceText(node, `${reactLine}\n${spaGuardLine}`);
             }

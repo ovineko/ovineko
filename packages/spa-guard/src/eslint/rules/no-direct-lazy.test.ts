@@ -39,6 +39,18 @@ ruleTester.run("no-direct-lazy", rule, {
       output:
         'import { useState, useEffect } from "react";\nimport { lazyWithRetry } from "@ovineko/spa-guard/react";',
     },
+    {
+      code: 'import React, { lazy } from "react";',
+      errors: [{ messageId: "noDirectLazy" }],
+      output:
+        'import React from "react";\nimport { lazyWithRetry } from "@ovineko/spa-guard/react";',
+    },
+    {
+      code: 'import React, { lazy, useState } from "react";',
+      errors: [{ messageId: "noDirectLazy" }],
+      output:
+        'import React, { useState } from "react";\nimport { lazyWithRetry } from "@ovineko/spa-guard/react";',
+    },
   ],
   valid: [
     {
