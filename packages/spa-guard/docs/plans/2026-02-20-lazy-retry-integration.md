@@ -154,11 +154,11 @@ interface Options {
 
 #### Task 6: Обновить tsup конфигурацию
 
-- [ ] Открыть [tsup.config.ts](../tsup.config.ts)
-- [ ] Добавить `src/react-lazy/index.tsx` в entry points массив
-- [ ] Убедиться что `splitting: true` и `dts: true` включены
-- [ ] Запустить `pnpm build` и проверить что `dist/react-lazy/` создается
-- [ ] Проверить что `.d.ts` типы генерируются корректно
+- [x] Открыть [tsup.config.ts](../tsup.config.ts)
+- [x] Добавить `src/react-lazy/index.tsx` в entry points массив
+- [x] Убедиться что `splitting: true` и `dts: true` включены
+- [x] Запустить `pnpm build` и проверить что `dist/react-lazy/` создается
+- [x] Проверить что `.d.ts` типы генерируются корректно
 
 #### Task 7: Создать пример использования и проверить в браузере
 
