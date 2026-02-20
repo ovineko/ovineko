@@ -149,14 +149,14 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 5: Add tests for ErrorBoundaryReactRouter component
 
-- [ ] Create `src/react-router/ErrorBoundaryReactRouter.test.tsx`
-- [ ] Write tests for useRouteError integration (route error → fallback rendered)
-- [ ] Write tests for chunk error detection in route errors
-- [ ] Write tests for auto-retry on route chunk errors
-- [ ] Write tests for custom fallback with route error context
-- [ ] Write tests for resetError navigation behavior
-- [ ] Write tests for edge cases (no route error, non-Error objects)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/react-router/ErrorBoundaryReactRouter.test.tsx`
+- [x] Write tests for useRouteError integration (route error → fallback rendered)
+- [x] Write tests for chunk error detection in route errors
+- [x] Write tests for auto-retry on route chunk errors
+- [x] Write tests for custom fallback with route error context
+- [x] Write tests for resetError navigation behavior
+- [x] Write tests for edge cases (no route error, non-Error objects)
+- [x] Run project tests - must pass before next task
 
 ### Task 6: Add tests for handleErrorWithSpaGuard
 
