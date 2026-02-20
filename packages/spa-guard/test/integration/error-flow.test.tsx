@@ -150,9 +150,6 @@ beforeEach(() => {
   setupMockLocation();
   sessionStorage.clear();
   vi.mocked(getOptions).mockReturnValue(makeOptions());
-  vi.spyOn(console, "warn").mockImplementation(() => {});
-  vi.spyOn(console, "error").mockImplementation(() => {});
-  vi.spyOn(console, "log").mockImplementation(() => {});
 });
 
 afterEach(() => {
