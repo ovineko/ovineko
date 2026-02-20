@@ -160,14 +160,14 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 6: Add tests for handleErrorWithSpaGuard
 
-- [ ] Create `src/common/handleErrorWithSpaGuard.test.ts`
-- [ ] Write tests for chunk error → attemptReload path
-- [ ] Write tests for non-chunk error → sendBeacon path
-- [ ] Write tests for ignored errors → no action taken
-- [ ] Write tests for error serialization before passing to reload/beacon
-- [ ] Write tests for event emission on error handling
-- [ ] Write tests for edge cases (null error, Error without message, non-Error objects)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/common/handleErrorWithSpaGuard.test.ts`
+- [x] Write tests for chunk error → attemptReload path
+- [x] Write tests for non-chunk error → sendBeacon path
+- [x] Write tests for ignored errors → no action taken
+- [x] Write tests for error serialization before passing to reload/beacon
+- [x] Write tests for event emission on error handling
+- [x] Write tests for edge cases (null error, Error without message, non-Error objects)
+- [x] Run project tests - must pass before next task
 
 ### Task 7: Add tests for reload orchestration
 
