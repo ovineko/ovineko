@@ -202,15 +202,15 @@ interface Options {
 
 #### Task 11: Написать unit тесты для retryImport
 
-- [ ] Тест: успешный import на первой попытке (без retry)
-- [ ] Тест: успешный import на второй попытке (1 retry)
-- [ ] Тест: провал всех попыток → reject с последней ошибкой
-- [ ] Тест: retryDelays массив корректно применяется (проверка timing через fake timers)
-- [ ] Тест: onRetry callback вызывается с правильными параметрами (attempt number, delay)
-- [ ] Тест: chunk error триггерит attemptReload при callReloadOnFailure=true
-- [ ] Тест: не-chunk error НЕ триггерит attemptReload
-- [ ] Тест: callReloadOnFailure=false НЕ вызывает attemptReload даже при chunk error
-- [ ] Запустить `pnpm test` - все тесты должны проходить
+- [x] Тест: успешный import на первой попытке (без retry)
+- [x] Тест: успешный import на второй попытке (1 retry)
+- [x] Тест: провал всех попыток → reject с последней ошибкой
+- [x] Тест: retryDelays массив корректно применяется (проверка timing через fake timers)
+- [x] Тест: onRetry callback вызывается с правильными параметрами (attempt number, delay)
+- [x] Тест: chunk error триггерит attemptReload при callReloadOnFailure=true
+- [x] Тест: не-chunk error НЕ триггерит attemptReload
+- [x] Тест: callReloadOnFailure=false НЕ вызывает attemptReload даже при chunk error
+- [x] Запустить `pnpm test` - все тесты должны проходить
 
 #### Task 12: Написать тесты для lazyWithRetry
 
