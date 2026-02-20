@@ -162,13 +162,13 @@ interface Options {
 
 #### Task 7: Создать пример использования и проверить в браузере
 
-- [ ] Создать тестовый React компонент в корне проекта для проверки (временный файл)
-- [ ] Использовать `lazyWithRetry(() => import('./TestComponent'))` с глобальными опциями
-- [ ] Использовать `lazyWithRetry(() => import('./TestComponent2'), { retryDelays: [500, 1500] })` с override
-- [ ] Открыть DevTools Network → установить throttling "Slow 3G"
-- [ ] Проверить что retry попытки видны в console (через onRetry callback)
-- [ ] Симулировать провал всех попыток (offline mode) и проверить что срабатывает attemptReload (URL параметры `spaGuardRetryId`, `spaGuardRetryAttempt` должны появиться)
-- [ ] Удалить тестовый файл после проверки
+- [x] Создать тестовый React компонент в корне проекта для проверки (временный файл)
+- [x] Использовать `lazyWithRetry(() => import('./TestComponent'))` с глобальными опциями
+- [x] Использовать `lazyWithRetry(() => import('./TestComponent2'), { retryDelays: [500, 1500] })` с override
+- [x] Открыть DevTools Network → установить throttling "Slow 3G"
+- [x] Проверить что retry попытки видны в console (через onRetry callback)
+- [x] Симулировать провал всех попыток (offline mode) и проверить что срабатывает attemptReload (URL параметры `spaGuardRetryId`, `spaGuardRetryAttempt` должны появиться)
+- [x] Удалить тестовый файл после проверки
 
 #### Task 8: Интеграция с event system
 
