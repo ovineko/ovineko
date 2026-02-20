@@ -184,15 +184,15 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 8: Add tests for global error listeners
 
-- [ ] Create `src/common/listen/internal.test.ts`
-- [ ] Write tests for window.error listener (sync errors captured)
-- [ ] Write tests for unhandledrejection listener (promise rejections captured)
-- [ ] Write tests for securitypolicyviolation listener (CSP errors captured)
-- [ ] Write tests for vite:preloadError listener (Vite chunk errors captured)
-- [ ] Write tests for chunk error → handleErrorWithSpaGuard integration
-- [ ] Write tests for listener cleanup on unlisten()
-- [ ] Write tests for edge cases (listener called with missing data, multiple listeners, listener errors)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/common/listen/internal.test.ts`
+- [x] Write tests for window.error listener (sync errors captured)
+- [x] Write tests for unhandledrejection listener (promise rejections captured)
+- [x] Write tests for securitypolicyviolation listener (CSP errors captured)
+- [x] Write tests for vite:preloadError listener (Vite chunk errors captured)
+- [x] Write tests for chunk error → handleErrorWithSpaGuard integration
+- [x] Write tests for listener cleanup on unlisten()
+- [x] Write tests for edge cases (listener called with missing data, multiple listeners, listener errors)
+- [x] Run project tests - must pass before next task
 
 ### Task 9: Add tests for URL state management
 
