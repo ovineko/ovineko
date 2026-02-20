@@ -59,7 +59,7 @@ describe("retryImport", () => {
       .mockResolvedValue({ default: "module" });
     const onRetry = vi.fn();
 
-    const promise = retryImport(importFn, [500, 1500], onRetry);
+    const promise = retryImport(importFn, [500, 1500], { onRetry });
 
     await vi.runAllTimersAsync();
 
@@ -75,7 +75,7 @@ describe("retryImport", () => {
     const importFn = vi.fn().mockResolvedValue({ default: "module" });
     const onRetry = vi.fn();
 
-    await retryImport(importFn, [1000], onRetry);
+    await retryImport(importFn, [1000], { onRetry });
 
     expect(onRetry).not.toHaveBeenCalled();
   });
@@ -103,7 +103,7 @@ describe("retryImport", () => {
     const importFn = vi.fn().mockRejectedValue(error);
     const onRetry = vi.fn();
 
-    const promise = retryImport(importFn, [100, 200, 300], onRetry);
+    const promise = retryImport(importFn, [100, 200, 300], { onRetry });
     promise.catch(() => {});
 
     await vi.runAllTimersAsync();
@@ -125,7 +125,7 @@ describe("retryImport", () => {
       const error = new Error("Failed to fetch dynamically imported module");
       const importFn = vi.fn().mockRejectedValue(error);
 
-      const promise = retryImport(importFn, [100], undefined, true);
+      const promise = retryImport(importFn, [100], { callReloadOnFailure: true });
       promise.catch(() => {});
 
       await vi.runAllTimersAsync();
@@ -145,7 +145,7 @@ describe("retryImport", () => {
       const error = new Error("Failed to fetch dynamically imported module");
       const importFn = vi.fn().mockRejectedValue(error);
 
-      const promise = retryImport(importFn, [100], undefined, false);
+      const promise = retryImport(importFn, [100], { callReloadOnFailure: false });
       promise.catch(() => {});
 
       await vi.runAllTimersAsync();
@@ -182,7 +182,7 @@ describe("retryImport", () => {
       const error = new Error("SyntaxError: unexpected token");
       const importFn = vi.fn().mockRejectedValue(error);
 
-      await expect(retryImport(importFn, [], undefined, true)).rejects.toThrow(
+      await expect(retryImport(importFn, [], { callReloadOnFailure: true })).rejects.toThrow(
         "SyntaxError: unexpected token",
       );
       expect(mockAttemptReload).not.toHaveBeenCalled();
@@ -195,7 +195,7 @@ describe("retryImport", () => {
       const error = new Error("Failed to fetch dynamically imported module");
       const importFn = vi.fn().mockRejectedValue(error);
 
-      await expect(retryImport(importFn, [], undefined, true)).rejects.toThrow(
+      await expect(retryImport(importFn, [], { callReloadOnFailure: true })).rejects.toThrow(
         "Failed to fetch dynamically imported module",
       );
       expect(mockAttemptReload).toHaveBeenCalledTimes(1);

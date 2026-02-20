@@ -195,10 +195,10 @@ interface Options {
 
 #### Task 10: Настроить test setup для react-lazy модуля
 
-- [ ] Создать [src/react-lazy/retryImport.test.ts](../src/react-lazy/retryImport.test.ts)
-- [ ] Настроить mock для `setTimeout` через `vi.useFakeTimers()`
-- [ ] Настроить mock для `attemptReload` функции
-- [ ] Создать helper функцию для mock import с контролируемыми fail/success
+- [x] Создать [src/react-lazy/retryImport.test.ts](../src/react-lazy/retryImport.test.ts)
+- [x] Настроить mock для `setTimeout` через `vi.useFakeTimers()`
+- [x] Настроить mock для `attemptReload` функции
+- [x] Создать helper функцию для mock import с контролируемыми fail/success
 
 #### Task 11: Написать unit тесты для retryImport
 

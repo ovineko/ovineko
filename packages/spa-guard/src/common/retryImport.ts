@@ -7,27 +7,36 @@ const wait = (ms: number): Promise<void> =>
     setTimeout(resolve, ms);
   });
 
+export interface RetryImportOptions {
+  /**
+   * If true and all retries fail with a chunk error, calls attemptReload before rethrowing.
+   * @default false
+   */
+  callReloadOnFailure?: boolean;
+  /** Optional callback called before each retry attempt */
+  onRetry?: (attempt: number, delay: number) => void;
+}
+
 /**
  * Retries an import function with configurable delays between attempts.
  *
  * @param importFn - The function that performs the dynamic import
  * @param delays - Array of delays in milliseconds. Each entry represents one retry attempt.
- * @param onRetry - Optional callback called before each retry attempt
- * @param callReloadOnFailure - If true and all retries fail with a chunk error, calls attemptReload before rethrowing
+ * @param options - Optional configuration for retry behaviour
  * @returns Promise that resolves with the import result or rejects after all attempts are exhausted
  *
  * @example
  * retryImport(() => import('./MyModule'), [1000, 2000])
- * retryImport(() => import('./MyModule'), [500, 1500], (attempt, delayMs) => {
- *   console.log(`Retry attempt ${attempt} after ${delayMs}ms`);
+ * retryImport(() => import('./MyModule'), [500, 1500], {
+ *   onRetry: (attempt, delayMs) => console.log(`Retry ${attempt} after ${delayMs}ms`),
  * })
  */
 export const retryImport = async <T>(
   importFn: () => Promise<T>,
   delays: number[],
-  onRetry?: (attempt: number, delay: number) => void,
-  callReloadOnFailure?: boolean,
+  options?: RetryImportOptions,
 ): Promise<T> => {
+  const { callReloadOnFailure, onRetry } = options ?? {};
   let lastError: Error = new Error("Import failed after all retry attempts");
 
   const totalAttempts = delays.length + 1;
