@@ -30,6 +30,11 @@ vi.mock("../shouldIgnore", () => ({
   shouldIgnoreMessages: vi.fn(),
 }));
 
+vi.mock("../events/internal", () => ({
+  isInitialized: vi.fn().mockReturnValue(false),
+  markInitialized: vi.fn(),
+}));
+
 import { isChunkError } from "../isChunkError";
 import { getOptions } from "../options";
 import { attemptReload } from "../reload";

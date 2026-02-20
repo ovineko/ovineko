@@ -51,13 +51,13 @@ Covers the missing parts of TODO item 2 (status: Partially implemented).
 - Modify: `packages/spa-guard/src/common/listen/internal.ts`
 - Modify: `packages/spa-guard/src/common/events/internal.test.ts`
 
-- [ ] add `initializedKey = Symbol.for(...)` and `internalConfigWindowKey = Symbol.for(...)` to `constants.ts`
-- [ ] add `InternalConfig` interface and rich event types (`chunk-error`, `retry-attempt`, `retry-exhausted`, `fallback-ui-shown`) to `events/types.ts`
-- [ ] add `internalConfig` shared state init to `events/internal.ts`
-- [ ] export `isInitialized`, `markInitialized`, `disableDefaultRetry`, `enableDefaultRetry`, `isDefaultRetryEnabled` from `events/internal.ts`
-- [ ] update `listenInternal` in `listen/internal.ts` to guard with `isInitialized()` / `markInitialized()`
-- [ ] add tests for new functions in `events/internal.test.ts` (disableDefaultRetry, isDefaultRetryEnabled, isInitialized, double-init prevention)
-- [ ] run `pnpm --filter @ovineko/spa-guard test` — must pass before task 3
+- [x] add `initializedKey = Symbol.for(...)` and `internalConfigWindowKey = Symbol.for(...)` to `constants.ts`
+- [x] add `InternalConfig` interface and rich event types (`chunk-error`, `retry-attempt`, `retry-exhausted`, `fallback-ui-shown`) to `events/types.ts`
+- [x] add `internalConfig` shared state init to `events/internal.ts`
+- [x] export `isInitialized`, `markInitialized`, `disableDefaultRetry`, `enableDefaultRetry`, `isDefaultRetryEnabled` from `events/internal.ts`
+- [x] update `listenInternal` in `listen/internal.ts` to guard with `isInitialized()` / `markInitialized()`
+- [x] add tests for new functions in `events/internal.test.ts` (disableDefaultRetry, isDefaultRetryEnabled, isInitialized, double-init prevention)
+- [x] run `pnpm --filter @ovineko/spa-guard test` — must pass before task 3
 
 ### Task 3: Version Checker Module
 

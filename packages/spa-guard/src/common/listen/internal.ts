@@ -1,3 +1,4 @@
+import { isInitialized, markInitialized } from "../events/internal";
 import { isChunkError } from "../isChunkError";
 import { logMessage } from "../log";
 import { getOptions } from "../options";
@@ -7,6 +8,11 @@ import { sendBeacon } from "../sendBeacon";
 import { shouldIgnoreMessages } from "../shouldIgnore";
 
 export const listenInternal = (serializeError: (error: unknown) => string) => {
+  if (isInitialized()) {
+    return;
+  }
+  markInitialized();
+
   const options = getOptions();
   const reloadDelays = options.reloadDelays ?? [];
   const retryState = getRetryStateFromUrl();

@@ -2,11 +2,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { SPAGuardEvent } from "./types";
 
-import { emitEvent, subscribe, subscribers } from "./internal";
+import {
+  disableDefaultRetry,
+  emitEvent,
+  enableDefaultRetry,
+  internalConfig,
+  isDefaultRetryEnabled,
+  isInitialized,
+  markInitialized,
+  subscribe,
+  subscribers,
+} from "./internal";
 
 describe("common/events/internal", () => {
   beforeEach(() => {
     subscribers.clear();
+    internalConfig.initialized = false;
+    internalConfig.defaultRetryEnabled = true;
+    internalConfig.inlineScriptLoaded = false;
   });
 
   afterEach(() => {
@@ -353,6 +366,130 @@ describe("common/events/internal", () => {
       const windowSet = (globalThis.window as any)?.[eventSubscribersWindowKey];
 
       expect(windowSet).toBe(subscribers);
+    });
+  });
+
+  describe("chunk-error event propagation", () => {
+    it("passes chunk-error event fields correctly to subscribers", () => {
+      const cb = vi.fn();
+      subscribe(cb);
+
+      const error = new Error("Failed to fetch dynamically imported module");
+      const event: SPAGuardEvent = {
+        error,
+        isRetrying: true,
+        name: "chunk-error",
+      };
+      emitEvent(event);
+
+      expect(cb).toHaveBeenCalledWith({
+        error,
+        isRetrying: true,
+        name: "chunk-error",
+      });
+    });
+
+    it("passes chunk-error with isRetrying=false when retry is disabled", () => {
+      const cb = vi.fn();
+      subscribe(cb);
+
+      const event: SPAGuardEvent = {
+        error: new Error("chunk error"),
+        isRetrying: false,
+        name: "chunk-error",
+      };
+      emitEvent(event);
+
+      expect(cb).toHaveBeenCalledWith(
+        expect.objectContaining({ isRetrying: false, name: "chunk-error" }),
+      );
+    });
+  });
+
+  describe("disableDefaultRetry() / enableDefaultRetry() / isDefaultRetryEnabled()", () => {
+    it("default retry is enabled by default", () => {
+      expect(isDefaultRetryEnabled()).toBe(true);
+    });
+
+    it("disableDefaultRetry sets defaultRetryEnabled to false", () => {
+      disableDefaultRetry();
+
+      expect(isDefaultRetryEnabled()).toBe(false);
+    });
+
+    it("enableDefaultRetry re-enables after disable", () => {
+      disableDefaultRetry();
+      expect(isDefaultRetryEnabled()).toBe(false);
+
+      enableDefaultRetry();
+      expect(isDefaultRetryEnabled()).toBe(true);
+    });
+
+    it("multiple disableDefaultRetry calls are idempotent", () => {
+      disableDefaultRetry();
+      disableDefaultRetry();
+      disableDefaultRetry();
+
+      expect(isDefaultRetryEnabled()).toBe(false);
+    });
+
+    it("multiple enableDefaultRetry calls are idempotent", () => {
+      enableDefaultRetry();
+      enableDefaultRetry();
+
+      expect(isDefaultRetryEnabled()).toBe(true);
+    });
+
+    it("disableDefaultRetry updates internalConfig directly", () => {
+      disableDefaultRetry();
+
+      expect(internalConfig.defaultRetryEnabled).toBe(false);
+    });
+  });
+
+  describe("isInitialized() / markInitialized() - double-init prevention", () => {
+    it("isInitialized returns false before markInitialized is called", () => {
+      expect(isInitialized()).toBe(false);
+    });
+
+    it("isInitialized returns true after markInitialized is called", () => {
+      markInitialized();
+
+      expect(isInitialized()).toBe(true);
+    });
+
+    it("markInitialized sets initialized on internalConfig", () => {
+      expect(internalConfig.initialized).toBe(false);
+
+      markInitialized();
+
+      expect(internalConfig.initialized).toBe(true);
+    });
+
+    it("markInitialized also sets window[initializedKey] when window exists", async () => {
+      const { initializedKey } = await import("../constants");
+
+      markInitialized();
+
+      expect((globalThis.window as any)[initializedKey]).toBe(true);
+    });
+
+    it("calling markInitialized twice does not throw", () => {
+      expect(() => {
+        markInitialized();
+        markInitialized();
+      }).not.toThrow();
+
+      expect(isInitialized()).toBe(true);
+    });
+  });
+
+  describe("internalConfig shared state", () => {
+    it("internalConfig is backed by window[internalConfigWindowKey] when window exists", async () => {
+      const { internalConfigWindowKey } = await import("../constants");
+      const windowConfig = (globalThis.window as any)?.[internalConfigWindowKey];
+
+      expect(windowConfig).toBe(internalConfig);
     });
   });
 });
