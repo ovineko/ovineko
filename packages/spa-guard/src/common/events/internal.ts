@@ -10,7 +10,13 @@ export const subscribers: Set<SubscribeFn> =
   (globalThis.window as any)?.[eventSubscribersWindowKey] ?? new Set<SubscribeFn>();
 
 export const emitEvent = (event: SPAGuardEvent) => {
-  subscribers.forEach((cb) => cb(event));
+  subscribers.forEach((cb) => {
+    try {
+      cb(event);
+    } catch {
+      // Isolate subscriber errors so all subscribers receive the event
+    }
+  });
 };
 
 export const subscribe = (cb: SubscribeFn): UnsubscribeFn => {

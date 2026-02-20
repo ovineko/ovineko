@@ -11,9 +11,9 @@ vi.mock("../common/retryImport", () => ({
   retryImport: vi.fn(),
 }));
 
-import { lazyWithRetry } from ".";
 import { getOptions } from "../common/options";
 import { retryImport } from "../common/retryImport";
+import { lazyWithRetry } from "./lazyWithRetry";
 
 interface ErrorBoundaryState {
   error: Error | null;

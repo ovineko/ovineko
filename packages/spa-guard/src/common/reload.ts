@@ -162,10 +162,6 @@ const showFallbackUI = (): void => {
     }
     targetElement.innerHTML = fallbackHtml;
 
-    emitEvent({
-      name: "fallback-ui-shown",
-    });
-
     const retryState = getRetryStateFromUrl();
     if (retryState && retryState.retryAttempt === -1) {
       console.log(logMessage("Clearing retry state from URL to allow clean reload attempt"));
@@ -188,6 +184,10 @@ const showFallbackUI = (): void => {
         element.textContent = retryState.retryId;
       }
     }
+
+    emitEvent({
+      name: "fallback-ui-shown",
+    });
   } catch (error) {
     console.error(logMessage("Failed to inject fallback UI"), error);
   }

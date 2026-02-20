@@ -14,7 +14,6 @@ export default tsup.defineConfig({
     "src/schema/index.ts",
     "src/schema/parse.ts",
     "src/fastify/index.ts",
-    "src/react-lazy/index.tsx",
     "src/react-router/index.tsx",
     "src/vite-plugin/index.ts",
   ],

@@ -82,7 +82,7 @@ export const retryImport = async <T>(
     try {
       const result = await importFn();
       if (attempt > 0) {
-        emitEvent({ attempt: attempt + 1, name: "lazy-retry-success" });
+        emitEvent({ attempt, name: "lazy-retry-success" });
       }
       return result;
     } catch (error) {

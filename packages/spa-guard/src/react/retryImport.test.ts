@@ -73,7 +73,7 @@ describe("retryImport (react-lazy)", () => {
       name: "lazy-retry-attempt",
       totalAttempts: 2,
     });
-    expect(emitEvent).toHaveBeenCalledWith({ attempt: 2, name: "lazy-retry-success" });
+    expect(emitEvent).toHaveBeenCalledWith({ attempt: 1, name: "lazy-retry-success" });
   });
 
   it("rejects with the last error after all attempts are exhausted", async () => {
