@@ -237,13 +237,13 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 13: Add tests for beacon schema parsing
 
-- [ ] Create `src/schema/parse.test.ts`
-- [ ] Write tests for valid beacon parsing (all required fields)
-- [ ] Write tests for invalid beacon rejection (missing fields, wrong types)
-- [ ] Write tests for optional field handling
-- [ ] Write tests for BeaconSchema typebox validation integration
-- [ ] Write tests for edge cases (null body, empty object, extra fields)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/schema/parse.test.ts`
+- [x] Write tests for valid beacon parsing (all required fields)
+- [x] Write tests for invalid beacon rejection (missing fields, wrong types)
+- [x] Write tests for optional field handling
+- [x] Write tests for BeaconSchema typebox validation integration
+- [x] Write tests for edge cases (null body, empty object, extra fields)
+- [x] Run project tests - must pass before next task
 
 ### Task 14: Add tests for Fastify plugin
 
