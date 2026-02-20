@@ -131,5 +131,5 @@ Covers TODO item 3 (status: Not implemented). Implemented as `@ovineko/spa-guard
 
 ### Task 7: Update documentation
 
-- [ ] update `packages/spa-guard/README.md` if user-facing API changed (checkVersion, event hooks, disableDefaultRetry, eslint submodule)
-- [ ] move this plan to `docs/plans/completed/`
+- [x] update `packages/spa-guard/README.md` if user-facing API changed (checkVersion, event hooks, disableDefaultRetry, eslint submodule)
+- [x] move this plan to `docs/plans/completed/`
