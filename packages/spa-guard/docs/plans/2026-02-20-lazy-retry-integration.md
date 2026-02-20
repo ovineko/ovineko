@@ -136,14 +136,14 @@ interface Options {
 
 #### Task 4: Создать React lazyWithRetry функцию
 
-- [ ] Создать файл [src/react-lazy/index.tsx](../src/react-lazy/index.tsx) (новая директория)
-- [ ] Импортировать `React.lazy` и типы `ComponentType`, `LazyExoticComponent`
-- [ ] Создать `lazyWithRetry<T extends ComponentType<any>>(importFn, options?)` функцию
-- [ ] Принимать `options?: { retryDelays?: number[] }` для per-import override
-- [ ] Внутри получить глобальные опции через `getOptions().lazyRetry`
-- [ ] Merge per-import options с глобальными (приоритет у per-import)
-- [ ] Вернуть `React.lazy(() => retryImport(importFn, mergedDelays))`
-- [ ] Экспортировать TypeScript типы для options
+- [x] Создать файл [src/react-lazy/index.tsx](../src/react-lazy/index.tsx) (новая директория)
+- [x] Импортировать `React.lazy` и типы `ComponentType`, `LazyExoticComponent`
+- [x] Создать `lazyWithRetry<T extends ComponentType<any>>(importFn, options?)` функцию
+- [x] Принимать `options?: { retryDelays?: number[] }` для per-import override
+- [x] Внутри получить глобальные опции через `getOptions().lazyRetry`
+- [x] Merge per-import options с глобальными (приоритет у per-import)
+- [x] Вернуть `React.lazy(() => retryImport(importFn, mergedDelays))`
+- [x] Экспортировать TypeScript типы для options
 
 #### Task 5: Добавить экспорт в package.json
 
