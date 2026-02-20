@@ -239,7 +239,7 @@ describe("retryImport (react-lazy)", () => {
       expect(attemptReload).not.toHaveBeenCalled();
     });
 
-    it("treats TypeError network error (offline) as a chunk error and triggers reload", async () => {
+    it("does not trigger reload for generic TypeError network error (Failed to fetch)", async () => {
       const networkError = new TypeError("Failed to fetch");
       const mockImport = createMockImport([networkError]);
 
@@ -248,8 +248,7 @@ describe("retryImport (react-lazy)", () => {
       await vi.runAllTimersAsync();
 
       await expect(promise).rejects.toThrow("Failed to fetch");
-      expect(attemptReload).toHaveBeenCalledTimes(1);
-      expect(attemptReload).toHaveBeenCalledWith(networkError);
+      expect(attemptReload).not.toHaveBeenCalled();
     });
 
     it("retries network errors and succeeds when connection is restored", async () => {

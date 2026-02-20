@@ -32,10 +32,6 @@ describe("isChunkError", () => {
       expect(isChunkError(new Error("ChunkLoadError: loading chunk failed"))).toBe(true);
     });
 
-    it("matches 'Failed to fetch'", () => {
-      expect(isChunkError(new TypeError("Failed to fetch"))).toBe(true);
-    });
-
     it("is case-insensitive for patterns", () => {
       expect(isChunkError(new Error("failed to fetch dynamically imported module"))).toBe(true);
       expect(isChunkError(new Error("CHUNKLOADERROR"))).toBe(true);
@@ -45,6 +41,10 @@ describe("isChunkError", () => {
   describe("non-chunk errors are not matched", () => {
     it("does not match SyntaxError", () => {
       expect(isChunkError(new SyntaxError("Unexpected token <"))).toBe(false);
+    });
+
+    it("does not match generic 'Failed to fetch' (API/network error, not a chunk error)", () => {
+      expect(isChunkError(new TypeError("Failed to fetch"))).toBe(false);
     });
 
     it("does not match TypeError unrelated to fetch", () => {

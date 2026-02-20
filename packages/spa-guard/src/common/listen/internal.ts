@@ -20,7 +20,7 @@ export const listenInternal = (serializeError: (error: unknown) => string) => {
     updateRetryStateInUrl(retryState.retryId, -1);
   }
 
-  const wa = window.addEventListener;
+  const wa = globalThis.window.addEventListener.bind(globalThis.window);
 
   wa(
     "error",
@@ -66,21 +66,6 @@ export const listenInternal = (serializeError: (error: unknown) => string) => {
     sendBeacon({
       errorMessage,
       eventName: "unhandledrejection",
-      serialized,
-      ...getRetryInfoForBeacon(),
-    });
-  });
-
-  wa("uncaughtException", (event) => {
-    const serialized = serializeError(event);
-    const shouldIgnore = shouldIgnoreMessages([JSON.stringify(serialized)]);
-
-    if (!shouldIgnore) {
-      console.error(logMessage("uncaughtException:"), event);
-    }
-
-    sendBeacon({
-      eventName: "uncaughtException",
       serialized,
       ...getRetryInfoForBeacon(),
     });

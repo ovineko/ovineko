@@ -12,7 +12,6 @@ export const isChunkError = (error: unknown): boolean => {
     /Loading chunk \d+ failed/i,
     /Loading CSS chunk \d+ failed/i,
     /ChunkLoadError/i,
-    /Failed to fetch/i,
   ];
 
   return patterns.some((pattern) => pattern.test(message));

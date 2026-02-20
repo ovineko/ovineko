@@ -346,7 +346,6 @@ interface BeaconSchema {
 - `chunk_error_max_reloads` - All reload attempts exhausted for chunk error
 - `error` - Non-chunk global error
 - `unhandledrejection` - Non-chunk promise rejection
-- `uncaughtException` - Uncaught exception
 - `securitypolicyviolation` - CSP violation
 
 ### React Integration
@@ -878,16 +877,14 @@ Subscribe to lazy retry events via the event system:
 import { events } from "@ovineko/spa-guard";
 
 events.subscribe((event) => {
-  if (event.type === "lazy-retry-attempt") {
-    console.log(
-      `Retry ${event.payload.attempt}/${event.payload.totalAttempts} after ${event.payload.delay}ms`,
-    );
+  if (event.name === "lazy-retry-attempt") {
+    console.log(`Retry ${event.attempt}/${event.totalAttempts} after ${event.delay}ms`);
   }
-  if (event.type === "lazy-retry-success") {
-    console.log(`Succeeded on attempt ${event.payload.attemptNumber}`);
+  if (event.name === "lazy-retry-success") {
+    console.log(`Succeeded on attempt ${event.attemptNumber}`);
   }
-  if (event.type === "lazy-retry-exhausted") {
-    console.log(`All retries exhausted. Will reload: ${event.payload.willReload}`);
+  if (event.name === "lazy-retry-exhausted") {
+    console.log(`All retries exhausted. Will reload: ${event.willReload}`);
   }
 });
 ```
@@ -896,27 +893,21 @@ events.subscribe((event) => {
 
 ```typescript
 type LazyRetryAttempt = {
-  type: "lazy-retry-attempt";
-  payload: {
-    attempt: number; // current attempt number (1-based)
-    delay: number; // delay in ms before this attempt
-    totalAttempts: number; // total number of retry attempts
-  };
+  name: "lazy-retry-attempt";
+  attempt: number; // current attempt number (1-based)
+  delay: number; // delay in ms before this attempt
+  totalAttempts: number; // total number of retry attempts
 };
 
 type LazyRetrySuccess = {
-  type: "lazy-retry-success";
-  payload: {
-    attemptNumber: number; // attempt on which import succeeded (1 = no retry needed)
-  };
+  name: "lazy-retry-success";
+  attemptNumber: number; // attempt on which import succeeded (1 = no retry needed)
 };
 
 type LazyRetryExhausted = {
-  type: "lazy-retry-exhausted";
-  payload: {
-    totalAttempts: number; // number of attempts made
-    willReload: boolean; // whether attemptReload() will be called
-  };
+  name: "lazy-retry-exhausted";
+  totalAttempts: number; // number of attempts made
+  willReload: boolean; // whether attemptReload() will be called
 };
 ```
 
