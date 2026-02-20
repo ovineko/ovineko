@@ -1392,11 +1392,773 @@ describe("SPA control", () => {
 
 ---
 
+## 3. ESLint Plugin for spa-guard
+
+**Status:** Not implemented
+**Priority:** Medium
+**Complexity:** Medium
+
+### Overview
+
+Create an ESLint plugin to enforce the use of spa-guard wrappers instead of direct React imports. This helps ensure that all error boundaries and lazy loading in the application are properly integrated with spa-guard's retry logic.
+
+### Rules to Implement
+
+#### 1. `no-direct-error-boundary`
+
+Disallow direct import and usage of React's `ErrorBoundary` or third-party error boundary libraries.
+
+**❌ Bad:**
+
+```typescript
+import { ErrorBoundary } from 'react-error-boundary';
+
+function App() {
+  return (
+    <ErrorBoundary fallback={<div>Error</div>}>
+      <MyComponent />
+    </ErrorBoundary>
+  );
+}
+```
+
+**✅ Good:**
+
+```typescript
+import { ErrorBoundary } from '@ovineko/spa-guard/react-error-boundary';
+
+function App() {
+  return (
+    <ErrorBoundary fallback={<div>Error</div>}>
+      <MyComponent />
+    </ErrorBoundary>
+  );
+}
+```
+
+#### 2. `no-direct-lazy`
+
+Disallow direct import and usage of React's `lazy` function.
+
+**❌ Bad:**
+
+```typescript
+import { lazy } from "react";
+
+const MyComponent = lazy(() => import("./MyComponent"));
+```
+
+**✅ Good:**
+
+```typescript
+import { lazy } from "@ovineko/spa-guard/react-router";
+
+const MyComponent = lazy(() => import("./MyComponent"));
+```
+
+#### 3. `no-direct-suspense` (Optional)
+
+Optionally disallow direct `Suspense` usage to ensure proper integration with error boundaries.
+
+### Implementation
+
+```typescript
+// eslint-plugin-spa-guard/src/rules/no-direct-error-boundary.ts
+import type { Rule } from "eslint";
+
+export const noDirectErrorBoundary: Rule.RuleModule = {
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow direct import of ErrorBoundary, use @ovineko/spa-guard instead",
+      category: "Best Practices",
+      recommended: true,
+    },
+    fixable: "code",
+    schema: [],
+    messages: {
+      noDirectErrorBoundary:
+        'Do not import ErrorBoundary directly. Use "@ovineko/spa-guard/react-error-boundary" instead.',
+    },
+  },
+  create(context) {
+    return {
+      ImportDeclaration(node) {
+        const source = node.source.value;
+
+        // Check if importing from react-error-boundary or similar libraries
+        if (source === "react-error-boundary" || source.includes("error-boundary")) {
+          const errorBoundaryImport = node.specifiers.find(
+            (spec) => spec.type === "ImportSpecifier" && spec.imported.name === "ErrorBoundary",
+          );
+
+          if (errorBoundaryImport) {
+            context.report({
+              node: errorBoundaryImport,
+              messageId: "noDirectErrorBoundary",
+              fix(fixer) {
+                // Auto-fix: change import source
+                return fixer.replaceText(node.source, '"@ovineko/spa-guard/react-error-boundary"');
+              },
+            });
+          }
+        }
+      },
+    };
+  },
+};
+```
+
+```typescript
+// eslint-plugin-spa-guard/src/rules/no-direct-lazy.ts
+import type { Rule } from "eslint";
+
+export const noDirectLazy: Rule.RuleModule = {
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow direct import of React.lazy, use @ovineko/spa-guard instead",
+      category: "Best Practices",
+      recommended: true,
+    },
+    fixable: "code",
+    schema: [],
+    messages: {
+      noDirectLazy: 'Do not import lazy from react. Use "@ovineko/spa-guard/react-router" instead.',
+    },
+  },
+  create(context) {
+    return {
+      ImportDeclaration(node) {
+        const source = node.source.value;
+
+        // Check if importing lazy from 'react'
+        if (source === "react") {
+          const lazyImport = node.specifiers.find(
+            (spec) => spec.type === "ImportSpecifier" && spec.imported.name === "lazy",
+          );
+
+          if (lazyImport) {
+            context.report({
+              node: lazyImport,
+              messageId: "noDirectLazy",
+              fix(fixer) {
+                const otherImports = node.specifiers.filter((spec) => spec !== lazyImport);
+
+                if (otherImports.length === 0) {
+                  // If 'lazy' is the only import, replace the entire import
+                  return fixer.replaceText(
+                    node,
+                    'import { lazy } from "@ovineko/spa-guard/react-router";',
+                  );
+                } else {
+                  // If there are other imports from react, split them
+                  const fixes = [];
+
+                  // Remove lazy from current import
+                  fixes.push(
+                    fixer.removeRange([
+                      lazyImport.range![0],
+                      lazyImport.range![1] + 1, // Include comma
+                    ]),
+                  );
+
+                  // Add new import for lazy
+                  fixes.push(
+                    fixer.insertTextBefore(
+                      node,
+                      'import { lazy } from "@ovineko/spa-guard/react-router";\n',
+                    ),
+                  );
+
+                  return fixes;
+                }
+              },
+            });
+          }
+        }
+      },
+    };
+  },
+};
+```
+
+```typescript
+// eslint-plugin-spa-guard/src/index.ts
+import { noDirectErrorBoundary } from "./rules/no-direct-error-boundary";
+import { noDirectLazy } from "./rules/no-direct-lazy";
+
+export = {
+  rules: {
+    "no-direct-error-boundary": noDirectErrorBoundary,
+    "no-direct-lazy": noDirectLazy,
+  },
+  configs: {
+    recommended: {
+      plugins: ["spa-guard"],
+      rules: {
+        "spa-guard/no-direct-error-boundary": "error",
+        "spa-guard/no-direct-lazy": "error",
+      },
+    },
+  },
+};
+```
+
+### Package Structure
+
+```json
+{
+  "name": "@ovineko/eslint-plugin-spa-guard",
+  "version": "0.1.0",
+  "description": "ESLint plugin to enforce spa-guard best practices",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": ["eslint", "eslintplugin", "spa-guard", "react", "error-boundary", "lazy-loading"],
+  "peerDependencies": {
+    "eslint": "^8.0.0 || ^9.0.0"
+  },
+  "devDependencies": {
+    "@types/eslint": "^8.56.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.0"
+  }
+}
+```
+
+### Usage
+
+```javascript
+// .eslintrc.js
+module.exports = {
+  plugins: ["@ovineko/spa-guard"],
+  extends: ["plugin:@ovineko/spa-guard/recommended"],
+  // Or configure rules individually:
+  rules: {
+    "@ovineko/spa-guard/no-direct-error-boundary": "error",
+    "@ovineko/spa-guard/no-direct-lazy": "error",
+  },
+};
+```
+
+### Testing
+
+```typescript
+import { RuleTester } from "eslint";
+import { noDirectLazy } from "../rules/no-direct-lazy";
+
+const ruleTester = new RuleTester({
+  parserOptions: {
+    ecmaVersion: 2020,
+    sourceType: "module",
+  },
+});
+
+ruleTester.run("no-direct-lazy", noDirectLazy, {
+  valid: [
+    {
+      code: 'import { lazy } from "@ovineko/spa-guard/react-router";',
+    },
+    {
+      code: 'import React from "react";',
+    },
+  ],
+  invalid: [
+    {
+      code: 'import { lazy } from "react";',
+      errors: [
+        {
+          messageId: "noDirectLazy",
+        },
+      ],
+      output: 'import { lazy } from "@ovineko/spa-guard/react-router";',
+    },
+    {
+      code: 'import { lazy, Suspense } from "react";',
+      errors: [
+        {
+          messageId: "noDirectLazy",
+        },
+      ],
+      output:
+        'import { lazy } from "@ovineko/spa-guard/react-router";\nimport { Suspense } from "react";',
+    },
+  ],
+});
+```
+
+### Benefits
+
+1. **Enforces best practices:** Ensures consistent usage of spa-guard wrappers across the codebase
+2. **Auto-fix support:** Developers can automatically fix violations with `eslint --fix`
+3. **Catches mistakes early:** Prevents accidental use of unwrapped React APIs during development
+4. **Documentation:** Rules serve as inline documentation of spa-guard conventions
+5. **Team alignment:** Makes it easier for teams to adopt spa-guard correctly
+
+### Potential Extensions
+
+1. **Custom configuration:** Allow specifying custom wrapper paths
+2. **Additional rules:** Check for proper retry configuration, version checker setup, etc.
+3. **TypeScript support:** Add type-aware rules using `@typescript-eslint/utils`
+4. **Migration helpers:** Codemod scripts to automatically migrate existing codebases
+
+---
+
+## 4. Comprehensive Test Suite
+
+**Status:** Not implemented
+**Priority:** High
+**Complexity:** Medium-High
+
+### Overview
+
+Set up a comprehensive test suite for spa-guard using Vitest, following the patterns established in other packages in the monorepo. This ensures reliability, prevents regressions, and makes it easier to add new features with confidence.
+
+### Current State
+
+- Vitest configuration exists at [vitest.config.ts](vitest.config.ts)
+- Test setup file exists at [test/setup.ts](test/setup.ts)
+- No actual test files implemented yet
+
+### Configuration Reference
+
+Based on existing packages in the monorepo:
+
+#### vitest.config.ts
+
+```typescript
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    coverage: {
+      exclude: ["src/**/*.test.{ts,tsx}", "src/test/**"],
+      include: ["src/**/*.{ts,tsx}"],
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+    },
+    environment: "happy-dom",
+    globals: true,
+    pool: "threads",
+    setupFiles: "./test/setup.ts",
+  },
+});
+```
+
+#### test/setup.ts
+
+```typescript
+import * as matchers from "@testing-library/jest-dom/matchers";
+import { cleanup } from "@testing-library/react";
+import { afterEach, vi } from "vitest";
+import { expect } from "vitest";
+
+expect.extend(matchers);
+
+afterEach(() => {
+  cleanup();
+});
+
+// Mock window.location for reload tests
+Object.defineProperty(globalThis.window, "location", {
+  value: { reload: vi.fn(), href: "http://localhost:3000" },
+  writable: true,
+});
+```
+
+### Dependencies
+
+Already installed in [package.json](package.json):
+
+```json
+{
+  "devDependencies": {
+    "@testing-library/dom": "10.4.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
+    "@vitejs/plugin-react": "5.1.3",
+    "@vitest/coverage-v8": "4.0.18",
+    "@vitest/ui": "4.0.18",
+    "happy-dom": "20.5.0",
+    "vitest": "4.0.18"
+  }
+}
+```
+
+### Test Categories
+
+#### 1. Core Functionality Tests
+
+**File:** `src/common/reload.test.ts`
+
+Test retry logic, reload attempts, and cycle management:
+
+```typescript
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { attemptReload } from "./reload";
+
+describe("attemptReload", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    globalThis.window = {
+      location: { href: "http://localhost:3000", reload: vi.fn() },
+    } as any;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it("should schedule reload with correct delay", () => {
+    attemptReload(new Error("Chunk load error"));
+
+    vi.advanceTimersByTime(1000);
+
+    expect(window.location.reload).toHaveBeenCalled();
+  });
+
+  it("should use retry ID from URL params", () => {
+    window.location.href = "http://localhost:3000?spaGuardRetryId=abc123&spaGuardRetryAttempt=1";
+
+    attemptReload(new Error("Chunk load error"));
+
+    vi.advanceTimersByTime(2000);
+
+    expect(window.location.href).toContain("spaGuardRetryId=abc123");
+    expect(window.location.href).toContain("spaGuardRetryAttempt=2");
+  });
+
+  it("should show fallback UI after max retries", () => {
+    window.location.href = "http://localhost:3000?spaGuardRetryAttempt=3";
+
+    attemptReload(new Error("Chunk load error"));
+
+    // Should not schedule reload
+    vi.advanceTimersByTime(10000);
+    expect(window.location.reload).not.toHaveBeenCalled();
+
+    // Should inject fallback HTML
+    expect(document.body.innerHTML).toContain("Please refresh");
+  });
+});
+```
+
+**File:** `src/common/isChunkError.test.ts`
+
+Test error detection logic:
+
+```typescript
+import { describe, it, expect } from "vitest";
+import { isChunkError } from "./isChunkError";
+
+describe("isChunkError", () => {
+  it("should detect Vite chunk load errors", () => {
+    const error = new Error("Failed to fetch dynamically imported module");
+    expect(isChunkError(error)).toBe(true);
+  });
+
+  it("should detect webpack chunk load errors", () => {
+    const error = new Error("Loading chunk 123 failed");
+    expect(isChunkError(error)).toBe(true);
+  });
+
+  it("should detect CSS chunk load errors", () => {
+    const error = new Error("Loading CSS chunk 456 failed");
+    expect(isChunkError(error)).toBe(true);
+  });
+
+  it("should return false for non-chunk errors", () => {
+    const error = new Error("Network error");
+    expect(isChunkError(error)).toBe(false);
+  });
+
+  it("should handle error-like objects", () => {
+    const error = { message: "Failed to fetch dynamically imported module" };
+    expect(isChunkError(error)).toBe(true);
+  });
+
+  it("should handle null and undefined", () => {
+    expect(isChunkError(null)).toBe(false);
+    expect(isChunkError(undefined)).toBe(false);
+  });
+});
+```
+
+#### 2. React Integration Tests
+
+**File:** `src/react-router/lazy.test.tsx`
+
+Test lazy component wrapper:
+
+```typescript
+import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { lazy } from "./lazy";
+import { Suspense } from "react";
+
+describe("lazy", () => {
+  it("should load component successfully", async () => {
+    const TestComponent = lazy(() =>
+      Promise.resolve({
+        default: () => <div>Lazy Component</div>,
+      }),
+    );
+
+    render(
+      <Suspense fallback={<div>Loading...</div>}>
+        <TestComponent />
+      </Suspense>,
+    );
+
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("Lazy Component")).toBeInTheDocument();
+    });
+  });
+
+  it("should trigger reload on chunk error", async () => {
+    const reloadSpy = vi.fn();
+    window.location.reload = reloadSpy;
+
+    const TestComponent = lazy(() =>
+      Promise.reject(new Error("Failed to fetch dynamically imported module")),
+    );
+
+    render(
+      <Suspense fallback={<div>Loading...</div>}>
+        <TestComponent />
+      </Suspense>,
+    );
+
+    await waitFor(() => {
+      expect(reloadSpy).toHaveBeenCalled();
+    });
+  });
+});
+```
+
+**File:** `src/react-error-boundary/index.test.tsx`
+
+Test error boundary wrapper:
+
+```typescript
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { ErrorBoundary } from "./index";
+
+const ThrowError = ({ error }: { error: Error }) => {
+  throw error;
+};
+
+describe("ErrorBoundary", () => {
+  it("should catch chunk errors and trigger reload", () => {
+    const reloadSpy = vi.fn();
+    window.location.reload = reloadSpy;
+
+    const error = new Error("Failed to fetch dynamically imported module");
+
+    render(
+      <ErrorBoundary fallback={<div>Error occurred</div>}>
+        <ThrowError error={error} />
+      </ErrorBoundary>,
+    );
+
+    expect(reloadSpy).toHaveBeenCalled();
+  });
+
+  it("should show fallback for non-chunk errors", () => {
+    const error = new Error("Some other error");
+
+    render(
+      <ErrorBoundary fallback={<div>Error occurred</div>}>
+        <ThrowError error={error} />
+      </ErrorBoundary>,
+    );
+
+    expect(screen.getByText("Error occurred")).toBeInTheDocument();
+  });
+});
+```
+
+#### 3. Vite Plugin Tests
+
+**File:** `src/vite-plugin/index.test.ts`
+
+Test Vite plugin functionality:
+
+```typescript
+import { describe, it, expect, vi } from "vitest";
+import { spaGuardVitePlugin } from "./index";
+
+describe("spaGuardVitePlugin", () => {
+  it("should inject inline script into HTML", async () => {
+    const plugin = spaGuardVitePlugin({
+      version: "1.0.0",
+      reloadDelays: [1000, 2000, 5000],
+    });
+
+    const html = "<html><head></head><body></body></html>";
+
+    const result = await plugin.transformIndexHtml?.handler?.(html, {
+      filename: "index.html",
+    } as any);
+
+    expect(result.html).toBe(html);
+    expect(result.tags?.[0].children).toContain("window.__SPA_GUARD_OPTIONS__");
+    expect(result.tags?.[0].children).toContain('"version":"1.0.0"');
+  });
+
+  it("should auto-detect version from package.json", async () => {
+    // Mock fs.readFile to return package.json with version
+    vi.mock("node:fs/promises", () => ({
+      readFile: vi.fn().mockResolvedValue('{"version":"2.0.0"}'),
+    }));
+
+    const plugin = spaGuardVitePlugin();
+
+    await plugin.configResolved?.({
+      root: "/fake/path",
+    } as any);
+
+    const html = "<html><head></head><body></body></html>";
+    const result = await plugin.transformIndexHtml?.handler?.(html, {
+      filename: "index.html",
+    } as any);
+
+    expect(result.tags?.[0].children).toContain('"version":"2.0.0"');
+  });
+});
+```
+
+#### 4. Fastify Plugin Tests
+
+**File:** `src/fastify/index.test.ts`
+
+Test Fastify beacon endpoint:
+
+```typescript
+import Fastify from "fastify";
+import { describe, it, expect } from "vitest";
+import { spaGuardFastifyPlugin } from "./index";
+
+describe("spaGuardFastifyPlugin", () => {
+  it("should register beacon endpoint", async () => {
+    const fastify = Fastify();
+
+    await fastify.register(spaGuardFastifyPlugin, {
+      endpoint: "/api/spa-guard-beacon",
+      enableLogging: false,
+    });
+
+    const response = await fastify.inject({
+      method: "POST",
+      url: "/api/spa-guard-beacon",
+      payload: {
+        eventName: "chunk_error",
+        errorMessage: "Failed to load chunk",
+        url: "http://localhost:3000",
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should validate beacon payload", async () => {
+    const fastify = Fastify();
+
+    await fastify.register(spaGuardFastifyPlugin);
+
+    const response = await fastify.inject({
+      method: "POST",
+      url: "/spa-guard-beacon",
+      payload: {
+        // Missing required fields
+        eventName: "chunk_error",
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+  });
+});
+```
+
+### Scripts
+
+Already configured in [package.json](package.json):
+
+```json
+{
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest"
+  }
+}
+```
+
+### Coverage Goals
+
+Target coverage thresholds:
+
+```typescript
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    coverage: {
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
+      },
+    },
+  },
+});
+```
+
+### Testing Strategy
+
+1. **Unit tests:** Test individual functions in isolation
+2. **Integration tests:** Test module interactions (e.g., Vite plugin + inline script)
+3. **React component tests:** Test React wrappers with @testing-library/react
+4. **Edge cases:** Test error handling, boundary conditions, SSR compatibility
+5. **Mocking:** Mock browser APIs (window.location, fetch, etc.) and timers
+
+### Priority Test Files
+
+1. ✅ `src/common/isChunkError.test.ts` - Critical for error detection
+2. ✅ `src/common/reload.test.ts` - Core retry logic
+3. ✅ `src/react-router/lazy.test.tsx` - React integration
+4. ✅ `src/react-error-boundary/index.test.tsx` - Error boundary
+5. ✅ `src/vite-plugin/index.test.ts` - Build-time injection
+6. 🔄 `src/fastify/index.test.ts` - Server-side beacon
+7. 🔄 `src/common/options.test.ts` - Configuration handling
+8. 🔄 `src/common/sendBeacon.test.ts` - Beacon reporting
+
+### Benefits
+
+1. **Confidence:** Make changes without fear of breaking existing functionality
+2. **Documentation:** Tests serve as living documentation of expected behavior
+3. **Regression prevention:** Catch bugs before they reach production
+4. **Refactoring safety:** Safely refactor code with test coverage
+5. **CI/CD integration:** Automated testing in pull requests
+6. **Code quality:** Enforces good practices and edge case handling
+
+---
+
 ## Summary
 
-These two features represent the next evolution of spa-guard:
+These features represent the next evolution of spa-guard:
 
 1. **Version Checker:** Proactive detection of new deployments to prevent chunk errors before they happen
 2. **Enhanced Event Emitter:** Full control and visibility for SPA applications to implement custom error handling UX
+3. **ESLint Plugin:** Enforce usage of spa-guard wrappers instead of direct React imports for error boundaries and lazy loading
+4. **Comprehensive Test Suite:** Ensure reliability and prevent regressions with thorough Vitest-based testing
 
-Both features are designed to be **optional** and **non-breaking** - existing implementations will continue to work with default inline retry behavior.
+All features are designed to be **optional** and **non-breaking** - existing implementations will continue to work with default inline retry behavior.

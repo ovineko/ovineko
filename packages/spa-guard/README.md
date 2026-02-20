@@ -343,19 +343,45 @@ interface BeaconSchema {
 - `uncaughtException` - Uncaught exception
 - `securitypolicyviolation` - CSP violation
 
-### React Router Integration
+### React Integration
 
-spa-guard works seamlessly with React Router v7 error boundaries:
+spa-guard provides two React error boundary components with automatic chunk error recovery.
+
+#### ErrorBoundary (Class-based)
+
+Standard React error boundary with spa-guard integration:
+
+```tsx
+import { ErrorBoundary } from "@ovineko/spa-guard/react-error-boundary";
+
+function App() {
+  return (
+    <ErrorBoundary
+      autoRetryChunkErrors={true}
+      sendBeaconOnError={true}
+      onError={(error, errorInfo) => {
+        console.error("Error caught:", error, errorInfo);
+      }}
+    >
+      <YourApp />
+    </ErrorBoundary>
+  );
+}
+```
+
+#### ErrorBoundaryReactRouter (React Router)
+
+For React Router v7 route-level error handling:
 
 ```tsx
 import { createBrowserRouter, RouterProvider } from "react-router";
-import { ErrorBoundaryReloadPage } from "@ovineko/react-error-boundary";
+import { ErrorBoundaryReactRouter } from "@ovineko/spa-guard/react-router";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
-    errorElement: <ErrorBoundaryReloadPage />,
+    errorElement: <ErrorBoundaryReactRouter />,
     children: [
       {
         path: "users/:id",
@@ -370,14 +396,115 @@ function Root() {
 }
 ```
 
+**Props:**
+
+```typescript
+interface ErrorBoundaryProps {
+  autoRetryChunkErrors?: boolean; // Auto-reload on chunk errors (default: true)
+  sendBeaconOnError?: boolean; // Send error reports to server (default: true)
+  fallback?: React.ComponentType<FallbackProps>; // Custom fallback component
+  fallbackRender?: (props: FallbackProps) => React.ReactElement; // Render prop alternative
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void; // Error callback
+  resetKeys?: Array<unknown>; // Keys that trigger error reset when changed
+  children: ReactNode;
+}
+```
+
+**Custom Fallback UI:**
+
+```tsx
+import { ErrorBoundary, type FallbackProps } from "@ovineko/spa-guard/react-error-boundary";
+
+const CustomFallback = ({ error, resetError, isChunkError, isRetrying }: FallbackProps) => (
+  <div>
+    <h1>{isChunkError ? "Failed to load" : "Something went wrong"}</h1>
+    <p>{error.message}</p>
+    {isRetrying ? <p>Retrying...</p> : <button onClick={resetError}>Try Again</button>}
+  </div>
+);
+
+function App() {
+  return (
+    <ErrorBoundary fallback={CustomFallback}>
+      <YourApp />
+    </ErrorBoundary>
+  );
+}
+```
+
+**Default Fallback Component:**
+
+Both error boundaries use `DefaultErrorFallback` by default, which provides:
+
+- Loading spinner with retry attempt counter
+- Error message display
+- "Try again" button (for non-chunk errors)
+- "Reload page" button
+- Minimal inline styles (no external dependencies)
+
 **Error flow:**
 
 1. Chunk load error occurs (e.g., after deployment)
 2. spa-guard inline script detects error
 3. Attempts automatic reload with query parameters (up to `reloadDelays.length` times)
-4. If all reloads fail, sends beacon to server and shows fallback UI
-5. React Router error boundary catches error (if no fallback UI configured)
-6. `ErrorBoundaryReloadPage` displays fallback UI
+4. React error boundary catches error and shows loading spinner during retries
+5. If all reloads fail, sends beacon to server and shows error UI
+6. User can manually retry or reload the page
+
+### React Hooks
+
+spa-guard provides React hooks to access retry state in your components.
+
+#### useSpaGuardState()
+
+Subscribe to spa-guard state changes:
+
+```tsx
+import { useSpaGuardState } from "@ovineko/spa-guard/react";
+
+function RetryIndicator() {
+  const state = useSpaGuardState();
+
+  if (!state.isWaiting) {
+    return null;
+  }
+
+  return <div className="retry-banner">Retrying... (Attempt {state.currentAttempt})</div>;
+}
+```
+
+**State properties:**
+
+```typescript
+interface SpaGuardState {
+  currentAttempt: number; // Current retry attempt (0-based)
+  isFallbackShown: boolean; // Whether fallback UI is displayed
+  isWaiting: boolean; // Whether waiting for a retry
+  lastRetryResetTime: number; // Timestamp of last retry reset
+  lastResetRetryId: string | null; // Retry ID of last reset cycle
+}
+```
+
+**Example - Global retry indicator:**
+
+```tsx
+import { useSpaGuardState } from "@ovineko/spa-guard/react";
+
+function App() {
+  const spaGuardState = useSpaGuardState();
+
+  return (
+    <>
+      {spaGuardState.isWaiting && (
+        <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-white p-4 text-center">
+          Loading updated version... (Attempt {spaGuardState.currentAttempt})
+        </div>
+      )}
+      <YourApp />
+    </>
+  );
+}
+```
 
 ### Core API (Framework-agnostic)
 
@@ -645,23 +772,33 @@ unsubscribe();
 
 spa-guard provides 9 export entry points:
 
-| Export                   | Description                                  | Peer Dependencies                      |
-| ------------------------ | -------------------------------------------- | -------------------------------------- |
-| `.`                      | Core functionality (events, listen, options) | None                                   |
-| `./schema`               | BeaconSchema type definitions                | `typebox@^1`                           |
-| `./schema/parse`         | Beacon parsing utilities                     | `typebox@^1`                           |
-| `./runtime`              | Runtime state management and subscriptions   | None                                   |
-| `./react`                | React integration (placeholder)              | `react@^19`                            |
-| `./react-router`         | React Router integration                     | `react@^19`, `react-router@^7`         |
-| `./fastify`              | Fastify server plugin                        | None                                   |
-| `./vite-plugin`          | Vite build plugin                            | `vite@^7 \|\| ^8`                      |
-| `./react-error-boundary` | Error boundary re-export                     | `react@^19`, `react-error-boundary@^6` |
+| Export                   | Description                                            | Peer Dependencies              |
+| ------------------------ | ------------------------------------------------------ | ------------------------------ |
+| `.`                      | Core functionality (events, listen, options)           | None                           |
+| `./schema`               | BeaconSchema type definitions                          | `typebox@^1`                   |
+| `./schema/parse`         | Beacon parsing utilities                               | `typebox@^1`                   |
+| `./runtime`              | Runtime state management and subscriptions             | None                           |
+| `./react`                | React hooks (useSpaGuardState)                         | `react@^19`                    |
+| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter) | `react@^19`, `react-router@^7` |
+| `./fastify`              | Fastify server plugin                                  | `fastify@^4 \|\| ^5`           |
+| `./vite-plugin`          | Vite build plugin                                      | `vite@^7 \|\| ^8`              |
+| `./react-error-boundary` | React error boundary component (ErrorBoundary)         | `react@^19`                    |
 
 **Import examples:**
 
 ```typescript
 // Core
 import { events, listen } from "@ovineko/spa-guard";
+
+// Runtime state
+import { getState, subscribeToState } from "@ovineko/spa-guard/runtime";
+
+// React hooks
+import { useSpaGuardState } from "@ovineko/spa-guard/react";
+
+// React error boundaries
+import { ErrorBoundary } from "@ovineko/spa-guard/react-error-boundary";
+import { ErrorBoundaryReactRouter } from "@ovineko/spa-guard/react-router";
 
 // Schema
 import type { BeaconSchema } from "@ovineko/spa-guard/schema";
