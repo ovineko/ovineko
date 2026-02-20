@@ -289,9 +289,9 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 18: [Final] Update documentation
 
-- [ ] Update README.md with breaking change notice (react-lazy → react)
-- [ ] Add migration guide for consumers (import path changes)
-- [ ] Update any internal docs referencing react-lazy module structure
+- [x] Update README.md with breaking change notice (react-lazy → react)
+- [x] Add migration guide for consumers (import path changes)
+- [x] Update any internal docs referencing react-lazy module structure
 
 _Note: ralphex automatically moves completed plans to `docs/plans/completed/`_
 

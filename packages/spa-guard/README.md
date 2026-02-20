@@ -10,6 +10,31 @@ pnpm add @ovineko/spa-guard
 
 Peer dependencies vary by integration - see sections below for specific requirements.
 
+## Breaking Changes
+
+### v\* - `react-lazy` consolidated into `react`
+
+The `@ovineko/spa-guard/react-lazy` export has been removed. All React functionality is now available from a single `@ovineko/spa-guard/react` entry point.
+
+**Migration:**
+
+```typescript
+// OLD (no longer works)
+import { lazyWithRetry } from "@ovineko/spa-guard/react-lazy";
+import type { LazyRetryOptions } from "@ovineko/spa-guard/react-lazy";
+
+// NEW
+import { lazyWithRetry } from "@ovineko/spa-guard/react";
+import type { LazyRetryOptions } from "@ovineko/spa-guard/react";
+```
+
+Both `useSpaGuardState` and `lazyWithRetry` are now exported from the same `@ovineko/spa-guard/react` path:
+
+```typescript
+import { useSpaGuardState, lazyWithRetry } from "@ovineko/spa-guard/react";
+import type { LazyRetryOptions } from "@ovineko/spa-guard/react";
+```
+
 ## Features
 
 - ✅ **Automatic chunk load error detection** - Handles `vite:preloadError`, dynamic imports, and chunk failures across Chrome, Firefox, and Safari
@@ -785,7 +810,7 @@ unsubscribe();
 #### Basic Usage
 
 ```tsx
-import { lazyWithRetry } from "@ovineko/spa-guard/react-lazy";
+import { lazyWithRetry } from "@ovineko/spa-guard/react";
 import { Suspense } from "react";
 import { ErrorBoundary } from "@ovineko/spa-guard/react-error-boundary";
 
@@ -918,8 +943,8 @@ type LazyRetryExhausted = {
 Creates a lazy React component with retry logic.
 
 ```typescript
-import { lazyWithRetry } from "@ovineko/spa-guard/react-lazy";
-import type { LazyRetryOptions } from "@ovineko/spa-guard/react-lazy";
+import { lazyWithRetry } from "@ovineko/spa-guard/react";
+import type { LazyRetryOptions } from "@ovineko/spa-guard/react";
 ```
 
 **Parameters:**
@@ -979,20 +1004,19 @@ interface Options {
 
 ## Module Exports
 
-spa-guard provides 10 export entry points:
+spa-guard provides 9 export entry points:
 
-| Export                   | Description                                            | Peer Dependencies              |
-| ------------------------ | ------------------------------------------------------ | ------------------------------ |
-| `.`                      | Core functionality (events, listen, options)           | None                           |
-| `./schema`               | BeaconSchema type definitions                          | `typebox@^1`                   |
-| `./schema/parse`         | Beacon parsing utilities                               | `typebox@^1`                   |
-| `./runtime`              | Runtime state management and subscriptions             | None                           |
-| `./react`                | React hooks (useSpaGuardState)                         | `react@^19`                    |
-| `./react-lazy`           | lazyWithRetry - lazy imports with retry (new)          | `react@^19`                    |
-| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter) | `react@^19`, `react-router@^7` |
-| `./fastify`              | Fastify server plugin                                  | `fastify@^4 \|\| ^5`           |
-| `./vite-plugin`          | Vite build plugin                                      | `vite@^7 \|\| ^8`              |
-| `./react-error-boundary` | React error boundary component (ErrorBoundary)         | `react@^19`                    |
+| Export                   | Description                                                    | Peer Dependencies              |
+| ------------------------ | -------------------------------------------------------------- | ------------------------------ |
+| `.`                      | Core functionality (events, listen, options)                   | None                           |
+| `./schema`               | BeaconSchema type definitions                                  | `typebox@^1`                   |
+| `./schema/parse`         | Beacon parsing utilities                                       | `typebox@^1`                   |
+| `./runtime`              | Runtime state management and subscriptions                     | None                           |
+| `./react`                | React hooks and lazy loading (useSpaGuardState, lazyWithRetry) | `react@^19`                    |
+| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)         | `react@^19`, `react-router@^7` |
+| `./fastify`              | Fastify server plugin                                          | `fastify@^4 \|\| ^5`           |
+| `./vite-plugin`          | Vite build plugin                                              | `vite@^7 \|\| ^8`              |
+| `./react-error-boundary` | React error boundary component (ErrorBoundary)                 | `react@^19`                    |
 
 **Import examples:**
 
@@ -1007,8 +1031,8 @@ import { getState, subscribeToState } from "@ovineko/spa-guard/runtime";
 import { useSpaGuardState } from "@ovineko/spa-guard/react";
 
 // Lazy imports with retry
-import { lazyWithRetry } from "@ovineko/spa-guard/react-lazy";
-import type { LazyRetryOptions } from "@ovineko/spa-guard/react-lazy";
+import { lazyWithRetry } from "@ovineko/spa-guard/react";
+import type { LazyRetryOptions } from "@ovineko/spa-guard/react";
 
 // React error boundaries
 import { ErrorBoundary } from "@ovineko/spa-guard/react-error-boundary";
