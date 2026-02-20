@@ -77,6 +77,7 @@ describe("clean", () => {
       name: "test",
       optionalDependencies: { baz: "1.0.0" },
       peerDependencies: { bar: "1.0.0" },
+      peerDependenciesMeta: { bar: { optional: true } },
       publishConfig: { access: "public" },
       repository: "repo",
       type: "module",

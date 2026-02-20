@@ -36,12 +36,12 @@ clean-pkg-json restore  # restore from backup
 
 ## Whitelisted fields
 
-| Category     | Fields                                                                        |
-| ------------ | ----------------------------------------------------------------------------- |
-| Identity     | `name`, `version`, `description`, `keywords`, `author`, `license`             |
-| Entry points | `main`, `module`, `types`, `exports`, `bin`                                   |
-| Publishing   | `files`, `type`, `engines`, `publishConfig`, `repository`, `bugs`, `homepage` |
-| Dependencies | `dependencies`, `peerDependencies`, `optionalDependencies`                    |
+| Category     | Fields                                                                             |
+| ------------ | ---------------------------------------------------------------------------------- |
+| Identity     | `name`, `version`, `description`, `keywords`, `author`, `license`                  |
+| Entry points | `main`, `module`, `types`, `exports`, `bin`                                        |
+| Publishing   | `files`, `type`, `engines`, `publishConfig`, `repository`, `bugs`, `homepage`      |
+| Dependencies | `dependencies`, `peerDependencies`, `peerDependenciesMeta`, `optionalDependencies` |
 
 ### Whitelisted scripts
 
