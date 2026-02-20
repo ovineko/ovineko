@@ -67,10 +67,6 @@
     "./react-error-boundary": {
       "types": "./dist/react-error-boundary/index.d.ts",
       "default": "./dist/react-error-boundary/index.js"
-    },
-    "./react-lazy": {
-      "types": "./dist/react-lazy/index.d.ts",
-      "default": "./dist/react-lazy/index.js"
     }
   },
   "files": [

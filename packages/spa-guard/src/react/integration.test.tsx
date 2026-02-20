@@ -13,10 +13,10 @@ vi.mock("../common/options", () => ({
 
 import type { SPAGuardEvent } from "../common/events/types";
 
-import { lazyWithRetry } from ".";
 import { subscribe } from "../common/events/internal";
 import { getOptions } from "../common/options";
 import { attemptReload } from "../common/reload";
+import { lazyWithRetry } from "./lazyWithRetry";
 
 interface ErrorBoundaryState {
   error: Error | null;
