@@ -1,3 +1,4 @@
+import { emitEvent } from "./events/internal";
 import { isChunkError } from "./isChunkError";
 import { attemptReload } from "./reload";
 
@@ -33,7 +34,11 @@ export const retryImport = async <T>(
 
   for (let attempt = 0; attempt < totalAttempts; attempt++) {
     try {
-      return await importFn();
+      const result = await importFn();
+      if (attempt > 0) {
+        emitEvent({ attemptNumber: attempt + 1, name: "lazy-retry-success" });
+      }
+      return result;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
@@ -43,11 +48,20 @@ export const retryImport = async <T>(
       }
 
       onRetry?.(attempt + 1, currentDelay);
+      emitEvent({
+        attempt: attempt + 1,
+        delay: currentDelay,
+        name: "lazy-retry-attempt",
+        totalAttempts,
+      });
       await wait(currentDelay);
     }
   }
 
-  if (callReloadOnFailure === true && isChunkError(lastError)) {
+  const willReload = callReloadOnFailure === true && isChunkError(lastError);
+  emitEvent({ name: "lazy-retry-exhausted", totalAttempts, willReload });
+
+  if (willReload) {
     attemptReload(lastError);
   }
 

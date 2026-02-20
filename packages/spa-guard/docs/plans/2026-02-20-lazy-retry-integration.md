@@ -172,20 +172,20 @@ interface Options {
 
 #### Task 8: Интеграция с event system
 
-- [ ] Добавить новые event типы в [src/common/events/types.ts](../src/common/events/types.ts):
+- [x] Добавить новые event типы в [src/common/events/types.ts](../src/common/events/types.ts):
   - `lazy-retry-attempt` - попытка retry модуля
   - `lazy-retry-success` - успешная загрузка после retry
   - `lazy-retry-exhausted` - исчерпаны все попытки, вызван attemptReload
-- [ ] В [src/common/retryImport.ts](../src/common/retryImport.ts) использовать `emitEvent()` из [src/common/events/internal.ts](../src/common/events/internal.ts)
-- [ ] Эмитить события на каждой попытке retry, при успехе, и при провале
-- [ ] Проверить в браузере через подписку на события
+- [x] В [src/common/retryImport.ts](../src/common/retryImport.ts) использовать `emitEvent()` из [src/common/events/internal.ts](../src/common/events/internal.ts)
+- [x] Эмитить события на каждой попытке retry, при успехе, и при провале
+- [x] Проверить в браузере через подписку на события
 
 #### Task 9: Обновить TypeScript типы и экспорты
 
-- [ ] Создать [src/react-lazy/types.ts](../src/react-lazy/types.ts) с экспортом `LazyRetryOptions` интерфейса
-- [ ] Экспортировать типы из [src/react-lazy/index.tsx](../src/react-lazy/index.tsx)
-- [ ] Убедиться что типы корректно работают с React.ComponentType generics
-- [ ] Проверить что IDE autocomplete работает для options параметра
+- [x] Создать [src/react-lazy/types.ts](../src/react-lazy/types.ts) с экспортом `LazyRetryOptions` интерфейса
+- [x] Экспортировать типы из [src/react-lazy/index.tsx](../src/react-lazy/index.tsx)
+- [x] Убедиться что типы корректно работают с React.ComponentType generics
+- [x] Проверить что IDE autocomplete работает для options параметра
 
 ---
 

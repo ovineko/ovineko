@@ -1,29 +1,11 @@
 import { type ComponentType, lazy, type LazyExoticComponent } from "react";
 
+import type { LazyRetryOptions } from "./types";
+
 import { getOptions } from "../common/options";
 import { retryImport } from "../common/retryImport";
 
-/**
- * Per-import options for lazyWithRetry that override global lazyRetry options.
- */
-export interface LazyRetryOptions {
-  /**
-   * Call attemptReload() after all retry attempts are exhausted.
-   * If true, triggers page reload logic after all retries fail.
-   * If false, only throws the error to the error boundary without reload.
-   * Overrides the global `window.__SPA_GUARD_OPTIONS__.lazyRetry.callReloadOnFailure`.
-   */
-  callReloadOnFailure?: boolean;
-
-  /**
-   * Array of delays in milliseconds for retry attempts.
-   * Each element represents one retry attempt with the given delay.
-   * Overrides the global `window.__SPA_GUARD_OPTIONS__.lazyRetry.retryDelays`.
-   *
-   * @example [500, 1500, 3000] // 3 attempts: 500ms, 1.5s, 3s
-   */
-  retryDelays?: number[];
-}
+export type { LazyRetryOptions } from "./types";
 
 /**
  * Creates a lazy-loaded React component with automatic retry on chunk load failures.
