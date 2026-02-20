@@ -144,11 +144,15 @@ describe("integration: lazyWithRetry → attemptReload → URL parameters", () =
 });
 
 describe("integration: events emitted in correct order", () => {
+  let unsubscribeEvents: (() => void) | undefined;
+
   beforeEach(() => {
     vi.mocked(attemptReload).mockClear();
   });
 
   afterEach(() => {
+    unsubscribeEvents?.();
+    unsubscribeEvents = undefined;
     vi.clearAllMocks();
   });
 
@@ -159,7 +163,7 @@ describe("integration: events emitted in correct order", () => {
     const mockImportFn = createMockImport([chunkError]);
 
     const emittedEvents: SPAGuardEvent[] = [];
-    const unsubscribe = subscribe((event) => emittedEvents.push(event));
+    unsubscribeEvents = subscribe((event) => emittedEvents.push(event));
 
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -177,8 +181,6 @@ describe("integration: events emitted in correct order", () => {
       expect(screen.getByTestId("error")).toBeInTheDocument();
     });
 
-    unsubscribe();
-
     const lazyEvents = emittedEvents.filter(
       (e) =>
         e.name === "lazy-retry-attempt" ||
@@ -186,9 +188,23 @@ describe("integration: events emitted in correct order", () => {
         e.name === "lazy-retry-success",
     );
 
-    expect(lazyEvents[0]).toMatchObject({ attempt: 1, name: "lazy-retry-attempt" });
-    expect(lazyEvents[1]).toMatchObject({ attempt: 2, name: "lazy-retry-attempt" });
-    expect(lazyEvents[2]).toMatchObject({ name: "lazy-retry-exhausted", willReload: true });
+    expect(lazyEvents[0]).toMatchObject({
+      attempt: 1,
+      delay: 1,
+      name: "lazy-retry-attempt",
+      totalAttempts: 3,
+    });
+    expect(lazyEvents[1]).toMatchObject({
+      attempt: 2,
+      delay: 2,
+      name: "lazy-retry-attempt",
+      totalAttempts: 3,
+    });
+    expect(lazyEvents[2]).toMatchObject({
+      name: "lazy-retry-exhausted",
+      totalAttempts: 3,
+      willReload: true,
+    });
 
     consoleError.mockRestore();
   });
@@ -200,7 +216,7 @@ describe("integration: events emitted in correct order", () => {
     const mockImportFn = createMockImport([chunkError, { default: SuccessComponent }]);
 
     const emittedEvents: SPAGuardEvent[] = [];
-    const unsubscribe = subscribe((event) => emittedEvents.push(event));
+    unsubscribeEvents = subscribe((event) => emittedEvents.push(event));
 
     const LazyComponent = lazyWithRetry(mockImportFn);
 
@@ -213,8 +229,6 @@ describe("integration: events emitted in correct order", () => {
     await waitFor(() => {
       expect(screen.getByText("Success")).toBeInTheDocument();
     });
-
-    unsubscribe();
 
     const lazyEvents = emittedEvents.filter(
       (e) =>

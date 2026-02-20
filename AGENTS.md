@@ -24,6 +24,7 @@ This monorepo contains the following packages:
 
 - **@ovineko/react-router**: Type-safe wrapper for React Router v7 with valibot schema validation, automatic error handling, and typed params
 - **@ovineko/react-error-boundary**: Error boundary utilities for React with optional Sentry integration
+- **@ovineko/spa-guard**: Production-ready chunk load error handling for SPAs — automatic retry with cache busting, `lazyWithRetry` for module-level retry before page reload, beacon error reporting, React error boundaries, Fastify plugin, and Vite plugin
 - **@ovineko/clean-pkg-json**: Zero-config tool to clean package.json before publishing and restore it after
 - **@ovineko/datamitsu-config**: Internal configuration package for datamitsu tooling (linting, formatting, etc.)
 - **@ovineko/fastify-base**: Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck, and other common integrations
@@ -35,6 +36,7 @@ ovineko/
 ├── packages/                    # All publishable packages
 │   ├── react-router/           # Type-safe React Router v7 wrapper (valibot validation)
 │   ├── react-error-boundary/   # Error boundaries with Sentry integration
+│   ├── spa-guard/              # Chunk load error handling for SPAs (lazyWithRetry, beacons, Vite plugin)
 │   ├── clean-pkg-json/         # Package.json cleanup tool for publishing
 │   ├── datamitsu-config/       # Shared config for datamitsu tooling
 │   └── fastify-base/           # Pre-configured Fastify server with observability
@@ -374,6 +376,15 @@ When modifying a package, always run its tests and ensure the build succeeds bef
 - Requires React Router v7 as peer dependency
 - URL params validated at runtime with valibot
 - Error boundaries require @ovineko/react-error-boundary
+
+### @ovineko/spa-guard
+
+- Dual build system: tsup builds the library (`dist/`); a separate Terser pipeline builds the inline script (`dist-inline/` for production, `dist-inline-trace/` for trace/debug mode)
+- Configuration flows from `spaGuardVitePlugin()` → injected as `window.__SPA_GUARD_OPTIONS__` at build time; all runtime code reads options exclusively from this global via `getOptions()`
+- Two-level retry strategy: `lazyWithRetry` retries the individual module import first (`lazyRetry.retryDelays`), then falls back to full page reload via `attemptReload()` (`reloadDelays`)
+- `src/common/retryImport.ts` is framework-agnostic retry logic; `src/react-lazy/index.tsx` wraps it for `React.lazy` compatibility
+- Event system uses `name` field as the discriminant (not `type`) in both internal `emitEvent()` calls and the public `events.subscribe()` API
+- Peer dependency for `./react-lazy` export is `react@^19` only
 
 ### @ovineko/clean-pkg-json
 

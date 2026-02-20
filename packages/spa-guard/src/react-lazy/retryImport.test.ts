@@ -8,6 +8,7 @@ vi.mock("../common/events/internal", () => ({
   emitEvent: vi.fn(),
 }));
 
+import { emitEvent } from "../common/events/internal";
 import { attemptReload } from "../common/reload";
 import { retryImport } from "../common/retryImport";
 
@@ -40,6 +41,7 @@ describe("retryImport (react-lazy)", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.mocked(attemptReload).mockClear();
+    vi.mocked(emitEvent).mockClear();
   });
 
   afterEach(() => {
@@ -65,6 +67,13 @@ describe("retryImport (react-lazy)", () => {
 
     expect(result).toEqual({ default: "module" });
     expect(mockImport).toHaveBeenCalledTimes(2);
+    expect(emitEvent).toHaveBeenCalledWith({
+      attempt: 1,
+      delay: 100,
+      name: "lazy-retry-attempt",
+      totalAttempts: 2,
+    });
+    expect(emitEvent).toHaveBeenCalledWith({ attemptNumber: 2, name: "lazy-retry-success" });
   });
 
   it("rejects with the last error after all attempts are exhausted", async () => {
@@ -77,6 +86,23 @@ describe("retryImport (react-lazy)", () => {
 
     await expect(promise).rejects.toThrow("Failed to fetch dynamically imported module");
     expect(mockImport).toHaveBeenCalledTimes(3);
+    expect(emitEvent).toHaveBeenCalledWith({
+      attempt: 1,
+      delay: 100,
+      name: "lazy-retry-attempt",
+      totalAttempts: 3,
+    });
+    expect(emitEvent).toHaveBeenCalledWith({
+      attempt: 2,
+      delay: 200,
+      name: "lazy-retry-attempt",
+      totalAttempts: 3,
+    });
+    expect(emitEvent).toHaveBeenCalledWith({
+      name: "lazy-retry-exhausted",
+      totalAttempts: 3,
+      willReload: false,
+    });
   });
 
   it("calls attemptReload when callReloadOnFailure is true and error is a chunk error", async () => {
@@ -90,6 +116,11 @@ describe("retryImport (react-lazy)", () => {
     await expect(promise).rejects.toThrow();
     expect(attemptReload).toHaveBeenCalledTimes(1);
     expect(attemptReload).toHaveBeenCalledWith(chunkError);
+    expect(emitEvent).toHaveBeenCalledWith({
+      name: "lazy-retry-exhausted",
+      totalAttempts: 2,
+      willReload: true,
+    });
   });
 
   it("does not call attemptReload when callReloadOnFailure is false", async () => {

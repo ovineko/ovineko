@@ -245,6 +245,29 @@ describe("lazyWithRetry", () => {
     });
   });
 
+  it("passes signal from per-import options to retryImport", async () => {
+    mockGetOptions();
+    vi.mocked(retryImport).mockResolvedValue({ default: GenericComponent });
+
+    const controller = new AbortController();
+    const mockImportFn = vi.fn();
+    const LazyComponent = lazyWithRetry(mockImportFn, { signal: controller.signal });
+
+    render(
+      <Suspense fallback={<div>Loading...</div>}>
+        <LazyComponent />
+      </Suspense>,
+    );
+
+    await waitFor(() => {
+      expect(retryImport).toHaveBeenCalledWith(
+        mockImportFn,
+        expect.any(Array),
+        expect.objectContaining({ signal: controller.signal }),
+      );
+    });
+  });
+
   it("triggers error boundary when lazy component fails to load after all retries", async () => {
     mockGetOptions();
     const loadError = new Error("Failed to fetch dynamically imported module");

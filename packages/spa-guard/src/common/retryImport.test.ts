@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("./reload", () => ({
   attemptReload: vi.fn(),
@@ -8,6 +8,10 @@ import { attemptReload } from "./reload";
 import { retryImport } from "./retryImport";
 
 describe("retryImport", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("resolves immediately on first successful attempt", async () => {
     const importFn = vi.fn().mockResolvedValue({ default: "module" });
 
@@ -29,8 +33,6 @@ describe("retryImport", () => {
     const result = await promise;
     expect(result).toEqual({ default: "module" });
     expect(importFn).toHaveBeenCalledTimes(2);
-
-    vi.useRealTimers();
   });
 
   it("rejects with last error after all attempts exhausted", async () => {
@@ -45,8 +47,6 @@ describe("retryImport", () => {
 
     await expect(promise).rejects.toThrow("Failed to fetch dynamically imported module");
     expect(importFn).toHaveBeenCalledTimes(3);
-
-    vi.useRealTimers();
   });
 
   it("calls onRetry with correct attempt number and delay", async () => {
@@ -67,8 +67,6 @@ describe("retryImport", () => {
     expect(onRetry).toHaveBeenCalledTimes(2);
     expect(onRetry).toHaveBeenNthCalledWith(1, 1, 500);
     expect(onRetry).toHaveBeenNthCalledWith(2, 2, 1500);
-
-    vi.useRealTimers();
   });
 
   it("does not call onRetry when first attempt succeeds", async () => {
@@ -112,8 +110,6 @@ describe("retryImport", () => {
     expect(onRetry).toHaveBeenNthCalledWith(1, 1, 100);
     expect(onRetry).toHaveBeenNthCalledWith(2, 2, 200);
     expect(onRetry).toHaveBeenNthCalledWith(3, 3, 300);
-
-    vi.useRealTimers();
   });
 
   describe("callReloadOnFailure", () => {
@@ -133,8 +129,6 @@ describe("retryImport", () => {
       await expect(promise).rejects.toThrow("Failed to fetch dynamically imported module");
       expect(mockAttemptReload).toHaveBeenCalledTimes(1);
       expect(mockAttemptReload).toHaveBeenCalledWith(error);
-
-      vi.useRealTimers();
     });
 
     it("does not call attemptReload when callReloadOnFailure is false", async () => {
@@ -152,8 +146,6 @@ describe("retryImport", () => {
 
       await expect(promise).rejects.toThrow("Failed to fetch dynamically imported module");
       expect(mockAttemptReload).not.toHaveBeenCalled();
-
-      vi.useRealTimers();
     });
 
     it("does not call attemptReload when callReloadOnFailure is undefined", async () => {
@@ -171,8 +163,6 @@ describe("retryImport", () => {
 
       await expect(promise).rejects.toThrow("Failed to fetch dynamically imported module");
       expect(mockAttemptReload).not.toHaveBeenCalled();
-
-      vi.useRealTimers();
     });
 
     it("does not call attemptReload for non-chunk errors even when callReloadOnFailure is true", async () => {
