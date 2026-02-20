@@ -271,11 +271,11 @@ interface Options {
 
 #### Task 18: Documentation updates
 
-- [ ] Обновить [README.md](../README.md) с секцией про `lazyWithRetry`
-- [ ] Добавить примеры использования (basic, with options, with override)
-- [ ] Добавить секцию про integration с `attemptReload`
-- [ ] Обновить API reference с новыми опциями `window.__SPA_GUARD_OPTIONS__.lazyRetry`
-- [ ] Добавить migration guide если нужно
+- [x] Обновить [README.md](../README.md) с секцией про `lazyWithRetry`
+- [x] Добавить примеры использования (basic, with options, with override)
+- [x] Добавить секцию про integration с `attemptReload`
+- [x] Обновить API reference с новыми опциями `window.__SPA_GUARD_OPTIONS__.lazyRetry`
+- [x] Добавить migration guide если нужно
 
 #### Task 19: Финальная проверка и linting
 

@@ -30,6 +30,7 @@ Peer dependencies vary by integration - see sections below for specific requirem
 - ✅ **React Router v7 integration** - Works seamlessly with React Router error boundaries
 - ✅ **TypeScript support** - Full type definitions with all exports
 - ✅ **Framework-agnostic core** - Works with or without React
+- ✅ **lazyWithRetry** - Drop-in React.lazy replacement with automatic module-level retry before page reload
 
 ## Quick Start
 
@@ -256,6 +257,11 @@ interface Options {
 
   reportBeacon?: {
     endpoint?: string; // Server endpoint for beacon reports
+  };
+
+  lazyRetry?: {
+    retryDelays?: number[]; // Delays in ms for module-level retries (default: [1000, 2000])
+    callReloadOnFailure?: boolean; // Trigger page reload after all retries fail (default: true)
   };
 }
 
@@ -695,6 +701,11 @@ interface Options {
   reportBeacon?: {
     endpoint?: string; // Error reporting endpoint
   };
+
+  lazyRetry?: {
+    retryDelays?: number[]; // Delays in ms for lazy import retries (default: [1000, 2000])
+    callReloadOnFailure?: boolean; // Trigger page reload after all retries fail (default: true)
+  };
 }
 ```
 
@@ -768,9 +779,216 @@ const unsubscribe = subscribeToState((state) => {
 unsubscribe();
 ```
 
+### lazyWithRetry
+
+`lazyWithRetry` is a drop-in replacement for `React.lazy` that adds automatic retry logic for dynamic imports. Instead of immediately failing on a chunk load error, it retries the import with configurable delays and only falls back to a full page reload via `attemptReload()` if all retries are exhausted.
+
+#### Basic Usage
+
+```tsx
+import { lazyWithRetry } from "@ovineko/spa-guard/react-lazy";
+import { Suspense } from "react";
+import { ErrorBoundary } from "@ovineko/spa-guard/react-error-boundary";
+
+// Uses global options from window.__SPA_GUARD_OPTIONS__.lazyRetry
+const LazyHome = lazyWithRetry(() => import("./pages/Home"));
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<div>Loading...</div>}>
+        <LazyHome />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+```
+
+#### Global Configuration
+
+Configure default retry behavior via `window.__SPA_GUARD_OPTIONS__`:
+
+```typescript
+window.__SPA_GUARD_OPTIONS__ = {
+  lazyRetry: {
+    retryDelays: [1000, 2000], // 2 retry attempts: 1s then 2s (default)
+    callReloadOnFailure: true, // Fall back to page reload after all retries (default)
+  },
+};
+```
+
+These global options are used by all `lazyWithRetry` calls unless overridden per-import.
+
+#### Per-Import Override
+
+Override global options for individual components:
+
+```tsx
+// More retries for a critical checkout flow
+const LazyCheckout = lazyWithRetry(
+  () => import("./pages/Checkout"),
+  { retryDelays: [500, 1000, 2000, 4000] }, // 4 attempts
+);
+
+// Disable page reload for a non-critical widget
+const LazyWidget = lazyWithRetry(() => import("./widgets/Optional"), {
+  retryDelays: [1000], // 1 retry attempt
+  callReloadOnFailure: false, // just throw to error boundary, no reload
+});
+```
+
+Per-import options always take priority over global options.
+
+#### Cancelling Retries with AbortSignal
+
+Use an `AbortSignal` to cancel in-progress retries and prevent memory leaks (e.g., when a component unmounts before the import resolves):
+
+```tsx
+const controller = new AbortController();
+
+const LazyPage = lazyWithRetry(() => import("./pages/Page"), { signal: controller.signal });
+
+// Cancel retries when no longer needed
+controller.abort();
+```
+
+Aborting clears any pending `setTimeout` timers immediately and rejects the import promise with an `AbortError`.
+
+#### Integration with attemptReload
+
+`lazyWithRetry` integrates with spa-guard's existing page reload logic:
+
+1. Component renders inside `<Suspense>`
+2. `React.lazy` calls the import function through `retryImport`
+3. On import failure, `retryImport` checks if it is a chunk load error
+4. If yes: retries with delays from `retryDelays` array, emitting `lazy-retry-attempt` events
+5. If all retries fail: emits `lazy-retry-exhausted` event, then calls `attemptReload()` (if `callReloadOnFailure: true`) before throwing to the error boundary
+6. `attemptReload()` adds `?spaGuardRetryId=...&spaGuardRetryAttempt=N` to the URL and reloads the page
+
+This means `lazyWithRetry` provides a two-level retry strategy:
+
+- Level 1 (new): Retry the individual module import with delays — no page disruption
+- Level 2 (existing): If all module retries fail, trigger the full page reload cycle
+
+#### Events
+
+Subscribe to lazy retry events via the event system:
+
+```typescript
+import { events } from "@ovineko/spa-guard";
+
+events.subscribe((event) => {
+  if (event.type === "lazy-retry-attempt") {
+    console.log(
+      `Retry ${event.payload.attempt}/${event.payload.totalAttempts} after ${event.payload.delay}ms`,
+    );
+  }
+  if (event.type === "lazy-retry-success") {
+    console.log(`Succeeded on attempt ${event.payload.attemptNumber}`);
+  }
+  if (event.type === "lazy-retry-exhausted") {
+    console.log(`All retries exhausted. Will reload: ${event.payload.willReload}`);
+  }
+});
+```
+
+**Event payload types:**
+
+```typescript
+type LazyRetryAttempt = {
+  type: "lazy-retry-attempt";
+  payload: {
+    attempt: number; // current attempt number (1-based)
+    delay: number; // delay in ms before this attempt
+    totalAttempts: number; // total number of retry attempts
+  };
+};
+
+type LazyRetrySuccess = {
+  type: "lazy-retry-success";
+  payload: {
+    attemptNumber: number; // attempt on which import succeeded (1 = no retry needed)
+  };
+};
+
+type LazyRetryExhausted = {
+  type: "lazy-retry-exhausted";
+  payload: {
+    totalAttempts: number; // number of attempts made
+    willReload: boolean; // whether attemptReload() will be called
+  };
+};
+```
+
+#### API Reference
+
+##### `lazyWithRetry<T>(importFn, options?)`
+
+Creates a lazy React component with retry logic.
+
+```typescript
+import { lazyWithRetry } from "@ovineko/spa-guard/react-lazy";
+import type { LazyRetryOptions } from "@ovineko/spa-guard/react-lazy";
+```
+
+**Parameters:**
+
+- `importFn: () => Promise<{ default: T }>` - Dynamic import function
+- `options?: LazyRetryOptions` - Per-import options (override global)
+
+**Returns:** `LazyExoticComponent<T>` - Same type as `React.lazy()`
+
+##### `LazyRetryOptions`
+
+```typescript
+interface LazyRetryOptions {
+  /**
+   * Array of delays in milliseconds for retry attempts.
+   * Each element = one retry attempt with that delay.
+   * Overrides window.__SPA_GUARD_OPTIONS__.lazyRetry.retryDelays.
+   * @default [1000, 2000]
+   */
+  retryDelays?: number[];
+
+  /**
+   * Call attemptReload() after all retries are exhausted.
+   * Overrides window.__SPA_GUARD_OPTIONS__.lazyRetry.callReloadOnFailure.
+   * @default true
+   */
+  callReloadOnFailure?: boolean;
+
+  /**
+   * AbortSignal to cancel in-progress retries and clear pending timers.
+   */
+  signal?: AbortSignal;
+}
+```
+
+##### Global `lazyRetry` Options
+
+```typescript
+interface Options {
+  // ... existing options ...
+
+  lazyRetry?: {
+    /**
+     * Array of retry delays in ms for dynamic imports.
+     * @default [1000, 2000]
+     */
+    retryDelays?: number[];
+
+    /**
+     * Call attemptReload() after all lazy import retries fail.
+     * @default true
+     */
+    callReloadOnFailure?: boolean;
+  };
+}
+```
+
 ## Module Exports
 
-spa-guard provides 9 export entry points:
+spa-guard provides 10 export entry points:
 
 | Export                   | Description                                            | Peer Dependencies              |
 | ------------------------ | ------------------------------------------------------ | ------------------------------ |
@@ -779,6 +997,7 @@ spa-guard provides 9 export entry points:
 | `./schema/parse`         | Beacon parsing utilities                               | `typebox@^1`                   |
 | `./runtime`              | Runtime state management and subscriptions             | None                           |
 | `./react`                | React hooks (useSpaGuardState)                         | `react@^19`                    |
+| `./react-lazy`           | lazyWithRetry - lazy imports with retry (new)          | `react@^19`                    |
 | `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter) | `react@^19`, `react-router@^7` |
 | `./fastify`              | Fastify server plugin                                  | `fastify@^4 \|\| ^5`           |
 | `./vite-plugin`          | Vite build plugin                                      | `vite@^7 \|\| ^8`              |
@@ -795,6 +1014,10 @@ import { getState, subscribeToState } from "@ovineko/spa-guard/runtime";
 
 // React hooks
 import { useSpaGuardState } from "@ovineko/spa-guard/react";
+
+// Lazy imports with retry
+import { lazyWithRetry } from "@ovineko/spa-guard/react-lazy";
+import type { LazyRetryOptions } from "@ovineko/spa-guard/react-lazy";
 
 // React error boundaries
 import { ErrorBoundary } from "@ovineko/spa-guard/react-error-boundary";
