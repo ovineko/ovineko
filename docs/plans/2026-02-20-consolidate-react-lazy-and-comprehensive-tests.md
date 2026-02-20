@@ -258,13 +258,13 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 15: Integration tests for event system
 
-- [ ] Create `src/common/events/internal.test.ts`
-- [ ] Write tests for emit → all subscribers notified
-- [ ] Write tests for multiple subscribers to same event
-- [ ] Write tests for unsubscribe stops notifications
-- [ ] Write tests for event data passed correctly to subscribers
-- [ ] Write tests for edge cases (no subscribers, subscriber throws error, unsubscribe during emit)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/common/events/internal.test.ts`
+- [x] Write tests for emit → all subscribers notified
+- [x] Write tests for multiple subscribers to same event
+- [x] Write tests for unsubscribe stops notifications
+- [x] Write tests for event data passed correctly to subscribers
+- [x] Write tests for edge cases (no subscribers, subscriber throws error, unsubscribe during emit)
+- [x] Run project tests - must pass before next task
 
 ### Task 16: Integration tests for end-to-end error flow
 
