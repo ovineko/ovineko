@@ -196,14 +196,14 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 9: Add tests for URL state management
 
-- [ ] Create `src/common/retryState.test.ts`
-- [ ] Write tests for getRetryStateFromUrl parsing (valid params)
-- [ ] Write tests for setRetryStateToUrl encoding (new URL params)
-- [ ] Write tests for retry ID preservation across reload
-- [ ] Write tests for retry attempt incrementation
-- [ ] Write tests for fallback state (attempt = -1)
-- [ ] Write tests for edge cases (malformed URL params, missing params, NaN values)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/common/retryState.test.ts`
+- [x] Write tests for getRetryStateFromUrl parsing (valid params)
+- [x] Write tests for setRetryStateToUrl encoding (new URL params)
+- [x] Write tests for retry ID preservation across reload
+- [x] Write tests for retry attempt incrementation
+- [x] Write tests for fallback state (attempt = -1)
+- [x] Write tests for edge cases (malformed URL params, missing params, NaN values)
+- [x] Run project tests - must pass before next task
 
 ### Task 10: Add tests for sendBeacon
 
