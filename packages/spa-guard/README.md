@@ -605,7 +605,6 @@ const patterns = [
   /Loading chunk \d+ failed/i, // Webpack
   /Loading CSS chunk \d+ failed/i, // Webpack CSS
   /ChunkLoadError/i, // Generic
-  /Failed to fetch/i, // Network failures
 ];
 ```
 
