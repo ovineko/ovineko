@@ -247,14 +247,14 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 14: Add tests for Fastify plugin
 
-- [ ] Create `src/fastify/fastifySPAGuard.test.ts`
-- [ ] Write tests for plugin registration (route created at specified path)
-- [ ] Write tests for valid beacon POST → onBeacon callback invoked
-- [ ] Write tests for invalid beacon POST → onUnknownBeacon callback invoked
-- [ ] Write tests for beacon parsing integration (schema validation)
-- [ ] Write tests for response handling (200 OK, custom responses from callbacks)
-- [ ] Write tests for edge cases (missing callbacks, callback throws error, malformed JSON body)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/fastify/fastifySPAGuard.test.ts`
+- [x] Write tests for plugin registration (route created at specified path)
+- [x] Write tests for valid beacon POST → onBeacon callback invoked
+- [x] Write tests for invalid beacon POST → onUnknownBeacon callback invoked
+- [x] Write tests for beacon parsing integration (schema validation)
+- [x] Write tests for response handling (200 OK, custom responses from callbacks)
+- [x] Write tests for edge cases (missing callbacks, callback throws error, malformed JSON body)
+- [x] Run project tests - must pass before next task
 
 ### Task 15: Integration tests for event system
 
