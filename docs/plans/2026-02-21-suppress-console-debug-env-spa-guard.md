@@ -37,9 +37,9 @@ Add conditional console suppression in the vitest setup file so console.log/warn
 
 ### Task 3: Verify acceptance criteria
 
-- [ ] Run `pnpm test` in `packages/spa-guard` — all tests pass, no console output visible
-- [ ] Run `pnpm test:debug` in `packages/spa-guard` — all tests pass, console output IS visible
-- [ ] Run linter: `pnpm lint` in `packages/spa-guard`
+- [x] Run `pnpm test` in `packages/spa-guard` — all tests pass, no console output visible
+- [x] Run `pnpm test:debug` in `packages/spa-guard` — all tests pass, console output IS visible
+- [x] Run linter: `pnpm lint` in `packages/spa-guard`
 
 ### Task 4: Update documentation
 
