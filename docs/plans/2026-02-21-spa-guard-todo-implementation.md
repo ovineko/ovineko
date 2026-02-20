@@ -121,13 +121,13 @@ Covers TODO item 3 (status: Not implemented). Implemented as `@ovineko/spa-guard
 
 ### Task 6: Verify acceptance criteria
 
-- [ ] manual check: `startVersionCheck` is importable from `@ovineko/spa-guard`
-- [ ] manual check: `disableDefaultRetry`, `isDefaultRetryEnabled` are importable from `@ovineko/spa-guard`
-- [ ] manual check: `useSPAGuardEvents`, `useSPAGuardChunkError` are importable from `@ovineko/spa-guard/react`
-- [ ] manual check: `@ovineko/spa-guard/eslint` is importable and exports a plugin with `rules` and `configs.recommended`
-- [ ] run full test suite: `pnpm --filter @ovineko/spa-guard test`
-- [ ] run linter: `pnpm --filter @ovineko/spa-guard lint`
-- [ ] verify test coverage: `pnpm --filter @ovineko/spa-guard test:coverage`
+- [x] manual check: `startVersionCheck` is importable from `@ovineko/spa-guard`
+- [x] manual check: `disableDefaultRetry`, `isDefaultRetryEnabled` are importable from `@ovineko/spa-guard`
+- [x] manual check: `useSPAGuardEvents`, `useSPAGuardChunkError` are importable from `@ovineko/spa-guard/react`
+- [x] manual check: `@ovineko/spa-guard/eslint` is importable and exports a plugin with `rules` and `configs.recommended`
+- [x] run full test suite: `pnpm --filter @ovineko/spa-guard test`
+- [x] run linter: `pnpm --filter @ovineko/spa-guard lint`
+- [x] verify test coverage: `pnpm --filter @ovineko/spa-guard test:coverage`
 
 ### Task 7: Update documentation
 
