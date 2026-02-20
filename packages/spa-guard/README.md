@@ -925,7 +925,7 @@ type LazyRetryAttempt = {
 
 type LazyRetrySuccess = {
   name: "lazy-retry-success";
-  attempt: number; // attempt on which import succeeded (always >1 since only emitted after retries)
+  attempt: number; // 1-based retry number on which import succeeded (1 = first retry)
 };
 
 type LazyRetryExhausted = {

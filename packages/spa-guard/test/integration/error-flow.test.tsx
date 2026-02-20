@@ -211,7 +211,7 @@ describe("chunk error in lazy component → retry → success", () => {
         e.name === "lazy-retry-exhausted",
     );
     expect(lazyEvents[0]).toMatchObject({ attempt: 1, name: "lazy-retry-attempt" });
-    expect(lazyEvents[1]).toMatchObject({ attempt: 2, name: "lazy-retry-success" });
+    expect(lazyEvents[1]).toMatchObject({ attempt: 1, name: "lazy-retry-success" });
     expect(lazyEvents).toHaveLength(2);
   });
 

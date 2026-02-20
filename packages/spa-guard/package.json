@@ -131,6 +131,9 @@
     "react-router": {
       "optional": true
     },
+    "typebox": {
+      "optional": true
+    },
     "vite": {
       "optional": true
     }
