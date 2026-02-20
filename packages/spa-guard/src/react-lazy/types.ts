@@ -29,4 +29,17 @@ export interface LazyRetryOptions {
    * @example [500, 1500, 3000] // 3 attempts: 500ms, 1.5s, 3s
    */
   retryDelays?: number[];
+
+  /**
+   * AbortSignal to cancel in-progress retry attempts and clear pending timers.
+   * When the signal fires, any pending setTimeout is cleared immediately (preventing
+   * memory leaks) and the import promise rejects with an AbortError.
+   *
+   * @example
+   * const controller = new AbortController();
+   * const LazyHome = lazyWithRetry(() => import('./Home'), { signal: controller.signal });
+   * // Cancel retries when no longer needed:
+   * controller.abort();
+   */
+  signal?: AbortSignal;
 }

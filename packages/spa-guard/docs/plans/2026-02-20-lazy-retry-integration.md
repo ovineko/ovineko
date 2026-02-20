@@ -247,12 +247,12 @@ interface Options {
 
 #### Task 15: Обработка edge cases
 
-- [ ] Добавить обработку отмены импорта (component unmount во время retry)
-- [ ] Добавить защиту от memory leaks при unmount (clear timeouts)
-- [ ] Проверить поведение при CSP violations
-- [ ] Проверить поведение при network offline → online transitions
-- [ ] Обновить тесты для edge cases
-- [ ] Запустить `pnpm test` - все тесты должны проходить
+- [x] Добавить обработку отмены импорта (component unmount во время retry)
+- [x] Добавить защиту от memory leaks при unmount (clear timeouts)
+- [x] Проверить поведение при CSP violations
+- [x] Проверить поведение при network offline → online transitions
+- [x] Обновить тесты для edge cases
+- [x] Запустить `pnpm test` - все тесты должны проходить
 
 #### Task 16: TypeScript типы полировка
 

@@ -142,4 +142,95 @@ describe("retryImport (react-lazy)", () => {
     expect(onRetry).toHaveBeenNthCalledWith(2, 2, 200);
     expect(onRetry).toHaveBeenNthCalledWith(3, 3, 300);
   });
+
+  describe("AbortSignal / cancellation / memory leak prevention", () => {
+    it("rejects immediately when signal is already aborted before start", async () => {
+      const mockImport = createMockImport([{ default: "module" }]);
+      const controller = new AbortController();
+      controller.abort();
+
+      await expect(retryImport(mockImport, [100], { signal: controller.signal })).rejects.toThrow(
+        /AbortError|Aborted/i,
+      );
+      expect(mockImport).not.toHaveBeenCalled();
+    });
+
+    it("cancels a pending retry wait when signal is aborted mid-wait", async () => {
+      const chunkError = new Error("Failed to fetch dynamically imported module");
+      const mockImport = createMockImport([chunkError, { default: "module" }]);
+      const controller = new AbortController();
+
+      const promise = retryImport(mockImport, [10_000], { signal: controller.signal });
+      promise.catch(() => {});
+
+      // First attempt failed, now waiting 10s before retry — abort during the wait
+      await Promise.resolve(); // let first attempt run
+      await Promise.resolve(); // let rejection propagate
+      controller.abort();
+
+      await expect(promise).rejects.toThrow(/AbortError|Aborted/i);
+      // Only the first attempt ran; retry was cancelled
+      expect(mockImport).toHaveBeenCalledTimes(1);
+    });
+
+    it("clears the timeout when aborted so timers do not fire (no memory leak)", async () => {
+      const chunkError = new Error("chunk error");
+      const mockImport = createMockImport([chunkError]);
+      const controller = new AbortController();
+
+      const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
+
+      const promise = retryImport(mockImport, [5000], { signal: controller.signal });
+      promise.catch(() => {});
+
+      await Promise.resolve();
+      await Promise.resolve();
+      controller.abort();
+
+      await promise.catch(() => {});
+
+      expect(clearTimeoutSpy).toHaveBeenCalled();
+      clearTimeoutSpy.mockRestore();
+    });
+  });
+
+  describe("edge cases: CSP violations and network errors", () => {
+    it("does not treat CSP SecurityError as a chunk error (no reload)", async () => {
+      const cspError = new Error(
+        "Refused to load the script because it violates the Content Security Policy",
+      );
+      cspError.name = "SecurityError";
+      const mockImport = createMockImport([cspError]);
+
+      await expect(retryImport(mockImport, [], { callReloadOnFailure: true })).rejects.toThrow(
+        "violates the Content Security Policy",
+      );
+      expect(attemptReload).not.toHaveBeenCalled();
+    });
+
+    it("treats TypeError network error (offline) as a chunk error and triggers reload", async () => {
+      const networkError = new TypeError("Failed to fetch");
+      const mockImport = createMockImport([networkError]);
+
+      const promise = retryImport(mockImport, [], { callReloadOnFailure: true });
+      promise.catch(() => {});
+      await vi.runAllTimersAsync();
+
+      await expect(promise).rejects.toThrow("Failed to fetch");
+      expect(attemptReload).toHaveBeenCalledTimes(1);
+      expect(attemptReload).toHaveBeenCalledWith(networkError);
+    });
+
+    it("retries network errors and succeeds when connection is restored", async () => {
+      const networkError = new TypeError("Failed to fetch");
+      const mockImport = createMockImport([networkError, { default: "module" }]);
+
+      const promise = retryImport(mockImport, [50]);
+      await vi.runAllTimersAsync();
+      const result = await promise;
+
+      expect(result).toEqual({ default: "module" });
+      expect(mockImport).toHaveBeenCalledTimes(2);
+    });
+  });
 });

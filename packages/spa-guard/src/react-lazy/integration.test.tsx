@@ -309,6 +309,69 @@ describe("integration: multiple parallel lazy imports with different retry delay
   });
 });
 
+describe("integration: edge cases - CSP violations and network transitions", () => {
+  beforeEach(() => {
+    vi.mocked(attemptReload).mockClear();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("does not trigger attemptReload for a CSP SecurityError (not a chunk error)", async () => {
+    mockGetOptions({ callReloadOnFailure: true, retryDelays: [] });
+
+    const cspError = new Error(
+      "Refused to load the script because it violates the Content Security Policy",
+    );
+    cspError.name = "SecurityError";
+    const mockImportFn = createMockImport([cspError]);
+
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const LazyComponent = lazyWithRetry(mockImportFn);
+
+    render(
+      <ErrorBoundary>
+        <Suspense fallback={<div>Loading...</div>}>
+          <LazyComponent />
+        </Suspense>
+      </ErrorBoundary>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("error")).toBeInTheDocument();
+    });
+
+    // CSP error is NOT a chunk error, so no reload should be triggered
+    expect(attemptReload).not.toHaveBeenCalled();
+
+    consoleError.mockRestore();
+  });
+
+  it("retries and recovers from a network error (offline → online transition)", async () => {
+    mockGetOptions({ callReloadOnFailure: false, retryDelays: [1] });
+
+    const networkError = new TypeError("Failed to fetch");
+    const mockImportFn = createMockImport([networkError, { default: LoadedComponent }]);
+
+    const LazyComponent = lazyWithRetry(mockImportFn);
+
+    render(
+      <Suspense fallback={<div data-testid="suspense-fallback">Loading...</div>}>
+        <LazyComponent />
+      </Suspense>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Loaded Component")).toBeInTheDocument();
+    });
+
+    expect(mockImportFn).toHaveBeenCalledTimes(2);
+    expect(screen.queryByTestId("suspense-fallback")).not.toBeInTheDocument();
+  });
+});
+
 describe("integration: React Suspense fallback during retry", () => {
   beforeEach(() => {
     vi.mocked(attemptReload).mockClear();

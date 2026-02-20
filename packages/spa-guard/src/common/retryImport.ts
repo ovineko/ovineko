@@ -2,9 +2,23 @@ import { emitEvent } from "./events/internal";
 import { isChunkError } from "./isChunkError";
 import { attemptReload } from "./reload";
 
-const wait = (ms: number): Promise<void> =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
+const wait = (ms: number, signal?: AbortSignal): Promise<void> =>
+  new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason ?? new DOMException("Aborted", "AbortError"));
+      return;
+    }
+
+    const timeoutId = setTimeout(resolve, ms);
+
+    signal?.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(timeoutId);
+        reject(signal.reason ?? new DOMException("Aborted", "AbortError"));
+      },
+      { once: true },
+    );
   });
 
 export interface RetryImportOptions {
@@ -15,6 +29,13 @@ export interface RetryImportOptions {
   callReloadOnFailure?: boolean;
   /** Optional callback called before each retry attempt */
   onRetry?: (attempt: number, delay: number) => void;
+  /**
+   * AbortSignal to cancel pending retries and clear timers.
+   * When aborted, any in-progress wait is cancelled immediately (preventing memory leaks),
+   * and the retryImport promise rejects with an AbortError.
+   * Useful when the caller no longer needs the import result (e.g. component unmounted).
+   */
+  signal?: AbortSignal;
 }
 
 /**
@@ -36,12 +57,16 @@ export const retryImport = async <T>(
   delays: number[],
   options?: RetryImportOptions,
 ): Promise<T> => {
-  const { callReloadOnFailure, onRetry } = options ?? {};
+  const { callReloadOnFailure, onRetry, signal } = options ?? {};
   let lastError: Error = new Error("Import failed after all retry attempts");
 
   const totalAttempts = delays.length + 1;
 
   for (let attempt = 0; attempt < totalAttempts; attempt++) {
+    if (signal?.aborted) {
+      throw signal.reason ?? new DOMException("Aborted", "AbortError");
+    }
+
     try {
       const result = await importFn();
       if (attempt > 0) {
@@ -63,7 +88,7 @@ export const retryImport = async <T>(
         name: "lazy-retry-attempt",
         totalAttempts,
       });
-      await wait(currentDelay);
+      await wait(currentDelay, signal);
     }
   }
 
