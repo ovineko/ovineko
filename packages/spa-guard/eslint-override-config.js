@@ -5,7 +5,7 @@ export { globalIgnores } from "@shibanet0/datamitsu-config/eslint";
 /**
  * @type {typeof defineConfigLib}
  */
-export const defineConfig = async (packageJSON, config = [], options) => {
+export const defineConfig = async (packageJSON, config = [], options = {}) => {
   const _config = await defineConfigLib(
     packageJSON,
     [

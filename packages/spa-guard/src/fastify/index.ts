@@ -149,7 +149,10 @@ const fastifySPAGuardPlugin: FastifyPluginAsync<FastifySPAGuardOptions> = async 
 
     const body = parseStringBody(request.body);
     await handleBeaconRequest({ body, options: { onBeacon, onUnknownBeacon }, reply, request });
-    return reply.status(200).send({ success: true });
+    if (!reply.sent) {
+      return reply.status(200).send({ success: true });
+    }
+    return reply;
   });
 };
 

@@ -31,7 +31,7 @@ const getInlineScript = async (options: VitePluginOptions) => {
     .readFile(path.join(import.meta.dirname, `../../${buildDir}/index.js`), "utf8")
     .then((r) => r.trim());
 
-  const processedOptions = { ...options };
+  const processedOptions = { ...options, trace: undefined };
 
   if (processedOptions.fallback?.html) {
     processedOptions.fallback = {
@@ -40,7 +40,7 @@ const getInlineScript = async (options: VitePluginOptions) => {
     };
   }
 
-  return `window.${optionsWindowKey}=${JSON.stringify(processedOptions)};${script}`;
+  return `window.${optionsWindowKey}=${JSON.stringify(processedOptions).replaceAll("<", "\\u003c")};${script}`;
 };
 
 export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
