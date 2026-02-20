@@ -15,7 +15,7 @@ export const tsupInlineTraceOptions: Options = {
   splitting: false,
   terserOptions: {
     compress: {
-      drop_console: true,
+      drop_console: false,
       passes: 3,
       pure_funcs: [],
       unsafe: true,
