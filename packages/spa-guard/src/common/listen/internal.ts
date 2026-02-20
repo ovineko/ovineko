@@ -103,6 +103,6 @@ export const listenInternal = (serializeError: (error: unknown) => string) => {
     }
 
     event.preventDefault();
-    attemptReload(event);
+    attemptReload((event as any)?.payload ?? event);
   });
 };

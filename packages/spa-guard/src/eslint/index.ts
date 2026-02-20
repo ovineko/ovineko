@@ -8,9 +8,13 @@ const rules: Record<string, Rule.RuleModule> = {
   "no-direct-lazy": noDirectLazy,
 };
 
-const configs = {
+const plugin = { configs: {} as Record<string, unknown>, rules };
+
+plugin.configs = {
   recommended: {
-    plugins: ["@ovineko/spa-guard"],
+    plugins: {
+      "@ovineko/spa-guard": plugin,
+    },
     rules: {
       "@ovineko/spa-guard/no-direct-error-boundary": "error",
       "@ovineko/spa-guard/no-direct-lazy": "error",
@@ -18,7 +22,7 @@ const configs = {
   },
 };
 
-const plugin = { configs, rules };
+const { configs } = plugin;
 
 export default plugin;
 export { configs, rules };

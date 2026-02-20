@@ -548,11 +548,11 @@ describe("listenInternal", () => {
       expect(mockPreventDefault).toHaveBeenCalledTimes(1);
     });
 
-    it("calls attemptReload with the full event", () => {
+    it("calls attemptReload with event.payload", () => {
       const { handlers } = captureListeners();
       const event = { payload: { message: "preload error" }, preventDefault: vi.fn() };
       handlers["vite:preloadError"]!(event);
-      expect(mockAttemptReload).toHaveBeenCalledWith(event);
+      expect(mockAttemptReload).toHaveBeenCalledWith(event.payload);
     });
 
     it("does not call sendBeacon - always uses attemptReload", () => {
@@ -645,13 +645,13 @@ describe("listenInternal", () => {
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
-    it("vite:preloadError always calls attemptReload (does not check isChunkError)", () => {
+    it("vite:preloadError always calls attemptReload with payload (does not check isChunkError)", () => {
       // vite:preloadError handler doesn't call isChunkError - it always does attemptReload
       mockIsChunkError.mockReturnValue(false);
       const { handlers } = captureListeners();
       const event = { payload: { message: "vite preload" }, preventDefault: vi.fn() };
       handlers["vite:preloadError"]!(event);
-      expect(mockAttemptReload).toHaveBeenCalledWith(event);
+      expect(mockAttemptReload).toHaveBeenCalledWith(event.payload);
       expect(mockIsChunkError).not.toHaveBeenCalled();
     });
 
