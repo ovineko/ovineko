@@ -33,7 +33,7 @@ Add conditional console suppression in the vitest setup file so console.log/warn
 **Files:**
 - Modify: `packages/spa-guard/package.json`
 
-- [ ] Add `"test:debug": "DEBUG=1 vitest run"` to the scripts section, placed after `test:coverage`
+- [x] Add `"test:debug": "DEBUG=1 vitest run"` to the scripts section, placed after `test:coverage`
 
 ### Task 3: Verify acceptance criteria
 

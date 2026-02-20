@@ -85,6 +85,7 @@
     "prepublishOnly": "pnpm build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:debug": "DEBUG=1 vitest run",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
