@@ -228,12 +228,12 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 12: Add tests for lastReloadTime persistence
 
-- [ ] Create `src/common/lastReloadTime.test.ts`
-- [ ] Write tests for getLastReloadTime from sessionStorage
-- [ ] Write tests for setLastReloadTime to sessionStorage
-- [ ] Write tests for time-since-reload calculation
-- [ ] Write tests for edge cases (sessionStorage unavailable, invalid stored value, NaN timestamps)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/common/lastReloadTime.test.ts`
+- [x] Write tests for getLastReloadTime from sessionStorage
+- [x] Write tests for setLastReloadTime to sessionStorage
+- [x] Write tests for time-since-reload calculation
+- [x] Write tests for edge cases (sessionStorage unavailable, invalid stored value, NaN timestamps)
+- [x] Run project tests - must pass before next task
 
 ### Task 13: Add tests for beacon schema parsing
 
