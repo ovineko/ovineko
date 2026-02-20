@@ -43,5 +43,5 @@ Add conditional console suppression in the vitest setup file so console.log/warn
 
 ### Task 4: Update documentation
 
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Move this plan to `docs/plans/completed/`
 ---
