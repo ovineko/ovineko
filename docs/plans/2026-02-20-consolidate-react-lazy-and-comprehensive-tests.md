@@ -218,13 +218,13 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 11: Add tests for error filtering
 
-- [ ] Create `src/common/shouldIgnore.test.ts`
-- [ ] Write tests for ignoredErrors pattern matching (exact match)
-- [ ] Write tests for ignoredErrors substring matching
-- [ ] Write tests for case-insensitive matching
-- [ ] Write tests for empty ignoredErrors array (nothing ignored)
-- [ ] Write tests for edge cases (null error message, Error without message, non-Error objects)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/common/shouldIgnore.test.ts`
+- [x] Write tests for ignoredErrors pattern matching (exact match)
+- [x] Write tests for ignoredErrors substring matching
+- [x] Write tests for case-insensitive matching
+- [x] Write tests for empty ignoredErrors array (nothing ignored)
+- [x] Write tests for edge cases (null error message, Error without message, non-Error objects)
+- [x] Run project tests - must pass before next task
 
 ### Task 12: Add tests for lastReloadTime persistence
 
