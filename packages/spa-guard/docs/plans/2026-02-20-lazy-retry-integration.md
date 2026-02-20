@@ -214,14 +214,14 @@ interface Options {
 
 #### Task 12: Написать тесты для lazyWithRetry
 
-- [ ] Создать [src/react-lazy/lazyWithRetry.test.tsx](../src/react-lazy/lazyWithRetry.test.tsx)
-- [ ] Настроить React Testing Library render
-- [ ] Тест: успешная загрузка lazy компонента без retry
-- [ ] Тест: успешная загрузка после retry попытки
-- [ ] Тест: использование глобальных опций когда per-import options не переданы
-- [ ] Тест: per-import options переопределяют глобальные
-- [ ] Тест: провал lazy компонента триггерит error boundary + attemptReload
-- [ ] Запустить `pnpm test` - все тесты должны проходить
+- [x] Создать [src/react-lazy/lazyWithRetry.test.tsx](../src/react-lazy/lazyWithRetry.test.tsx)
+- [x] Настроить React Testing Library render
+- [x] Тест: успешная загрузка lazy компонента без retry
+- [x] Тест: успешная загрузка после retry попытки
+- [x] Тест: использование глобальных опций когда per-import options не переданы
+- [x] Тест: per-import options переопределяют глобальные
+- [x] Тест: провал lazy компонента триггерит error boundary + attemptReload
+- [x] Запустить `pnpm test` - все тесты должны проходить
 
 #### Task 13: Написать integration тесты
 
