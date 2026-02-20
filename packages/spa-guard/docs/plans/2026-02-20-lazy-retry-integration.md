@@ -225,12 +225,12 @@ interface Options {
 
 #### Task 13: Написать integration тесты
 
-- [ ] Создать [src/react-lazy/integration.test.tsx](../src/react-lazy/integration.test.tsx)
-- [ ] Тест: последовательность lazy retry → attemptReload → URL параметры обновлены
-- [ ] Тест: события эмитятся в правильном порядке (lazy-retry-attempt → lazy-retry-exhausted)
-- [ ] Тест: несколько параллельных lazy imports с разными retry delays
-- [ ] Тест: React Suspense fallback отображается во время retry
-- [ ] Запустить `pnpm test` - все тесты должны проходить
+- [x] Создать [src/react-lazy/integration.test.tsx](../src/react-lazy/integration.test.tsx)
+- [x] Тест: последовательность lazy retry → attemptReload → URL параметры обновлены
+- [x] Тест: события эмитятся в правильном порядке (lazy-retry-attempt → lazy-retry-exhausted)
+- [x] Тест: несколько параллельных lazy imports с разными retry delays
+- [x] Тест: React Suspense fallback отображается во время retry
+- [x] Запустить `pnpm test` - все тесты должны проходить
 
 #### Task 14: Проверить test coverage
 
