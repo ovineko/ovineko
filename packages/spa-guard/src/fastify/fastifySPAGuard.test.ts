@@ -30,7 +30,7 @@ describe("fastifySPAGuard", () => {
         url: "/api/beacon",
       });
 
-      expect(response.statusCode).not.toBe(404);
+      expect(response.statusCode).toBe(200);
       await app.close();
     });
 
@@ -44,7 +44,7 @@ describe("fastifySPAGuard", () => {
         url: "/custom/spa-guard/beacon",
       });
 
-      expect(response.statusCode).not.toBe(404);
+      expect(response.statusCode).toBe(200);
       await app.close();
     });
 

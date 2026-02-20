@@ -510,8 +510,8 @@ interface SpaGuardState {
   currentAttempt: number; // Current retry attempt (0-based)
   isFallbackShown: boolean; // Whether fallback UI is displayed
   isWaiting: boolean; // Whether waiting for a retry
-  lastRetryResetTime: number; // Timestamp of last retry reset
-  lastResetRetryId: string | null; // Retry ID of last reset cycle
+  lastRetryResetTime?: number; // Timestamp of last retry reset (undefined if no reset has occurred)
+  lastResetRetryId?: string; // Retry ID of last reset cycle (undefined if no reset has occurred)
 }
 ```
 

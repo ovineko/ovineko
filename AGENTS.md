@@ -382,9 +382,9 @@ When modifying a package, always run its tests and ensure the build succeeds bef
 - Dual build system: tsup builds the library (`dist/`); a separate Terser pipeline builds the inline script (`dist-inline/` for production, `dist-inline-trace/` for trace/debug mode)
 - Configuration flows from `spaGuardVitePlugin()` → injected as `window.__SPA_GUARD_OPTIONS__` at build time; all runtime code reads options exclusively from this global via `getOptions()`
 - Two-level retry strategy: `lazyWithRetry` retries the individual module import first (`lazyRetry.retryDelays`), then falls back to full page reload via `attemptReload()` (`reloadDelays`)
-- `src/common/retryImport.ts` is framework-agnostic retry logic; `src/react-lazy/index.tsx` wraps it for `React.lazy` compatibility
+- `src/common/retryImport.ts` is framework-agnostic retry logic; `src/react/lazyWithRetry.tsx` wraps it for `React.lazy` compatibility
 - Event system uses `name` field as the discriminant (not `type`) in both internal `emitEvent()` calls and the public `events.subscribe()` API
-- Peer dependency for `./react-lazy` export is `react@^19` only
+- Peer dependency for `./react` export is `react@^19` only
 
 ### @ovineko/clean-pkg-json
 
