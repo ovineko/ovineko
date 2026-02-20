@@ -33,8 +33,8 @@ export interface SPAGuardEventLazyRetryExhausted {
 
 /** Emitted when a module loads successfully after one or more retry attempts. */
 export interface SPAGuardEventLazyRetrySuccess {
-  /** The 1-based attempt number on which the import succeeded (>1 means retries occurred). */
-  attemptNumber: number;
+  /** 1-based attempt number on which the import succeeded (always >1 since only emitted after retries). */
+  attempt: number;
   name: "lazy-retry-success";
 }
 

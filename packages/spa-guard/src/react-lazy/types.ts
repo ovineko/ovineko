@@ -31,15 +31,14 @@ export interface LazyRetryOptions {
   retryDelays?: number[];
 
   /**
-   * AbortSignal to cancel in-progress retry attempts and clear pending timers.
-   * When the signal fires, any pending setTimeout is cleared immediately (preventing
-   * memory leaks) and the import promise rejects with an AbortError.
+   * AbortSignal to cancel pending retry delays between import attempts.
+   * When the signal fires, any pending setTimeout between retries is cleared
+   * and the import promise rejects with an AbortError.
    *
-   * @example
-   * const controller = new AbortController();
-   * const LazyHome = lazyWithRetry(() => import('./Home'), { signal: controller.signal });
-   * // Cancel retries when no longer needed:
-   * controller.abort();
+   * Note: cancels only the wait periods between retry attempts, not an in-flight
+   * dynamic import (JavaScript does not support cancelling in-flight module fetches).
+   * Most useful when calling `retryImport` directly rather than through `lazyWithRetry`,
+   * since `lazyWithRetry` captures the signal at module scope (not per component instance).
    */
   signal?: AbortSignal;
 }

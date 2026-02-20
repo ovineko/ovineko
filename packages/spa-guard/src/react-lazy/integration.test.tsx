@@ -238,7 +238,7 @@ describe("integration: events emitted in correct order", () => {
     );
 
     expect(lazyEvents[0]).toMatchObject({ attempt: 1, name: "lazy-retry-attempt" });
-    expect(lazyEvents[1]).toMatchObject({ attemptNumber: 2, name: "lazy-retry-success" });
+    expect(lazyEvents[1]).toMatchObject({ attempt: 2, name: "lazy-retry-success" });
     expect(lazyEvents).toHaveLength(2);
   });
 });

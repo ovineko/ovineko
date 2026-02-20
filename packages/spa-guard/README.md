@@ -881,7 +881,7 @@ events.subscribe((event) => {
     console.log(`Retry ${event.attempt}/${event.totalAttempts} after ${event.delay}ms`);
   }
   if (event.name === "lazy-retry-success") {
-    console.log(`Succeeded on attempt ${event.attemptNumber}`);
+    console.log(`Succeeded on attempt ${event.attempt}`);
   }
   if (event.name === "lazy-retry-exhausted") {
     console.log(`All retries exhausted. Will reload: ${event.willReload}`);
@@ -901,7 +901,7 @@ type LazyRetryAttempt = {
 
 type LazyRetrySuccess = {
   name: "lazy-retry-success";
-  attemptNumber: number; // attempt on which import succeeded (1 = no retry needed)
+  attempt: number; // attempt on which import succeeded (always >1 since only emitted after retries)
 };
 
 type LazyRetryExhausted = {
