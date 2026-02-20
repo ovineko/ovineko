@@ -185,6 +185,66 @@ describe("lazyWithRetry", () => {
     });
   });
 
+  it("uses hardcoded default retryDelays and callReloadOnFailure when lazyRetry is not in global options", async () => {
+    vi.mocked(getOptions).mockReturnValue({});
+    vi.mocked(retryImport).mockResolvedValue({ default: GenericComponent });
+
+    const mockImportFn = vi.fn();
+    const LazyComponent = lazyWithRetry(mockImportFn);
+
+    render(
+      <Suspense fallback={<div>Loading...</div>}>
+        <LazyComponent />
+      </Suspense>,
+    );
+
+    await waitFor(() => {
+      expect(retryImport).toHaveBeenCalledWith(mockImportFn, [1000, 2000], {
+        callReloadOnFailure: true,
+      });
+    });
+  });
+
+  it("uses hardcoded default retryDelays when global lazyRetry.retryDelays is not set", async () => {
+    vi.mocked(getOptions).mockReturnValue({ lazyRetry: { callReloadOnFailure: false } });
+    vi.mocked(retryImport).mockResolvedValue({ default: GenericComponent });
+
+    const mockImportFn = vi.fn();
+    const LazyComponent = lazyWithRetry(mockImportFn);
+
+    render(
+      <Suspense fallback={<div>Loading...</div>}>
+        <LazyComponent />
+      </Suspense>,
+    );
+
+    await waitFor(() => {
+      expect(retryImport).toHaveBeenCalledWith(mockImportFn, [1000, 2000], {
+        callReloadOnFailure: false,
+      });
+    });
+  });
+
+  it("uses hardcoded default callReloadOnFailure when global lazyRetry.callReloadOnFailure is not set", async () => {
+    vi.mocked(getOptions).mockReturnValue({ lazyRetry: { retryDelays: [500] } });
+    vi.mocked(retryImport).mockResolvedValue({ default: GenericComponent });
+
+    const mockImportFn = vi.fn();
+    const LazyComponent = lazyWithRetry(mockImportFn);
+
+    render(
+      <Suspense fallback={<div>Loading...</div>}>
+        <LazyComponent />
+      </Suspense>,
+    );
+
+    await waitFor(() => {
+      expect(retryImport).toHaveBeenCalledWith(mockImportFn, [500], {
+        callReloadOnFailure: true,
+      });
+    });
+  });
+
   it("triggers error boundary when lazy component fails to load after all retries", async () => {
     mockGetOptions();
     const loadError = new Error("Failed to fetch dynamically imported module");

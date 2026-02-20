@@ -234,10 +234,10 @@ interface Options {
 
 #### Task 14: Проверить test coverage
 
-- [ ] Запустить `pnpm test:coverage`
-- [ ] Убедиться что coverage для `src/react-lazy/` >= 80%
-- [ ] Добавить недостающие тесты для edge cases если coverage низкий
-- [ ] Запустить финальный `pnpm test` - все тесты должны проходить
+- [x] Запустить `pnpm test:coverage`
+- [x] Убедиться что coverage для `src/react-lazy/` >= 80%
+- [x] Добавить недостающие тесты для edge cases если coverage низкий
+- [x] Запустить финальный `pnpm test` - все тесты должны проходить
 
 ---
 
