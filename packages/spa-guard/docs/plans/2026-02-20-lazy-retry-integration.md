@@ -264,10 +264,10 @@ interface Options {
 
 #### Task 17: Performance проверка
 
-- [ ] Измерить bundle size impact через `pnpm build` → проверить размер dist/react-lazy/
-- [ ] Убедиться что нет ненужных dependencies в bundle
-- [ ] Проверить что tree-shaking работает корректно (unused code не включается)
-- [ ] Оптимизировать если bundle слишком большой (>2KB для этого модуля)
+- [x] Измерить bundle size impact через `pnpm build` → проверить размер dist/react-lazy/
+- [x] Убедиться что нет ненужных dependencies в bundle
+- [x] Проверить что tree-shaking работает корректно (unused code не включается)
+- [x] Оптимизировать если bundle слишком большой (>2KB для этого модуля)
 
 #### Task 18: Documentation updates
 
