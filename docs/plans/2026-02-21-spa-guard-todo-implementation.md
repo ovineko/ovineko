@@ -109,15 +109,15 @@ Covers TODO item 3 (status: Not implemented). Implemented as `@ovineko/spa-guard
 - Create: `packages/spa-guard/src/eslint/rules/no-direct-error-boundary.test.ts`
 - Create: `packages/spa-guard/src/eslint/rules/no-direct-lazy.test.ts`
 
-- [ ] add `eslint: "^8 || ^9"` to `peerDependencies` and `eslint: { optional: true }` to `peerDependenciesMeta` in `package.json`
-- [ ] add `@types/eslint` to `devDependencies` in `package.json`
-- [ ] add `"./eslint": { "types": "./dist/eslint/index.d.ts", "default": "./dist/eslint/index.js" }` to `exports` in `package.json`
-- [ ] add `"src/eslint/index.ts"` to entry points in `tsup.config.ts`
-- [ ] implement `no-direct-error-boundary` rule with auto-fix (changes import source to `@ovineko/spa-guard/react-error-boundary`)
-- [ ] implement `no-direct-lazy` rule with auto-fix including split-import case
-- [ ] implement plugin `src/eslint/index.ts` with `rules` and `configs.recommended`
-- [ ] write tests using `RuleTester` for both rules (valid/invalid cases, auto-fix output)
-- [ ] run `pnpm --filter @ovineko/spa-guard test` — must pass before task 6
+- [x] add `eslint: "^8 || ^9"` to `peerDependencies` and `eslint: { optional: true }` to `peerDependenciesMeta` in `package.json`
+- [x] add `@types/eslint` to `devDependencies` in `package.json`
+- [x] add `"./eslint": { "types": "./dist/eslint/index.d.ts", "default": "./dist/eslint/index.js" }` to `exports` in `package.json`
+- [x] add `"src/eslint/index.ts"` to entry points in `tsup.config.ts`
+- [x] implement `no-direct-error-boundary` rule with auto-fix (changes import source to `@ovineko/spa-guard/react-error-boundary`)
+- [x] implement `no-direct-lazy` rule with auto-fix including split-import case
+- [x] implement plugin `src/eslint/index.ts` with `rules` and `configs.recommended`
+- [x] write tests using `RuleTester` for both rules (valid/invalid cases, auto-fix output)
+- [x] run `pnpm --filter @ovineko/spa-guard test` — must pass before task 6
 
 ### Task 6: Verify acceptance criteria
 
