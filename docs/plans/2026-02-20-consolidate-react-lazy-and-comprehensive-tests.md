@@ -124,13 +124,13 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 3: Add tests for useSpaGuardState hook
 
-- [ ] Create `src/react/useSpaGuardState.test.tsx`
-- [ ] Write tests for initial hook state (matches runtime state)
-- [ ] Write tests for state updates when runtime state changes (event emission → state update → component re-render)
-- [ ] Write tests for subscription cleanup on unmount
-- [ ] Write tests for multiple components using same hook (shared state)
-- [ ] Write tests for edge cases (unmount before first update, rapid state changes)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/react/useSpaGuardState.test.tsx`
+- [x] Write tests for initial hook state (matches runtime state)
+- [x] Write tests for state updates when runtime state changes (event emission → state update → component re-render)
+- [x] Write tests for subscription cleanup on unmount
+- [x] Write tests for multiple components using same hook (shared state)
+- [x] Write tests for edge cases (unmount before first update, rapid state changes)
+- [x] Run project tests - must pass before next task
 
 ### Task 4: Add tests for ErrorBoundary component
 
