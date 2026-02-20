@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/clean-pkg-json",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Zero-config tool to clean package.json before publishing and restore it after",
   "keywords": [
     "clean",
