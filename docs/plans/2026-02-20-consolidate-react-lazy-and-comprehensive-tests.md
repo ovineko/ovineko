@@ -113,14 +113,14 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 2: Add tests for runtime state management
 
-- [ ] Create `src/runtime/state.test.ts`
-- [ ] Write tests for `getState()` initial state (success case)
-- [ ] Write tests for `subscribeToState()` subscription lifecycle (subscribe, notify, unsubscribe)
-- [ ] Write tests for event-driven state updates (fallback-ui-shown, retry-attempt, retry-exhausted)
-- [ ] Write tests for URL initialization (getRetryStateFromUrl integration)
-- [ ] Write tests for multiple subscribers receiving same update
-- [ ] Write tests for edge cases (unsubscribe during callback, invalid event data)
-- [ ] Run project tests - must pass before next task
+- [x] Create `src/runtime/state.test.ts`
+- [x] Write tests for `getState()` initial state (success case)
+- [x] Write tests for `subscribeToState()` subscription lifecycle (subscribe, notify, unsubscribe)
+- [x] Write tests for event-driven state updates (fallback-ui-shown, retry-attempt, retry-exhausted)
+- [x] Write tests for URL initialization (getRetryStateFromUrl integration)
+- [x] Write tests for multiple subscribers receiving same update
+- [x] Write tests for edge cases (unsubscribe during callback, invalid event data)
+- [x] Run project tests - must pass before next task
 
 ### Task 3: Add tests for useSpaGuardState hook
 
