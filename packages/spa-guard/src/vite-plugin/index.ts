@@ -1,5 +1,6 @@
 import type { Plugin } from "vite";
 
+import { minify } from "html-minifier-terser";
 import fsPromise from "node:fs/promises";
 import path from "node:path";
 
@@ -10,14 +11,36 @@ export interface VitePluginOptions extends Options {
   trace?: boolean;
 }
 
+const minifyHtml = async (html: string): Promise<string> => {
+  return await minify(html, {
+    collapseWhitespace: true,
+    minifyCSS: true,
+    minifyJS: true,
+    removeComments: true,
+    removeRedundantAttributes: true,
+    removeScriptTypeAttributes: true,
+    removeStyleLinkTypeAttributes: true,
+    useShortDoctype: true,
+  });
+};
+
 const getInlineScript = async (options: VitePluginOptions) => {
   const buildDir = options.trace ? "dist-inline-trace" : "dist-inline";
 
   const script = await fsPromise
-    .readFile(path.join(import.meta.dirname, `../${buildDir}/index.js`), "utf8")
+    .readFile(path.join(import.meta.dirname, `../../${buildDir}/index.js`), "utf8")
     .then((r) => r.trim());
 
-  return `window.${optionsWindowKey}=${JSON.stringify(options)};${script}`;
+  const processedOptions = { ...options };
+
+  if (processedOptions.fallback?.html) {
+    processedOptions.fallback = {
+      ...processedOptions.fallback,
+      html: await minifyHtml(processedOptions.fallback.html),
+    };
+  }
+
+  return `window.${optionsWindowKey}=${JSON.stringify(processedOptions)};${script}`;
 };
 
 export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {

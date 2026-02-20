@@ -1,6 +1,8 @@
-import tsup from "tsup";
+import type { Options } from "tsup";
 
-export default tsup.defineConfig({
+import { defineConfig } from "tsup";
+
+export const tsupInlineOptions: Options = {
   clean: true,
   entry: ["src/inline/index.ts"],
   format: "esm",
@@ -13,7 +15,7 @@ export default tsup.defineConfig({
   splitting: false,
   terserOptions: {
     compress: {
-      drop_console: false, // у тебя console.log нужен? если нет — true
+      drop_console: false,
       passes: 3,
       pure_funcs: [],
       unsafe: true,
@@ -24,7 +26,9 @@ export default tsup.defineConfig({
       comments: false,
     },
     mangle: {
-      toplevel: true, // мангл на верхнем уровне — важно!
+      toplevel: true,
     },
   },
-});
+};
+
+export default defineConfig(tsupInlineOptions);

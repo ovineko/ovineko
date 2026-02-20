@@ -1,19 +1,35 @@
-import { emitEvent } from "../events/internal";
 import { isChunkError } from "../isChunkError";
 import { logMessage } from "../log";
+import { getOptions } from "../options";
 import { attemptReload } from "../reload";
+import { getRetryInfoForBeacon, getRetryStateFromUrl, updateRetryStateInUrl } from "../retryState";
 import { sendBeacon } from "../sendBeacon";
-import { serializeError } from "../serializeError";
+import { shouldIgnoreMessages } from "../shouldIgnore";
 
-export const listenInternal = () => {
-  emitEvent({ name: "test" });
+export const listenInternal = (serializeError: (error: unknown) => string) => {
+  const options = getOptions();
+  const reloadDelays = options.reloadDelays ?? [];
+  const retryState = getRetryStateFromUrl();
+
+  if (retryState && retryState.retryAttempt >= reloadDelays.length) {
+    console.log(
+      logMessage(
+        `Retry limit exceeded (${retryState.retryAttempt}/${reloadDelays.length}), marking as fallback shown`,
+      ),
+    );
+    updateRetryStateInUrl(retryState.retryId, -1);
+  }
 
   const wa = window.addEventListener;
 
   wa(
     "error",
     (event) => {
-      console.error(logMessage("error:capture:"), event);
+      const shouldIgnore = shouldIgnoreMessages([event.message]);
+
+      if (!shouldIgnore) {
+        console.error(logMessage("error:capture:"), event);
+      }
 
       if (isChunkError(event)) {
         event.preventDefault();
@@ -26,17 +42,19 @@ export const listenInternal = () => {
         errorMessage: event.message,
         eventName: "error",
         serialized,
+        ...getRetryInfoForBeacon(),
       });
     },
     true,
   );
 
-  wa("error", (event) => {
-    console.error(logMessage("error:"), event);
-  });
-
   wa("unhandledrejection", (event) => {
-    console.error(logMessage("unhandledrejection:"), event);
+    const errorMessage = String(event.reason);
+    const shouldIgnore = shouldIgnoreMessages([errorMessage]);
+
+    if (!shouldIgnore) {
+      console.error(logMessage("unhandledrejection:"), event);
+    }
 
     if (isChunkError(event.reason)) {
       event.preventDefault();
@@ -46,35 +64,52 @@ export const listenInternal = () => {
 
     const serialized = serializeError(event);
     sendBeacon({
-      errorMessage: String(event.reason),
+      errorMessage,
       eventName: "unhandledrejection",
       serialized,
+      ...getRetryInfoForBeacon(),
     });
   });
 
   wa("uncaughtException", (event) => {
-    console.error(logMessage("uncaughtException:"), event);
-
     const serialized = serializeError(event);
+    const shouldIgnore = shouldIgnoreMessages([JSON.stringify(serialized)]);
+
+    if (!shouldIgnore) {
+      console.error(logMessage("uncaughtException:"), event);
+    }
+
     sendBeacon({
       eventName: "uncaughtException",
       serialized,
+      ...getRetryInfoForBeacon(),
     });
   });
 
   wa("securitypolicyviolation", (event) => {
-    console.error(logMessage("CSP violation:"), event.blockedURI, event.violatedDirective);
+    const eventMessage = `${event.violatedDirective}: ${event.blockedURI}`;
+    const shouldIgnore = shouldIgnoreMessages([eventMessage]);
+
+    if (!shouldIgnore) {
+      console.error(logMessage("CSP violation:"), event.blockedURI, event.violatedDirective);
+    }
 
     const serialized = serializeError(event);
     sendBeacon({
-      eventMessage: `${event.violatedDirective}: ${event.blockedURI}`,
+      eventMessage,
       eventName: "securitypolicyviolation",
       serialized,
+      ...getRetryInfoForBeacon(),
     });
   });
 
   wa("vite:preloadError", (event) => {
-    console.error(logMessage("vite:preloadError:"), event);
+    const errorMsg = (event as any)?.payload?.message || (event as any)?.message;
+    const shouldIgnore = shouldIgnoreMessages([errorMsg]);
+
+    if (!shouldIgnore) {
+      console.error(logMessage("vite:preloadError:"), event);
+    }
 
     event.preventDefault();
     attemptReload(event);

@@ -1,7 +1,23 @@
-export type SPAGuardEvent = SPAGuardEventTest & { name: "test" };
+export type SPAGuardEvent =
+  | (SPAGuardEventFallbackUIShown & { name: "fallback-ui-shown" })
+  | (SPAGuardEventRetryAttempt & { name: "retry-attempt" })
+  | (SPAGuardEventRetryExhausted & { name: "retry-exhausted" });
 
-export interface SPAGuardEventTest {
-  name: "test";
+export interface SPAGuardEventFallbackUIShown {
+  name: "fallback-ui-shown";
+}
+
+export interface SPAGuardEventRetryAttempt {
+  attempt: number;
+  delay: number;
+  name: "retry-attempt";
+  retryId: string;
+}
+
+export interface SPAGuardEventRetryExhausted {
+  finalAttempt: number;
+  name: "retry-exhausted";
+  retryId: string;
 }
 
 export type SubscribeFn = (event: SPAGuardEvent) => void;

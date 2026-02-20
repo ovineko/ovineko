@@ -1,48 +1,18 @@
 import { RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
+import { emitEvent } from "./events/internal";
 import { logMessage } from "./log";
 import { getOptions } from "./options";
+import {
+  clearRetryStateFromUrl,
+  generateRetryId,
+  getRetryStateFromUrl,
+  updateRetryStateInUrl,
+} from "./retryState";
 import { sendBeacon } from "./sendBeacon";
-
-interface RetryState {
-  retryAttempt: number;
-  retryId: string;
-}
-
-const getRetryStateFromUrl = (): null | RetryState => {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const retryId = params.get(RETRY_ID_PARAM);
-    const retryAttempt = params.get(RETRY_ATTEMPT_PARAM);
-
-    if (retryId && retryAttempt) {
-      return {
-        retryAttempt: parseInt(retryAttempt, 10),
-        retryId,
-      };
-    }
-    return null;
-  } catch {
-    return null;
-  }
-};
-
-const generateRetryId = (): string => {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-    const array = new Uint32Array(2);
-    crypto.getRandomValues(array);
-    return `${Date.now()}-${array[0]!.toString(36)}${array[1]!.toString(36)}`;
-  }
-
-  // eslint-disable-next-line sonarjs/pseudo-random -- Last resort fallback for insecure contexts (HTTP) where crypto is unavailable
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 15)}`;
-};
+import { shouldIgnoreMessages } from "./shouldIgnore";
 
 const buildReloadUrl = (retryId: string, retryAttempt: number): string => {
-  const url = new URL(window.location.href);
+  const url = new URL(globalThis.window.location.href);
   url.searchParams.set(RETRY_ID_PARAM, retryId);
   url.searchParams.set(RETRY_ATTEMPT_PARAM, String(retryAttempt));
   return url.toString();
@@ -57,12 +27,35 @@ export const attemptReload = (error: unknown): void => {
 
   const currentAttempt = retryState ? retryState.retryAttempt : 0;
 
+  if (currentAttempt === -1) {
+    const errorMsg = String(error);
+    if (!shouldIgnoreMessages([errorMsg])) {
+      console.error(
+        logMessage("Fallback UI was already shown. Not retrying to prevent infinite loop."),
+        error,
+      );
+    }
+    showFallbackUI();
+    return;
+  }
+
   if (currentAttempt >= reloadDelays.length) {
-    console.error(logMessage("All reload attempts exhausted"), error);
+    const errorMsg = String(error);
+    if (!shouldIgnoreMessages([errorMsg])) {
+      console.error(logMessage("All reload attempts exhausted"), error);
+    }
+
+    emitEvent({
+      finalAttempt: currentAttempt,
+      name: "retry-exhausted",
+      retryId: retryState?.retryId ?? "",
+    });
 
     sendBeacon({
       errorMessage: "Exceeded maximum reload attempts",
       eventName: "chunk_error_max_reloads",
+      retryAttempt: currentAttempt,
+      retryId: retryState?.retryId,
       serialized: JSON.stringify({
         error: String(error),
         retryAttempt: currentAttempt,
@@ -76,28 +69,39 @@ export const attemptReload = (error: unknown): void => {
 
   const nextAttempt = currentAttempt + 1;
   const retryId = retryState?.retryId ?? generateRetryId();
-  const delay = reloadDelays[currentAttempt];
+  const delay = reloadDelays[currentAttempt] ?? 1000;
 
-  console.warn(
-    logMessage(
-      `Reload attempt ${nextAttempt}/${reloadDelays.length} in ${delay}ms (retryId: ${retryId})`,
-    ),
-    error,
-  );
+  const errorMsg = String(error);
+  if (!shouldIgnoreMessages([errorMsg])) {
+    console.warn(
+      logMessage(
+        `Reload attempt ${nextAttempt}/${reloadDelays.length} in ${delay}ms (retryId: ${retryId})`,
+      ),
+      error,
+    );
+  }
+
+  emitEvent({
+    attempt: nextAttempt,
+    delay,
+    name: "retry-attempt",
+    retryId,
+  });
 
   setTimeout(() => {
     if (useRetryId) {
       const reloadUrl = buildReloadUrl(retryId, nextAttempt);
-      window.location.href = reloadUrl;
+      globalThis.window.location.href = reloadUrl;
     } else {
-      window.location.reload();
+      globalThis.window.location.reload();
     }
   }, delay);
 };
 
 const showFallbackUI = (): void => {
   const options = getOptions();
-  const fallbackHtml = options.fallbackHtml;
+  const fallbackHtml = options.fallback?.html;
+  const selector = options.fallback?.selector ?? "body";
 
   if (!fallbackHtml) {
     console.error(logMessage("No fallback UI configured"));
@@ -105,7 +109,39 @@ const showFallbackUI = (): void => {
   }
 
   try {
-    document.body.innerHTML = fallbackHtml;
+    const targetElement = document.querySelector(selector);
+    if (!targetElement) {
+      console.error(logMessage(`Target element not found for selector: ${selector}`));
+      return;
+    }
+    targetElement.innerHTML = fallbackHtml;
+
+    emitEvent({
+      name: "fallback-ui-shown",
+    });
+
+    const retryState = getRetryStateFromUrl();
+    if (retryState && retryState.retryAttempt === -1) {
+      console.log(logMessage("Clearing retry state from URL to allow clean reload attempt"));
+      clearRetryStateFromUrl();
+
+      const retryIdElements = document.getElementsByClassName("spa-guard-retry-id");
+      for (const element of retryIdElements) {
+        element.textContent = retryState.retryId;
+      }
+    } else if (retryState) {
+      updateRetryStateInUrl(retryState.retryId, retryState.retryAttempt + 1);
+      console.log(
+        logMessage(
+          `Updated retry attempt to ${retryState.retryAttempt + 1} in URL for fallback UI`,
+        ),
+      );
+
+      const retryIdElements = document.getElementsByClassName("spa-guard-retry-id");
+      for (const element of retryIdElements) {
+        element.textContent = retryState.retryId;
+      }
+    }
   } catch (error) {
     console.error(logMessage("Failed to inject fallback UI"), error);
   }

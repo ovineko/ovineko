@@ -1,3 +1,4 @@
+import { serializeError } from "../serializeError";
 import { listenInternal } from "./internal";
 
 export const listen = () => {
@@ -5,5 +6,5 @@ export const listen = () => {
     return;
   }
 
-  listenInternal();
+  listenInternal(serializeError);
 };

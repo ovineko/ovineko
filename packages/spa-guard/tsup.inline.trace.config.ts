@@ -1,14 +1,9 @@
-import tsup from "tsup";
+import { defineConfig } from "tsup";
 
-export default tsup.defineConfig({
-  clean: true,
-  entry: ["src/inline/index.ts"],
-  esbuildOptions(options) {
-    options.drop = [];
-  },
-  format: "esm",
-  minify: false,
+import { tsupInlineOptions } from "./tsup.inline.config";
+
+export default defineConfig({
+  ...tsupInlineOptions,
+  entry: ["src/inline-trace/index.ts"],
   outDir: "dist-inline-trace",
-  platform: "browser",
-  splitting: false,
 });

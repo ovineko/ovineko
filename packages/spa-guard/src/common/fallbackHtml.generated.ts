@@ -2,4 +2,4 @@
 // Do not edit manually
 
 // prettier-ignore
-export const defaultFallbackHtml = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif"><div style="text-align:center"><h1>Something went wrong</h1><p>Please refresh the page to continue.</p><button onclick="location.reload()">Refresh Page</button></div></div>`;
+export const defaultFallbackHtml = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif"><div style="text-align:center"><h1>Something went wrong</h1><p>Please refresh the page to continue.</p><button onclick="location.reload()">Refresh Page</button><p style="margin-top:20px;font-size:12px;color:#999">Error ID: <span class="spa-guard-retry-id"></span></p></div></div>`;

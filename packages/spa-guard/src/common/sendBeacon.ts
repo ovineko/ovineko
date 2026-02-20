@@ -2,8 +2,13 @@ import type { BeaconSchema } from "../schema";
 
 import { logMessage } from "./log";
 import { getOptions } from "./options";
+import { shouldIgnoreBeacon } from "./shouldIgnore";
 
 export const sendBeacon = (beacon: BeaconSchema) => {
+  if (shouldIgnoreBeacon(beacon)) {
+    return;
+  }
+
   const options = getOptions();
 
   if (!options.reportBeacon?.endpoint) {

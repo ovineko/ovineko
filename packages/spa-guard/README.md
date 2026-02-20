@@ -16,11 +16,14 @@ Peer dependencies vary by integration - see sections below for specific requirem
 - ✅ **Intelligent retry with cache busting** - Uses query parameters with UUID to bypass HTML cache after deployments
 - ✅ **Configurable retry delays** - Flexible delay arrays (e.g., `[1000, 2000, 5000]`) instead of simple max attempts
 - ✅ **Graceful fallback UI** - Shows user-friendly error screen after all retry attempts are exhausted
+- ✅ **Configurable injection target** - Inject fallback UI into any element via CSS selector (default: `body`)
+- ✅ **Error filtering** - Filter out specific errors from logging and reporting via `ignoredErrors` option
 - ✅ **Deep error serialization** - Captures detailed error information for server-side analysis
 - ✅ **Smart beacon reporting** - Sends error reports only after retry exhaustion to prevent spam
 - ✅ **Dual build system** - Production minified (5KB) and trace verbose (10KB) builds for different environments
 - ✅ **Global error listeners** - Captures `error`, `unhandledrejection`, and `securitypolicyviolation` events
 - ✅ **Vite plugin for inline script injection** - Runs before all chunks to catch early errors
+- ✅ **HTML minification** - Automatically minifies fallback HTML to reduce bundle size
 - ✅ **Fastify server integration** - Ready-to-use plugin for handling error reports
 - ✅ **React Router v7 integration** - Works seamlessly with React Router error boundaries
 - ✅ **TypeScript support** - Full type definitions with all exports
@@ -41,18 +44,22 @@ export default defineConfig({
     spaGuardVitePlugin({
       // Production configuration
       reloadDelays: [1000, 2000, 5000], // 3 attempts with increasing delays
-      fallbackHtml: `
-        <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
-          <div style="text-align:center">
-            <h1>Something went wrong</h1>
-            <p>Please refresh the page to continue.</p>
-            <button onclick="location.reload()">Refresh Page</button>
+      fallback: {
+        html: `
+          <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
+            <div style="text-align:center">
+              <h1>Something went wrong</h1>
+              <p>Please refresh the page to continue.</p>
+              <button onclick="location.reload()">Refresh Page</button>
+            </div>
           </div>
-        </div>
-      `,
+        `,
+        selector: "body", // CSS selector where to inject fallback UI (default: "body")
+      },
       reportBeacon: {
         endpoint: "/api/beacon",
       },
+      ignoredErrors: [], // Filter out specific error messages from reporting
       useRetryId: true, // Use query parameters for cache busting (default: true)
     }),
     react(),
@@ -154,12 +161,18 @@ spaGuardVitePlugin({
   useRetryId: true, // Use query parameters for cache busting (default: true)
 
   // Fallback UI configuration
-  fallbackHtml: `
-    <div style="...">
-      <h1>Something went wrong</h1>
-      <button onclick="location.reload()">Refresh</button>
-    </div>
-  `,
+  fallback: {
+    html: `
+      <div style="...">
+        <h1>Something went wrong</h1>
+        <button onclick="location.reload()">Refresh</button>
+      </div>
+    `,
+    selector: "body", // CSS selector for injection target (default: "body")
+  },
+
+  // Error filtering
+  ignoredErrors: [], // Array of error message substrings to ignore
 
   // Beacon reporting
   reportBeacon: {
@@ -185,7 +198,14 @@ spaGuardVitePlugin({
 interface Options {
   reloadDelays?: number[]; // Array of retry delays in ms (default: [1000, 2000, 5000])
   useRetryId?: boolean; // Use query params for cache busting (default: true)
-  fallbackHtml?: string; // Custom error UI HTML (default: basic error screen)
+
+  fallback?: {
+    html?: string; // Custom error UI HTML (default: basic error screen)
+    selector?: string; // CSS selector for injection target (default: "body")
+  };
+
+  ignoredErrors?: string[]; // Error message substrings to filter out (default: [])
+
   reportBeacon?: {
     endpoint?: string; // Server endpoint for beacon reports
   };
@@ -202,15 +222,19 @@ interface VitePluginOptions extends Options {
 {
   reloadDelays: [1000, 2000, 5000],
   useRetryId: true,
-  fallbackHtml: `
-    <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
-      <div style="text-align:center">
-        <h1>Something went wrong</h1>
-        <p>Please refresh the page to continue.</p>
-        <button onclick="location.reload()">Refresh Page</button>
+  fallback: {
+    html: `
+      <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
+        <div style="text-align:center">
+          <h1>Something went wrong</h1>
+          <p>Please refresh the page to continue.</p>
+          <button onclick="location.reload()">Refresh Page</button>
+        </div>
       </div>
-    </div>
-  `,
+    `,
+    selector: "body",
+  },
+  ignoredErrors: [],
 }
 ```
 
@@ -479,12 +503,19 @@ interface FastifySPAGuardOptions {
 
 ```typescript
 interface Options {
-  fallbackHtml?: string; // Custom error UI HTML
   reloadDelays?: number[]; // Retry delays in ms (default: [1000, 2000, 5000])
+  useRetryId?: boolean; // Use query params for cache busting (default: true)
+
+  fallback?: {
+    html?: string; // Custom error UI HTML
+    selector?: string; // CSS selector for injection target (default: "body")
+  };
+
+  ignoredErrors?: string[]; // Error message substrings to filter out (default: [])
+
   reportBeacon?: {
     endpoint?: string; // Error reporting endpoint
   };
-  useRetryId?: boolean; // Use query params for cache busting (default: true)
 }
 ```
 
@@ -528,15 +559,44 @@ From `@ovineko/spa-guard/schema/parse`:
 
 - `parseBeacon(data)` - Parse and validate beacon data
 
+### Runtime Exports
+
+From `@ovineko/spa-guard/runtime`:
+
+- `getState()` - Get current spa-guard state (currentAttempt, isFallbackShown, isWaiting)
+- `subscribeToState(callback)` - Subscribe to state changes, returns unsubscribe function
+- `SpaGuardState` - TypeScript type for state object
+
+**Example:**
+
+```typescript
+import { getState, subscribeToState } from "@ovineko/spa-guard/runtime";
+
+// Get current state
+const state = getState();
+console.log("Current attempt:", state.currentAttempt);
+console.log("Is fallback shown:", state.isFallbackShown);
+console.log("Is waiting for retry:", state.isWaiting);
+
+// Subscribe to state changes
+const unsubscribe = subscribeToState((state) => {
+  console.log("State changed:", state);
+});
+
+// Later: unsubscribe
+unsubscribe();
+```
+
 ## Module Exports
 
-spa-guard provides 8 export entry points:
+spa-guard provides 9 export entry points:
 
 | Export                   | Description                                  | Peer Dependencies                      |
 | ------------------------ | -------------------------------------------- | -------------------------------------- |
 | `.`                      | Core functionality (events, listen, options) | None                                   |
 | `./schema`               | BeaconSchema type definitions                | `typebox@^1`                           |
 | `./schema/parse`         | Beacon parsing utilities                     | `typebox@^1`                           |
+| `./runtime`              | Runtime state management and subscriptions   | None                                   |
 | `./react`                | React integration (placeholder)              | `react@^19`                            |
 | `./react-router`         | React Router integration                     | `react@^19`, `react-router@^7`         |
 | `./fastify`              | Fastify server plugin                        | None                                   |
@@ -582,57 +642,97 @@ spaGuardVitePlugin({
 
 ### Custom Fallback UI
 
-Provide fully custom HTML for error screen (injected into `document.body`):
+Provide fully custom HTML for error screen:
 
 ```typescript
 spaGuardVitePlugin({
-  fallbackHtml: `
-    <style>
-      .spa-guard-error {
-        font-family: system-ui, -apple-system, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        margin: 0;
-        padding: 20px;
-        box-sizing: border-box;
-      }
-      .spa-guard-container {
-        max-width: 500px;
-        text-align: center;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        padding: 40px;
-        border-radius: 20px;
-      }
-      .spa-guard-button {
-        background: white;
-        color: #667eea;
-        border: none;
-        padding: 12px 24px;
-        font-size: 16px;
-        font-weight: 600;
-        border-radius: 8px;
-        cursor: pointer;
-        margin-top: 20px;
-      }
-      .spa-guard-button:hover {
-        transform: scale(1.05);
-      }
-    </style>
-    <div class="spa-guard-error">
-      <div class="spa-guard-container">
-        <h1>⚠️ Application Error</h1>
-        <p>We're experiencing technical difficulties. Please try reloading the page.</p>
-        <button class="spa-guard-button" onclick="location.reload()">Reload Application</button>
+  fallback: {
+    html: `
+      <style>
+        .spa-guard-error {
+          font-family: system-ui, -apple-system, sans-serif;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          margin: 0;
+          padding: 20px;
+          box-sizing: border-box;
+        }
+        .spa-guard-container {
+          max-width: 500px;
+          text-align: center;
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          padding: 40px;
+          border-radius: 20px;
+        }
+        .spa-guard-button {
+          background: white;
+          color: #667eea;
+          border: none;
+          padding: 12px 24px;
+          font-size: 16px;
+          font-weight: 600;
+          border-radius: 8px;
+          cursor: pointer;
+          margin-top: 20px;
+        }
+        .spa-guard-button:hover {
+          transform: scale(1.05);
+        }
+      </style>
+      <div class="spa-guard-error">
+        <div class="spa-guard-container">
+          <h1>⚠️ Application Error</h1>
+          <p>We're experiencing technical difficulties. Please try reloading the page.</p>
+          <button class="spa-guard-button" onclick="location.reload()">Reload Application</button>
+        </div>
       </div>
-    </div>
-  `,
+    `,
+    selector: "body", // Inject into document.body
+  },
 });
 ```
+
+### Custom Injection Target
+
+Inject fallback UI into a specific element instead of `<body>`:
+
+```typescript
+spaGuardVitePlugin({
+  fallback: {
+    html: `<div>Error occurred. <button onclick="location.reload()">Retry</button></div>`,
+    selector: "#app", // Inject into <div id="app">
+  },
+});
+```
+
+### Error Filtering
+
+Filter out specific errors from being logged or reported:
+
+```typescript
+spaGuardVitePlugin({
+  ignoredErrors: [
+    "ResizeObserver loop", // Ignore benign ResizeObserver errors
+    "Non-Error promise rejection", // Ignore specific promise rejections
+    "Script error", // Ignore generic script errors from third-party scripts
+  ],
+  reportBeacon: {
+    endpoint: "/api/beacon",
+  },
+});
+```
+
+**How it works:**
+
+- Errors containing any of the `ignoredErrors` substrings will not be logged to console
+- Beacons for filtered errors will not be sent to the server
+- Useful for filtering out known benign errors or third-party script noise
+- Case-sensitive substring matching
 
 ### Custom Retry Strategy
 
