@@ -453,7 +453,7 @@ describe("fastifySPAGuard", () => {
       await app.close();
     });
 
-    it("handles onBeacon throwing synchronously - error is caught internally and returns 200", async () => {
+    it("handles onBeacon throwing synchronously - error propagates and returns 500", async () => {
       const app = await buildApp({
         onBeacon: () => {
           throw new Error("callback error");
@@ -468,9 +468,9 @@ describe("fastifySPAGuard", () => {
         url: "/api/beacon",
       });
 
-      // The thrown error is caught by handleBeaconRequest's internal try/catch,
-      // which falls through to the unknown-beacon path and returns 200
-      expect(response.statusCode).toBe(200);
+      // onBeacon errors propagate out of handleBeaconRequest so Fastify returns 500
+      // (valid beacons are not misrouted to onUnknownBeacon on callback failure)
+      expect(response.statusCode).toBe(500);
       await app.close();
     });
 

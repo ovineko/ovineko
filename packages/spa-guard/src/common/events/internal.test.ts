@@ -274,29 +274,25 @@ describe("common/events/internal", () => {
       expect(() => emitEvent({ name: "fallback-ui-shown" })).not.toThrow();
     });
 
-    it("subscriber throwing causes the error to propagate out of emitEvent", () => {
+    it("subscriber throwing does not propagate out of emitEvent", () => {
       subscribe(() => {
         throw new Error("subscriber error");
       });
 
-      expect(() => emitEvent({ name: "fallback-ui-shown" })).toThrow("subscriber error");
+      expect(() => emitEvent({ name: "fallback-ui-shown" })).not.toThrow();
     });
 
-    it("subscriber throwing prevents subsequent subscribers from being called", () => {
+    it("subscriber throwing does not prevent subsequent subscribers from being called", () => {
       const cbAfter = vi.fn();
       subscribe(() => {
         throw new Error("first subscriber fails");
       });
       subscribe(cbAfter);
 
-      try {
-        emitEvent({ name: "fallback-ui-shown" });
-      } catch {
-        // expected
-      }
+      emitEvent({ name: "fallback-ui-shown" });
 
-      // Set.forEach propagates the throw and stops iteration
-      expect(cbAfter).not.toHaveBeenCalled();
+      // Error is isolated per subscriber so subsequent subscribers still receive the event
+      expect(cbAfter).toHaveBeenCalledTimes(1);
     });
 
     it("unsubscribing later-added subscriber during emit prevents it from being called", () => {

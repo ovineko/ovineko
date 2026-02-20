@@ -64,34 +64,10 @@ const handleBeaconRequest = async (params: {
   request: FastifyRequest;
 }) => {
   const { body, options, reply, request } = params;
+
+  let beacon: BeaconSchema;
   try {
-    const beacon = parseBeacon(body);
-
-    if (options.onBeacon) {
-      const result = await options.onBeacon(beacon, request, reply);
-
-      if (!result?.skipDefaultLog) {
-        request.log.info(
-          {
-            errorMessage: beacon.errorMessage,
-            eventMessage: beacon.eventMessage,
-            eventName: beacon.eventName,
-            serialized: beacon.serialized,
-          },
-          logMessage("Beacon received"),
-        );
-      }
-    } else {
-      request.log.info(
-        {
-          errorMessage: beacon.errorMessage,
-          eventMessage: beacon.eventMessage,
-          eventName: beacon.eventName,
-          serialized: beacon.serialized,
-        },
-        logMessage("Beacon received"),
-      );
-    }
+    beacon = parseBeacon(body);
   } catch {
     if (options.onUnknownBeacon) {
       const result = await options.onUnknownBeacon(body, request, reply);
@@ -102,6 +78,33 @@ const handleBeaconRequest = async (params: {
     } else {
       request.log.warn({ bodyType: typeof body }, logMessage("Unknown beacon format"));
     }
+    return;
+  }
+
+  if (options.onBeacon) {
+    const result = await options.onBeacon(beacon, request, reply);
+
+    if (!result?.skipDefaultLog) {
+      request.log.info(
+        {
+          errorMessage: beacon.errorMessage,
+          eventMessage: beacon.eventMessage,
+          eventName: beacon.eventName,
+          serialized: beacon.serialized,
+        },
+        logMessage("Beacon received"),
+      );
+    }
+  } else {
+    request.log.info(
+      {
+        errorMessage: beacon.errorMessage,
+        eventMessage: beacon.eventMessage,
+        eventName: beacon.eventName,
+        serialized: beacon.serialized,
+      },
+      logMessage("Beacon received"),
+    );
   }
 };
 
