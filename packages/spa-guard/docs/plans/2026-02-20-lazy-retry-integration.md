@@ -119,12 +119,12 @@ interface Options {
 
 #### Task 2: Создать утилиту для retry с exponential backoff
 
-- [ ] Создать файл [src/common/retryImport.ts](../src/common/retryImport.ts)
-- [ ] Реализовать функцию `retryImport<T>(importFn: () => Promise<T>, delays: number[]): Promise<T>`
-- [ ] Логика: попытка импорта → если ошибка и есть еще delays → setTimeout с delay → повторная попытка
-- [ ] Возврат промиса который resolve при успехе или reject после исчерпания попыток
-- [ ] Добавить опциональный `onRetry?: (attempt: number, delay: number) => void` callback для логирования
-- [ ] Проверить в браузере с mock import функцией
+- [x] Создать файл [src/common/retryImport.ts](../src/common/retryImport.ts)
+- [x] Реализовать функцию `retryImport<T>(importFn: () => Promise<T>, delays: number[]): Promise<T>`
+- [x] Логика: попытка импорта → если ошибка и есть еще delays → setTimeout с delay → повторная попытка
+- [x] Возврат промиса который resolve при успехе или reject после исчерпания попыток
+- [x] Добавить опциональный `onRetry?: (attempt: number, delay: number) => void` callback для логирования
+- [x] Проверить в браузере с mock import функцией
 
 #### Task 3: Интегрировать retryImport с attemptReload при финальном провале
 
