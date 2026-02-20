@@ -71,13 +71,13 @@ Covers TODO item 1 (status: Not implemented).
 - Modify: `packages/spa-guard/src/vite-plugin/index.ts`
 - Modify: `packages/spa-guard/src/common/index.ts`
 
-- [ ] add `checkVersion` config block to `Options` interface and `defaultOptions` in `options.ts`
-- [ ] update `getOptions` merge logic to handle nested `checkVersion` object
-- [ ] implement `checkVersion.ts`: `startVersionCheck`, `stopVersionCheck`, `fetchRemoteVersion` (html + json modes), `onVersionChange` (dispatches `spa-guard:version-change` CustomEvent)
-- [ ] update `vite-plugin/index.ts`: add `configResolved` hook to auto-read `package.json` version; inject `version` into serialized options
-- [ ] export `startVersionCheck`, `stopVersionCheck` from `src/common/index.ts`
-- [ ] write `checkVersion.test.ts` covering: no version config → warn; version change HTML mode → dispatches event; version change JSON mode → dispatches event; no change → no event; fetch error → logs and continues; stop clears interval; duplicate startVersionCheck → warn; SSR (no window) → noop
-- [ ] run `pnpm --filter @ovineko/spa-guard test` — must pass before task 4
+- [x] add `checkVersion` config block to `Options` interface and `defaultOptions` in `options.ts`
+- [x] update `getOptions` merge logic to handle nested `checkVersion` object
+- [x] implement `checkVersion.ts`: `startVersionCheck`, `stopVersionCheck`, `fetchRemoteVersion` (html + json modes), `onVersionChange` (dispatches `spa-guard:version-change` CustomEvent)
+- [x] update `vite-plugin/index.ts`: add `configResolved` hook to auto-read `package.json` version; inject `version` into serialized options
+- [x] export `startVersionCheck`, `stopVersionCheck` from `src/common/index.ts`
+- [x] write `checkVersion.test.ts` covering: no version config → warn; version change HTML mode → dispatches event; version change JSON mode → dispatches event; no change → no event; fetch error → logs and continues; stop clears interval; duplicate startVersionCheck → warn; SSR (no window) → noop
+- [x] run `pnpm --filter @ovineko/spa-guard test` — must pass before task 4
 
 ### Task 4: React Event Hooks
 

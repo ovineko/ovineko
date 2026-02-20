@@ -44,11 +44,29 @@ const getInlineScript = async (options: VitePluginOptions) => {
 };
 
 export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
+  let packageVersion: string | undefined;
+
   return {
+    configResolved: async (config) => {
+      if (!options.version) {
+        try {
+          const packageJsonPath = path.join(config.root, "package.json");
+          const packageJson = JSON.parse(await fsPromise.readFile(packageJsonPath, "utf8"));
+          packageVersion = packageJson.version;
+        } catch {
+          // package.json may not exist or may not have a version field
+        }
+      }
+    },
     name: `${name}/vite-plugin`,
     transformIndexHtml: {
       handler: async (html) => {
-        const inlineScript = await getInlineScript(options);
+        const finalOptions: VitePluginOptions = {
+          ...options,
+          version: options.version ?? packageVersion,
+        };
+
+        const inlineScript = await getInlineScript(finalOptions);
 
         return {
           html,
