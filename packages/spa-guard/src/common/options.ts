@@ -10,6 +10,10 @@ const defaultOptions: Options = {
     selector: "body",
   },
   ignoredErrors: [],
+  lazyRetry: {
+    callReloadOnFailure: true,
+    retryDelays: [1000, 2000],
+  },
   minTimeBetweenResets: 5000,
   reloadDelays: [1000, 2000, 5000],
   useRetryId: true,
@@ -43,6 +47,25 @@ export interface Options {
    */
   ignoredErrors?: string[];
 
+  lazyRetry?: {
+    /**
+     * Вызывать attemptReload() после исчерпания всех retry попыток динамических импортов.
+     * Если true - после провала всех retryDelays включается логика page reload.
+     * Если false - просто throw error в error boundary без reload.
+     * @default true
+     */
+    callReloadOnFailure?: boolean;
+
+    /**
+     * Массив задержек в миллисекундах для retry попыток динамических импортов.
+     * Каждый элемент массива = одна retry попытка с указанной задержкой.
+     * Количество элементов = количество retry попыток.
+     * @default [1000, 2000]
+     * @example [500, 1500, 3000] // 3 попытки: 500ms, 1.5s, 3s
+     */
+    retryDelays?: number[];
+  };
+
   /**
    * Minimum time in milliseconds between retry cycle resets.
    * Prevents infinite reset loops by ensuring a reset can only happen
@@ -71,6 +94,10 @@ export const getOptions = (): Options => {
     fallback: {
       ...defaultOptions.fallback,
       ...windowOptions?.fallback,
+    },
+    lazyRetry: {
+      ...defaultOptions.lazyRetry,
+      ...windowOptions?.lazyRetry,
     },
     reportBeacon: {
       ...defaultOptions.reportBeacon,
