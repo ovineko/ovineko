@@ -279,13 +279,13 @@ Stabilize the `@ovineko/spa-guard` package by:
 
 ### Task 17: Verify acceptance criteria
 
-- [ ] Verify react-lazy consolidated into react module (single export point)
-- [ ] Verify all existing tests still pass (~77 original tests)
-- [ ] Verify new tests cover all previously untested modules (14+ new test files)
-- [ ] Run full test suite (unit tests) - all must pass
-- [ ] Run linter - all issues must be fixed
-- [ ] Verify test coverage meets 80%+ standard (run coverage report)
-- [ ] Verify edge cases are handled (documented in tests)
+- [x] Verify react-lazy consolidated into react module (single export point)
+- [x] Verify all existing tests still pass (~77 original tests)
+- [x] Verify new tests cover all previously untested modules (14+ new test files)
+- [x] Run full test suite (unit tests) - all must pass
+- [x] Run linter - all issues must be fixed
+- [x] Verify test coverage meets 80%+ standard (run coverage report)
+- [x] Verify edge cases are handled (documented in tests)
 
 ### Task 18: [Final] Update documentation
 
