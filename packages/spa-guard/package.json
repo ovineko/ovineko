@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard",
-  "version": "0.0.1-alpha-1",
+  "version": "0.0.1-alpha-2",
   "description": "Chunk load error handling for SPAs with automatic recovery, beacon reporting, and deployment monitoring",
   "keywords": [
     "spa",
