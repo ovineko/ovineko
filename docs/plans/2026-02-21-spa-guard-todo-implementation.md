@@ -89,11 +89,11 @@ Covers the React integration part of TODO item 2.
 - Create: `packages/spa-guard/src/react/useSPAGuardChunkError.ts`
 - Modify: `packages/spa-guard/src/react/index.tsx`
 
-- [ ] implement `useSPAGuardEvents(callback)` hook using subscribe/useEffect pattern
-- [ ] implement `useSPAGuardChunkError()` hook using useSPAGuardEvents + useState
-- [ ] export both hooks from `src/react/index.tsx`
-- [ ] add tests for `useSPAGuardEvents` and `useSPAGuardChunkError` (using @testing-library/react renderHook)
-- [ ] run `pnpm --filter @ovineko/spa-guard test` — must pass before task 5
+- [x] implement `useSPAGuardEvents(callback)` hook using subscribe/useEffect pattern
+- [x] implement `useSPAGuardChunkError()` hook using useSPAGuardEvents + useState
+- [x] export both hooks from `src/react/index.tsx`
+- [x] add tests for `useSPAGuardEvents` and `useSPAGuardChunkError` (using @testing-library/react renderHook)
+- [x] run `pnpm --filter @ovineko/spa-guard test` — must pass before task 5
 
 ### Task 5: ESLint Plugin Submodule
 
