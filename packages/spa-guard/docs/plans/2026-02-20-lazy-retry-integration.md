@@ -147,10 +147,10 @@ interface Options {
 
 #### Task 5: Добавить экспорт в package.json
 
-- [ ] Открыть [package.json](../package.json) корня пакета spa-guard
-- [ ] Добавить в `exports` новый entry point `"./react-lazy": "./dist/react-lazy/index.js"`
-- [ ] Добавить соответствующий TypeScript types export: `"./react-lazy": "./dist/react-lazy/index.d.ts"`
-- [ ] Проверить что tsup конфигурация включает новую директорию в build
+- [x] Открыть [package.json](../package.json) корня пакета spa-guard
+- [x] Добавить в `exports` новый entry point `"./react-lazy": "./dist/react-lazy/index.js"`
+- [x] Добавить соответствующий TypeScript types export: `"./react-lazy": "./dist/react-lazy/index.d.ts"`
+- [x] Проверить что tsup конфигурация включает новую директорию в build
 
 #### Task 6: Обновить tsup конфигурацию
 
