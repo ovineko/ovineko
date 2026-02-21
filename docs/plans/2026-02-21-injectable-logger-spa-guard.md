@@ -185,15 +185,15 @@ Note: This is an alpha package. No backwards compatibility concerns. Breaking ch
 
 ### Task 7: Verify acceptance criteria
 
-- [ ] Verify retryImport.ts events now produce console output via event auto-logging (in trace mode)
-- [ ] Verify reload.ts has no duplicated logging (each piece of info logged once)
-- [ ] Verify shouldIgnoreMessages suppresses event logging via silent flag
-- [ ] Verify production inline bundle (dist-inline/index.js) does NOT contain log message strings
-- [ ] Verify trace inline bundle (dist-inline-trace/index.js) DOES contain log messages
-- [ ] Compare bundle sizes before/after
-- [ ] Run full test suite
-- [ ] Run linter
-- [ ] Verify test coverage meets 80%+
+- [x] Verify retryImport.ts events now produce console output via event auto-logging (in trace mode)
+- [x] Verify reload.ts has no duplicated logging (each piece of info logged once)
+- [x] Verify shouldIgnoreMessages suppresses event logging via silent flag
+- [x] Verify production inline bundle (dist-inline/index.js) does NOT contain log message strings
+- [x] Verify trace inline bundle (dist-inline-trace/index.js) DOES contain log messages
+- [x] Compare bundle sizes before/after
+- [x] Run full test suite
+- [x] Run linter
+- [x] Verify test coverage meets 80%+
 
 ### Task 8: Update documentation
 
