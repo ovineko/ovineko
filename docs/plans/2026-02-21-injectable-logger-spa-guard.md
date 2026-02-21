@@ -99,19 +99,19 @@ Note: This is an alpha package. No backwards compatibility concerns. Breaking ch
 - Modify: `packages/spa-guard/src/common/listen/internal.ts`
 - Modify: `packages/spa-guard/src/common/listen/index.ts`
 
-- [ ] Add optional `logger?: Logger` parameter to `listenInternal(serializeError, logger?)`
-- [ ] Call `setLogger(logger)` at the start of listenInternal (before initialization guard, so logger is available even if already initialized)
-- [ ] Replace 5 console.\* calls with Logger method calls via getLogger():
+- [x] Add optional `logger?: Logger` parameter to `listenInternal(serializeError, logger?)`
+- [x] Call `setLogger(logger)` at the start of listenInternal (before initialization guard, so logger is available even if already initialized)
+- [x] Replace 5 console.\* calls with Logger method calls via getLogger():
   - Line 21-25: `console.log(logMessage("Retry limit exceeded..."))` -> `getLogger()?.retryLimitExceeded(retryState.retryAttempt, reloadDelays.length)`
   - Line 37: `console.error(logMessage("error:capture:"), event)` -> `getLogger()?.capturedError("error", event)`
   - Line 62: `console.error(logMessage("unhandledrejection:"), event)` -> `getLogger()?.capturedError("unhandledrejection", event)`
   - Line 85: `console.error(logMessage("CSP violation:"), ...)` -> `getLogger()?.capturedError("csp", event.blockedURI, event.violatedDirective)`
   - Line 102: `console.error(logMessage("vite:preloadError:"), event)` -> `getLogger()?.capturedError("vite:preloadError", event)`
-- [ ] Keep shouldIgnoreMessages checks at call sites (guard the getLogger() calls)
-- [ ] Update `listen()` in index.ts to pass `createLogger()` as second argument
-- [ ] Remove `logMessage` import from listen/internal.ts
-- [ ] Update/add tests
-- [ ] Run project test suite - must pass before task 3
+- [x] Keep shouldIgnoreMessages checks at call sites (guard the getLogger() calls)
+- [x] Update `listen()` in index.ts to pass `createLogger()` as second argument
+- [x] Remove `logMessage` import from listen/internal.ts
+- [x] Update/add tests
+- [x] Run project test suite - must pass before task 3
 
 ### Task 3: Migrate reload.ts
 

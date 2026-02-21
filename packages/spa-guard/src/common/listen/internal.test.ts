@@ -4,10 +4,6 @@ vi.mock("../isChunkError", () => ({
   isChunkError: vi.fn(),
 }));
 
-vi.mock("../log", () => ({
-  logMessage: vi.fn((msg: string) => msg),
-}));
-
 vi.mock("../options", () => ({
   getOptions: vi.fn(),
 }));
@@ -31,10 +27,13 @@ vi.mock("../shouldIgnore", () => ({
 }));
 
 vi.mock("../events/internal", () => ({
+  getLogger: vi.fn(),
   isInitialized: vi.fn().mockReturnValue(false),
   markInitialized: vi.fn(),
+  setLogger: vi.fn(),
 }));
 
+import { getLogger, isInitialized, setLogger } from "../events/internal";
 import { isChunkError } from "../isChunkError";
 import { getOptions } from "../options";
 import { attemptReload } from "../reload";
@@ -43,6 +42,9 @@ import { sendBeacon } from "../sendBeacon";
 import { shouldIgnoreMessages } from "../shouldIgnore";
 import { listenInternal } from "./internal";
 
+const mockGetLogger = vi.mocked(getLogger);
+const mockIsInitialized = vi.mocked(isInitialized);
+const mockSetLogger = vi.mocked(setLogger);
 const mockIsChunkError = vi.mocked(isChunkError);
 const mockGetOptions = vi.mocked(getOptions);
 const mockAttemptReload = vi.mocked(attemptReload);
@@ -63,6 +65,11 @@ interface CapturedHandlers {
   "vite:preloadError"?: (event: any) => void;
 }
 
+let mockLogger: {
+  capturedError: ReturnType<typeof vi.fn>;
+  retryLimitExceeded: ReturnType<typeof vi.fn>;
+};
+
 function captureListeners(mockSerialize = vi.fn().mockReturnValue('{"serialized":"error"}')): {
   handlers: CapturedHandlers;
   mockSerialize: ReturnType<typeof vi.fn>;
@@ -80,11 +87,17 @@ function captureListeners(mockSerialize = vi.fn().mockReturnValue('{"serialized"
 
 describe("listenInternal", () => {
   beforeEach(() => {
+    mockLogger = {
+      capturedError: vi.fn(),
+      retryLimitExceeded: vi.fn(),
+    };
+    mockIsInitialized.mockReturnValue(false);
     mockGetOptions.mockReturnValue({ ...DEFAULT_OPTIONS });
     mockGetRetryStateFromUrl.mockReturnValue(null);
     mockGetRetryInfoForBeacon.mockReturnValue({});
     mockIsChunkError.mockReturnValue(false);
     mockShouldIgnoreMessages.mockReturnValue(false);
+    mockGetLogger.mockReturnValue(mockLogger as any);
     vi.spyOn(console, "log").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -170,6 +183,40 @@ describe("listenInternal", () => {
       const result = listenInternal(vi.fn());
       spy.mockRestore();
       expect(result).toBeUndefined();
+    });
+
+    it("calls setLogger with logger argument", () => {
+      const spy = vi.spyOn(window, "addEventListener").mockImplementation(() => {});
+      const fakeLogger = { capturedError: vi.fn() } as any;
+      listenInternal(vi.fn(), fakeLogger);
+      spy.mockRestore();
+      expect(mockSetLogger).toHaveBeenCalledWith(fakeLogger);
+    });
+
+    it("calls setLogger with undefined when no logger is provided", () => {
+      const spy = vi.spyOn(window, "addEventListener").mockImplementation(() => {});
+      listenInternal(vi.fn());
+      spy.mockRestore();
+      expect(mockSetLogger).toHaveBeenCalledWith(undefined);
+    });
+
+    it("calls setLogger before isInitialized check (logger available even when already initialized)", () => {
+      mockIsInitialized.mockReturnValue(true);
+      const fakeLogger = { capturedError: vi.fn() } as any;
+      listenInternal(vi.fn(), fakeLogger);
+      expect(mockSetLogger).toHaveBeenCalledWith(fakeLogger);
+    });
+
+    it("calls logger.retryLimitExceeded when retry limit is exceeded", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "test-id" });
+      captureListeners();
+      expect(mockLogger.retryLimitExceeded).toHaveBeenCalledWith(3, 3);
+    });
+
+    it("does not call logger.retryLimitExceeded when retryAttempt < reloadDelays.length", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 1, retryId: "test-id" });
+      captureListeners();
+      expect(mockLogger.retryLimitExceeded).not.toHaveBeenCalled();
     });
   });
 
@@ -262,19 +309,20 @@ describe("listenInternal", () => {
       expect(mockIsChunkError).toHaveBeenCalledWith(event);
     });
 
-    it("suppresses console.error when shouldIgnoreMessages returns true", () => {
+    it("does not call logger.capturedError when shouldIgnoreMessages returns true", () => {
       mockShouldIgnoreMessages.mockReturnValue(true);
       const { handlers } = captureListeners();
       handlers.error!({ message: "ignored error", preventDefault: vi.fn() });
-      expect(console.error).not.toHaveBeenCalled();
+      expect(mockLogger.capturedError).not.toHaveBeenCalled();
     });
 
-    it("logs console.error when error is not ignored", () => {
+    it("calls logger.capturedError with type and event when error is not ignored", () => {
       mockIsChunkError.mockReturnValue(false);
       mockShouldIgnoreMessages.mockReturnValue(false);
       const { handlers } = captureListeners();
-      handlers.error!({ message: "visible error", preventDefault: vi.fn() });
-      expect(console.error).toHaveBeenCalled();
+      const event = { message: "visible error", preventDefault: vi.fn() };
+      handlers.error!(event);
+      expect(mockLogger.capturedError).toHaveBeenCalledWith("error", event);
     });
 
     it("still calls sendBeacon when shouldIgnoreMessages returns true (shouldIgnore only affects logging)", () => {
@@ -367,11 +415,19 @@ describe("listenInternal", () => {
       expect(mockSerialize).toHaveBeenCalledWith(event);
     });
 
-    it("suppresses console.error when shouldIgnoreMessages returns true", () => {
+    it("does not call logger.capturedError when shouldIgnoreMessages returns true", () => {
       mockShouldIgnoreMessages.mockReturnValue(true);
       const { handlers } = captureListeners();
       handlers.unhandledrejection!({ preventDefault: vi.fn(), reason: new Error("ignored") });
-      expect(console.error).not.toHaveBeenCalled();
+      expect(mockLogger.capturedError).not.toHaveBeenCalled();
+    });
+
+    it("calls logger.capturedError with type and event when rejection is not ignored", () => {
+      mockShouldIgnoreMessages.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      const event = { preventDefault: vi.fn(), reason: new Error("visible") };
+      handlers.unhandledrejection!(event);
+      expect(mockLogger.capturedError).toHaveBeenCalledWith("unhandledrejection", event);
     });
 
     it("still calls sendBeacon when shouldIgnoreMessages returns true (shouldIgnore only affects logging)", () => {
@@ -491,7 +547,7 @@ describe("listenInternal", () => {
       expect(mockShouldIgnoreMessages).toHaveBeenCalledWith(["script-src: https://evil.com"]);
     });
 
-    it("suppresses console.error when shouldIgnoreMessages returns true", () => {
+    it("does not call logger.capturedError when shouldIgnoreMessages returns true", () => {
       mockShouldIgnoreMessages.mockReturnValue(true);
       const { handlers } = captureListeners();
       handlers.securitypolicyviolation!({
@@ -499,7 +555,22 @@ describe("listenInternal", () => {
         preventDefault: vi.fn(),
         violatedDirective: "script-src",
       });
-      expect(console.error).not.toHaveBeenCalled();
+      expect(mockLogger.capturedError).not.toHaveBeenCalled();
+    });
+
+    it("calls logger.capturedError with csp type and details when CSP violation is not ignored", () => {
+      mockShouldIgnoreMessages.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      handlers.securitypolicyviolation!({
+        blockedURI: "https://evil.com",
+        preventDefault: vi.fn(),
+        violatedDirective: "script-src",
+      });
+      expect(mockLogger.capturedError).toHaveBeenCalledWith(
+        "csp",
+        "https://evil.com",
+        "script-src",
+      );
     });
 
     it("still calls sendBeacon when shouldIgnoreMessages returns true (shouldIgnore only affects logging)", () => {
@@ -593,14 +664,14 @@ describe("listenInternal", () => {
       expect(mockShouldIgnoreMessages).toHaveBeenCalledWith(["event level message"]);
     });
 
-    it("suppresses console.error when shouldIgnoreMessages returns true", () => {
+    it("does not call logger.capturedError when shouldIgnoreMessages returns true", () => {
       mockShouldIgnoreMessages.mockReturnValue(true);
       const { handlers } = captureListeners();
       handlers["vite:preloadError"]!({
         payload: { message: "ignored chunk error" },
         preventDefault: vi.fn(),
       });
-      expect(console.error).not.toHaveBeenCalled();
+      expect(mockLogger.capturedError).not.toHaveBeenCalled();
     });
 
     it("still calls attemptReload when shouldIgnoreMessages returns true (shouldIgnore only affects logging)", () => {
@@ -613,14 +684,33 @@ describe("listenInternal", () => {
       expect(mockAttemptReload).toHaveBeenCalledTimes(1);
     });
 
-    it("logs console.error when error is not ignored", () => {
+    it("calls logger.capturedError with type and event when error is not ignored", () => {
       mockShouldIgnoreMessages.mockReturnValue(false);
       const { handlers } = captureListeners();
-      handlers["vite:preloadError"]!({
+      const event = {
         payload: { message: "visible chunk error" },
         preventDefault: vi.fn(),
-      });
-      expect(console.error).toHaveBeenCalled();
+      };
+      handlers["vite:preloadError"]!(event);
+      expect(mockLogger.capturedError).toHaveBeenCalledWith("vite:preloadError", event);
+    });
+  });
+
+  describe("logger graceful degradation", () => {
+    it("does not throw when getLogger returns undefined (no logger set)", () => {
+      mockGetLogger.mockReset();
+      const { handlers } = captureListeners();
+      expect(() => {
+        handlers.error!({ message: "test error", preventDefault: vi.fn() });
+      }).not.toThrow();
+    });
+
+    it("still processes events normally when no logger is set", () => {
+      mockGetLogger.mockReset();
+      mockIsChunkError.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      handlers.error!({ message: "test error", preventDefault: vi.fn() });
+      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
     });
   });
 
