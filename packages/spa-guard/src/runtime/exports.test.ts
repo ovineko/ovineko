@@ -24,4 +24,10 @@ describe("runtime/index exports", () => {
     expect(mod.subscribeToState).toBeDefined();
     expect(typeof mod.subscribeToState).toBe("function");
   });
+
+  it("exports recommendedSetup function", async () => {
+    const mod = await import("./index");
+    expect(mod.recommendedSetup).toBeDefined();
+    expect(typeof mod.recommendedSetup).toBe("function");
+  });
 });

@@ -108,11 +108,11 @@ A convenience function that enables version checking with sensible defaults and 
 - Create: `packages/spa-guard/src/runtime/recommendedSetup.ts`
 - Modify: `packages/spa-guard/src/runtime/index.ts`
 
-- [ ] implement `recommendedSetup(overrides?)` that calls `startVersionCheck()` with sensible defaults
-- [ ] export from `runtime/index.ts`
-- [ ] update README.md with usage example
-- [ ] write tests for `recommendedSetup()` verifying it calls the right functions with defaults
-- [ ] run project test suite - must pass before task 6
+- [x] implement `recommendedSetup(overrides?)` that calls `startVersionCheck()` with sensible defaults
+- [x] export from `runtime/index.ts`
+- [x] update README.md with usage example
+- [x] write tests for `recommendedSetup()` verifying it calls the right functions with defaults
+- [x] run project test suite - must pass before task 6
 
 ### Task 6: Unify fallback HTML across all implementations
 
