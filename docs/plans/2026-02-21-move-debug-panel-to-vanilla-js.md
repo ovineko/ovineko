@@ -62,9 +62,9 @@ Error dispatchers produce truly unhandled errors that reach spa-guard's window l
 
 Key difference from old errorSimulators: functions return void, not Promise. Errors are dispatched, not returned. Caller cannot catch them.
 
-- [ ] Implement all 4 dispatch functions
-- [ ] Write tests verifying errors reach window event listeners (use addEventListener in test to capture)
-- [ ] Run test suite
+- [x] Implement all 4 dispatch functions
+- [x] Write tests verifying errors reach window event listeners (use addEventListener in test to capture)
+- [x] Run test suite
 
 ### Task 3: Implement createDebugger() with vanilla JS panel
 
