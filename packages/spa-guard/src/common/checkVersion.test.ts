@@ -66,6 +66,14 @@ const simulateVisibilityChange = (state: "hidden" | "visible") => {
   document.dispatchEvent(new Event("visibilitychange"));
 };
 
+const simulateFocus = () => {
+  globalThis.dispatchEvent(new Event("focus"));
+};
+
+const simulateBlur = () => {
+  globalThis.dispatchEvent(new Event("blur"));
+};
+
 describe("common/checkVersion", () => {
   let mod: Awaited<ReturnType<typeof loadModule>>;
   let originalFetch: typeof globalThis.fetch;
@@ -582,6 +590,221 @@ describe("common/checkVersion", () => {
       await vi.advanceTimersByTimeAsync(20_000);
 
       expect(globalThis.fetch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("initial tab state handling", () => {
+    afterEach(() => {
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        value: "visible",
+      });
+    });
+
+    it("does not start polling when tab is initially hidden", async () => {
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        value: "hidden",
+      });
+
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json" },
+        version: "1.0.0",
+      });
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        json: async () => ({ version: "1.0.0" }),
+        ok: true,
+      });
+
+      mod.startVersionCheck();
+
+      expect(mockLogger.versionCheckPaused).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(globalThis.fetch).not.toHaveBeenCalled();
+    });
+
+    it("does not start polling when window is initially unfocused", async () => {
+      vi.spyOn(document, "hasFocus").mockReturnValue(false);
+
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json" },
+        version: "1.0.0",
+      });
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        json: async () => ({ version: "1.0.0" }),
+        ok: true,
+      });
+
+      mod.startVersionCheck();
+
+      expect(mockLogger.versionCheckPaused).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(globalThis.fetch).not.toHaveBeenCalled();
+    });
+
+    it("starts polling when focus event arrives after initially hidden start", async () => {
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        value: "hidden",
+      });
+
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 5000, mode: "json" },
+        version: "1.0.0",
+      });
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        json: async () => ({ version: "1.0.0" }),
+        ok: true,
+      });
+
+      mod.startVersionCheck();
+
+      // Simulate tab becoming visible and focused after 6 seconds
+      await vi.advanceTimersByTimeAsync(6000);
+
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        value: "visible",
+      });
+      simulateVisibilityChange("visible");
+
+      // Interval elapsed (6000 >= 5000), so immediate check
+      expect(mockLogger.versionCheckResumedImmediate).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(0);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("focus/blur-based pausing", () => {
+    const startJsonCheck = (interval: number) => {
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval, mode: "json" },
+        version: "1.0.0",
+      });
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        json: async () => ({ version: "1.0.0" }),
+        ok: true,
+      });
+      mod.startVersionCheck();
+    };
+
+    it("pauses polling when window loses focus", async () => {
+      startJsonCheck(1000);
+      simulateBlur();
+
+      expect(mockLogger.versionCheckPaused).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(globalThis.fetch).not.toHaveBeenCalled();
+    });
+
+    it("resumes polling when window gains focus", async () => {
+      startJsonCheck(5000);
+      simulateBlur();
+      await vi.advanceTimersByTimeAsync(6000);
+      simulateFocus();
+
+      expect(mockLogger.versionCheckResumedImmediate).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(0);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("resumes with delayed check when focus returns before interval elapses", async () => {
+      startJsonCheck(10_000);
+      await vi.advanceTimersByTimeAsync(3000);
+      simulateBlur();
+      await vi.advanceTimersByTimeAsync(2000);
+      simulateFocus();
+
+      expect(mockLogger.versionCheckResumed).toHaveBeenCalledTimes(1);
+      expect(globalThis.fetch).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("cleans up focus and blur listeners on stopVersionCheck", () => {
+      const removeListenerSpy = vi.spyOn(globalThis, "removeEventListener");
+
+      setWindowOptions({ checkVersion: { interval: 1000 }, version: "1.0.0" });
+      mod.startVersionCheck();
+      mod.stopVersionCheck();
+
+      expect(removeListenerSpy).toHaveBeenCalledWith("focus", expect.any(Function));
+      expect(removeListenerSpy).toHaveBeenCalledWith("blur", expect.any(Function));
+    });
+  });
+
+  describe("deduplication of concurrent checks", () => {
+    it("skips concurrent version checks when one is already in-flight", async () => {
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json" },
+        version: "1.0.0",
+      });
+
+      // Create a fetch that stays pending (never resolves immediately)
+      let resolveFetch: ((value: any) => void) | undefined;
+      globalThis.fetch = vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveFetch = resolve;
+          }),
+      );
+
+      mod.startVersionCheck();
+
+      // First interval tick - starts a fetch
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+      // Second interval tick - check should be skipped because first is in-flight
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+      // Resolve the first fetch
+      resolveFetch!({
+        json: async () => ({ version: "1.0.0" }),
+        ok: true,
+      });
+      await vi.advanceTimersByTimeAsync(0);
+
+      // Third tick - now a new check can proceed
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it("does not restart timers when both visibilitychange and focus fire together", async () => {
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 5000, mode: "json" },
+        version: "1.0.0",
+      });
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        json: async () => ({ version: "1.0.0" }),
+        ok: true,
+      });
+
+      mod.startVersionCheck();
+      simulateBlur();
+      await vi.advanceTimersByTimeAsync(6000);
+
+      // Both events fire close together (common browser behavior)
+      simulateVisibilityChange("visible");
+      simulateFocus();
+
+      // Only one resumedImmediate log - the second call is a no-op because timers are already running
+      expect(mockLogger.versionCheckResumedImmediate).toHaveBeenCalledTimes(1);
+
+      // Only one fetch from the single resume
+      await vi.advanceTimersByTimeAsync(0);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     });
   });
 });

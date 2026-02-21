@@ -73,16 +73,16 @@ Four improvements from revise.txt and revise2.txt:
 - Modify: `packages/spa-guard/src/common/checkVersion.ts`
 - Modify: `packages/spa-guard/src/common/logger.ts` (add new log methods if needed)
 
-- [ ] add `checkInProgress` boolean flag; wrap `checkVersionOnce` so that if a check is already in-flight, new calls are skipped (return early)
-- [ ] in `startVersionCheck()`: before starting polling, check `document.visibilityState` and `document.hasFocus()`; if tab is hidden or window unfocused, only register event listeners without starting polling
-- [ ] add `window.focus` and `window.blur` event listeners alongside `visibilitychange`:
+- [x] add `checkInProgress` boolean flag; wrap `checkVersionOnce` so that if a check is already in-flight, new calls are skipped (return early)
+- [x] in `startVersionCheck()`: before starting polling, check `document.visibilityState` and `document.hasFocus()`; if tab is hidden or window unfocused, only register event listeners without starting polling
+- [x] add `window.focus` and `window.blur` event listeners alongside `visibilitychange`:
   - `blur`: pause polling (clearTimers), same as hidden
   - `focus`: resume with same logic as visibility-visible (check elapsed time, immediate check if >= interval, otherwise schedule remaining)
-- [ ] deduplicate overlapping events: since both visibilitychange and focus/blur can fire close together, the `checkInProgress` flag prevents concurrent fetches; additionally, if timers are already running (from a prior resume), don't restart them
-- [ ] in `stopVersionCheck()`: also remove focus/blur listeners
-- [ ] in `_resetForTesting()`: reset `checkInProgress` flag
-- [ ] write/update tests for: initial hidden state (no polling starts), focus/blur pause/resume, deduplication (concurrent checks skipped), immediate check on return after interval elapsed
-- [ ] run project test suite - must pass before task 5
+- [x] deduplicate overlapping events: since both visibilitychange and focus/blur can fire close together, the `checkInProgress` flag prevents concurrent fetches; additionally, if timers are already running (from a prior resume), don't restart them
+- [x] in `stopVersionCheck()`: also remove focus/blur listeners
+- [x] in `_resetForTesting()`: reset `checkInProgress` flag
+- [x] write/update tests for: initial hidden state (no polling starts), focus/blur pause/resume, deduplication (concurrent checks skipped), immediate check on return after interval elapsed
+- [x] run project test suite - must pass before task 5
 
 ### Task 5: Auto-reload on version change
 

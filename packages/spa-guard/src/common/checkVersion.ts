@@ -6,6 +6,9 @@ let versionCheckTimeout: null | ReturnType<typeof setTimeout> = null;
 let lastKnownVersion: null | string = null;
 let lastCheckTimestamp: null | number = null;
 let visibilityHandler: (() => void) | null = null;
+let focusHandler: (() => void) | null = null;
+let blurHandler: (() => void) | null = null;
+let checkInProgress = false;
 
 const fetchJsonVersion = async (): Promise<null | string> => {
   const endpoint = getOptions().checkVersion?.endpoint;
@@ -64,6 +67,10 @@ const onVersionChange = (oldVersion: null | string, latestVersion: string): void
 };
 
 const checkVersionOnce = async (mode: "html" | "json"): Promise<void> => {
+  if (checkInProgress) {
+    return;
+  }
+  checkInProgress = true;
   try {
     const remoteVersion = await fetchRemoteVersion(mode);
 
@@ -73,6 +80,8 @@ const checkVersionOnce = async (mode: "html" | "json"): Promise<void> => {
     }
   } catch (error) {
     getLogger()?.versionCheckFailed(error);
+  } finally {
+    checkInProgress = false;
   }
 };
 
@@ -100,7 +109,12 @@ const handleVisibilityHidden = (): void => {
   getLogger()?.versionCheckPaused();
 };
 
-const handleVisibilityVisible = (mode: "html" | "json", interval: number): void => {
+const handleResume = (mode: "html" | "json", interval: number): void => {
+  // If timers are already running (from a prior resume), don't restart them
+  if (versionCheckInterval !== null || versionCheckTimeout !== null) {
+    return;
+  }
+
   const elapsed = Date.now() - (lastCheckTimestamp ?? 0);
 
   if (elapsed >= interval) {
@@ -146,17 +160,36 @@ export const startVersionCheck = (): void => {
   getLogger()?.versionCheckStarted(mode, interval, lastKnownVersion);
 
   lastCheckTimestamp = Date.now();
-  startPolling(mode, interval);
+
+  // Only start polling if tab is visible and window is focused
+  const isTabVisible = document.visibilityState === "visible";
+  const isWindowFocused = document.hasFocus();
+
+  if (isTabVisible && isWindowFocused) {
+    startPolling(mode, interval);
+  } else {
+    getLogger()?.versionCheckPaused();
+  }
 
   visibilityHandler = () => {
     if (document.visibilityState === "hidden") {
       handleVisibilityHidden();
     } else {
-      handleVisibilityVisible(mode, interval);
+      handleResume(mode, interval);
     }
   };
 
+  focusHandler = () => {
+    handleResume(mode, interval);
+  };
+
+  blurHandler = () => {
+    handleVisibilityHidden();
+  };
+
   document.addEventListener("visibilitychange", visibilityHandler);
+  globalThis.addEventListener("focus", focusHandler);
+  globalThis.addEventListener("blur", blurHandler);
 };
 
 export const stopVersionCheck = (): void => {
@@ -170,6 +203,16 @@ export const stopVersionCheck = (): void => {
     visibilityHandler = null;
   }
 
+  if (focusHandler !== null) {
+    globalThis.removeEventListener("focus", focusHandler);
+    focusHandler = null;
+  }
+
+  if (blurHandler !== null) {
+    globalThis.removeEventListener("blur", blurHandler);
+    blurHandler = null;
+  }
+
   if (wasRunning) {
     getLogger()?.versionCheckStopped();
   }
@@ -180,4 +223,5 @@ export const _resetForTesting = (): void => {
   stopVersionCheck();
   lastKnownVersion = null;
   lastCheckTimestamp = null;
+  checkInProgress = false;
 };
