@@ -16,6 +16,12 @@ describe("eslint plugin", () => {
     expect(plugin.configs).toBeDefined();
   });
 
+  it("plugin name is @ovineko/spa-guard/eslint", () => {
+    const recommended = configs.recommended as Record<string, unknown>;
+    const plugins = recommended.plugins as Record<string, unknown>;
+    expect(plugins).toHaveProperty("@ovineko/spa-guard/eslint");
+  });
+
   it("recommended config uses dynamic plugin name as key", () => {
     const recommended = configs.recommended as Record<string, unknown>;
     expect(recommended).toBeDefined();
@@ -31,6 +37,7 @@ describe("eslint plugin", () => {
 
     expect(configRules[`${expectedPluginName}/no-direct-error-boundary`]).toBe("error");
     expect(configRules[`${expectedPluginName}/no-direct-lazy`]).toBe("error");
+    expect(Object.keys(configRules)).toHaveLength(2);
   });
 
   it("named export configs is the same reference as plugin.configs", () => {

@@ -9,7 +9,7 @@ const rule: Rule.RuleModule = {
   create(context) {
     return {
       ImportDeclaration(node) {
-        const source = node.source.value as string;
+        const source = node.source.value;
         if (source !== BANNED_SOURCE) {
           return;
         }

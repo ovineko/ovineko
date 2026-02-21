@@ -43,12 +43,10 @@ const rule: Rule.RuleModule = {
               const namedSpecs = otherSpecifiers.filter((s) => s.type === "ImportSpecifier");
 
               const namedNames = namedSpecs.map((s) => {
-                if (s.type === "ImportSpecifier" && s.imported.type === "Identifier") {
-                  return s.imported.name === s.local.name
-                    ? s.local.name
-                    : `${s.imported.name} as ${s.local.name}`;
-                }
-                return s.local.name;
+                const spec = s as Rule.Node & { imported: { name: string; type: string } };
+                return spec.imported.name === s.local.name
+                  ? s.local.name
+                  : `${spec.imported.name} as ${s.local.name}`;
               });
 
               let reactLine: string;
