@@ -115,7 +115,7 @@ createDebugger returns a function. Calling that function destroys the panel. The
 
 - Delete: `revise.txt`
 
-- [ ] Delete revise.txt from repo root
+- [x] Delete revise.txt from repo root
 
 ### Task 6: Verify acceptance criteria
 
