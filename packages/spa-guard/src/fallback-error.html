@@ -1,3 +1,8 @@
+<style>
+  .spa-guard-error-id:has(.spa-guard-retry-id:empty) {
+    display: none;
+  }
+</style>
 <div
   style="
     display: flex;
@@ -20,7 +25,7 @@
         Reload page
       </button>
     </div>
-    <p style="margin-top: 20px; font-size: 12px">
+    <p class="spa-guard-error-id" style="margin-top: 20px; font-size: 12px">
       Error ID: <span class="spa-guard-retry-id"></span>
     </p>
   </div>
