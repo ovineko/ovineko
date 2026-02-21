@@ -154,11 +154,11 @@ Currently there are 3 different fallback UIs: the generated HTML string (used in
 
 ### Task 9: Verify acceptance criteria
 
-- [ ] run full test suite: `pnpm test` from spa-guard package
-- [ ] run linter: `pnpm lint` or `pnpm datamitsu check`
-- [ ] run typecheck: `pnpm typecheck`
-- [ ] verify test coverage meets 80%+
-- [ ] rebuild inline scripts and confirm sizes are updated in README
+- [x] run full test suite: `pnpm test` from spa-guard package
+- [x] run linter: `pnpm lint` or `pnpm datamitsu check`
+- [x] run typecheck: `pnpm typecheck`
+- [x] verify test coverage meets 80%+
+- [x] rebuild inline scripts and confirm sizes are updated in README
 
 ### Task 10: Update documentation
 

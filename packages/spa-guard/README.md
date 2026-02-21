@@ -24,7 +24,7 @@ Peer dependencies vary by integration - see sections below for specific requirem
 - ✅ **Error filtering** - Filter out specific errors from logging and reporting via `ignoredErrors` option
 - ✅ **Deep error serialization** - Captures detailed error information for server-side analysis
 - ✅ **Smart beacon reporting** - Sends error reports only after retry exhaustion to prevent spam
-- ✅ **Dual build system** - Production minified (~5.9 KB) and trace minified (~7.3 KB) builds for different environments
+- ✅ **Dual build system** - Production minified (~8.3 KB) and trace minified (~13.3 KB) builds for different environments
 - ✅ **Global error listeners** - Captures `error`, `unhandledrejection`, and `securitypolicyviolation` events
 - ✅ **Vite plugin for inline script injection** - Runs before all chunks to catch early errors
 - ✅ **HTML minification** - Automatically minifies fallback HTML to reduce bundle size
@@ -83,7 +83,7 @@ export default defineConfig({
 export default defineConfig({
   plugins: [
     spaGuardVitePlugin({
-      trace: true, // Enable verbose logging (10KB instead of 5KB)
+      trace: true, // Enable verbose logging (~13KB instead of ~8KB)
       reloadDelays: [1000, 2000],
       reportBeacon: { endpoint: "/api/beacon" },
     }),
@@ -233,7 +233,7 @@ spaGuardVitePlugin({
   },
 
   // Build mode
-  trace: false, // Set to true for verbose debug build (10KB vs 5KB)
+  trace: false, // Set to true for verbose debug build (~13KB vs ~8KB)
 });
 ```
 
@@ -1289,8 +1289,8 @@ import spaGuardEslint from "@ovineko/spa-guard/eslint";
 
 ## Build Sizes
 
-- **Production:** `dist-inline/index.js` ~5.9 KB minified (Terser)
-- **Trace:** `dist-inline-trace/index.js` ~7.3 KB minified (Terser)
+- **Production:** `dist-inline/index.js` ~8.3 KB minified (Terser)
+- **Trace:** `dist-inline-trace/index.js` ~13.3 KB minified (Terser)
 - **Main library:** `dist/` varies by export
 
 ## Advanced Usage
