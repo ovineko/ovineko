@@ -7,6 +7,19 @@
  * spa-guard's listenInternal() picks them up.
  */
 
+import { debugSyncErrorEventType } from "../../common/constants";
+
+/**
+ * Dispatches an async runtime error via setTimeout.
+ * Triggers the window "error" event because the throw happens outside
+ * any call stack that could catch it.
+ */
+export function dispatchAsyncRuntimeError(): void {
+  setTimeout(() => {
+    throw new Error("Simulated runtime error from spa-guard debug panel");
+  }, 0);
+}
+
 /**
  * Dispatches an unhandled chunk load error via void Promise.reject().
  * Triggers window "unhandledrejection" with an error matching spa-guard's
@@ -45,12 +58,12 @@ export function dispatchNetworkTimeout(delayMs = 3000): void {
 }
 
 /**
- * Dispatches a synchronous runtime error via setTimeout.
- * Triggers the window "error" event because the throw happens outside
- * any call stack that could catch it.
+ * Dispatches a sync runtime error via CustomEvent.
+ * DebugSyncErrorTrigger (a React component) listens for this event,
+ * stores the error in state, and throws it during render so that
+ * React Error Boundary can catch it.
  */
-export function dispatchRuntimeError(): void {
-  setTimeout(() => {
-    throw new Error("Simulated runtime error from spa-guard debug panel");
-  }, 0);
+export function dispatchSyncRuntimeError(): void {
+  const error = new Error("Simulated sync runtime error from spa-guard debug panel");
+  globalThis.dispatchEvent(new CustomEvent(debugSyncErrorEventType, { detail: { error } }));
 }

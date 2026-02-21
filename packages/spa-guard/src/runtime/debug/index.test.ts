@@ -12,26 +12,27 @@ vi.mock("../state", () => ({
 }));
 
 vi.mock("./errorDispatchers", () => ({
+  dispatchAsyncRuntimeError: vi.fn(),
   dispatchChunkLoadError: vi.fn(),
   dispatchFinallyError: vi.fn(),
   dispatchNetworkTimeout: vi.fn(),
-  dispatchRuntimeError: vi.fn(),
+  dispatchSyncRuntimeError: vi.fn(),
 }));
 
 import { subscribe } from "../../common/events/internal";
 import { subscribeToState } from "../state";
 import {
+  dispatchAsyncRuntimeError,
   dispatchChunkLoadError,
   dispatchFinallyError,
   dispatchNetworkTimeout,
-  dispatchRuntimeError,
 } from "./errorDispatchers";
 
 const mockSubscribe = vi.mocked(subscribe);
 const mockSubscribeToState = vi.mocked(subscribeToState);
 const mockDispatchChunkLoadError = vi.mocked(dispatchChunkLoadError);
 const mockDispatchNetworkTimeout = vi.mocked(dispatchNetworkTimeout);
-const mockDispatchRuntimeError = vi.mocked(dispatchRuntimeError);
+const mockDispatchAsyncRuntimeError = vi.mocked(dispatchAsyncRuntimeError);
 const mockDispatchFinallyError = vi.mocked(dispatchFinallyError);
 
 const defaultState: SpaGuardState = {
@@ -235,11 +236,11 @@ describe("createDebugger - buttons", () => {
     destroy();
   });
 
-  it("calls dispatchRuntimeError when runtime button is clicked", async () => {
+  it("calls dispatchAsyncRuntimeError when runtime button is clicked", async () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     getButton("runtime-error")!.click();
-    expect(mockDispatchRuntimeError).toHaveBeenCalledOnce();
+    expect(mockDispatchAsyncRuntimeError).toHaveBeenCalledOnce();
     destroy();
   });
 

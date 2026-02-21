@@ -3,10 +3,10 @@ import type { SPAGuardEvent } from "../../common/events/types";
 import { subscribe } from "../../common/events/internal";
 import { subscribeToState } from "../state";
 import {
+  dispatchAsyncRuntimeError,
   dispatchChunkLoadError,
   dispatchFinallyError,
   dispatchNetworkTimeout,
-  dispatchRuntimeError,
 } from "./errorDispatchers";
 
 type ButtonStatus = "default" | "loading" | "triggered";
@@ -21,7 +21,7 @@ interface Scenario {
 const SCENARIOS: Scenario[] = [
   { dispatch: dispatchChunkLoadError, key: "chunk-load-error", label: "ChunkLoadError" },
   { dispatch: () => dispatchNetworkTimeout(100), key: "network-timeout", label: "Network Timeout" },
-  { dispatch: dispatchRuntimeError, key: "runtime-error", label: "Runtime Error" },
+  { dispatch: dispatchAsyncRuntimeError, key: "runtime-error", label: "Runtime Error" },
   { dispatch: dispatchFinallyError, key: "finally-error", label: "Finally Error" },
 ];
 

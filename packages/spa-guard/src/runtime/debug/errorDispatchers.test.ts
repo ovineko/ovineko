@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { debugSyncErrorEventType } from "../../common/constants";
 import { isChunkError } from "../../common/isChunkError";
 import {
+  dispatchAsyncRuntimeError,
   dispatchChunkLoadError,
   dispatchFinallyError,
   dispatchNetworkTimeout,
-  dispatchRuntimeError,
+  dispatchSyncRuntimeError,
 } from "./errorDispatchers";
 
 /**
@@ -106,7 +108,7 @@ describe("dispatchNetworkTimeout", () => {
   });
 });
 
-describe("dispatchRuntimeError", () => {
+describe("dispatchAsyncRuntimeError", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -116,21 +118,21 @@ describe("dispatchRuntimeError", () => {
   });
 
   it("returns void", () => {
-    const result = dispatchRuntimeError();
+    const result = dispatchAsyncRuntimeError();
     expect(result).toBeUndefined();
     // Pending fake timer is discarded by vi.useRealTimers() in afterEach
   });
 
   it("schedules a throw via setTimeout", () => {
     const spy = vi.spyOn(globalThis, "setTimeout");
-    dispatchRuntimeError();
+    dispatchAsyncRuntimeError();
     expect(spy).toHaveBeenCalledWith(expect.any(Function), 0);
     spy.mockRestore();
   });
 
   it("the scheduled callback throws an Error with descriptive message", () => {
     const spy = vi.spyOn(globalThis, "setTimeout");
-    dispatchRuntimeError();
+    dispatchAsyncRuntimeError();
     const callback = spy.mock.calls.at(-1)[0] as () => void;
     spy.mockRestore();
 
@@ -139,7 +141,7 @@ describe("dispatchRuntimeError", () => {
 
   it("the thrown error is an Error instance", () => {
     const spy = vi.spyOn(globalThis, "setTimeout");
-    dispatchRuntimeError();
+    dispatchAsyncRuntimeError();
     const callback = spy.mock.calls.at(-1)[0] as () => void;
     spy.mockRestore();
 
@@ -148,7 +150,7 @@ describe("dispatchRuntimeError", () => {
 
   it("dispatches an error not recognized as a chunk error", () => {
     const spy = vi.spyOn(globalThis, "setTimeout");
-    dispatchRuntimeError();
+    dispatchAsyncRuntimeError();
     const callback = spy.mock.calls.at(-1)[0] as () => void;
     spy.mockRestore();
 
@@ -159,6 +161,58 @@ describe("dispatchRuntimeError", () => {
       caught = error;
     }
     expect(isChunkError(caught)).toBe(false);
+  });
+});
+
+describe("dispatchSyncRuntimeError", () => {
+  it("returns void", () => {
+    const result = dispatchSyncRuntimeError();
+    expect(result).toBeUndefined();
+  });
+
+  it("fires a CustomEvent on window with the correct type", () => {
+    const spy = vi.fn();
+    globalThis.addEventListener(debugSyncErrorEventType, spy);
+    dispatchSyncRuntimeError();
+    expect(spy).toHaveBeenCalledOnce();
+    globalThis.removeEventListener(debugSyncErrorEventType, spy);
+  });
+
+  it("passes an Error in event.detail.error", () => {
+    let receivedDetail: undefined | { error: unknown };
+    const handler = (e: Event) => {
+      receivedDetail = (e as CustomEvent).detail as { error: unknown };
+    };
+    globalThis.addEventListener(debugSyncErrorEventType, handler);
+    dispatchSyncRuntimeError();
+    globalThis.removeEventListener(debugSyncErrorEventType, handler);
+
+    expect(receivedDetail).toBeDefined();
+    expect(receivedDetail!.error).toBeInstanceOf(Error);
+  });
+
+  it("includes a descriptive message in the error", () => {
+    let receivedError: Error | undefined;
+    const handler = (e: Event) => {
+      receivedError = (e as CustomEvent).detail.error as Error;
+    };
+    globalThis.addEventListener(debugSyncErrorEventType, handler);
+    dispatchSyncRuntimeError();
+    globalThis.removeEventListener(debugSyncErrorEventType, handler);
+
+    expect(receivedError!.message).toBe("Simulated sync runtime error from spa-guard debug panel");
+  });
+
+  it("dispatches an error not recognized as a chunk error", () => {
+    let receivedError: unknown;
+    const handler = (e: Event) => {
+      receivedError = (e as CustomEvent).detail.error as unknown;
+    };
+    globalThis.addEventListener(debugSyncErrorEventType, handler);
+    dispatchSyncRuntimeError();
+    globalThis.removeEventListener(debugSyncErrorEventType, handler);
+
+    expect(isChunkError(receivedError)).toBe(false);
   });
 });
 
