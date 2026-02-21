@@ -312,7 +312,7 @@ describe("common/logger", () => {
       logger.versionChangeDetected("1.0.0", "2.0.0");
 
       expect(warnSpy).toHaveBeenCalledWith(
-        "[spa-guard] New version available. Please refresh to get the latest version.",
+        "[spa-guard] New version available (1.0.0 → 2.0.0). Please refresh to get the latest version.",
       );
     });
 

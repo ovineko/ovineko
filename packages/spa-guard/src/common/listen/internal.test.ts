@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { Logger } from "../logger";
+
 vi.mock("../isChunkError", () => ({
   isChunkError: vi.fn(),
 }));
@@ -65,10 +67,34 @@ interface CapturedHandlers {
   "vite:preloadError"?: (event: any) => void;
 }
 
-let mockLogger: {
-  capturedError: ReturnType<typeof vi.fn>;
-  retryLimitExceeded: ReturnType<typeof vi.fn>;
-};
+const createMockLogger = (): Logger => ({
+  beaconSendFailed: vi.fn(),
+  capturedError: vi.fn(),
+  clearingRetryState: vi.fn(),
+  error: vi.fn(),
+  fallbackAlreadyShown: vi.fn(),
+  fallbackInjectFailed: vi.fn(),
+  fallbackTargetNotFound: vi.fn(),
+  log: vi.fn(),
+  logEvent: vi.fn(),
+  noBeaconEndpoint: vi.fn(),
+  noFallbackConfigured: vi.fn(),
+  retryLimitExceeded: vi.fn(),
+  updatedRetryAttempt: vi.fn(),
+  versionChanged: vi.fn(),
+  versionChangeDetected: vi.fn(),
+  versionCheckAlreadyRunning: vi.fn(),
+  versionCheckDisabled: vi.fn(),
+  versionCheckFailed: vi.fn(),
+  versionCheckHttpError: vi.fn(),
+  versionCheckParseError: vi.fn(),
+  versionCheckRequiresEndpoint: vi.fn(),
+  versionCheckStarted: vi.fn(),
+  versionCheckStopped: vi.fn(),
+  warn: vi.fn(),
+});
+
+let mockLogger: Logger;
 
 function captureListeners(mockSerialize = vi.fn().mockReturnValue('{"serialized":"error"}')): {
   handlers: CapturedHandlers;
@@ -87,17 +113,14 @@ function captureListeners(mockSerialize = vi.fn().mockReturnValue('{"serialized"
 
 describe("listenInternal", () => {
   beforeEach(() => {
-    mockLogger = {
-      capturedError: vi.fn(),
-      retryLimitExceeded: vi.fn(),
-    };
+    mockLogger = createMockLogger();
     mockIsInitialized.mockReturnValue(false);
     mockGetOptions.mockReturnValue({ ...DEFAULT_OPTIONS });
     mockGetRetryStateFromUrl.mockReturnValue(null);
     mockGetRetryInfoForBeacon.mockReturnValue({});
     mockIsChunkError.mockReturnValue(false);
     mockShouldIgnoreMessages.mockReturnValue(false);
-    mockGetLogger.mockReturnValue(mockLogger as any);
+    mockGetLogger.mockReturnValue(mockLogger);
     vi.spyOn(console, "log").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -193,11 +216,11 @@ describe("listenInternal", () => {
       expect(mockSetLogger).toHaveBeenCalledWith(fakeLogger);
     });
 
-    it("calls setLogger with undefined when no logger is provided", () => {
+    it("does not call setLogger when no logger is provided", () => {
       const spy = vi.spyOn(window, "addEventListener").mockImplementation(() => {});
       listenInternal(vi.fn());
       spy.mockRestore();
-      expect(mockSetLogger).toHaveBeenCalledWith(undefined);
+      expect(mockSetLogger).not.toHaveBeenCalled();
     });
 
     it("calls setLogger before isInitialized check (logger available even when already initialized)", () => {

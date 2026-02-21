@@ -121,8 +121,10 @@ export const createLogger = (): Logger => ({
   versionChanged(oldVersion: null | string, latestVersion: string): void {
     console.warn(`${PREFIX} Version changed: ${oldVersion} → ${latestVersion}`);
   },
-  versionChangeDetected(_oldVersion: null | string, _latestVersion: string): void {
-    console.warn(`${PREFIX} New version available. Please refresh to get the latest version.`);
+  versionChangeDetected(oldVersion: null | string, latestVersion: string): void {
+    console.warn(
+      `${PREFIX} New version available (${oldVersion ?? "unknown"} → ${latestVersion}). Please refresh to get the latest version.`,
+    );
   },
   versionCheckAlreadyRunning(): void {
     console.warn(`${PREFIX} Version check already running`);

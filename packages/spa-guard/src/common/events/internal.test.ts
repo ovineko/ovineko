@@ -497,34 +497,34 @@ describe("common/events/internal", () => {
     });
   });
 
-  describe("setLogger() / getLogger() - logger lifecycle", () => {
-    const createMockLogger = (): Logger => ({
-      beaconSendFailed: vi.fn(),
-      capturedError: vi.fn(),
-      clearingRetryState: vi.fn(),
-      error: vi.fn(),
-      fallbackAlreadyShown: vi.fn(),
-      fallbackInjectFailed: vi.fn(),
-      fallbackTargetNotFound: vi.fn(),
-      log: vi.fn(),
-      logEvent: vi.fn(),
-      noBeaconEndpoint: vi.fn(),
-      noFallbackConfigured: vi.fn(),
-      retryLimitExceeded: vi.fn(),
-      updatedRetryAttempt: vi.fn(),
-      versionChanged: vi.fn(),
-      versionChangeDetected: vi.fn(),
-      versionCheckAlreadyRunning: vi.fn(),
-      versionCheckDisabled: vi.fn(),
-      versionCheckFailed: vi.fn(),
-      versionCheckHttpError: vi.fn(),
-      versionCheckParseError: vi.fn(),
-      versionCheckRequiresEndpoint: vi.fn(),
-      versionCheckStarted: vi.fn(),
-      versionCheckStopped: vi.fn(),
-      warn: vi.fn(),
-    });
+  const createMockLogger = (): Logger => ({
+    beaconSendFailed: vi.fn(),
+    capturedError: vi.fn(),
+    clearingRetryState: vi.fn(),
+    error: vi.fn(),
+    fallbackAlreadyShown: vi.fn(),
+    fallbackInjectFailed: vi.fn(),
+    fallbackTargetNotFound: vi.fn(),
+    log: vi.fn(),
+    logEvent: vi.fn(),
+    noBeaconEndpoint: vi.fn(),
+    noFallbackConfigured: vi.fn(),
+    retryLimitExceeded: vi.fn(),
+    updatedRetryAttempt: vi.fn(),
+    versionChanged: vi.fn(),
+    versionChangeDetected: vi.fn(),
+    versionCheckAlreadyRunning: vi.fn(),
+    versionCheckDisabled: vi.fn(),
+    versionCheckFailed: vi.fn(),
+    versionCheckHttpError: vi.fn(),
+    versionCheckParseError: vi.fn(),
+    versionCheckRequiresEndpoint: vi.fn(),
+    versionCheckStarted: vi.fn(),
+    versionCheckStopped: vi.fn(),
+    warn: vi.fn(),
+  });
 
+  describe("setLogger() / getLogger() - logger lifecycle", () => {
     it("getLogger returns undefined when no logger is set", () => {
       expect(getLogger()).toBeUndefined();
     });
@@ -563,33 +563,6 @@ describe("common/events/internal", () => {
   });
 
   describe("emitEvent() - auto-logging via logger", () => {
-    const createMockLogger = (): Logger => ({
-      beaconSendFailed: vi.fn(),
-      capturedError: vi.fn(),
-      clearingRetryState: vi.fn(),
-      error: vi.fn(),
-      fallbackAlreadyShown: vi.fn(),
-      fallbackInjectFailed: vi.fn(),
-      fallbackTargetNotFound: vi.fn(),
-      log: vi.fn(),
-      logEvent: vi.fn(),
-      noBeaconEndpoint: vi.fn(),
-      noFallbackConfigured: vi.fn(),
-      retryLimitExceeded: vi.fn(),
-      updatedRetryAttempt: vi.fn(),
-      versionChanged: vi.fn(),
-      versionChangeDetected: vi.fn(),
-      versionCheckAlreadyRunning: vi.fn(),
-      versionCheckDisabled: vi.fn(),
-      versionCheckFailed: vi.fn(),
-      versionCheckHttpError: vi.fn(),
-      versionCheckParseError: vi.fn(),
-      versionCheckRequiresEndpoint: vi.fn(),
-      versionCheckStarted: vi.fn(),
-      versionCheckStopped: vi.fn(),
-      warn: vi.fn(),
-    });
-
     it("calls logger.logEvent when a logger is set", () => {
       const logger = createMockLogger();
       setLogger(logger);

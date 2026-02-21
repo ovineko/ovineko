@@ -9,7 +9,9 @@ import { sendBeacon } from "../sendBeacon";
 import { shouldIgnoreMessages } from "../shouldIgnore";
 
 export const listenInternal = (serializeError: (error: unknown) => string, logger?: Logger) => {
-  setLogger(logger);
+  if (logger) {
+    setLogger(logger);
+  }
 
   if (isInitialized()) {
     return;
