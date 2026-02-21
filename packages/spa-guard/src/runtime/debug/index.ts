@@ -7,6 +7,7 @@ import {
   dispatchChunkLoadError,
   dispatchFinallyError,
   dispatchNetworkTimeout,
+  dispatchSyncRuntimeError,
 } from "./errorDispatchers";
 
 type ButtonStatus = "default" | "loading" | "triggered";
@@ -21,7 +22,8 @@ interface Scenario {
 const SCENARIOS: Scenario[] = [
   { dispatch: dispatchChunkLoadError, key: "chunk-load-error", label: "ChunkLoadError" },
   { dispatch: () => dispatchNetworkTimeout(100), key: "network-timeout", label: "Network Timeout" },
-  { dispatch: dispatchAsyncRuntimeError, key: "runtime-error", label: "Runtime Error" },
+  { dispatch: dispatchSyncRuntimeError, key: "sync-runtime-error", label: "Sync Runtime Error" },
+  { dispatch: dispatchAsyncRuntimeError, key: "async-runtime-error", label: "Async Runtime Error" },
   { dispatch: dispatchFinallyError, key: "finally-error", label: "Finally Error" },
 ];
 

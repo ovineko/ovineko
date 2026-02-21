@@ -26,12 +26,14 @@ import {
   dispatchChunkLoadError,
   dispatchFinallyError,
   dispatchNetworkTimeout,
+  dispatchSyncRuntimeError,
 } from "./errorDispatchers";
 
 const mockSubscribe = vi.mocked(subscribe);
 const mockSubscribeToState = vi.mocked(subscribeToState);
 const mockDispatchChunkLoadError = vi.mocked(dispatchChunkLoadError);
 const mockDispatchNetworkTimeout = vi.mocked(dispatchNetworkTimeout);
+const mockDispatchSyncRuntimeError = vi.mocked(dispatchSyncRuntimeError);
 const mockDispatchAsyncRuntimeError = vi.mocked(dispatchAsyncRuntimeError);
 const mockDispatchFinallyError = vi.mocked(dispatchFinallyError);
 
@@ -210,12 +212,13 @@ describe("createDebugger - buttons", () => {
   beforeEach(setupMocks);
   afterEach(cleanupDom);
 
-  it("renders all 4 error buttons", async () => {
+  it("renders all 5 error buttons", async () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     expect(getButton("chunk-load-error")).not.toBeNull();
     expect(getButton("network-timeout")).not.toBeNull();
-    expect(getButton("runtime-error")).not.toBeNull();
+    expect(getButton("sync-runtime-error")).not.toBeNull();
+    expect(getButton("async-runtime-error")).not.toBeNull();
     expect(getButton("finally-error")).not.toBeNull();
     destroy();
   });
@@ -236,10 +239,18 @@ describe("createDebugger - buttons", () => {
     destroy();
   });
 
-  it("calls dispatchAsyncRuntimeError when runtime button is clicked", async () => {
+  it("calls dispatchSyncRuntimeError when sync runtime button is clicked", async () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
-    getButton("runtime-error")!.click();
+    getButton("sync-runtime-error")!.click();
+    expect(mockDispatchSyncRuntimeError).toHaveBeenCalledOnce();
+    destroy();
+  });
+
+  it("calls dispatchAsyncRuntimeError when async runtime button is clicked", async () => {
+    const { createDebugger: create } = await import("./index");
+    const destroy = create();
+    getButton("async-runtime-error")!.click();
     expect(mockDispatchAsyncRuntimeError).toHaveBeenCalledOnce();
     destroy();
   });
@@ -257,7 +268,8 @@ describe("createDebugger - buttons", () => {
     const destroy = create();
     expect(getButton("chunk-load-error")!.textContent).toBe("ChunkLoadError");
     expect(getButton("network-timeout")!.textContent).toBe("Network Timeout");
-    expect(getButton("runtime-error")!.textContent).toBe("Runtime Error");
+    expect(getButton("sync-runtime-error")!.textContent).toBe("Sync Runtime Error");
+    expect(getButton("async-runtime-error")!.textContent).toBe("Async Runtime Error");
     expect(getButton("finally-error")!.textContent).toBe("Finally Error");
     destroy();
   });

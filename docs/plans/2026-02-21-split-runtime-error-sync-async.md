@@ -58,10 +58,10 @@ React Error Boundaries only catch errors thrown during rendering. The vanilla de
 
 - Modify: `packages/spa-guard/src/runtime/debug/index.ts`
 
-- [ ] Update SCENARIOS array: replace single runtime-error entry with two entries: `{ key: "sync-runtime-error", label: "Sync Runtime Error", dispatch: dispatchSyncRuntimeError }` and `{ key: "async-runtime-error", label: "Async Runtime Error", dispatch: dispatchAsyncRuntimeError }`
-- [ ] Update import from errorDispatchers
-- [ ] Update tests in index.test.ts: verify 5 buttons rendered, test both new button clicks
-- [ ] Run test suite
+- [x] Update SCENARIOS array: replace single runtime-error entry with two entries: `{ key: "sync-runtime-error", label: "Sync Runtime Error", dispatch: dispatchSyncRuntimeError }` and `{ key: "async-runtime-error", label: "Async Runtime Error", dispatch: dispatchAsyncRuntimeError }`
+- [x] Update import from errorDispatchers
+- [x] Update tests in index.test.ts: verify 5 buttons rendered, test both new button clicks
+- [x] Run test suite
 
 ### Task 4: Delete revise.txt
 
