@@ -102,9 +102,11 @@ const createMockLogger = () => ({
 
 const defaultOptions = {
   enableRetryReset: true,
-  fallback: {
-    html: "<div>Fallback UI</div>",
-    selector: "body",
+  html: {
+    fallback: {
+      content: "<div>Fallback UI</div>",
+      selector: "body",
+    },
   },
   minTimeBetweenResets: 5000,
   reloadDelays: [1000, 2000, 5000],
@@ -617,7 +619,7 @@ describe("attemptReload", () => {
     it("uses custom selector from fallback options", () => {
       mockGetOptions.mockReturnValue({
         ...defaultOptions,
-        fallback: { html: "<div>Custom</div>", selector: "#app" },
+        html: { fallback: { content: "<div>Custom</div>", selector: "#app" } },
       });
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
       const mockEl = { innerHTML: "" };
@@ -646,7 +648,7 @@ describe("attemptReload", () => {
     it("does not inject fallback HTML or emit event when no fallback html configured", () => {
       mockGetOptions.mockReturnValue({
         ...defaultOptions,
-        fallback: { selector: "body" },
+        html: { fallback: { selector: "body" } },
       });
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
       vi.spyOn(document, "querySelector");
@@ -951,7 +953,7 @@ describe("attemptReload", () => {
     it("calls noFallbackConfigured when no fallback HTML is set", () => {
       mockGetOptions.mockReturnValue({
         ...defaultOptions,
-        fallback: { selector: "body" },
+        html: { fallback: { selector: "body" } },
       });
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
 

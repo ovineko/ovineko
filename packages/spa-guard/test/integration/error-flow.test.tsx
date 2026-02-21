@@ -56,9 +56,11 @@ const setupMockLocation = (url = "http://localhost/"): void => {
 const makeOptions = (overrides: Record<string, unknown> = {}) => ({
   enableRetryReset: true,
   errors: { forceRetry: [], ignore: [] },
-  fallback: {
-    html: "<div id='spa-guard-fallback'>Fallback UI</div>",
-    selector: "body",
+  html: {
+    fallback: {
+      content: "<div id='spa-guard-fallback'>Fallback UI</div>",
+      selector: "body",
+    },
   },
   lazyRetry: {
     callReloadOnFailure: true,
@@ -511,9 +513,11 @@ describe("max retries → fallback UI shown", () => {
     vi.mocked(getOptions).mockReturnValue(
       makeOptions({
         enableRetryReset: false,
-        fallback: {
-          html: "<div id='spa-guard-fallback'>Fallback UI</div>",
-          selector: "body",
+        html: {
+          fallback: {
+            content: "<div id='spa-guard-fallback'>Fallback UI</div>",
+            selector: "body",
+          },
         },
         reloadDelays: [1000, 2000, 5000],
         useRetryId: true,
@@ -535,9 +539,11 @@ describe("max retries → fallback UI shown", () => {
     vi.mocked(getOptions).mockReturnValue(
       makeOptions({
         enableRetryReset: false,
-        fallback: {
-          html: "<div id='spa-guard-fallback'>Fallback UI</div>",
-          selector: "body",
+        html: {
+          fallback: {
+            content: "<div id='spa-guard-fallback'>Fallback UI</div>",
+            selector: "body",
+          },
         },
         reloadDelays: [1000, 2000, 5000],
         useRetryId: true,
@@ -578,9 +584,11 @@ describe("max retries → fallback UI shown", () => {
     vi.mocked(getOptions).mockReturnValue(
       makeOptions({
         enableRetryReset: false,
-        fallback: {
-          html: "<div id='spa-guard-fallback'>Fallback UI</div>",
-          selector: "body",
+        html: {
+          fallback: {
+            content: "<div id='spa-guard-fallback'>Fallback UI</div>",
+            selector: "body",
+          },
         },
         reloadDelays: [1000, 2000, 5000],
         reportBeacon: { endpoint: "http://test.example.com/beacon" },
@@ -621,7 +629,7 @@ describe("retry reset after minTimeBetweenResets", () => {
     vi.mocked(getOptions).mockReturnValue(
       makeOptions({
         enableRetryReset: true,
-        fallback: { html: "<div>Fallback</div>", selector: "body" },
+        html: { fallback: { content: "<div>Fallback</div>", selector: "body" } },
         minTimeBetweenResets: 100, // only 100ms minimum between resets
         reloadDelays: [1000, 2000, 5000],
         useRetryId: true,
@@ -659,7 +667,7 @@ describe("retry reset after minTimeBetweenResets", () => {
     vi.mocked(getOptions).mockReturnValue(
       makeOptions({
         enableRetryReset: true,
-        fallback: { html: "<div>Fallback</div>", selector: "body" },
+        html: { fallback: { content: "<div>Fallback</div>", selector: "body" } },
         minTimeBetweenResets: 100,
         reloadDelays: [1, 2, 5], // tiny delays so setTimeout fires quickly
         useRetryId: true,
@@ -700,7 +708,7 @@ describe("retry reset after minTimeBetweenResets", () => {
     vi.mocked(getOptions).mockReturnValue(
       makeOptions({
         enableRetryReset: true,
-        fallback: { html: "<div>Fallback</div>", selector: "body" },
+        html: { fallback: { content: "<div>Fallback</div>", selector: "body" } },
         minTimeBetweenResets: 100,
         reloadDelays: [1000, 2000, 5000], // delay=1000ms, elapsed=100ms → no reset
         useRetryId: true,

@@ -126,7 +126,7 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
 
     it("escapes < characters to prevent HTML injection", async () => {
       const result = await invokeTransform({
-        fallback: { html: "<script>alert('xss')</script>" },
+        html: { fallback: { content: "<script>alert('xss')</script>" } },
       });
       const script = result.tags[0].children as string;
 
@@ -138,7 +138,7 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
   describe("fallback HTML minification", () => {
     it("minifies fallback HTML when provided", async () => {
       const { minify } = await import("html-minifier-terser");
-      await invokeTransform({ fallback: { html: "<div>  <p>fallback</p>  </div>" } });
+      await invokeTransform({ html: { fallback: { content: "<div>  <p>fallback</p>  </div>" } } });
 
       expect(minify).toHaveBeenCalledWith(
         "<div>  <p>fallback</p>  </div>",

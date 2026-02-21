@@ -83,9 +83,9 @@ After: `html: { fallback: { selector, content }, loading: { content } }`
 - Modify: `packages/spa-guard/src/common/reload.test.ts`
 - Modify: `packages/spa-guard/src/vite-plugin/index.test.ts`
 
-- [ ] In reload.test.ts: replace all `fallback: { html: ..., selector: ... }` with `html: { fallback: { content: ..., selector: ... } }`
-- [ ] In index.test.ts: replace all `fallback: { html: ... }` with `html: { fallback: { content: ... } }`
-- [ ] Run tests: `pnpm --filter spa-guard test` - all must pass
+- [x] In reload.test.ts: replace all `fallback: { html: ..., selector: ... }` with `html: { fallback: { content: ..., selector: ... } }`
+- [x] In index.test.ts: replace all `fallback: { html: ... }` with `html: { fallback: { content: ... } }`
+- [x] Run tests: `pnpm --filter spa-guard test` - all must pass
 
 ### Task 4: Update README documentation
 
