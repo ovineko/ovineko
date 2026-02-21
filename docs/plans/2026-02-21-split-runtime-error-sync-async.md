@@ -69,7 +69,7 @@ React Error Boundaries only catch errors thrown during rendering. The vanilla de
 
 - Delete: `revise.txt`
 
-- [ ] Delete revise.txt from repo root
+- [x] Delete revise.txt from repo root
 
 ### Task 5: Verify acceptance criteria
 
