@@ -39,12 +39,12 @@ Create a `DebugTestPanel` React component exported as a separate entry point `@o
 
 - Create: `packages/spa-guard/src/react/debug/errorSimulators.ts`
 
-- [ ] Implement `simulateChunkLoadError()` - triggers a dynamic import to a nonexistent module
-- [ ] Implement `simulateNetworkTimeout()` - rejects with a network-like error after a short delay
-- [ ] Implement `simulateRuntimeError()` - throws synchronously in a way React error boundary catches
-- [ ] Implement `simulateFinallyError()` - promise that throws in `.finally()`
-- [ ] Write tests for each simulator function in `errorSimulators.test.ts`
-- [ ] Run test suite - must pass before task 3
+- [x] Implement `simulateChunkLoadError()` - triggers a dynamic import to a nonexistent module
+- [x] Implement `simulateNetworkTimeout()` - rejects with a network-like error after a short delay
+- [x] Implement `simulateRuntimeError()` - throws synchronously in a way React error boundary catches
+- [x] Implement `simulateFinallyError()` - promise that throws in `.finally()`
+- [x] Write tests for each simulator function in `errorSimulators.test.ts`
+- [x] Run test suite - must pass before task 3
 
 ### Task 3: Implement DebugTestPanel component
 
