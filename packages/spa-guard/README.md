@@ -53,17 +53,19 @@ export default defineConfig({
     spaGuardVitePlugin({
       // Production configuration
       reloadDelays: [1000, 2000, 5000], // 3 attempts with increasing delays
-      fallback: {
-        html: `
-          <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
-            <div style="text-align:center">
-              <h1>Something went wrong</h1>
-              <p>Please refresh the page to continue.</p>
-              <button onclick="location.reload()">Refresh Page</button>
+      html: {
+        fallback: {
+          content: `
+            <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
+              <div style="text-align:center">
+                <h1>Something went wrong</h1>
+                <p>Please refresh the page to continue.</p>
+                <button onclick="location.reload()">Refresh Page</button>
+              </div>
             </div>
-          </div>
-        `,
-        selector: "body", // CSS selector where to inject fallback UI (default: "body")
+          `,
+          selector: "body", // CSS selector where to inject fallback UI (default: "body")
+        },
       },
       reportBeacon: {
         endpoint: "/api/beacon",
@@ -217,14 +219,16 @@ spaGuardVitePlugin({
   minTimeBetweenResets: 5000, // Min time between retry resets in ms (default: 5000)
 
   // Fallback UI configuration
-  fallback: {
-    html: `
-      <div style="...">
-        <h1>Something went wrong</h1>
-        <button onclick="location.reload()">Refresh</button>
-      </div>
-    `,
-    selector: "body", // CSS selector for injection target (default: "body")
+  html: {
+    fallback: {
+      content: `
+        <div style="...">
+          <h1>Something went wrong</h1>
+          <button onclick="location.reload()">Refresh</button>
+        </div>
+      `,
+      selector: "body", // CSS selector for injection target (default: "body")
+    },
   },
 
   // Error filtering and retry
@@ -274,10 +278,14 @@ interface Options {
     forceRetry?: string[]; // Error message substrings that trigger retry/reload (default: [])
   };
 
-  fallback?: {
-    html?: string; // Custom error UI HTML (default: minimal error screen)
-    loadingHtml?: string; // Custom loading/retrying UI HTML (default: minimal loading screen)
-    selector?: string; // CSS selector for injection target (default: "body")
+  html?: {
+    fallback?: {
+      content?: string; // Custom error UI HTML (default: minimal error screen)
+      selector?: string; // CSS selector for injection target (default: "body")
+    };
+    loading?: {
+      content?: string; // Custom loading/retrying UI HTML (default: minimal loading screen)
+    };
   };
 
   reportBeacon?: {
@@ -312,10 +320,14 @@ interface VitePluginOptions extends Options {
     ignore: [],
     forceRetry: [],
   },
-  fallback: {
-    html: defaultErrorFallbackHtml, // minimal error screen (auto-generated)
-    loadingHtml: defaultLoadingFallbackHtml, // minimal loading screen (auto-generated)
-    selector: "body",
+  html: {
+    fallback: {
+      content: defaultErrorFallbackHtml, // minimal error screen (auto-generated)
+      selector: "body",
+    },
+    loading: {
+      content: defaultLoadingFallbackHtml, // minimal loading screen (auto-generated)
+    },
   },
 }
 ```
@@ -971,10 +983,14 @@ interface Options {
     forceRetry?: string[]; // Error message substrings that trigger retry/reload (default: [])
   };
 
-  fallback?: {
-    html?: string; // Custom error UI HTML
-    loadingHtml?: string; // Custom loading/retrying UI HTML
-    selector?: string; // CSS selector for injection target (default: "body")
+  html?: {
+    fallback?: {
+      content?: string; // Custom error UI HTML
+      selector?: string; // CSS selector for injection target (default: "body")
+    };
+    loading?: {
+      content?: string; // Custom loading/retrying UI HTML
+    };
   };
 
   reportBeacon?: {
@@ -1350,53 +1366,55 @@ Provide fully custom HTML for error screen:
 
 ```typescript
 spaGuardVitePlugin({
-  fallback: {
-    html: `
-      <style>
-        .spa-guard-error {
-          font-family: system-ui, -apple-system, sans-serif;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 100vh;
-          margin: 0;
-          padding: 20px;
-          box-sizing: border-box;
-        }
-        .spa-guard-container {
-          max-width: 500px;
-          text-align: center;
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(10px);
-          padding: 40px;
-          border-radius: 20px;
-        }
-        .spa-guard-button {
-          background: white;
-          color: #667eea;
-          border: none;
-          padding: 12px 24px;
-          font-size: 16px;
-          font-weight: 600;
-          border-radius: 8px;
-          cursor: pointer;
-          margin-top: 20px;
-        }
-        .spa-guard-button:hover {
-          transform: scale(1.05);
-        }
-      </style>
-      <div class="spa-guard-error">
-        <div class="spa-guard-container">
-          <h1>⚠️ Application Error</h1>
-          <p>We're experiencing technical difficulties. Please try reloading the page.</p>
-          <button class="spa-guard-button" onclick="location.reload()">Reload Application</button>
+  html: {
+    fallback: {
+      content: `
+        <style>
+          .spa-guard-error {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+          }
+          .spa-guard-container {
+            max-width: 500px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+          }
+          .spa-guard-button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+          }
+          .spa-guard-button:hover {
+            transform: scale(1.05);
+          }
+        </style>
+        <div class="spa-guard-error">
+          <div class="spa-guard-container">
+            <h1>⚠️ Application Error</h1>
+            <p>We're experiencing technical difficulties. Please try reloading the page.</p>
+            <button class="spa-guard-button" onclick="location.reload()">Reload Application</button>
+          </div>
         </div>
-      </div>
-    `,
-    selector: "body", // Inject into document.body
+      `,
+      selector: "body", // Inject into document.body
+    },
   },
 });
 ```
@@ -1407,9 +1425,11 @@ Inject fallback UI into a specific element instead of `<body>`:
 
 ```typescript
 spaGuardVitePlugin({
-  fallback: {
-    html: `<div>Error occurred. <button onclick="location.reload()">Retry</button></div>`,
-    selector: "#app", // Inject into <div id="app">
+  html: {
+    fallback: {
+      content: `<div>Error occurred. <button onclick="location.reload()">Retry</button></div>`,
+      selector: "#app", // Inject into <div id="app">
+    },
   },
 });
 ```

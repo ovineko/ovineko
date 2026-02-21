@@ -93,9 +93,9 @@ After: `html: { fallback: { selector, content }, loading: { content } }`
 
 - Modify: `packages/spa-guard/README.md`
 
-- [ ] Update all code examples showing the old `fallback` option to use the new `html` structure
-- [ ] Update the Options Interface documentation section
-- [ ] Update the Default Values section
+- [x] Update all code examples showing the old `fallback` option to use the new `html` structure
+- [x] Update the Options Interface documentation section
+- [x] Update the Default Values section
 
 ### Task 5: Verify acceptance criteria
 
