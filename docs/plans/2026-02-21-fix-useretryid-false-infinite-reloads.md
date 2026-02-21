@@ -42,15 +42,15 @@ When `useRetryId: false`, the code skips ALL URL parameter handling - both `spaG
 - Modify: `packages/spa-guard/src/common/reload.ts`
 - Modify: `packages/spa-guard/src/common/reload.test.ts`
 
-- [ ] Extract a `buildReloadUrlAttemptOnly(retryAttempt: number): string` helper that sets only `spaGuardRetryAttempt` param (no `spaGuardRetryId`)
-- [ ] Line 40: when `useRetryId: false`, read attempt from `getRetryAttemptFromUrl()` instead of returning null; construct a partial retry state with a generated retryId and the persisted attempt
-- [ ] Lines 148-153: when `useRetryId: false`, use `location.href = buildReloadUrlAttemptOnly(nextAttempt)` instead of `location.reload()`, so the attempt param persists across reloads
-- [ ] In the exhaustion path (line 97+): when `useRetryId: false`, call `clearRetryAttemptFromUrl()` to clean up the URL
-- [ ] In `showFallbackUI`: handle `useRetryId: false` case - use `clearRetryAttemptFromUrl()` when no full retry state is present
-- [ ] Update existing `useRetryId=false` tests to verify the attempt param appears in URL
-- [ ] Add test: successive reloads with `useRetryId=false` increment attempt via URL param and eventually reach exhaustion
-- [ ] Add test: exhaustion with `useRetryId=false` clears the attempt param from URL
-- [ ] Run project test suite - must pass before task 3
+- [x] Extract a `buildReloadUrlAttemptOnly(retryAttempt: number): string` helper that sets only `spaGuardRetryAttempt` param (no `spaGuardRetryId`)
+- [x] Line 40: when `useRetryId: false`, read attempt from `getRetryAttemptFromUrl()` instead of returning null; construct a partial retry state with a generated retryId and the persisted attempt
+- [x] Lines 148-153: when `useRetryId: false`, use `location.href = buildReloadUrlAttemptOnly(nextAttempt)` instead of `location.reload()`, so the attempt param persists across reloads
+- [x] In the exhaustion path (line 97+): when `useRetryId: false`, call `clearRetryAttemptFromUrl()` to clean up the URL
+- [x] In `showFallbackUI`: handle `useRetryId: false` case - use `clearRetryAttemptFromUrl()` when no full retry state is present
+- [x] Update existing `useRetryId=false` tests to verify the attempt param appears in URL
+- [x] Add test: successive reloads with `useRetryId=false` increment attempt via URL param and eventually reach exhaustion
+- [x] Add test: exhaustion with `useRetryId=false` clears the attempt param from URL
+- [x] Run project test suite - must pass before task 3
 
 ### Task 3: Verify acceptance criteria
 
