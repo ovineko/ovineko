@@ -1,7 +1,9 @@
 import type { Rule } from "eslint";
 
+import { name } from "../../../package.json";
+
 const BANNED_SOURCES = new Set(["react-error-boundary"]);
-const SPA_GUARD_SOURCE = "@ovineko/spa-guard/react-error-boundary";
+const SPA_GUARD_SOURCE = `${name}/react-error-boundary`;
 
 const rule: Rule.RuleModule = {
   create(context) {

@@ -1,28 +1,34 @@
-import type { Rule } from "eslint";
+import type { ESLint } from "eslint";
 
+import { name } from "../../package.json";
 import noDirectErrorBoundary from "./rules/no-direct-error-boundary";
 import noDirectLazy from "./rules/no-direct-lazy";
 
-const rules: Record<string, Rule.RuleModule> = {
+const pluginName = `${name}/eslint`;
+
+const rules = {
   "no-direct-error-boundary": noDirectErrorBoundary,
   "no-direct-lazy": noDirectLazy,
 };
 
-const plugin = { configs: {} as Record<string, unknown>, rules };
+const plugin = {
+  configs: {} as NonNullable<ESLint.Plugin["configs"]>,
+  rules,
+} satisfies ESLint.Plugin;
 
 plugin.configs = {
   recommended: {
     plugins: {
-      "@ovineko/spa-guard": plugin,
+      [pluginName]: plugin,
     },
     rules: {
-      "@ovineko/spa-guard/no-direct-error-boundary": "error",
-      "@ovineko/spa-guard/no-direct-lazy": "error",
+      [`${pluginName}/no-direct-error-boundary`]: "error",
+      [`${pluginName}/no-direct-lazy`]: "error",
     },
   },
 };
 
-const { configs } = plugin;
+const configs: NonNullable<ESLint.Plugin["configs"]> = plugin.configs;
 
 export default plugin;
 export { configs, rules };

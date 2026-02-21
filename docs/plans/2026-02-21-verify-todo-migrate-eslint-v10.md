@@ -78,14 +78,14 @@ Changes:
 
 5. Update test files to match new plugin name prefix `@ovineko/spa-guard/eslint` in any rule name expectations
 
-- [ ] Update package.json dependencies
-- [ ] Refactor eslint/index.ts with `satisfies ESLint.Plugin`, `name` from package.json, and `/eslint` suffix
-- [ ] Refactor no-direct-error-boundary.ts to use `name` from package.json
-- [ ] Refactor no-direct-lazy.ts to use `name` from package.json
-- [ ] Update test expectations for new plugin name prefix
-- [ ] Run `pnpm install` to update lockfile
-- [ ] Run tests: `pnpm test`
-- [ ] Run typecheck: `pnpm typecheck`
+- [x] Update package.json dependencies
+- [x] Refactor eslint/index.ts with `satisfies ESLint.Plugin`, `name` from package.json, and `/eslint` suffix
+- [x] Refactor no-direct-error-boundary.ts to use `name` from package.json
+- [x] Refactor no-direct-lazy.ts to use `name` from package.json
+- [x] Update test expectations for new plugin name prefix
+- [x] Run `pnpm install` to update lockfile
+- [x] Run tests: `pnpm test`
+- [x] Run typecheck: `pnpm typecheck`
 
 ### Task 3: Verify acceptance criteria
 

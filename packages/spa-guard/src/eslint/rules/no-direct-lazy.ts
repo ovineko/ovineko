@@ -1,6 +1,8 @@
 import type { Rule } from "eslint";
 
-const SPA_GUARD_SOURCE = "@ovineko/spa-guard/react";
+import { name } from "../../../package.json";
+
+const SPA_GUARD_SOURCE = `${name}/react`;
 const SPA_GUARD_IMPORT = "lazyWithRetry";
 
 const rule: Rule.RuleModule = {
