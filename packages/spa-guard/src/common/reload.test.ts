@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("./events/internal", () => ({
   emitEvent: vi.fn(),
+  isDefaultRetryEnabled: vi.fn().mockReturnValue(true),
 }));
 
 vi.mock("./lastReloadTime", () => ({
@@ -631,18 +632,18 @@ describe("attemptReload", () => {
   });
 
   describe("event emissions", () => {
-    it("emits exactly one event on a normal retry attempt", () => {
+    it("emits chunk-error then retry-attempt on a normal retry attempt", () => {
       const error = new Error("chunk error");
 
       attemptReload(error);
 
-      expect(mockEmitEvent).toHaveBeenCalledTimes(1);
-      expect(mockEmitEvent).toHaveBeenCalledWith(
-        expect.objectContaining({ name: "retry-attempt" }),
-      );
+      expect(mockEmitEvent).toHaveBeenCalledTimes(2);
+      const eventNames = mockEmitEvent.mock.calls.map((call) => call[0]?.name);
+      expect(eventNames[0]).toBe("chunk-error");
+      expect(eventNames[1]).toBe("retry-attempt");
     });
 
-    it("emits retry-reset then retry-attempt when reset occurs", () => {
+    it("emits chunk-error then retry-reset then retry-attempt when reset occurs", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 2, retryId: "old-id" });
       mockShouldResetRetryCycle.mockReturnValue(true);
       mockGetLastReloadTime.mockReturnValue({
@@ -657,8 +658,9 @@ describe("attemptReload", () => {
       attemptReload(error);
 
       const eventNames = mockEmitEvent.mock.calls.map((call) => call[0]?.name);
-      expect(eventNames[0]).toBe("retry-reset");
-      expect(eventNames[1]).toBe("retry-attempt");
+      expect(eventNames[0]).toBe("chunk-error");
+      expect(eventNames[1]).toBe("retry-reset");
+      expect(eventNames[2]).toBe("retry-attempt");
     });
 
     it("emits retry-exhausted before fallback-ui-shown when max attempts exceeded", () => {

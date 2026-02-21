@@ -4,6 +4,10 @@ import { defaultFallbackHtml } from "./fallbackHtml.generated";
 export { optionsWindowKey } from "./constants";
 
 const defaultOptions: Options = {
+  checkVersion: {
+    interval: 60_000,
+    mode: "html",
+  },
   enableRetryReset: true,
   fallback: {
     html: defaultFallbackHtml,
@@ -20,6 +24,31 @@ const defaultOptions: Options = {
 };
 
 export interface Options {
+  /**
+   * Configuration for proactive version checking to detect new deployments.
+   * When configured with a `version`, periodically polls to detect version changes
+   * and dispatches a `spa-guard:version-change` CustomEvent on the window.
+   */
+  checkVersion?: {
+    /**
+     * Endpoint URL for JSON mode version checking.
+     * Required when mode is "json".
+     */
+    endpoint?: string;
+    /**
+     * Polling interval in milliseconds.
+     * @default 60000
+     */
+    interval?: number;
+    /**
+     * Detection mode.
+     * - "html": Re-fetches the current page and parses the injected version from the HTML.
+     * - "json": Fetches a dedicated JSON endpoint.
+     * @default "html"
+     */
+    mode?: "html" | "json";
+  };
+
   /**
    * Enable automatic retry cycle reset when enough time has passed
    * since the last reload. When true, if the user stays on a page longer
@@ -87,6 +116,12 @@ export interface Options {
 
   /** @default true */
   useRetryId?: boolean;
+
+  /**
+   * Current application version. Used by the version checker to detect new deployments.
+   * Automatically injected by the Vite plugin from the project's package.json.
+   */
+  version?: string;
 }
 
 export const getOptions = (): Options => {
@@ -95,6 +130,10 @@ export const getOptions = (): Options => {
   return {
     ...defaultOptions,
     ...windowOptions,
+    checkVersion: {
+      ...defaultOptions.checkVersion,
+      ...windowOptions?.checkVersion,
+    },
     fallback: {
       ...defaultOptions.fallback,
       ...windowOptions?.fallback,

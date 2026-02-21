@@ -5,6 +5,8 @@ import { getState, subscribeToState } from "../runtime";
 export type { SpaGuardState } from "../runtime";
 export { lazyWithRetry } from "./lazyWithRetry";
 export type { LazyRetryOptions } from "./types";
+export { useSPAGuardChunkError } from "./useSPAGuardChunkError";
+export { useSPAGuardEvents } from "./useSPAGuardEvents";
 
 export const useSpaGuardState = () => {
   const [state, setState] = useState(() => {

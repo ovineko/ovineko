@@ -16,6 +16,7 @@ export default tsup.defineConfig({
     "src/fastify/index.ts",
     "src/react-router/index.tsx",
     "src/vite-plugin/index.ts",
+    "src/eslint/index.ts",
   ],
   format: "esm",
   async onSuccess() {
