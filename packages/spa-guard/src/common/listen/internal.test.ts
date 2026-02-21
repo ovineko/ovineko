@@ -25,6 +25,7 @@ vi.mock("../sendBeacon", () => ({
 }));
 
 vi.mock("../shouldIgnore", () => ({
+  shouldForceRetry: vi.fn(),
   shouldIgnoreMessages: vi.fn(),
 }));
 
@@ -41,7 +42,7 @@ import { getOptions } from "../options";
 import { attemptReload } from "../reload";
 import { getRetryInfoForBeacon, getRetryStateFromUrl, updateRetryStateInUrl } from "../retryState";
 import { sendBeacon } from "../sendBeacon";
-import { shouldIgnoreMessages } from "../shouldIgnore";
+import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
 import { listenInternal } from "./internal";
 
 const mockGetLogger = vi.mocked(getLogger);
@@ -54,6 +55,7 @@ const mockGetRetryInfoForBeacon = vi.mocked(getRetryInfoForBeacon);
 const mockGetRetryStateFromUrl = vi.mocked(getRetryStateFromUrl);
 const mockUpdateRetryStateInUrl = vi.mocked(updateRetryStateInUrl);
 const mockSendBeacon = vi.mocked(sendBeacon);
+const mockShouldForceRetry = vi.mocked(shouldForceRetry);
 const mockShouldIgnoreMessages = vi.mocked(shouldIgnoreMessages);
 
 const DEFAULT_OPTIONS = {
@@ -124,6 +126,7 @@ describe("listenInternal", () => {
     mockGetRetryStateFromUrl.mockReturnValue(null);
     mockGetRetryInfoForBeacon.mockReturnValue({});
     mockIsChunkError.mockReturnValue(false);
+    mockShouldForceRetry.mockReturnValue(false);
     mockShouldIgnoreMessages.mockReturnValue(false);
     mockGetLogger.mockReturnValue(mockLogger);
     vi.spyOn(console, "log").mockImplementation(() => {});
@@ -908,6 +911,113 @@ describe("listenInternal", () => {
         violatedDirective: "script-src",
       });
       expect(mockGetRetryInfoForBeacon).toHaveBeenCalled();
+    });
+  });
+
+  describe("forceRetry errors trigger attemptReload", () => {
+    it("calls attemptReload when error message matches forceRetry pattern", () => {
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      const event = { message: "StaleModule detected", preventDefault: vi.fn() };
+      handlers.error!(event);
+      expect(mockAttemptReload).toHaveBeenCalledWith(event);
+    });
+
+    it("calls event.preventDefault() for forceRetry error events", () => {
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      const mockPreventDefault = vi.fn();
+      handlers.error!({ message: "StaleModule", preventDefault: mockPreventDefault });
+      expect(mockPreventDefault).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not call sendBeacon for forceRetry error events", () => {
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      handlers.error!({ message: "StaleModule", preventDefault: vi.fn() });
+      expect(mockSendBeacon).not.toHaveBeenCalled();
+    });
+
+    it("checks shouldForceRetry with event.message for error events", () => {
+      mockIsChunkError.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      handlers.error!({ message: "my custom error", preventDefault: vi.fn() });
+      expect(mockShouldForceRetry).toHaveBeenCalledWith(["my custom error"]);
+    });
+
+    it("calls attemptReload with event.reason when unhandledrejection matches forceRetry", () => {
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      const reason = new Error("VersionMismatch");
+      handlers.unhandledrejection!({ preventDefault: vi.fn(), reason });
+      expect(mockAttemptReload).toHaveBeenCalledWith(reason);
+    });
+
+    it("calls event.preventDefault() for forceRetry unhandledrejection events", () => {
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      const mockPreventDefault = vi.fn();
+      handlers.unhandledrejection!({
+        preventDefault: mockPreventDefault,
+        reason: new Error("VersionMismatch"),
+      });
+      expect(mockPreventDefault).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not call sendBeacon for forceRetry unhandledrejection events", () => {
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      handlers.unhandledrejection!({
+        preventDefault: vi.fn(),
+        reason: new Error("VersionMismatch"),
+      });
+      expect(mockSendBeacon).not.toHaveBeenCalled();
+    });
+
+    it("checks shouldForceRetry with String(event.reason) for unhandledrejection", () => {
+      mockIsChunkError.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      const reason = new Error("my rejection");
+      handlers.unhandledrejection!({ preventDefault: vi.fn(), reason });
+      expect(mockShouldForceRetry).toHaveBeenCalledWith([String(reason)]);
+    });
+
+    it("chunk errors take priority over forceRetry (isChunkError checked first)", () => {
+      mockIsChunkError.mockReturnValue(true);
+      mockShouldForceRetry.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      const event = { message: "ChunkLoadError", preventDefault: vi.fn() };
+      handlers.error!(event);
+      expect(mockAttemptReload).toHaveBeenCalledWith(event);
+      // shouldForceRetry is not even checked since isChunkError returns first
+      expect(mockShouldForceRetry).not.toHaveBeenCalled();
+    });
+
+    it("non-matching errors still send beacons normally", () => {
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      handlers.error!({ message: "regular error", preventDefault: vi.fn() });
+      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+    });
+
+    it("non-matching rejections still send beacons normally", () => {
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      handlers.unhandledrejection!({
+        preventDefault: vi.fn(),
+        reason: new Error("regular rejection"),
+      });
+      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+      expect(mockAttemptReload).not.toHaveBeenCalled();
     });
   });
 });

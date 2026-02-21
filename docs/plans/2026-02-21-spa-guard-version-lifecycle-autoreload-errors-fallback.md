@@ -105,12 +105,12 @@ Four improvements from revise.txt and revise2.txt:
 - Modify: `packages/spa-guard/src/common/shouldIgnore.ts`
 - Modify: `packages/spa-guard/src/common/listen/internal.ts`
 
-- [ ] in `options.ts`: replace `ignoredErrors?: string[]` with `errors?: { ignore?: string[]; forceRetry?: string[] }`; update `defaultOptions` (set `errors: { ignore: [], forceRetry: [] }`); remove old `ignoredErrors`; update `getOptions()` to merge `errors` sub-object
-- [ ] in `shouldIgnore.ts`: update `shouldIgnoreMessages` to read from `options.errors?.ignore` instead of `options.ignoredErrors`
-- [ ] add new function `shouldForceRetry(messages: (string | undefined)[]): boolean` in `shouldIgnore.ts` that checks messages against `options.errors?.forceRetry` patterns (same logic as ignore - substring match)
-- [ ] in `listen/internal.ts`: in `error` and `unhandledrejection` handlers, after the `isChunkError` check, add a `shouldForceRetry` check - if matched, call `event.preventDefault()` and `attemptReload(error)` (same as chunk error path)
-- [ ] write/update tests for: `shouldForceRetry` function, `errors.ignore` works same as old `ignoredErrors`, forceRetry errors trigger `attemptReload` in listen handlers, non-matching errors still send beacons normally
-- [ ] run project test suite - must pass before task 7
+- [x] in `options.ts`: replace `ignoredErrors?: string[]` with `errors?: { ignore?: string[]; forceRetry?: string[] }`; update `defaultOptions` (set `errors: { ignore: [], forceRetry: [] }`); remove old `ignoredErrors`; update `getOptions()` to merge `errors` sub-object
+- [x] in `shouldIgnore.ts`: update `shouldIgnoreMessages` to read from `options.errors?.ignore` instead of `options.ignoredErrors`
+- [x] add new function `shouldForceRetry(messages: (string | undefined)[]): boolean` in `shouldIgnore.ts` that checks messages against `options.errors?.forceRetry` patterns (same logic as ignore - substring match)
+- [x] in `listen/internal.ts`: in `error` and `unhandledrejection` handlers, after the `isChunkError` check, add a `shouldForceRetry` check - if matched, call `event.preventDefault()` and `attemptReload(error)` (same as chunk error path)
+- [x] write/update tests for: `shouldForceRetry` function, `errors.ignore` works same as old `ignoredErrors`, forceRetry errors trigger `attemptReload` in listen handlers, non-matching errors still send beacons normally
+- [x] run project test suite - must pass before task 7
 
 ### Task 7: Verify acceptance criteria
 

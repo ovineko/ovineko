@@ -55,11 +55,11 @@ const setupMockLocation = (url = "http://localhost/"): void => {
 
 const makeOptions = (overrides: Record<string, unknown> = {}) => ({
   enableRetryReset: true,
+  errors: { forceRetry: [], ignore: [] },
   fallback: {
     html: "<div id='spa-guard-fallback'>Fallback UI</div>",
     selector: "body",
   },
-  ignoredErrors: [],
   lazyRetry: {
     callReloadOnFailure: true,
     retryDelays: [1, 2],

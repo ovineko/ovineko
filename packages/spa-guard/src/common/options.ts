@@ -10,12 +10,15 @@ const defaultOptions: Options = {
     onUpdate: "reload",
   },
   enableRetryReset: true,
+  errors: {
+    forceRetry: [],
+    ignore: [],
+  },
   fallback: {
     html: defaultErrorFallbackHtml,
     loadingHtml: defaultLoadingFallbackHtml,
     selector: "body",
   },
-  ignoredErrors: [],
   lazyRetry: {
     callReloadOnFailure: true,
     retryDelays: [1000, 2000],
@@ -66,6 +69,24 @@ export interface Options {
    */
   enableRetryReset?: boolean;
 
+  /**
+   * Error filtering and retry configuration.
+   */
+  errors?: {
+    /**
+     * List of error message substrings that should trigger the retry/reload process,
+     * same as chunk load errors. Useful for custom errors that indicate a stale deployment.
+     * @default []
+     */
+    forceRetry?: string[];
+    /**
+     * List of error message substrings to ignore and not report.
+     * If error message contains any of these strings, it will be filtered out.
+     * @default []
+     */
+    ignore?: string[];
+  };
+
   fallback?: {
     /**
      * Custom HTML to display when all reload attempts are exhausted
@@ -81,13 +102,6 @@ export interface Options {
      */
     selector?: string;
   };
-
-  /**
-   * List of error message substrings to ignore and not report.
-   * If error message contains any of these strings, it will be filtered out.
-   * @default []
-   */
-  ignoredErrors?: string[];
 
   /**
    * Options for the lazyWithRetry module-level retry logic.
@@ -146,6 +160,10 @@ export const getOptions = (): Options => {
     checkVersion: {
       ...defaultOptions.checkVersion,
       ...windowOptions?.checkVersion,
+    },
+    errors: {
+      ...defaultOptions.errors,
+      ...windowOptions?.errors,
     },
     fallback: {
       ...defaultOptions.fallback,

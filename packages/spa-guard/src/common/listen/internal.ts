@@ -6,7 +6,7 @@ import { getOptions } from "../options";
 import { attemptReload } from "../reload";
 import { getRetryInfoForBeacon, getRetryStateFromUrl, updateRetryStateInUrl } from "../retryState";
 import { sendBeacon } from "../sendBeacon";
-import { shouldIgnoreMessages } from "../shouldIgnore";
+import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
 
 export const listenInternal = (serializeError: (error: unknown) => string, logger?: Logger) => {
   if (logger) {
@@ -44,6 +44,12 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
         return;
       }
 
+      if (shouldForceRetry([event.message])) {
+        event.preventDefault();
+        attemptReload(event);
+        return;
+      }
+
       const serialized = serializeError(event);
       sendBeacon({
         errorMessage: event.message,
@@ -64,6 +70,12 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
     }
 
     if (isChunkError(event.reason)) {
+      event.preventDefault();
+      attemptReload(event.reason);
+      return;
+    }
+
+    if (shouldForceRetry([errorMessage])) {
       event.preventDefault();
       attemptReload(event.reason);
       return;
