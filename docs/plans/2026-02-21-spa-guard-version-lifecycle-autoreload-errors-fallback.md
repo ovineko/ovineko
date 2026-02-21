@@ -114,10 +114,10 @@ Four improvements from revise.txt and revise2.txt:
 
 ### Task 7: Verify acceptance criteria
 
-- [ ] manual test: configure `errors.forceRetry` with a custom message, verify it triggers retry
-- [ ] run full test suite: `pnpm --filter @ovineko/spa-guard test`
-- [ ] run linter: `pnpm --filter @ovineko/spa-guard lint`
-- [ ] verify test coverage meets 80%+
+- [x] manual test: configure `errors.forceRetry` with a custom message, verify it triggers retry
+- [x] run full test suite: `pnpm --filter @ovineko/spa-guard test`
+- [x] run linter: `pnpm --filter @ovineko/spa-guard lint`
+- [x] verify test coverage meets 80%+
 
 ### Task 8: Update documentation
 
