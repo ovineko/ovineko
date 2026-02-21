@@ -85,16 +85,16 @@ export function createDebugger(options?: {
 
 createDebugger returns a function. Calling that function destroys the panel. There is no wrapper object - the return value IS the destroy function.
 
-- [ ] Implement panel DOM structure with inline styles (same Catppuccin #1e1e2e theme)
-- [ ] Implement toggle open/close header
-- [ ] Wire 4 buttons to error dispatchers (no try/catch)
-- [ ] Implement button visual states (default -> loading -> triggered)
-- [ ] Implement state display section via subscribeToState
-- [ ] Implement event history section via subscribe + clear button
-- [ ] Implement destroy: calling the returned function removes DOM element and unsubscribes all listeners
-- [ ] Implement deduplication (one instance at a time, warn on duplicate call, return same function)
-- [ ] Write tests for createDebugger (panel creation, destroy, dedup, button clicks, state/events)
-- [ ] Run test suite
+- [x] Implement panel DOM structure with inline styles (same Catppuccin #1e1e2e theme)
+- [x] Implement toggle open/close header
+- [x] Wire 4 buttons to error dispatchers (no try/catch)
+- [x] Implement button visual states (default -> loading -> triggered)
+- [x] Implement state display section via subscribeToState
+- [x] Implement event history section via subscribe + clear button
+- [x] Implement destroy: calling the returned function removes DOM element and unsubscribes all listeners
+- [x] Implement deduplication (one instance at a time, warn on duplicate call, return same function)
+- [x] Write tests for createDebugger (panel creation, destroy, dedup, button clicks, state/events)
+- [x] Run test suite
 
 ### Task 4: Remove React debug code and old export
 
