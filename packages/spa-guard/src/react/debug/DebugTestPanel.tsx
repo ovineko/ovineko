@@ -182,8 +182,10 @@ export const DebugTestPanel = ({
 
   useSPAGuardEvents(
     useCallback((event: SPAGuardEvent) => {
+      const id = nextEventIdRef.current++;
+      const timestamp = Date.now();
       setEventHistory((prev) => {
-        const next = [...prev, { event, id: nextEventIdRef.current++, timestamp: Date.now() }];
+        const next = [...prev, { event, id, timestamp }];
         return next.length > MAX_EVENT_HISTORY ? next.slice(-MAX_EVENT_HISTORY) : next;
       });
     }, []),

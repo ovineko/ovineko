@@ -443,5 +443,17 @@ describe("DebugTestPanel", () => {
       expect(screen.getByTestId("debug-clear-history")).toBeInTheDocument();
       expect(screen.getByTestId("debug-clear-history").textContent).toBe("clear");
     });
+
+    it("caps event history at 100 entries", () => {
+      render(<DebugTestPanel />);
+
+      act(() => {
+        for (let i = 0; i < 105; i++) {
+          capturedEventCallback!({ name: "fallback-ui-shown" });
+        }
+      });
+
+      expect(screen.getAllByTestId("debug-event-entry")).toHaveLength(100);
+    });
   });
 });
