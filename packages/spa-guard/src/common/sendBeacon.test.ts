@@ -46,7 +46,6 @@ const createMockLogger = () => ({
   retryLimitExceeded: vi.fn(),
   retrySchedulingReload: vi.fn(),
   updatedRetryAttempt: vi.fn(),
-  versionChanged: vi.fn(),
   versionChangeDetected: vi.fn(),
   versionCheckAlreadyRunning: vi.fn(),
   versionCheckDisabled: vi.fn(),

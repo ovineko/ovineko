@@ -181,15 +181,12 @@ const showFallbackUI = (): void => {
     if (retryState && retryState.retryAttempt === -1) {
       getLogger()?.clearingRetryState();
       clearRetryStateFromUrl();
-
-      const retryIdElements = document.getElementsByClassName("spa-guard-retry-id");
-      for (const element of retryIdElements) {
-        element.textContent = retryState.retryId;
-      }
     } else if (retryState) {
       updateRetryStateInUrl(retryState.retryId, retryState.retryAttempt + 1);
       getLogger()?.updatedRetryAttempt(retryState.retryAttempt + 1);
+    }
 
+    if (retryState) {
       const retryIdElements = document.getElementsByClassName("spa-guard-retry-id");
       for (const element of retryIdElements) {
         element.textContent = retryState.retryId;

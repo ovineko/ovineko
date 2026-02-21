@@ -30,7 +30,6 @@ const createMockLogger = (): Logger => ({
   retryLimitExceeded: vi.fn(),
   retrySchedulingReload: vi.fn(),
   updatedRetryAttempt: vi.fn(),
-  versionChanged: vi.fn(),
   versionChangeDetected: vi.fn(),
   versionCheckAlreadyRunning: vi.fn(),
   versionCheckDisabled: vi.fn(),
@@ -323,20 +322,6 @@ describe("common/checkVersion", () => {
     });
 
     describe("Logger method calls", () => {
-      it("calls versionChanged when a new version is detected", async () => {
-        setWindowOptions({ checkVersion: { interval: 1000, mode: "html" }, version: "1.0.0" });
-
-        globalThis.fetch = vi.fn().mockResolvedValue({
-          ok: true,
-          text: async () => 'window.__SPA_GUARD_OPTIONS__={"version":"1.0.1"}',
-        });
-
-        mod.startVersionCheck();
-        await vi.advanceTimersByTimeAsync(1000);
-
-        expect(mockLogger.versionChanged).toHaveBeenCalledWith("1.0.0", "1.0.1");
-      });
-
       it("calls versionChangeDetected when a new version is detected", async () => {
         setWindowOptions({ checkVersion: { interval: 1000, mode: "html" }, version: "1.0.0" });
 

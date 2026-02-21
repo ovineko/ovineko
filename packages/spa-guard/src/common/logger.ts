@@ -17,7 +17,6 @@ export interface Logger {
   retryLimitExceeded(attempt: number, max: number): void;
   retrySchedulingReload(retryId: string, attempt: number, delay: number): void;
   updatedRetryAttempt(attempt: number): void;
-  versionChanged(oldVersion: null | string, latestVersion: string): void;
   versionChangeDetected(oldVersion: null | string, latestVersion: string): void;
   versionCheckAlreadyRunning(): void;
   versionCheckDisabled(): void;
@@ -134,9 +133,6 @@ export const createLogger = (): Logger => ({
   },
   updatedRetryAttempt(attempt: number): void {
     console.log(`${PREFIX} Updated retry attempt to ${attempt} in URL for fallback UI`);
-  },
-  versionChanged(oldVersion: null | string, latestVersion: string): void {
-    console.warn(`${PREFIX} Version changed: ${oldVersion} → ${latestVersion}`);
   },
   versionChangeDetected(oldVersion: null | string, latestVersion: string): void {
     console.warn(

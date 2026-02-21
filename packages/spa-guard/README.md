@@ -1243,7 +1243,7 @@ spa-guard provides 11 export entry points:
 
 | Export                   | Description                                                                                                                   | Peer Dependencies               |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `.`                      | Core functionality (events, listen, options, version checker, retry control)                                                  | None                            |
+| `.`                      | Core functionality (events, listen, options, retry control)                                                                   | None                            |
 | `./schema`               | BeaconSchema type definitions                                                                                                 | `typebox@^1`                    |
 | `./schema/parse`         | Beacon parsing utilities                                                                                                      | `typebox@^1`                    |
 | `./runtime`              | Runtime state management and subscriptions                                                                                    | None                            |

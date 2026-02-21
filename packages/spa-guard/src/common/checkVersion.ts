@@ -68,8 +68,6 @@ const checkVersionOnce = async (mode: "html" | "json"): Promise<void> => {
     const remoteVersion = await fetchRemoteVersion(mode);
 
     if (remoteVersion && remoteVersion !== lastKnownVersion) {
-      getLogger()?.versionChanged(lastKnownVersion, remoteVersion);
-
       onVersionChange(lastKnownVersion, remoteVersion);
       lastKnownVersion = remoteVersion;
     }
@@ -79,6 +77,7 @@ const checkVersionOnce = async (mode: "html" | "json"): Promise<void> => {
 };
 
 const startPolling = (mode: "html" | "json", interval: number): void => {
+  clearTimers();
   versionCheckInterval = setInterval(async () => {
     lastCheckTimestamp = Date.now();
     await checkVersionOnce(mode);
