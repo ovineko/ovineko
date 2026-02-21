@@ -30,7 +30,10 @@ const fetchJsonVersion = async (): Promise<null | string> => {
 };
 
 const fetchHtmlVersion = async (): Promise<null | string> => {
-  const response = await fetch(globalThis.location.href, {
+  const url = new URL(globalThis.location.href);
+  url.search = "";
+  url.hash = "";
+  const response = await fetch(url.toString(), {
     cache: "no-store",
     headers: { Accept: "text/html" },
   });
@@ -79,8 +82,9 @@ const checkVersionOnce = async (mode: "html" | "json"): Promise<void> => {
     const remoteVersion = await fetchRemoteVersion(mode);
 
     if (remoteVersion && remoteVersion !== lastKnownVersion) {
-      onVersionChange(lastKnownVersion, remoteVersion);
+      const oldVersion = lastKnownVersion;
       lastKnownVersion = remoteVersion;
+      onVersionChange(oldVersion, remoteVersion);
     }
   } catch (error) {
     getLogger()?.versionCheckFailed(error);
