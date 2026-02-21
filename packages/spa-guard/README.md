@@ -21,7 +21,7 @@ Peer dependencies vary by integration - see sections below for specific requirem
 - ✅ **Infinite loop protection** - Prevents rapid retry resets with configurable minimum time between resets
 - ✅ **Graceful fallback UI** - Shows user-friendly error screen after all retry attempts are exhausted
 - ✅ **Configurable injection target** - Inject fallback UI into any element via CSS selector (default: `body`)
-- ✅ **Error filtering** - Filter out specific errors from logging and reporting via `ignoredErrors` option
+- ✅ **Error filtering** - Filter out specific errors via `errors.ignore`, or force retry/reload via `errors.forceRetry`
 - ✅ **Deep error serialization** - Captures detailed error information for server-side analysis
 - ✅ **Smart beacon reporting** - Sends error reports only after retry exhaustion to prevent spam
 - ✅ **Dual build system** - Production minified (~8.3 KB) and trace minified (~13.3 KB) builds for different environments
@@ -68,7 +68,10 @@ export default defineConfig({
       reportBeacon: {
         endpoint: "/api/beacon",
       },
-      ignoredErrors: [], // Filter out specific error messages from reporting
+      errors: {
+        ignore: [], // Filter out specific error messages from reporting
+        forceRetry: [], // Custom error messages that trigger retry/reload (like chunk errors)
+      },
       useRetryId: true, // Use query parameters for cache busting (default: true)
     }),
     react(),
@@ -224,8 +227,11 @@ spaGuardVitePlugin({
     selector: "body", // CSS selector for injection target (default: "body")
   },
 
-  // Error filtering
-  ignoredErrors: [], // Array of error message substrings to ignore
+  // Error filtering and retry
+  errors: {
+    ignore: [], // Array of error message substrings to ignore
+    forceRetry: [], // Array of error message substrings that trigger retry/reload
+  },
 
   // Beacon reporting
   reportBeacon: {
@@ -260,14 +266,19 @@ interface Options {
     mode?: "html" | "json"; // Detection mode (default: "html")
     interval?: number; // Polling interval in ms (default: 60000)
     endpoint?: string; // JSON endpoint URL (required for "json" mode)
+    onUpdate?: "reload" | "event"; // Behavior on version change (default: "reload")
+  };
+
+  errors?: {
+    ignore?: string[]; // Error message substrings to filter out (default: [])
+    forceRetry?: string[]; // Error message substrings that trigger retry/reload (default: [])
   };
 
   fallback?: {
-    html?: string; // Custom error UI HTML (default: basic error screen)
+    html?: string; // Custom error UI HTML (default: minimal error screen)
+    loadingHtml?: string; // Custom loading/retrying UI HTML (default: minimal loading screen)
     selector?: string; // CSS selector for injection target (default: "body")
   };
-
-  ignoredErrors?: string[]; // Error message substrings to filter out (default: [])
 
   reportBeacon?: {
     endpoint?: string; // Server endpoint for beacon reports
@@ -295,20 +306,17 @@ interface VitePluginOptions extends Options {
   checkVersion: {
     mode: "html",
     interval: 60_000,
+    onUpdate: "reload",
+  },
+  errors: {
+    ignore: [],
+    forceRetry: [],
   },
   fallback: {
-    html: `
-      <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
-        <div style="text-align:center">
-          <h1>Something went wrong</h1>
-          <p>Please refresh the page to continue.</p>
-          <button onclick="location.reload()">Refresh Page</button>
-        </div>
-      </div>
-    `,
+    html: defaultErrorFallbackHtml, // minimal error screen (auto-generated)
+    loadingHtml: defaultLoadingFallbackHtml, // minimal loading screen (auto-generated)
     selector: "body",
   },
-  ignoredErrors: [],
 }
 ```
 
@@ -479,13 +487,12 @@ function App() {
 
 **Default Fallback Component:**
 
-Both error boundaries use `DefaultErrorFallback` by default, which provides:
+Both error boundaries use `DefaultErrorFallback` by default, which uses two minimal HTML templates:
 
-- Loading spinner with retry attempt counter
-- Error message display
-- "Try again" button (for non-chunk errors)
-- "Reload page" button
-- Minimal inline styles (no external dependencies)
+- **Error state:** Heading, message paragraph, "Try again" button (non-chunk errors), "Reload page" button, error ID. No colors, no custom fonts, no animations - plain default browser styling.
+- **Loading/retrying state:** Centered "Loading..." text with retry attempt counter. No spinner, no animation.
+
+These templates are auto-generated as TypeScript string constants (`defaultErrorFallbackHtml` and `defaultLoadingFallbackHtml`) and can be imported for use in custom integrations.
 
 **Error flow:**
 
@@ -707,6 +714,7 @@ spaGuardVitePlugin({
     mode: "html", // "html" (default) or "json"
     interval: 60_000, // polling interval in ms (default: 60s)
     endpoint: "/api/version", // required for "json" mode
+    onUpdate: "reload", // "reload" (default) or "event"
   },
 });
 ```
@@ -716,18 +724,32 @@ spaGuardVitePlugin({
 - **HTML mode** (default): Re-fetches the current page and parses the version from the injected `__SPA_GUARD_OPTIONS__`. No extra server endpoint needed.
 - **JSON mode**: Fetches a dedicated JSON endpoint that returns `{ "version": "1.2.3" }`. Lower bandwidth, but requires a server endpoint.
 
+**Auto-reload on version change:**
+
+By default (`onUpdate: "reload"`), when a new version is detected, spa-guard dispatches a `spa-guard:version-change` CustomEvent and then automatically calls `location.reload()`. Set `onUpdate: "event"` to only dispatch the event without reloading, allowing your app to handle the update notification (e.g., show a banner prompting the user to refresh).
+
+```typescript
+spaGuardVitePlugin({
+  checkVersion: {
+    onUpdate: "event", // Don't auto-reload, just dispatch the event
+  },
+});
+```
+
 #### API
 
 - `recommendedSetup(overrides?)` - Enable recommended runtime features (version checking, etc.) with sensible defaults. Returns a cleanup function.
 - `startVersionCheck()` - Start periodic version polling. No-op if no version is configured or already running.
 - `stopVersionCheck()` - Stop version polling and clear the interval.
 
-#### Tab Visibility
+#### Tab Visibility and Focus
 
-Version polling automatically pauses when the browser tab is hidden (using the Page Visibility API) to save resources. When the tab becomes visible again:
+Version polling automatically pauses when the browser tab is hidden (Page Visibility API) or the window loses focus, and resumes when the tab becomes visible or the window regains focus. When resuming:
 
 - If enough time has passed (>= polling interval), a check runs immediately and polling resumes
 - If less time has passed, polling resumes after the remaining interval
+
+Additionally, if the tab is hidden or the window is unfocused when `startVersionCheck()` is called, polling is deferred until the tab/window becomes active. Concurrent version checks are deduplicated - overlapping visibility and focus events won't trigger multiple fetches.
 
 This is handled transparently - no configuration needed.
 
@@ -941,14 +963,19 @@ interface Options {
     mode?: "html" | "json"; // Detection mode (default: "html")
     interval?: number; // Polling interval in ms (default: 60000)
     endpoint?: string; // JSON endpoint URL (required for "json" mode)
+    onUpdate?: "reload" | "event"; // Behavior on version change (default: "reload")
+  };
+
+  errors?: {
+    ignore?: string[]; // Error message substrings to filter out (default: [])
+    forceRetry?: string[]; // Error message substrings that trigger retry/reload (default: [])
   };
 
   fallback?: {
     html?: string; // Custom error UI HTML
+    loadingHtml?: string; // Custom loading/retrying UI HTML
     selector?: string; // CSS selector for injection target (default: "body")
   };
-
-  ignoredErrors?: string[]; // Error message substrings to filter out (default: [])
 
   reportBeacon?: {
     endpoint?: string; // Error reporting endpoint
@@ -1387,29 +1414,32 @@ spaGuardVitePlugin({
 });
 ```
 
-### Error Filtering
+### Error Filtering and Force Retry
 
-Filter out specific errors from being logged or reported:
+Filter out specific errors from reporting, or force certain errors to trigger the retry/reload process:
 
 ```typescript
 spaGuardVitePlugin({
-  ignoredErrors: [
-    "ResizeObserver loop", // Ignore benign ResizeObserver errors
-    "Non-Error promise rejection", // Ignore specific promise rejections
-    "Script error", // Ignore generic script errors from third-party scripts
-  ],
+  errors: {
+    ignore: [
+      "ResizeObserver loop", // Ignore benign ResizeObserver errors
+      "Non-Error promise rejection", // Ignore specific promise rejections
+      "Script error", // Ignore generic script errors from third-party scripts
+    ],
+    forceRetry: [
+      "STALE_DEPLOYMENT", // Custom errors that should trigger retry like chunk errors
+      "MODULE_NOT_FOUND", // Framework-specific stale module errors
+    ],
+  },
   reportBeacon: {
     endpoint: "/api/beacon",
   },
 });
 ```
 
-**How it works:**
+**`errors.ignore`** - Errors containing any of these substrings will not be logged to console and beacons will not be sent. Case-sensitive substring matching.
 
-- Errors containing any of the `ignoredErrors` substrings will not be logged to console
-- Beacons for filtered errors will not be sent to the server
-- Useful for filtering out known benign errors or third-party script noise
-- Case-sensitive substring matching
+**`errors.forceRetry`** - Errors containing any of these substrings will trigger the same retry/reload process as chunk load errors (calls `attemptReload()`). Useful for custom error patterns that indicate a stale deployment. Case-sensitive substring matching.
 
 ### Custom Retry Strategy
 

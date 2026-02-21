@@ -121,6 +121,6 @@ Four improvements from revise.txt and revise2.txt:
 
 ### Task 8: Update documentation
 
-- [ ] update README.md: document new `checkVersion.onUpdate` option, new `errors` config structure (replacing `ignoredErrors`), focus/blur behavior, simplified fallback UI and how to use exported HTML constants
-- [ ] update CLAUDE.md if internal patterns changed
-- [ ] move this plan to `docs/plans/completed/`
+- [x] update README.md: document new `checkVersion.onUpdate` option, new `errors` config structure (replacing `ignoredErrors`), focus/blur behavior, simplified fallback UI and how to use exported HTML constants
+- [x] update CLAUDE.md if internal patterns changed
+- [x] move this plan to `docs/plans/completed/`
