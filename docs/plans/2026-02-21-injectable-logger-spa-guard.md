@@ -119,22 +119,22 @@ Note: This is an alpha package. No backwards compatibility concerns. Breaking ch
 
 - Modify: `packages/spa-guard/src/common/reload.ts`
 
-- [ ] Remove 3 redundant console calls that duplicate event information:
+- [x] Remove 3 redundant console calls that duplicate event information:
   - Lines 66-72: retry-reset console.log (now auto-logged by emitEvent)
   - Line 100: retry-exhausted console.error (now auto-logged by emitEvent)
   - Lines 128-136: retry-attempt console.warn (now auto-logged by emitEvent)
-- [ ] For these 3 removed calls: pass `{ silent: shouldIgnoreMessages([errorMsg]) }` to the corresponding emitEvent calls to preserve shouldIgnore suppression
-- [ ] Replace remaining 6 console calls with specific Logger methods:
+- [x] For these 3 removed calls: pass `{ silent: shouldIgnoreMessages([errorMsg]) }` to the corresponding emitEvent calls to preserve shouldIgnore suppression
+- [x] Replace remaining 6 console calls with specific Logger methods:
   - Lines 88-91: `console.error(logMessage("Fallback UI was already shown..."))` -> `getLogger()?.fallbackAlreadyShown(error)`
   - Line 165: `console.error(logMessage("No fallback UI configured"))` -> `getLogger()?.noFallbackConfigured()`
   - Line 172: `console.error(logMessage("Target element not found..."))` -> `getLogger()?.fallbackTargetNotFound(selector)`
   - Line 179: `console.log(logMessage("Clearing retry state..."))` -> `getLogger()?.clearingRetryState()`
   - Lines 188-190: `console.log(logMessage("Updated retry attempt..."))` -> `getLogger()?.updatedRetryAttempt(retryState.retryAttempt + 1)`
   - Line 204: `console.error(logMessage("Failed to inject fallback UI"), error)` -> `getLogger()?.fallbackInjectFailed(error)`
-- [ ] Remove `logMessage` import
-- [ ] Update/add tests: verify shouldIgnore suppresses event logging via silent flag
-- [ ] Update/add tests: verify Logger methods called correctly
-- [ ] Run project test suite - must pass before task 4
+- [x] Remove `logMessage` import
+- [x] Update/add tests: verify shouldIgnore suppresses event logging via silent flag
+- [x] Update/add tests: verify Logger methods called correctly
+- [x] Run project test suite - must pass before task 4
 
 ### Task 4: Migrate sendBeacon.ts and checkVersion.ts
 

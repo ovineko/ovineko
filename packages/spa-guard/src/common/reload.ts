@@ -1,5 +1,5 @@
 import { RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
-import { emitEvent, isDefaultRetryEnabled } from "./events/internal";
+import { emitEvent, getLogger, isDefaultRetryEnabled } from "./events/internal";
 import {
   clearLastReloadTime,
   getLastReloadTime,
@@ -7,7 +7,6 @@ import {
   setLastRetryResetInfo,
   shouldResetRetryCycle,
 } from "./lastReloadTime";
-import { logMessage } from "./log";
 import { getOptions } from "./options";
 import {
   clearRetryStateFromUrl,
@@ -63,20 +62,16 @@ export const attemptReload = (error: unknown): void => {
     setLastRetryResetInfo(retryState.retryId);
 
     const errorMsg = String(error);
-    if (!shouldIgnoreMessages([errorMsg])) {
-      console.log(
-        logMessage(
-          `Resetting retry cycle: ${timeSinceReload}ms passed since last reload (retryId: ${retryState.retryId})`,
-        ),
-      );
-    }
 
-    emitEvent({
-      name: "retry-reset",
-      previousAttempt: retryState.retryAttempt,
-      previousRetryId: retryState.retryId,
-      timeSinceReload,
-    });
+    emitEvent(
+      {
+        name: "retry-reset",
+        previousAttempt: retryState.retryAttempt,
+        previousRetryId: retryState.retryId,
+        timeSinceReload,
+      },
+      { silent: shouldIgnoreMessages([errorMsg]) },
+    );
 
     currentAttempt = 0;
     retryId = generateRetryId();
@@ -85,10 +80,7 @@ export const attemptReload = (error: unknown): void => {
   if (currentAttempt === -1) {
     const errorMsg = String(error);
     if (!shouldIgnoreMessages([errorMsg])) {
-      console.error(
-        logMessage("Fallback UI was already shown. Not retrying to prevent infinite loop."),
-        error,
-      );
+      getLogger()?.fallbackAlreadyShown(error);
     }
     showFallbackUI();
     return;
@@ -96,15 +88,15 @@ export const attemptReload = (error: unknown): void => {
 
   if (currentAttempt >= reloadDelays.length) {
     const errorMsg = String(error);
-    if (!shouldIgnoreMessages([errorMsg])) {
-      console.error(logMessage("All reload attempts exhausted"), error);
-    }
 
-    emitEvent({
-      finalAttempt: currentAttempt,
-      name: "retry-exhausted",
-      retryId: retryState?.retryId ?? "",
-    });
+    emitEvent(
+      {
+        finalAttempt: currentAttempt,
+        name: "retry-exhausted",
+        retryId: retryState?.retryId ?? "",
+      },
+      { silent: shouldIgnoreMessages([errorMsg]) },
+    );
 
     sendBeacon({
       errorMessage: "Exceeded maximum reload attempts",
@@ -126,21 +118,16 @@ export const attemptReload = (error: unknown): void => {
   const delay = reloadDelays[currentAttempt] ?? 1000;
 
   const errorMsg = String(error);
-  if (!shouldIgnoreMessages([errorMsg])) {
-    console.warn(
-      logMessage(
-        `Reload attempt ${nextAttempt}/${reloadDelays.length} in ${delay}ms (retryId: ${retryId})`,
-      ),
-      error,
-    );
-  }
 
-  emitEvent({
-    attempt: nextAttempt,
-    delay,
-    name: "retry-attempt",
-    retryId,
-  });
+  emitEvent(
+    {
+      attempt: nextAttempt,
+      delay,
+      name: "retry-attempt",
+      retryId,
+    },
+    { silent: shouldIgnoreMessages([errorMsg]) },
+  );
 
   setTimeout(() => {
     if (useRetryId && enableRetryReset) {
@@ -162,21 +149,21 @@ const showFallbackUI = (): void => {
   const selector = options.fallback?.selector ?? "body";
 
   if (!fallbackHtml) {
-    console.error(logMessage("No fallback UI configured"));
+    getLogger()?.noFallbackConfigured();
     return;
   }
 
   try {
     const targetElement = document.querySelector(selector);
     if (!targetElement) {
-      console.error(logMessage(`Target element not found for selector: ${selector}`));
+      getLogger()?.fallbackTargetNotFound(selector);
       return;
     }
     targetElement.innerHTML = fallbackHtml;
 
     const retryState = getRetryStateFromUrl();
     if (retryState && retryState.retryAttempt === -1) {
-      console.log(logMessage("Clearing retry state from URL to allow clean reload attempt"));
+      getLogger()?.clearingRetryState();
       clearRetryStateFromUrl();
 
       const retryIdElements = document.getElementsByClassName("spa-guard-retry-id");
@@ -185,11 +172,7 @@ const showFallbackUI = (): void => {
       }
     } else if (retryState) {
       updateRetryStateInUrl(retryState.retryId, retryState.retryAttempt + 1);
-      console.log(
-        logMessage(
-          `Updated retry attempt to ${retryState.retryAttempt + 1} in URL for fallback UI`,
-        ),
-      );
+      getLogger()?.updatedRetryAttempt(retryState.retryAttempt + 1);
 
       const retryIdElements = document.getElementsByClassName("spa-guard-retry-id");
       for (const element of retryIdElements) {
@@ -201,6 +184,6 @@ const showFallbackUI = (): void => {
       name: "fallback-ui-shown",
     });
   } catch (error) {
-    console.error(logMessage("Failed to inject fallback UI"), error);
+    getLogger()?.fallbackInjectFailed(error);
   }
 };
