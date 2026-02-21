@@ -192,6 +192,17 @@ describe("createDebugger - toggle", () => {
 
     destroy();
   });
+
+  it("opens content when toggling from closed state", async () => {
+    const { createDebugger: create } = await import("./index");
+    const destroy = create({ defaultOpen: false });
+
+    expect(getContent()).toBeNull();
+    getHeader()!.click();
+    expect(getContent()).not.toBeNull();
+
+    destroy();
+  });
 });
 
 describe("createDebugger - buttons", () => {
@@ -250,12 +261,35 @@ describe("createDebugger - buttons", () => {
     destroy();
   });
 
+  it("shows loading state synchronously on click", async () => {
+    const { createDebugger: create } = await import("./index");
+    const destroy = create();
+    const btn = getButton("chunk-load-error")!;
+    btn.click();
+    expect(btn.textContent).toBe("ChunkLoadError...");
+    expect(btn.disabled).toBe(true);
+    expect(btn.getAttribute("style")).toContain("opacity:0.7");
+    await Promise.resolve();
+    destroy();
+  });
+
   it("transitions to triggered state after microtask", async () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     getButton("chunk-load-error")!.click();
     await Promise.resolve();
     expect(getButton("chunk-load-error")!.textContent).toBe("ChunkLoadError \u2713");
+    destroy();
+  });
+
+  it("re-enables button after triggered state", async () => {
+    const { createDebugger: create } = await import("./index");
+    const destroy = create();
+    const btn = getButton("chunk-load-error")!;
+    btn.click();
+    expect(btn.disabled).toBe(true);
+    await Promise.resolve();
+    expect(btn.disabled).toBe(false);
     destroy();
   });
 });
@@ -462,11 +496,20 @@ describe("createDebugger - destroy and dedup", () => {
 
   it("allows creating a new panel after destroy", async () => {
     const { createDebugger: create } = await import("./index");
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const destroy1 = create();
     destroy1();
     const destroy2 = create();
+    expect(warnSpy).not.toHaveBeenCalled();
     expect(getPanel()).not.toBeNull();
     expect(destroy2).not.toBe(destroy1);
     destroy2();
+  });
+
+  it("does not throw when destroy is called twice", async () => {
+    const { createDebugger: create } = await import("./index");
+    const destroy = create();
+    destroy();
+    expect(() => destroy()).not.toThrow();
   });
 });

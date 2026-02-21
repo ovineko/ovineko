@@ -281,8 +281,7 @@ function wireEventSubscription(
   eventList: HTMLDivElement,
   unsubscribers: (() => void)[],
 ): void {
-  let history: { event: SPAGuardEvent; id: number; timestamp: number }[] = [];
-  let nextId = 0;
+  let history: { event: SPAGuardEvent; timestamp: number }[] = [];
 
   function render(): void {
     countSpan.textContent = `Event History (${String(history.length)})`;
@@ -305,7 +304,7 @@ function wireEventSubscription(
 
   unsubscribers.push(
     subscribe((event: SPAGuardEvent) => {
-      history = [...history, { event, id: nextId++, timestamp: Date.now() }];
+      history = [...history, { event, timestamp: Date.now() }];
       if (history.length > MAX_EVENT_HISTORY) {
         history = history.slice(-MAX_EVENT_HISTORY);
       }
