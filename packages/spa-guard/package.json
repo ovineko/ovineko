@@ -48,6 +48,10 @@
       "types": "./dist/runtime/index.d.ts",
       "default": "./dist/runtime/index.js"
     },
+    "./runtime/debug": {
+      "types": "./dist/runtime/debug/index.d.ts",
+      "default": "./dist/runtime/debug/index.js"
+    },
     "./react": {
       "types": "./dist/react/index.d.ts",
       "default": "./dist/react/index.js"

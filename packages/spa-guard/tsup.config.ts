@@ -12,6 +12,7 @@ export default tsup.defineConfig({
     "src/react/index.tsx",
     "src/react/debug/index.ts",
     "src/runtime/index.ts",
+    "src/runtime/debug/index.ts",
     "src/schema/index.ts",
     "src/schema/parse.ts",
     "src/fastify/index.ts",
