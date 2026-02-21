@@ -119,11 +119,11 @@ createDebugger returns a function. Calling that function destroys the panel. The
 
 ### Task 6: Verify acceptance criteria
 
-- [ ] Run full test suite (pnpm test in packages/spa-guard)
-- [ ] Run linter (pnpm lint in packages/spa-guard)
-- [ ] Run typecheck (pnpm typecheck in packages/spa-guard)
-- [ ] Verify test coverage meets 80%+
-- [ ] Manual verification: createDebugger() creates panel, buttons dispatch errors that spa-guard catches, state and events display correctly
+- [x] Run full test suite (pnpm test in packages/spa-guard)
+- [x] Run linter (pnpm lint in packages/spa-guard)
+- [x] Run typecheck (pnpm typecheck in packages/spa-guard)
+- [x] Verify test coverage meets 80%+
+- [x] Manual verification: createDebugger() creates panel, buttons dispatch errors that spa-guard catches, state and events display correctly
 
 ### Task 7: Update documentation
 
