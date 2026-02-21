@@ -34,10 +34,13 @@ const getInlineScript = async (options: VitePluginOptions) => {
 
   const processedOptions = { ...options, trace: undefined };
 
-  if (processedOptions.fallback?.html) {
-    processedOptions.fallback = {
-      ...processedOptions.fallback,
-      html: await minifyHtml(processedOptions.fallback.html),
+  if (processedOptions.html?.fallback?.content) {
+    processedOptions.html = {
+      ...processedOptions.html,
+      fallback: {
+        ...processedOptions.html.fallback,
+        content: await minifyHtml(processedOptions.html.fallback.content),
+      },
     };
   }
 

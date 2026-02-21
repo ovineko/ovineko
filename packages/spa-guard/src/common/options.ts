@@ -14,10 +14,14 @@ const defaultOptions: Options = {
     forceRetry: [],
     ignore: [],
   },
-  fallback: {
-    html: defaultErrorFallbackHtml,
-    loadingHtml: defaultLoadingFallbackHtml,
-    selector: "body",
+  html: {
+    fallback: {
+      content: defaultErrorFallbackHtml,
+      selector: "body",
+    },
+    loading: {
+      content: defaultLoadingFallbackHtml,
+    },
   },
   lazyRetry: {
     callReloadOnFailure: true,
@@ -87,20 +91,17 @@ export interface Options {
     ignore?: string[];
   };
 
-  fallback?: {
-    /**
-     * Custom HTML to display when all reload attempts are exhausted
-     */
-    html?: string;
-    /**
-     * Custom HTML to display during the loading/retrying state
-     */
-    loadingHtml?: string;
-    /**
-     * CSS selector where the fallback HTML should be injected
-     * @default "body"
-     */
-    selector?: string;
+  html?: {
+    fallback?: {
+      /** Custom HTML to display when all reload attempts are exhausted */
+      content?: string;
+      /** CSS selector where the fallback HTML should be injected @default "body" */
+      selector?: string;
+    };
+    loading?: {
+      /** Custom HTML to display during the loading/retrying state */
+      content?: string;
+    };
   };
 
   /**
@@ -165,9 +166,15 @@ export const getOptions = (): Options => {
       ...defaultOptions.errors,
       ...windowOptions?.errors,
     },
-    fallback: {
-      ...defaultOptions.fallback,
-      ...windowOptions?.fallback,
+    html: {
+      fallback: {
+        ...defaultOptions.html?.fallback,
+        ...windowOptions?.html?.fallback,
+      },
+      loading: {
+        ...defaultOptions.html?.loading,
+        ...windowOptions?.html?.loading,
+      },
     },
     lazyRetry: {
       ...defaultOptions.lazyRetry,

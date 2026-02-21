@@ -156,8 +156,8 @@ export const attemptReload = (error: unknown): void => {
 
 const showFallbackUI = (): void => {
   const options = getOptions();
-  const fallbackHtml = options.fallback?.html;
-  const selector = options.fallback?.selector ?? "body";
+  const fallbackHtml = options.html?.fallback?.content;
+  const selector = options.html?.fallback?.selector ?? "body";
 
   if (!fallbackHtml) {
     getLogger()?.noFallbackConfigured();
