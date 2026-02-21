@@ -1,4 +1,4 @@
-import type { ESLint } from "eslint";
+import type { ESLint, Linter } from "eslint";
 
 import { name } from "../../package.json";
 import noDirectErrorBoundary from "./rules/no-direct-error-boundary";
@@ -11,8 +11,13 @@ const rules = {
   "no-direct-lazy": noDirectLazy,
 };
 
+interface Configs {
+  [key: string]: Linter.Config;
+  recommended: Linter.Config;
+}
+
 const plugin = {
-  configs: {} as NonNullable<ESLint.Plugin["configs"]>,
+  configs: {} as Configs,
   rules,
 } satisfies ESLint.Plugin;
 
@@ -28,7 +33,7 @@ plugin.configs = {
   },
 };
 
-const configs: NonNullable<ESLint.Plugin["configs"]> = plugin.configs;
+const configs: Configs = plugin.configs;
 
 export default plugin;
 export { configs, rules };
