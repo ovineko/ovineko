@@ -99,10 +99,10 @@ After: `html: { fallback: { selector, content }, loading: { content } }`
 
 ### Task 5: Verify acceptance criteria
 
-- [ ] Run full test suite: `pnpm --filter spa-guard test`
-- [ ] Run linter: `pnpm --filter spa-guard lint`
-- [ ] Verify test coverage meets 80%+
-- [ ] Verify no references to old `fallback.html`, `fallback.loadingHtml`, or `fallback.selector` remain in source (excluding git history)
+- [x] Run full test suite: `pnpm --filter spa-guard test`
+- [x] Run linter: `pnpm --filter spa-guard lint`
+- [x] Verify test coverage meets 80%+
+- [x] Verify no references to old `fallback.html`, `fallback.loadingHtml`, or `fallback.selector` remain in source (excluding git history)
 
 ### Task 6: Update documentation
 
