@@ -48,7 +48,7 @@ export const attemptReload = (error: unknown): void => {
 
   emitEvent({
     error,
-    isRetrying: retryEnabled && currentAttempt < reloadDelays.length,
+    isRetrying: retryEnabled && currentAttempt >= 0 && currentAttempt < reloadDelays.length,
     name: "chunk-error",
   });
 

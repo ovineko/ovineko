@@ -415,6 +415,20 @@ describe("attemptReload", () => {
       expect(mockEl.innerHTML).toBe("<div>Fallback UI</div>");
     });
 
+    it("emits chunk-error with isRetrying=false when attempt=-1", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ isRetrying: false, name: "chunk-error" }),
+      );
+    });
+
     it("does not emit retry-attempt or retry-exhausted when attempt=-1", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
       const mockEl = { innerHTML: "" };
