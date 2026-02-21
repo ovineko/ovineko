@@ -106,5 +106,5 @@ After: `html: { fallback: { selector, content }, loading: { content } }`
 
 ### Task 6: Update documentation
 
-- [ ] Update CLAUDE.md if internal patterns changed
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Update CLAUDE.md if internal patterns changed
+- [x] Move this plan to `docs/plans/completed/`
