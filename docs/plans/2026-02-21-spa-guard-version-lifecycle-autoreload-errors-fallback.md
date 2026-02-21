@@ -60,11 +60,11 @@ Four improvements from revise.txt and revise2.txt:
 - Modify: `packages/spa-guard/src/common/options.ts`
 - Modify: `packages/spa-guard/src/common/reload.ts`
 
-- [ ] update `DefaultErrorFallback.tsx`: use `defaultErrorFallbackHtml` for error state and `defaultLoadingFallbackHtml` for retrying state; remove all color manipulations (no grey button reassignment in useLayoutEffect), remove spinner-related string replacements; simplify string replacements to just: swap display for retrying/error sections, populate attempt number, populate heading/message text, show/hide try-again button
-- [ ] update `options.ts`: replace `fallback.html` default with `defaultErrorFallbackHtml`; consider adding `fallback.loadingHtml` default with `defaultLoadingFallbackHtml`
-- [ ] update `reload.ts` (`showFallbackUI`): use `defaultErrorFallbackHtml` (same as before, just renamed import)
-- [ ] write/update tests for DefaultErrorFallback rendering both states with new minimal templates
-- [ ] run project test suite - must pass before task 4
+- [x] update `DefaultErrorFallback.tsx`: use `defaultErrorFallbackHtml` for error state and `defaultLoadingFallbackHtml` for retrying state; remove all color manipulations (no grey button reassignment in useLayoutEffect), remove spinner-related string replacements; simplify string replacements to just: swap display for retrying/error sections, populate attempt number, populate heading/message text, show/hide try-again button
+- [x] update `options.ts`: replace `fallback.html` default with `defaultErrorFallbackHtml`; consider adding `fallback.loadingHtml` default with `defaultLoadingFallbackHtml`
+- [x] update `reload.ts` (`showFallbackUI`): use `defaultErrorFallbackHtml` (same as before, just renamed import)
+- [x] write/update tests for DefaultErrorFallback rendering both states with new minimal templates
+- [x] run project test suite - must pass before task 4
 
 ### Task 4: Version check - focus/blur + deduplication + initial state handling
 

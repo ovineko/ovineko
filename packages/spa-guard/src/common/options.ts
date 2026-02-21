@@ -1,5 +1,5 @@
 import { optionsWindowKey } from "./constants";
-import { defaultErrorFallbackHtml } from "./fallbackHtml.generated";
+import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./fallbackHtml.generated";
 
 export { optionsWindowKey } from "./constants";
 
@@ -11,6 +11,7 @@ const defaultOptions: Options = {
   enableRetryReset: true,
   fallback: {
     html: defaultErrorFallbackHtml,
+    loadingHtml: defaultLoadingFallbackHtml,
     selector: "body",
   },
   ignoredErrors: [],
@@ -62,6 +63,10 @@ export interface Options {
      * Custom HTML to display when all reload attempts are exhausted
      */
     html?: string;
+    /**
+     * Custom HTML to display during the loading/retrying state
+     */
+    loadingHtml?: string;
     /**
      * CSS selector where the fallback HTML should be injected
      * @default "body"
