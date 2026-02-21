@@ -159,17 +159,17 @@ Note: This is an alpha package. No backwards compatibility concerns. Breaking ch
 - Modify: `packages/spa-guard/src/common/log.ts`
 - No change: `packages/spa-guard/src/inline/index.ts` (production stays as-is: no logger)
 
-- [ ] inline-trace/index.ts: import `createLogger` from logger.ts, pass to `listenInternal(serializeError, createLogger())`
-- [ ] inline/index.ts: no changes — `listenInternal(() => "")` stays minimal, tree-shaking removes logger.ts
-- [ ] Check if `logMessage()` is still used anywhere (fastify/index.ts may still use it)
-- [ ] If only fastify uses logMessage, keep log.ts as-is
-- [ ] If nothing uses logMessage, remove log.ts
-- [ ] Build the package and verify:
+- [x] inline-trace/index.ts: import `createLogger` from logger.ts, pass to `listenInternal(serializeError, createLogger())`
+- [x] inline/index.ts: no changes — `listenInternal(() => "")` stays minimal, tree-shaking removes logger.ts
+- [x] Check if `logMessage()` is still used anywhere (fastify/index.ts may still use it)
+- [x] If only fastify uses logMessage, keep log.ts as-is
+- [x] If nothing uses logMessage, remove log.ts
+- [x] Build the package and verify:
   - dist-inline/index.js contains no log message strings (grep for `[spa-guard]` or key phrases)
   - dist-inline-trace/index.js contains formatted log messages
   - Compare sizes: production inline should be same or smaller
-- [ ] Write/update tests
-- [ ] Run project test suite - must pass before task 6
+- [x] Write/update tests
+- [x] Run project test suite - must pass before task 6
 
 ### Task 6: Clean up README
 
