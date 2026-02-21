@@ -125,13 +125,13 @@ Currently there are 3 different fallback UIs: the generated HTML string (used in
 - Modify: `packages/spa-guard/src/react-router/index.tsx`
 - Reference: `packages/spa-guard/src/common/fallbackHtml.generated.ts`
 
-- [ ] refactor `DefaultErrorFallback` to render the `defaultFallbackHtml` string via `dangerouslySetInnerHTML` instead of custom JSX
-- [ ] ensure the HTML template supports all needed states (retrying with attempt count, error with reload button)
-- [ ] update the react-router error boundary default fallback to use the same HTML
-- [ ] update `fallback.html` source template if it needs additional states (retry indicator)
-- [ ] regenerate `fallbackHtml.generated.ts` via `pnpm generate:fallback`
-- [ ] write/update tests verifying all three fallback paths render the same HTML structure
-- [ ] run project test suite - must pass before task 7
+- [x] refactor `DefaultErrorFallback` to render the `defaultFallbackHtml` string via `dangerouslySetInnerHTML` instead of custom JSX
+- [x] ensure the HTML template supports all needed states (retrying with attempt count, error with reload button)
+- [x] update the react-router error boundary default fallback to use the same HTML
+- [x] update `fallback.html` source template if it needs additional states (retry indicator)
+- [x] regenerate `fallbackHtml.generated.ts` via `pnpm generate:fallback`
+- [x] write/update tests verifying all three fallback paths render the same HTML structure
+- [x] run project test suite - must pass before task 7
 
 ### Task 7: Update AGENTS.md with inline rebuild instructions
 
