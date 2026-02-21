@@ -43,7 +43,7 @@ Add tests verifying the config export structure.
 
 - Modify: `packages/spa-guard/README.md`
 
-- [ ] Replace the manual plugin+rules setup example (lines 1388-1403) with the `configs.recommended` pattern:
+- [x] Replace the manual plugin+rules setup example (lines 1388-1403) with the `configs.recommended` pattern:
 
   ```javascript
   // eslint.config.js (flat config)
@@ -52,7 +52,7 @@ Add tests verifying the config export structure.
   export default [spaGuardEslint.configs.recommended];
   ```
 
-- [ ] Keep the Rules subsection (no-direct-error-boundary, no-direct-lazy) as-is since it documents individual rules
+- [x] Keep the Rules subsection (no-direct-error-boundary, no-direct-lazy) as-is since it documents individual rules
 
 ### Task 3: Verify acceptance criteria
 

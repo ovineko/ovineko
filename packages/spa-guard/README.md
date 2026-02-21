@@ -1402,29 +1402,10 @@ spa-guard includes an ESLint plugin (`@ovineko/spa-guard/eslint`) that enforces 
 ### Setup
 
 ```javascript
-// eslint.config.js (flat config) — recommended preset
-import spaGuardPlugin from "@ovineko/spa-guard/eslint";
+// eslint.config.js (flat config)
+import spaGuardEslint from "@ovineko/spa-guard/eslint";
 
-export default [spaGuardPlugin.configs.recommended];
-```
-
-Or configure rules individually:
-
-```javascript
-// eslint.config.js (flat config) — manual configuration
-import spaGuardPlugin from "@ovineko/spa-guard/eslint";
-
-export default [
-  {
-    plugins: {
-      "@ovineko/spa-guard/eslint": spaGuardPlugin,
-    },
-    rules: {
-      "@ovineko/spa-guard/eslint/no-direct-error-boundary": "error",
-      "@ovineko/spa-guard/eslint/no-direct-lazy": "error",
-    },
-  },
-];
+export default [spaGuardEslint.configs.recommended];
 ```
 
 ### Rules
