@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./log", () => ({
-  logMessage: vi.fn((msg: string) => `[spa-guard] ${msg}`),
+vi.mock("./events/internal", () => ({
+  getLogger: vi.fn(),
 }));
 
 vi.mock("./options", () => ({
@@ -12,10 +12,12 @@ vi.mock("./shouldIgnore", () => ({
   shouldIgnoreBeacon: vi.fn(),
 }));
 
+import { getLogger } from "./events/internal";
 import { getOptions } from "./options";
 import { sendBeacon } from "./sendBeacon";
 import { shouldIgnoreBeacon } from "./shouldIgnore";
 
+const mockGetLogger = vi.mocked(getLogger);
 const mockGetOptions = vi.mocked(getOptions);
 const mockShouldIgnoreBeacon = vi.mocked(shouldIgnoreBeacon);
 
@@ -27,10 +29,36 @@ const makeBeacon = (overrides = {}) => ({
   ...overrides,
 });
 
+const createMockLogger = () => ({
+  beaconSendFailed: vi.fn(),
+  capturedError: vi.fn(),
+  clearingRetryState: vi.fn(),
+  error: vi.fn(),
+  fallbackAlreadyShown: vi.fn(),
+  fallbackInjectFailed: vi.fn(),
+  fallbackTargetNotFound: vi.fn(),
+  log: vi.fn(),
+  logEvent: vi.fn(),
+  noBeaconEndpoint: vi.fn(),
+  noFallbackConfigured: vi.fn(),
+  retryLimitExceeded: vi.fn(),
+  updatedRetryAttempt: vi.fn(),
+  versionChanged: vi.fn(),
+  versionChangeDetected: vi.fn(),
+  versionCheckAlreadyRunning: vi.fn(),
+  versionCheckDisabled: vi.fn(),
+  versionCheckFailed: vi.fn(),
+  versionCheckHttpError: vi.fn(),
+  versionCheckParseError: vi.fn(),
+  versionCheckRequiresEndpoint: vi.fn(),
+  versionCheckStarted: vi.fn(),
+  versionCheckStopped: vi.fn(),
+  warn: vi.fn(),
+});
+
 describe("sendBeacon", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
-  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  let mockLogger: ReturnType<typeof createMockLogger>;
 
   beforeEach(() => {
     mockShouldIgnoreBeacon.mockReturnValue(false);
@@ -41,8 +69,8 @@ describe("sendBeacon", () => {
     fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal("fetch", fetchMock);
 
-    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockLogger = createMockLogger();
+    mockGetLogger.mockReturnValue(mockLogger);
   });
 
   afterEach(() => {
@@ -108,40 +136,32 @@ describe("sendBeacon", () => {
       );
     });
 
-    it("warns and returns early when endpoint is not configured", () => {
+    it("calls noBeaconEndpoint and returns early when endpoint is not configured", () => {
       mockGetOptions.mockReturnValue({ reportBeacon: {} });
 
       sendBeacon(makeBeacon());
 
-      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      expect(mockLogger.noBeaconEndpoint).toHaveBeenCalledTimes(1);
       expect(sendBeaconSpy).not.toHaveBeenCalled();
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it("warns and returns early when reportBeacon is undefined", () => {
+    it("calls noBeaconEndpoint and returns early when reportBeacon is undefined", () => {
       mockGetOptions.mockReturnValue({});
 
       sendBeacon(makeBeacon());
 
-      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      expect(mockLogger.noBeaconEndpoint).toHaveBeenCalledTimes(1);
       expect(sendBeaconSpy).not.toHaveBeenCalled();
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it("includes [spa-guard] prefix in the warning message", () => {
-      mockGetOptions.mockReturnValue({});
-
-      sendBeacon(makeBeacon());
-
-      expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("[spa-guard]"));
-    });
-
-    it("handles endpoint being an empty string (treats as falsy, warns)", () => {
+    it("handles endpoint being an empty string (treats as falsy, calls noBeaconEndpoint)", () => {
       mockGetOptions.mockReturnValue({ reportBeacon: { endpoint: "" } });
 
       sendBeacon(makeBeacon());
 
-      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      expect(mockLogger.noBeaconEndpoint).toHaveBeenCalledTimes(1);
       expect(sendBeaconSpy).not.toHaveBeenCalled();
       expect(fetchMock).not.toHaveBeenCalled();
     });
@@ -268,17 +288,14 @@ describe("sendBeacon", () => {
       });
     });
 
-    it("logs error when fetch rejects", async () => {
+    it("calls beaconSendFailed when fetch rejects", async () => {
       const fetchError = new Error("network offline");
       fetchMock.mockRejectedValue(fetchError);
 
       sendBeacon(makeBeacon());
 
       await vi.waitFor(() => {
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-          expect.stringContaining("[spa-guard]"),
-          fetchError,
-        );
+        expect(mockLogger.beaconSendFailed).toHaveBeenCalledWith(fetchError);
       });
     });
 
@@ -288,7 +305,7 @@ describe("sendBeacon", () => {
       expect(() => sendBeacon(makeBeacon())).not.toThrow();
 
       await vi.waitFor(() => {
-        expect(consoleErrorSpy).toHaveBeenCalled();
+        expect(mockLogger.beaconSendFailed).toHaveBeenCalled();
       });
     });
   });
@@ -411,6 +428,45 @@ describe("sendBeacon", () => {
     });
   });
 
+  describe("Logger method calls", () => {
+    it("calls noBeaconEndpoint when no endpoint is configured", () => {
+      mockGetOptions.mockReturnValue({});
+
+      sendBeacon(makeBeacon());
+
+      expect(mockLogger.noBeaconEndpoint).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls beaconSendFailed with the error when fetch fails", async () => {
+      vi.spyOn(navigator, "sendBeacon").mockReturnValue(false);
+      const fetchError = new Error("network failure");
+      fetchMock.mockRejectedValue(fetchError);
+
+      sendBeacon(makeBeacon());
+
+      await vi.waitFor(() => {
+        expect(mockLogger.beaconSendFailed).toHaveBeenCalledWith(fetchError);
+      });
+    });
+
+    it("does not call Logger methods when no logger is set", () => {
+      mockGetLogger.mockReturnValue();
+      mockGetOptions.mockReturnValue({});
+
+      sendBeacon(makeBeacon());
+
+      expect(mockLogger.noBeaconEndpoint).not.toHaveBeenCalled();
+    });
+
+    it("does not call noBeaconEndpoint when endpoint is configured", () => {
+      vi.spyOn(navigator, "sendBeacon").mockReturnValue(true);
+
+      sendBeacon(makeBeacon());
+
+      expect(mockLogger.noBeaconEndpoint).not.toHaveBeenCalled();
+    });
+  });
+
   describe("edge cases", () => {
     let sendBeaconSpy: ReturnType<typeof vi.spyOn>;
 
@@ -431,12 +487,6 @@ describe("sendBeacon", () => {
 
     it("handles empty beacon object without throwing", () => {
       expect(() => sendBeacon({})).not.toThrow();
-    });
-
-    it("does not warn when endpoint is configured", () => {
-      sendBeacon(makeBeacon());
-
-      expect(consoleWarnSpy).not.toHaveBeenCalled();
     });
 
     it("does not call sendBeacon when no endpoint is configured", () => {

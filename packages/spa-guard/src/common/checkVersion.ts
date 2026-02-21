@@ -1,4 +1,4 @@
-import { logMessage } from "./log";
+import { getLogger } from "./events/internal";
 import { getOptions } from "./options";
 
 let versionCheckInterval: null | ReturnType<typeof setInterval> = null;
@@ -10,7 +10,7 @@ export const fetchRemoteVersion = async (mode: "html" | "json"): Promise<null | 
   if (mode === "json") {
     const endpoint = options.checkVersion?.endpoint;
     if (!endpoint) {
-      console.warn(logMessage("JSON version check mode requires endpoint"));
+      getLogger()?.versionCheckRequiresEndpoint();
       return null;
     }
 
@@ -19,7 +19,7 @@ export const fetchRemoteVersion = async (mode: "html" | "json"): Promise<null | 
       headers: { Accept: "application/json" },
     });
     if (!response.ok) {
-      console.warn(logMessage(`Version check HTTP error: ${response.status}`));
+      getLogger()?.versionCheckHttpError(response.status);
       return null;
     }
     const data = await response.json();
@@ -32,7 +32,7 @@ export const fetchRemoteVersion = async (mode: "html" | "json"): Promise<null | 
     headers: { Accept: "text/html" },
   });
   if (!response.ok) {
-    console.warn(logMessage(`Version check HTTP error: ${response.status}`));
+    getLogger()?.versionCheckHttpError(response.status);
     return null;
   }
   const html = await response.text();
@@ -41,7 +41,7 @@ export const fetchRemoteVersion = async (mode: "html" | "json"): Promise<null | 
   // Use a permissive pattern that handles nested objects in the JSON
   const match = html.match(/__SPA_GUARD_OPTIONS__\s*=\s*\{[\s\S]*?"version"\s*:\s*"([^"]+)"/);
   if (!match) {
-    console.warn(logMessage("Failed to parse version from HTML"));
+    getLogger()?.versionCheckParseError();
     return null;
   }
 
@@ -57,7 +57,7 @@ const onVersionChange = (oldVersion: null | string, latestVersion: string): void
     );
   }
 
-  console.warn(logMessage("New version available. Please refresh to get the latest version."));
+  getLogger()?.versionChangeDetected(oldVersion, latestVersion);
 };
 
 const checkVersionOnce = async (mode: "html" | "json"): Promise<void> => {
@@ -65,13 +65,13 @@ const checkVersionOnce = async (mode: "html" | "json"): Promise<void> => {
     const remoteVersion = await fetchRemoteVersion(mode);
 
     if (remoteVersion && remoteVersion !== lastKnownVersion) {
-      console.warn(logMessage(`Version changed: ${lastKnownVersion} → ${remoteVersion}`));
+      getLogger()?.versionChanged(lastKnownVersion, remoteVersion);
 
       onVersionChange(lastKnownVersion, remoteVersion);
       lastKnownVersion = remoteVersion;
     }
   } catch (error) {
-    console.error(logMessage("Version check failed"), error);
+    getLogger()?.versionCheckFailed(error);
   }
 };
 
@@ -83,12 +83,12 @@ export const startVersionCheck = (): void => {
   const options = getOptions();
 
   if (!options.version) {
-    console.warn(logMessage("Version checking disabled: no version configured"));
+    getLogger()?.versionCheckDisabled();
     return;
   }
 
   if (versionCheckInterval !== null) {
-    console.warn(logMessage("Version check already running"));
+    getLogger()?.versionCheckAlreadyRunning();
     return;
   }
 
@@ -97,11 +97,7 @@ export const startVersionCheck = (): void => {
   const interval = options.checkVersion?.interval ?? 60_000;
   const mode = options.checkVersion?.mode ?? "html";
 
-  console.log(
-    logMessage(
-      `Starting version check (mode: ${mode}, interval: ${interval}ms, current: ${lastKnownVersion})`,
-    ),
-  );
+  getLogger()?.versionCheckStarted(mode, interval, lastKnownVersion);
 
   versionCheckInterval = setInterval(async () => {
     await checkVersionOnce(mode);
@@ -112,7 +108,7 @@ export const stopVersionCheck = (): void => {
   if (versionCheckInterval !== null) {
     clearInterval(versionCheckInterval);
     versionCheckInterval = null;
-    console.log(logMessage("Version check stopped"));
+    getLogger()?.versionCheckStopped();
   }
 };
 
