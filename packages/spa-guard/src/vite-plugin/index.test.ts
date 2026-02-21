@@ -158,6 +158,56 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
     });
   });
 
+  describe("version auto-generation", () => {
+    it("auto-generates a UUID version when no version is provided", async () => {
+      const result = await invokeTransform();
+      const parsed = parseOptionsFromScript(result.tags[0].children as string);
+
+      expect(parsed.version).toBeDefined();
+      expect(parsed.version).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      );
+    });
+
+    it("uses the explicit version when provided", async () => {
+      const result = await invokeTransform({ version: "1.2.3" });
+      const parsed = parseOptionsFromScript(result.tags[0].children as string);
+
+      expect(parsed.version).toBe("1.2.3");
+    });
+
+    it("uses the same auto-generated version across multiple transforms", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin();
+      const handler = getTransformHandler(plugin);
+
+      const result1 = await handler("<html></html>");
+      const result2 = await handler("<html></html>");
+
+      const parsed1 = parseOptionsFromScript(result1.tags[0].children as string);
+      const parsed2 = parseOptionsFromScript(result2.tags[0].children as string);
+
+      expect(parsed1.version).toBe(parsed2.version);
+    });
+
+    it("generates different versions for different plugin instances", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin1 = spaGuardVitePlugin();
+      const plugin2 = spaGuardVitePlugin();
+
+      const handler1 = getTransformHandler(plugin1);
+      const handler2 = getTransformHandler(plugin2);
+
+      const result1 = await handler1("<html></html>");
+      const result2 = await handler2("<html></html>");
+
+      const parsed1 = parseOptionsFromScript(result1.tags[0].children as string);
+      const parsed2 = parseOptionsFromScript(result2.tags[0].children as string);
+
+      expect(parsed1.version).not.toBe(parsed2.version);
+    });
+  });
+
   describe("inline script file reading", () => {
     it("reads from dist-inline by default (non-trace mode)", async () => {
       const fsMod = await import("node:fs/promises");

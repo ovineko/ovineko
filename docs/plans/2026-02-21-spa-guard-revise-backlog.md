@@ -93,11 +93,11 @@ If `options.version` is not provided, generate a `crypto.randomUUID()` and use i
 
 - Modify: `packages/spa-guard/src/vite-plugin/index.ts`
 
-- [ ] in `spaGuardVitePlugin()`, if `options.version` is not provided, generate via `crypto.randomUUID()`
-- [ ] remove the existing logic that reads version from `package.json` (or make it a fallback chain: user-provided > auto-UUID)
-- [ ] update README.md to document that version is auto-generated if not specified
-- [ ] write tests for the Vite plugin covering: no version provided (UUID generated), explicit version provided (used as-is)
-- [ ] run project test suite - must pass before task 5
+- [x] in `spaGuardVitePlugin()`, if `options.version` is not provided, generate via `crypto.randomUUID()`
+- [x] remove the existing logic that reads version from `package.json` (or make it a fallback chain: user-provided > auto-UUID)
+- [x] update README.md to document that version is auto-generated if not specified
+- [x] write tests for the Vite plugin covering: no version provided (UUID generated), explicit version provided (used as-is)
+- [x] run project test suite - must pass before task 5
 
 ### Task 5: Add recommendedSetup() to runtime
 
