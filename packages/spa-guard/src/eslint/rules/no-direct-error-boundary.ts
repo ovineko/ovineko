@@ -2,19 +2,15 @@ import type { Rule } from "eslint";
 
 import { name } from "../../../package.json";
 
-const BANNED_SOURCES = new Set(["react-error-boundary"]);
+const BANNED_SOURCE = "react-error-boundary";
 const SPA_GUARD_SOURCE = `${name}/react-error-boundary`;
 
 const rule: Rule.RuleModule = {
   create(context) {
     return {
       ImportDeclaration(node) {
-        const source = node.source.value;
-        if (typeof source !== "string") {
-          return;
-        }
-
-        if (!BANNED_SOURCES.has(source)) {
+        const source = node.source.value as string;
+        if (source !== BANNED_SOURCE) {
           return;
         }
 

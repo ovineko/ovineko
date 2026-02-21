@@ -12,6 +12,22 @@ Peer dependencies vary by integration - see sections below for specific requirem
 
 ## Breaking Changes
 
+### v\* - ESLint plugin naming convention changed
+
+The ESLint plugin name changed from `@ovineko/spa-guard` to `@ovineko/spa-guard/eslint`, and the minimum ESLint version was raised from `^8 || ^9` to `^9 || ^10`.
+
+**Migration:**
+
+```javascript
+// OLD (no longer works)
+plugins: { "@ovineko/spa-guard": spaGuardPlugin }
+rules: { "@ovineko/spa-guard/no-direct-error-boundary": "error" }
+
+// NEW
+plugins: { "@ovineko/spa-guard/eslint": spaGuardPlugin }
+rules: { "@ovineko/spa-guard/eslint/no-direct-error-boundary": "error" }
+```
+
 ### v\* - `react-lazy` consolidated into `react`
 
 The `@ovineko/spa-guard/react-lazy` export has been removed. All React functionality is now available from a single `@ovineko/spa-guard/react` entry point.
@@ -1167,18 +1183,18 @@ interface Options {
 
 spa-guard provides 10 export entry points:
 
-| Export                   | Description                                                                             | Peer Dependencies              |
-| ------------------------ | --------------------------------------------------------------------------------------- | ------------------------------ |
-| `.`                      | Core functionality (events, listen, options, version checker, retry control)            | None                           |
-| `./schema`               | BeaconSchema type definitions                                                           | `typebox@^1`                   |
-| `./schema/parse`         | Beacon parsing utilities                                                                | `typebox@^1`                   |
-| `./runtime`              | Runtime state management and subscriptions                                              | None                           |
-| `./react`                | React hooks (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry) | `react@^19`                    |
-| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                  | `react@^19`, `react-router@^7` |
-| `./fastify`              | Fastify server plugin                                                                   | `fastify@^4 \|\| ^5`           |
-| `./vite-plugin`          | Vite build plugin                                                                       | `vite@^7 \|\| ^8`              |
-| `./react-error-boundary` | React error boundary component (ErrorBoundary)                                          | `react@^19`                    |
-| `./eslint`               | ESLint plugin with `no-direct-error-boundary` and `no-direct-lazy` rules                | `eslint@^8 \|\| ^9` (optional) |
+| Export                   | Description                                                                             | Peer Dependencies               |
+| ------------------------ | --------------------------------------------------------------------------------------- | ------------------------------- |
+| `.`                      | Core functionality (events, listen, options, version checker, retry control)            | None                            |
+| `./schema`               | BeaconSchema type definitions                                                           | `typebox@^1`                    |
+| `./schema/parse`         | Beacon parsing utilities                                                                | `typebox@^1`                    |
+| `./runtime`              | Runtime state management and subscriptions                                              | None                            |
+| `./react`                | React hooks (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry) | `react@^19`                     |
+| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                  | `react@^19`, `react-router@^7`  |
+| `./fastify`              | Fastify server plugin                                                                   | `fastify@^4 \|\| ^5`            |
+| `./vite-plugin`          | Vite build plugin                                                                       | `vite@^7 \|\| ^8`               |
+| `./react-error-boundary` | React error boundary component (ErrorBoundary)                                          | `react@^19`                     |
+| `./eslint`               | ESLint plugin with `no-direct-error-boundary` and `no-direct-lazy` rules                | `eslint@^9 \|\| ^10` (optional) |
 
 **Import examples:**
 
@@ -1386,17 +1402,26 @@ spa-guard includes an ESLint plugin (`@ovineko/spa-guard/eslint`) that enforces 
 ### Setup
 
 ```javascript
-// eslint.config.js (flat config)
+// eslint.config.js (flat config) — recommended preset
+import spaGuardPlugin from "@ovineko/spa-guard/eslint";
+
+export default [spaGuardPlugin.configs.recommended];
+```
+
+Or configure rules individually:
+
+```javascript
+// eslint.config.js (flat config) — manual configuration
 import spaGuardPlugin from "@ovineko/spa-guard/eslint";
 
 export default [
   {
     plugins: {
-      "@ovineko/spa-guard": spaGuardPlugin,
+      "@ovineko/spa-guard/eslint": spaGuardPlugin,
     },
     rules: {
-      "@ovineko/spa-guard/no-direct-error-boundary": "error",
-      "@ovineko/spa-guard/no-direct-lazy": "error",
+      "@ovineko/spa-guard/eslint/no-direct-error-boundary": "error",
+      "@ovineko/spa-guard/eslint/no-direct-lazy": "error",
     },
   },
 ];
