@@ -60,6 +60,19 @@ const rule: Rule.RuleModule = {
 
               yield fixer.replaceText(node, `${reactLine}\n${spaGuardLine}`);
             }
+
+            // Rename all references to `lazy` in the code (skip aliased imports)
+            if (localName === "lazy") {
+              const scope = context.sourceCode.getScope(node);
+              const variable = scope.variables.find((v) => v.name === "lazy");
+              if (variable) {
+                for (const ref of variable.references) {
+                  if (ref.identifier !== lazySpecifier.local) {
+                    yield fixer.replaceText(ref.identifier, SPA_GUARD_IMPORT);
+                  }
+                }
+              }
+            }
           },
           messageId: "noDirectLazy",
           node: lazySpecifier,

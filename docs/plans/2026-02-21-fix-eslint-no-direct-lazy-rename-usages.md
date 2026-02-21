@@ -39,10 +39,10 @@ The ESLint rule `no-direct-lazy` in packages/spa-guard correctly transforms the 
 
 - Modify: `packages/spa-guard/src/eslint/rules/no-direct-lazy.ts`
 
-- [ ] Inside the `*fix` generator, after yielding the import replacement, use `context.sourceCode.getScope(node)` to find the variable declared by the `lazy` specifier
-- [ ] Iterate over all references to that variable and yield `fixer.replaceText(ref.identifier, SPA_GUARD_IMPORT)` for each reference (skip the specifier node itself which is already handled by the import fix)
-- [ ] Only rename references when `localName === "lazy"` (aliased imports like `lazy as myLazy` keep their local name)
-- [ ] Run tests - all tests (old and new) must pass
+- [x] Inside the `*fix` generator, after yielding the import replacement, use `context.sourceCode.getScope(node)` to find the variable declared by the `lazy` specifier
+- [x] Iterate over all references to that variable and yield `fixer.replaceText(ref.identifier, SPA_GUARD_IMPORT)` for each reference (skip the specifier node itself which is already handled by the import fix)
+- [x] Only rename references when `localName === "lazy"` (aliased imports like `lazy as myLazy` keep their local name)
+- [x] Run tests - all tests (old and new) must pass
 
 ### Task 3: Verify acceptance criteria
 
