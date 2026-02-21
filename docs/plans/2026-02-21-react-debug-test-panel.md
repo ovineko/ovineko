@@ -80,7 +80,7 @@ Create a `DebugTestPanel` React component exported as a separate entry point `@o
 
 - Delete: `packages/spa-guard/TODO.md`
 
-- [ ] Remove `packages/spa-guard/TODO.md` from the repo
+- [x] Remove `packages/spa-guard/TODO.md` from the repo
 
 ### Task 6: Verify acceptance criteria
 
