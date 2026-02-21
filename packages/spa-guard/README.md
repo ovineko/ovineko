@@ -1364,6 +1364,8 @@ spaGuardVitePlugin({
 - Only the `spaGuardRetryId` UUID param is omitted
 - Retries still work correctly (attempt counter persists in URL)
 - The attempt param is cleaned up from the URL after retry exhaustion
+- The "Error ID" line in the default fallback UI is automatically hidden (no retry ID to display)
+- `enableRetryReset` (smart retry cycle reset) has no effect — retry cycles cannot auto-reset without a persisted retry ID
 
 **Note:** Without `useRetryId`, the retry URL won't include a unique UUID, so aggressive HTML cache may not be bypassed. However, retry counting still works correctly.
 
