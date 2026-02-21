@@ -149,8 +149,8 @@ Currently there are 3 different fallback UIs: the generated HTML string (used in
 
 - Delete: `revise.txt`
 
-- [ ] delete `revise.txt` from repo root
-- [ ] verify all tasks from revise.txt are captured in this plan
+- [x] delete `revise.txt` from repo root
+- [x] verify all tasks from revise.txt are captured in this plan
 
 ### Task 9: Verify acceptance criteria
 
