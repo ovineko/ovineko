@@ -32,4 +32,8 @@ describe("eslint plugin", () => {
     expect(configRules[`${expectedPluginName}/no-direct-error-boundary`]).toBe("error");
     expect(configRules[`${expectedPluginName}/no-direct-lazy`]).toBe("error");
   });
+
+  it("named export configs is the same reference as plugin.configs", () => {
+    expect(configs).toBe(plugin.configs);
+  });
 });
