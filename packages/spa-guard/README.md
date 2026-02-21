@@ -1347,18 +1347,25 @@ import spaGuardEslint from "@ovineko/spa-guard/eslint";
 
 ## Advanced Usage
 
-### Disable Query Parameters (PII Concerns)
+### Disable Retry ID Query Parameter (PII Concerns)
 
-If query parameters are problematic for your use case:
+If the `spaGuardRetryId` query parameter is problematic for your use case (e.g., URL logging policies):
 
 ```typescript
 spaGuardVitePlugin({
-  useRetryId: false, // Disable query parameters
-  reloadDelays: [1000, 2000], // Still retries, but without cache busting
+  useRetryId: false, // Disable spaGuardRetryId in URL (default: true)
+  reloadDelays: [1000, 2000], // Still retries, but without cache-busting UUID
 });
 ```
 
-**Note:** Without `useRetryId`, retries use `globalThis.window.location.reload()` which may not bypass aggressive HTML cache.
+**Behavior with `useRetryId: false`:**
+
+- The `spaGuardRetryAttempt` param is still written to the URL to track retry progress across reloads
+- Only the `spaGuardRetryId` UUID param is omitted
+- Retries still work correctly (attempt counter persists in URL)
+- The attempt param is cleaned up from the URL after retry exhaustion
+
+**Note:** Without `useRetryId`, the retry URL won't include a unique UUID, so aggressive HTML cache may not be bypassed. However, retry counting still works correctly.
 
 ### Custom Fallback UI
 
