@@ -572,6 +572,53 @@ function ChunkErrorBanner() {
 }
 ```
 
+### Debug Test Panel
+
+spa-guard provides a `DebugTestPanel` React component for development and testing. It lets you simulate error scenarios and observe how spa-guard handles them in real time.
+
+```tsx
+import { DebugTestPanel } from "@ovineko/spa-guard/react/debug";
+
+function App() {
+  return (
+    <>
+      <YourApp />
+      {process.env.NODE_ENV === "development" && <DebugTestPanel />}
+    </>
+  );
+}
+```
+
+**Props:**
+
+```typescript
+interface DebugTestPanelProps {
+  position?: "top-left" | "top-right" | "bottom-left" | "bottom-right"; // default: "bottom-right"
+  defaultOpen?: boolean; // default: true
+  onErrorTriggered?: (errorType: string, error: unknown) => void; // callback when an error is triggered
+}
+```
+
+**Features:**
+
+- Fixed-position overlay panel with toggle open/close
+- Error scenario buttons: ChunkLoadError, Network Timeout, Runtime Error, Finally Error
+- Button visual states (default, loading, triggered)
+- Live spa-guard state display (attempt, isWaiting, isFallbackShown)
+- Scrollable event history with timestamps
+- Clear history button
+
+**Error simulators** are also available as standalone functions:
+
+```typescript
+import {
+  simulateChunkLoadError,
+  simulateNetworkTimeout,
+  simulateRuntimeError,
+  simulateFinallyError,
+} from "@ovineko/spa-guard/react/debug";
+```
+
 ### Version Checker
 
 spa-guard can proactively detect new deployments by periodically polling for version changes. This helps notify users before chunk errors occur.
@@ -1142,7 +1189,7 @@ interface Options {
 
 ## Module Exports
 
-spa-guard provides 10 export entry points:
+spa-guard provides 11 export entry points:
 
 | Export                   | Description                                                                                    | Peer Dependencies               |
 | ------------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------- |
@@ -1151,6 +1198,7 @@ spa-guard provides 10 export entry points:
 | `./schema/parse`         | Beacon parsing utilities                                                                       | `typebox@^1`                    |
 | `./runtime`              | Runtime state management and subscriptions                                                     | None                            |
 | `./react`                | React hooks (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry)        | `react@^19`                     |
+| `./react/debug`          | Debug test panel component (DebugTestPanel) and error simulators                               | `react@^19`                     |
 | `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                         | `react@^19`, `react-router@^7`  |
 | `./fastify`              | Fastify server plugin                                                                          | `fastify@^4 \|\| ^5`            |
 | `./vite-plugin`          | Vite build plugin                                                                              | `vite@^7 \|\| ^8`               |
@@ -1176,6 +1224,9 @@ import {
 // Lazy imports with retry
 import { lazyWithRetry } from "@ovineko/spa-guard/react";
 import type { LazyRetryOptions } from "@ovineko/spa-guard/react";
+
+// Debug test panel
+import { DebugTestPanel } from "@ovineko/spa-guard/react/debug";
 
 // React error boundaries
 import { ErrorBoundary } from "@ovineko/spa-guard/react-error-boundary";
