@@ -722,6 +722,15 @@ spaGuardVitePlugin({
 - `startVersionCheck()` - Start periodic version polling. No-op if no version is configured or already running.
 - `stopVersionCheck()` - Stop version polling and clear the interval.
 
+#### Tab Visibility
+
+Version polling automatically pauses when the browser tab is hidden (using the Page Visibility API) to save resources. When the tab becomes visible again:
+
+- If enough time has passed (>= polling interval), a check runs immediately and polling resumes
+- If less time has passed, polling resumes after the remaining interval
+
+This is handled transparently - no configuration needed.
+
 ### Retry Control
 
 spa-guard allows your SPA to take over error handling from the inline script by disabling the default retry behavior:

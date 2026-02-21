@@ -162,6 +162,6 @@ Currently there are 3 different fallback UIs: the generated HTML string (used in
 
 ### Task 10: Update documentation
 
-- [ ] update README.md if user-facing changes (new runtime exports, recommendedSetup, auto-version)
-- [ ] update CLAUDE.md if internal patterns changed
-- [ ] move this plan to `docs/plans/completed/`
+- [x] update README.md if user-facing changes (new runtime exports, recommendedSetup, auto-version)
+- [x] update CLAUDE.md if internal patterns changed
+- [x] move this plan to `docs/plans/completed/`
