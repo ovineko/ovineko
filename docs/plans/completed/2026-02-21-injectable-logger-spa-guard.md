@@ -197,5 +197,5 @@ Note: This is an alpha package. No backwards compatibility concerns. Breaking ch
 
 ### Task 8: Update documentation
 
-- [ ] Update CLAUDE.md if internal patterns changed (Logger DI pattern, event auto-logging)
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Update CLAUDE.md if internal patterns changed (Logger DI pattern, event auto-logging)
+- [x] Move this plan to `docs/plans/completed/`
