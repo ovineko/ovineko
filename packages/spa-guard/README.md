@@ -419,6 +419,28 @@ function Root() {
 }
 ```
 
+#### DebugSyncErrorTrigger
+
+A React component that bridges the vanilla debug panel's "Sync Runtime Error" button with React Error Boundaries. It listens for a CustomEvent dispatched by the debug panel, stores the error in state, and throws it during render so that a parent Error Boundary catches it.
+
+Place this component inside your ErrorBoundary:
+
+```tsx
+import { ErrorBoundary } from "@ovineko/spa-guard/react-error-boundary";
+import { DebugSyncErrorTrigger } from "@ovineko/spa-guard/react";
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <DebugSyncErrorTrigger />
+      <YourApp />
+    </ErrorBoundary>
+  );
+}
+```
+
+This component renders nothing under normal conditions. It only throws when triggered by the debug panel's "Sync Runtime Error" button.
+
 **Props:**
 
 ```typescript
@@ -614,7 +636,7 @@ function createDebugger(options?: {
 
 - Framework-agnostic vanilla JS (no React dependency)
 - Fixed-position overlay panel with toggle open/close
-- Error scenario buttons: ChunkLoadError, Network Timeout, Runtime Error, Finally Error
+- Error scenario buttons: ChunkLoadError, Network Timeout, Sync Runtime Error, Async Runtime Error, Finally Error
 - Button visual states (default, loading, triggered)
 - Live spa-guard state display (attempt, isWaiting, isFallbackShown)
 - Scrollable event history with timestamps
@@ -1194,19 +1216,19 @@ interface Options {
 
 spa-guard provides 11 export entry points:
 
-| Export                   | Description                                                                                    | Peer Dependencies               |
-| ------------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------- |
-| `.`                      | Core functionality (events, listen, options, version checker, retry control)                   | None                            |
-| `./schema`               | BeaconSchema type definitions                                                                  | `typebox@^1`                    |
-| `./schema/parse`         | Beacon parsing utilities                                                                       | `typebox@^1`                    |
-| `./runtime`              | Runtime state management and subscriptions                                                     | None                            |
-| `./react`                | React hooks (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry)        | `react@^19`                     |
-| `./runtime/debug`        | Debug panel factory (`createDebugger`) - framework-agnostic vanilla JS                         | None                            |
-| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                         | `react@^19`, `react-router@^7`  |
-| `./fastify`              | Fastify server plugin                                                                          | `fastify@^4 \|\| ^5`            |
-| `./vite-plugin`          | Vite build plugin                                                                              | `vite@^7 \|\| ^8`               |
-| `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                 | `react@^19`                     |
-| `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`) | `eslint@^9 \|\| ^10` (optional) |
+| Export                   | Description                                                                                                                   | Peer Dependencies               |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `.`                      | Core functionality (events, listen, options, version checker, retry control)                                                  | None                            |
+| `./schema`               | BeaconSchema type definitions                                                                                                 | `typebox@^1`                    |
+| `./schema/parse`         | Beacon parsing utilities                                                                                                      | `typebox@^1`                    |
+| `./runtime`              | Runtime state management and subscriptions                                                                                    | None                            |
+| `./react`                | React hooks and components (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry, DebugSyncErrorTrigger) | `react@^19`                     |
+| `./runtime/debug`        | Debug panel factory (`createDebugger`) - framework-agnostic vanilla JS                                                        | None                            |
+| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                                                        | `react@^19`, `react-router@^7`  |
+| `./fastify`              | Fastify server plugin                                                                                                         | `fastify@^4 \|\| ^5`            |
+| `./vite-plugin`          | Vite build plugin                                                                                                             | `vite@^7 \|\| ^8`               |
+| `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                | `react@^19`                     |
+| `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                | `eslint@^9 \|\| ^10` (optional) |
 
 **Import examples:**
 
@@ -1217,11 +1239,12 @@ import { events, listen, startVersionCheck, disableDefaultRetry } from "@ovineko
 // Runtime state
 import { getState, subscribeToState } from "@ovineko/spa-guard/runtime";
 
-// React hooks
+// React hooks and components
 import {
   useSpaGuardState,
   useSPAGuardEvents,
   useSPAGuardChunkError,
+  DebugSyncErrorTrigger,
 } from "@ovineko/spa-guard/react";
 
 // Lazy imports with retry

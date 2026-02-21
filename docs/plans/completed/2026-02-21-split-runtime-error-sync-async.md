@@ -80,6 +80,6 @@ React Error Boundaries only catch errors thrown during rendering. The vanilla de
 
 ### Task 6: Update documentation
 
-- [ ] Update packages/spa-guard/README.md: document DebugSyncErrorTrigger usage (place inside ErrorBoundary), updated 5-button list in debug panel section
-- [ ] Update CLAUDE.md if internal patterns changed
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Update packages/spa-guard/README.md: document DebugSyncErrorTrigger usage (place inside ErrorBoundary), updated 5-button list in debug panel section
+- [x] Update CLAUDE.md if internal patterns changed
+- [x] Move this plan to `docs/plans/completed/`
