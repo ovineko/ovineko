@@ -127,6 +127,6 @@ createDebugger returns a function. Calling that function destroys the panel. The
 
 ### Task 7: Update documentation
 
-- [ ] Update packages/spa-guard/README.md - replace react/debug section with runtime/debug usage, including React example: `useEffect(() => createDebugger(), [])`
-- [ ] Update CLAUDE.md if internal patterns changed
-- [ ] Move this plan to docs/plans/completed/
+- [x] Update packages/spa-guard/README.md - replace react/debug section with runtime/debug usage, including React example: `useEffect(() => createDebugger(), [])`
+- [x] Update CLAUDE.md if internal patterns changed
+- [x] Move this plan to docs/plans/completed/

@@ -572,52 +572,55 @@ function ChunkErrorBanner() {
 }
 ```
 
-### Debug Test Panel
+### Debug Panel
 
-spa-guard provides a `DebugTestPanel` React component for development and testing. It lets you simulate error scenarios and observe how spa-guard handles them in real time.
+spa-guard provides a framework-agnostic `createDebugger()` function for development and testing. It creates a vanilla JS debug panel that lets you simulate error scenarios and observe how spa-guard handles them in real time. Works with any SPA framework.
+
+```typescript
+import { createDebugger } from "@ovineko/spa-guard/runtime/debug";
+
+// Create the debug panel - returns a cleanup function
+const destroy = createDebugger();
+
+// Later: remove the panel and clean up all subscriptions
+destroy();
+```
+
+**React usage:**
 
 ```tsx
-import { DebugTestPanel } from "@ovineko/spa-guard/react/debug";
+import { useEffect } from "react";
+import { createDebugger } from "@ovineko/spa-guard/runtime/debug";
 
 function App() {
-  return (
-    <>
-      <YourApp />
-      {process.env.NODE_ENV === "development" && <DebugTestPanel />}
-    </>
-  );
+  useEffect(() => createDebugger(), []);
+
+  return <YourApp />;
 }
 ```
 
-**Props:**
+Since `createDebugger()` returns a cleanup function directly, the arrow shorthand implicitly returns it as the `useEffect` cleanup. No wrapper needed.
+
+**Options:**
 
 ```typescript
-interface DebugTestPanelProps {
-  position?: "top-left" | "top-right" | "bottom-left" | "bottom-right"; // default: "bottom-right"
+function createDebugger(options?: {
+  position?: "bottom-left" | "bottom-right" | "top-left" | "top-right"; // default: "bottom-right"
   defaultOpen?: boolean; // default: true
-  onErrorTriggered?: (errorType: string, error: unknown) => void; // callback when an error is triggered
-}
+}): () => void;
 ```
 
 **Features:**
 
+- Framework-agnostic vanilla JS (no React dependency)
 - Fixed-position overlay panel with toggle open/close
 - Error scenario buttons: ChunkLoadError, Network Timeout, Runtime Error, Finally Error
 - Button visual states (default, loading, triggered)
 - Live spa-guard state display (attempt, isWaiting, isFallbackShown)
 - Scrollable event history with timestamps
 - Clear history button
-
-**Error simulators** are also available as standalone functions:
-
-```typescript
-import {
-  simulateChunkLoadError,
-  simulateNetworkTimeout,
-  simulateRuntimeError,
-  simulateFinallyError,
-} from "@ovineko/spa-guard/react/debug";
-```
+- Single-instance deduplication (second call returns existing cleanup function with a warning)
+- Errors use fire-and-forget dispatch (reach spa-guard's window event listeners instead of being caught)
 
 ### Version Checker
 
@@ -1198,7 +1201,7 @@ spa-guard provides 11 export entry points:
 | `./schema/parse`         | Beacon parsing utilities                                                                       | `typebox@^1`                    |
 | `./runtime`              | Runtime state management and subscriptions                                                     | None                            |
 | `./react`                | React hooks (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry)        | `react@^19`                     |
-| `./react/debug`          | Debug test panel component (DebugTestPanel) and error simulators                               | `react@^19`                     |
+| `./runtime/debug`        | Debug panel factory (`createDebugger`) - framework-agnostic vanilla JS                         | None                            |
 | `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                         | `react@^19`, `react-router@^7`  |
 | `./fastify`              | Fastify server plugin                                                                          | `fastify@^4 \|\| ^5`            |
 | `./vite-plugin`          | Vite build plugin                                                                              | `vite@^7 \|\| ^8`               |
@@ -1225,8 +1228,8 @@ import {
 import { lazyWithRetry } from "@ovineko/spa-guard/react";
 import type { LazyRetryOptions } from "@ovineko/spa-guard/react";
 
-// Debug test panel
-import { DebugTestPanel } from "@ovineko/spa-guard/react/debug";
+// Debug panel (framework-agnostic)
+import { createDebugger } from "@ovineko/spa-guard/runtime/debug";
 
 // React error boundaries
 import { ErrorBoundary } from "@ovineko/spa-guard/react-error-boundary";
