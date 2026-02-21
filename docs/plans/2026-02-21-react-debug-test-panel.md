@@ -52,14 +52,14 @@ Create a `DebugTestPanel` React component exported as a separate entry point `@o
 
 - Modify: `packages/spa-guard/src/react/debug/index.tsx`
 
-- [ ] Implement panel UI with inline styles: fixed-position overlay, header with toggle, error scenario buttons
-- [ ] Wire buttons to error simulator functions from task 2
-- [ ] Add button visual states (default, loading, triggered) using local component state
-- [ ] Add `position` prop (`top-left` | `top-right` | `bottom-left` | `bottom-right`, default `bottom-right`)
-- [ ] Add `defaultOpen` prop (boolean, default `true`)
-- [ ] Add `onErrorTriggered` callback prop
-- [ ] Write tests: renders in each position, toggle open/close, buttons call simulators, callback fires
-- [ ] Run test suite - must pass before task 4
+- [x] Implement panel UI with inline styles: fixed-position overlay, header with toggle, error scenario buttons
+- [x] Wire buttons to error simulator functions from task 2
+- [x] Add button visual states (default, loading, triggered) using local component state
+- [x] Add `position` prop (`top-left` | `top-right` | `bottom-left` | `bottom-right`, default `bottom-right`)
+- [x] Add `defaultOpen` prop (boolean, default `true`)
+- [x] Add `onErrorTriggered` callback prop
+- [x] Write tests: renders in each position, toggle open/close, buttons call simulators, callback fires
+- [x] Run test suite - must pass before task 4
 
 ### Task 4: Add event history and state display
 
