@@ -2,31 +2,31 @@ import { getLogger } from "./events/internal";
 import { getOptions } from "./options";
 
 let versionCheckInterval: null | ReturnType<typeof setInterval> = null;
+let versionCheckTimeout: null | ReturnType<typeof setTimeout> = null;
 let lastKnownVersion: null | string = null;
+let lastCheckTimestamp: null | number = null;
+let visibilityHandler: (() => void) | null = null;
 
-export const fetchRemoteVersion = async (mode: "html" | "json"): Promise<null | string> => {
-  const options = getOptions();
-
-  if (mode === "json") {
-    const endpoint = options.checkVersion?.endpoint;
-    if (!endpoint) {
-      getLogger()?.versionCheckRequiresEndpoint();
-      return null;
-    }
-
-    const response = await fetch(endpoint, {
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-    });
-    if (!response.ok) {
-      getLogger()?.versionCheckHttpError(response.status);
-      return null;
-    }
-    const data = await response.json();
-    return data.version ?? null;
+const fetchJsonVersion = async (): Promise<null | string> => {
+  const endpoint = getOptions().checkVersion?.endpoint;
+  if (!endpoint) {
+    getLogger()?.versionCheckRequiresEndpoint();
+    return null;
   }
 
-  // HTML mode: re-fetch current page
+  const response = await fetch(endpoint, {
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) {
+    getLogger()?.versionCheckHttpError(response.status);
+    return null;
+  }
+  const data = await response.json();
+  return data.version ?? null;
+};
+
+const fetchHtmlVersion = async (): Promise<null | string> => {
   const response = await fetch(globalThis.location.href, {
     cache: "no-store",
     headers: { Accept: "text/html" },
@@ -38,7 +38,6 @@ export const fetchRemoteVersion = async (mode: "html" | "json"): Promise<null | 
   const html = await response.text();
 
   // Parse: window.__SPA_GUARD_OPTIONS__={...,"version":"1.2.3",...}
-  // Use a permissive pattern that handles nested objects in the JSON
   const match = html.match(/__SPA_GUARD_OPTIONS__\s*=\s*\{[\s\S]*?"version"\s*:\s*"([^"]+)"/);
   if (!match) {
     getLogger()?.versionCheckParseError();
@@ -46,6 +45,10 @@ export const fetchRemoteVersion = async (mode: "html" | "json"): Promise<null | 
   }
 
   return match[1] ?? null;
+};
+
+export const fetchRemoteVersion = async (mode: "html" | "json"): Promise<null | string> => {
+  return mode === "json" ? fetchJsonVersion() : fetchHtmlVersion();
 };
 
 const onVersionChange = (oldVersion: null | string, latestVersion: string): void => {
@@ -75,6 +78,50 @@ const checkVersionOnce = async (mode: "html" | "json"): Promise<void> => {
   }
 };
 
+const startPolling = (mode: "html" | "json", interval: number): void => {
+  versionCheckInterval = setInterval(async () => {
+    lastCheckTimestamp = Date.now();
+    await checkVersionOnce(mode);
+  }, interval);
+};
+
+const clearTimers = (): void => {
+  if (versionCheckInterval !== null) {
+    clearInterval(versionCheckInterval);
+    versionCheckInterval = null;
+  }
+  if (versionCheckTimeout !== null) {
+    clearTimeout(versionCheckTimeout);
+    versionCheckTimeout = null;
+  }
+};
+
+const handleVisibilityHidden = (): void => {
+  clearTimers();
+  getLogger()?.versionCheckPaused();
+};
+
+const handleVisibilityVisible = (mode: "html" | "json", interval: number): void => {
+  const elapsed = Date.now() - (lastCheckTimestamp ?? 0);
+
+  if (elapsed >= interval) {
+    getLogger()?.versionCheckResumedImmediate();
+    lastCheckTimestamp = Date.now();
+    void checkVersionOnce(mode);
+    startPolling(mode, interval);
+    return;
+  }
+
+  getLogger()?.versionCheckResumed();
+  const remaining = interval - elapsed;
+  versionCheckTimeout = setTimeout(() => {
+    versionCheckTimeout = null;
+    lastCheckTimestamp = Date.now();
+    void checkVersionOnce(mode);
+    startPolling(mode, interval);
+  }, remaining);
+};
+
 export const startVersionCheck = (): void => {
   if (globalThis.window === undefined) {
     return;
@@ -87,7 +134,7 @@ export const startVersionCheck = (): void => {
     return;
   }
 
-  if (versionCheckInterval !== null) {
+  if (versionCheckInterval !== null || visibilityHandler !== null) {
     getLogger()?.versionCheckAlreadyRunning();
     return;
   }
@@ -99,15 +146,32 @@ export const startVersionCheck = (): void => {
 
   getLogger()?.versionCheckStarted(mode, interval, lastKnownVersion);
 
-  versionCheckInterval = setInterval(async () => {
-    await checkVersionOnce(mode);
-  }, interval);
+  lastCheckTimestamp = Date.now();
+  startPolling(mode, interval);
+
+  visibilityHandler = () => {
+    if (document.visibilityState === "hidden") {
+      handleVisibilityHidden();
+    } else {
+      handleVisibilityVisible(mode, interval);
+    }
+  };
+
+  document.addEventListener("visibilitychange", visibilityHandler);
 };
 
 export const stopVersionCheck = (): void => {
-  if (versionCheckInterval !== null) {
-    clearInterval(versionCheckInterval);
-    versionCheckInterval = null;
+  const wasRunning =
+    versionCheckInterval !== null || versionCheckTimeout !== null || visibilityHandler !== null;
+
+  clearTimers();
+
+  if (visibilityHandler !== null) {
+    document.removeEventListener("visibilitychange", visibilityHandler);
+    visibilityHandler = null;
+  }
+
+  if (wasRunning) {
     getLogger()?.versionCheckStopped();
   }
 };
@@ -116,4 +180,5 @@ export const stopVersionCheck = (): void => {
 export const _resetForTesting = (): void => {
   stopVersionCheck();
   lastKnownVersion = null;
+  lastCheckTimestamp = null;
 };

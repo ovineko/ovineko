@@ -376,6 +376,32 @@ describe("common/logger", () => {
 
       expect(logSpy).toHaveBeenCalledWith("[spa-guard] Version check stopped");
     });
+
+    it("versionCheckPaused logs at log level", () => {
+      const logger = createLogger();
+
+      logger.versionCheckPaused();
+
+      expect(logSpy).toHaveBeenCalledWith("[spa-guard] Version check paused (tab hidden)");
+    });
+
+    it("versionCheckResumed logs at log level", () => {
+      const logger = createLogger();
+
+      logger.versionCheckResumed();
+
+      expect(logSpy).toHaveBeenCalledWith("[spa-guard] Version check resumed (tab visible)");
+    });
+
+    it("versionCheckResumedImmediate logs at log level", () => {
+      const logger = createLogger();
+
+      logger.versionCheckResumedImmediate();
+
+      expect(logSpy).toHaveBeenCalledWith(
+        "[spa-guard] Version check resumed with immediate check (tab visible, interval elapsed)",
+      );
+    });
   });
 
   describe("generic methods", () => {

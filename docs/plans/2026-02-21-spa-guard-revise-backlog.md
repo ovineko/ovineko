@@ -77,13 +77,13 @@ Pause version polling when the browser tab is hidden (Page Visibility API). Resu
 - Modify: `packages/spa-guard/src/common/checkVersion.ts`
 - Modify: `packages/spa-guard/src/common/logger.ts` (add log methods for pause/resume)
 
-- [ ] add `document.visibilitychange` listener inside `startVersionCheck()`
-- [ ] on hidden: clear the polling interval, record timestamp of last check
-- [ ] on visible: calculate elapsed time since last check; if >= interval, fetch immediately then restart interval; if < interval, set a one-shot timeout for the remaining time then restart interval
-- [ ] add Logger methods: `versionCheckPaused()`, `versionCheckResumed()`, `versionCheckResumedImmediate()`
-- [ ] clean up visibility listener in `stopVersionCheck()`
-- [ ] write tests: mock `document.visibilityState` and `visibilitychange` events to verify pause/resume/immediate-check behavior
-- [ ] run project test suite - must pass before task 4
+- [x] add `document.visibilitychange` listener inside `startVersionCheck()`
+- [x] on hidden: clear the polling interval, record timestamp of last check
+- [x] on visible: calculate elapsed time since last check; if >= interval, fetch immediately then restart interval; if < interval, set a one-shot timeout for the remaining time then restart interval
+- [x] add Logger methods: `versionCheckPaused()`, `versionCheckResumed()`, `versionCheckResumedImmediate()`
+- [x] clean up visibility listener in `stopVersionCheck()`
+- [x] write tests: mock `document.visibilityState` and `visibilitychange` events to verify pause/resume/immediate-check behavior
+- [x] run project test suite - must pass before task 4
 
 ### Task 4: Auto-generate version in Vite plugin
 

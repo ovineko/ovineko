@@ -24,7 +24,10 @@ export interface Logger {
   versionCheckFailed(error: unknown): void;
   versionCheckHttpError(status: number): void;
   versionCheckParseError(): void;
+  versionCheckPaused(): void;
   versionCheckRequiresEndpoint(): void;
+  versionCheckResumed(): void;
+  versionCheckResumedImmediate(): void;
   versionCheckStarted(mode: string, interval: number, version: string): void;
   versionCheckStopped(): void;
   warn(msg: string, ...args: unknown[]): void;
@@ -155,8 +158,19 @@ export const createLogger = (): Logger => ({
   versionCheckParseError(): void {
     console.warn(`${PREFIX} Failed to parse version from HTML`);
   },
+  versionCheckPaused(): void {
+    console.log(`${PREFIX} Version check paused (tab hidden)`);
+  },
   versionCheckRequiresEndpoint(): void {
     console.warn(`${PREFIX} JSON version check mode requires endpoint`);
+  },
+  versionCheckResumed(): void {
+    console.log(`${PREFIX} Version check resumed (tab visible)`);
+  },
+  versionCheckResumedImmediate(): void {
+    console.log(
+      `${PREFIX} Version check resumed with immediate check (tab visible, interval elapsed)`,
+    );
   },
   versionCheckStarted(mode: string, interval: number, version: string): void {
     console.log(
