@@ -52,5 +52,5 @@ The ESLint rule `no-direct-lazy` in packages/spa-guard correctly transforms the 
 
 ### Task 4: Update documentation
 
-- [ ] Update CLAUDE.md if internal patterns changed
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Update CLAUDE.md if internal patterns changed
+- [x] Move this plan to `docs/plans/completed/`
