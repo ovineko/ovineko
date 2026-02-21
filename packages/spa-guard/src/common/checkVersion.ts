@@ -64,6 +64,10 @@ const onVersionChange = (oldVersion: null | string, latestVersion: string): void
   }
 
   getLogger()?.versionChangeDetected(oldVersion, latestVersion);
+
+  if (getOptions().checkVersion?.onUpdate !== "event") {
+    globalThis.location.reload();
+  }
 };
 
 const checkVersionOnce = async (mode: "html" | "json"): Promise<void> => {

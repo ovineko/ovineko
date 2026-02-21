@@ -78,9 +78,17 @@ describe("common/checkVersion", () => {
   let mod: Awaited<ReturnType<typeof loadModule>>;
   let originalFetch: typeof globalThis.fetch;
   let mockLogger: ReturnType<typeof createMockLogger>;
+  let mockLocationReload: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     originalFetch = globalThis.fetch;
+    mockLocationReload = vi.fn();
+    Object.defineProperty(globalThis.location, "reload", {
+      configurable: true,
+      value: mockLocationReload,
+      writable: true,
+    });
+
     vi.useFakeTimers();
     vi.resetModules();
     clearWindowOptions();
@@ -805,6 +813,89 @@ describe("common/checkVersion", () => {
       // Only one fetch from the single resume
       await vi.advanceTimersByTimeAsync(0);
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("onUpdate auto-reload behavior", () => {
+    it("calls location.reload() by default when version changes", async () => {
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json" },
+        version: "1.0.0",
+      });
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        json: async () => ({ version: "2.0.0" }),
+        ok: true,
+      });
+
+      mod.startVersionCheck();
+      await vi.advanceTimersByTimeAsync(1000);
+
+      expect(mockLocationReload).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls location.reload() when onUpdate is explicitly "reload"', async () => {
+      setWindowOptions({
+        checkVersion: {
+          endpoint: "/api/version",
+          interval: 1000,
+          mode: "json",
+          onUpdate: "reload",
+        },
+        version: "1.0.0",
+      });
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        json: async () => ({ version: "2.0.0" }),
+        ok: true,
+      });
+
+      mod.startVersionCheck();
+      await vi.advanceTimersByTimeAsync(1000);
+
+      expect(mockLocationReload).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call location.reload() when onUpdate is "event"', async () => {
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json", onUpdate: "event" },
+        version: "1.0.0",
+      });
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        json: async () => ({ version: "2.0.0" }),
+        ok: true,
+      });
+
+      const dispatchEvent = vi.spyOn(globalThis, "dispatchEvent");
+
+      mod.startVersionCheck();
+      await vi.advanceTimersByTimeAsync(1000);
+
+      expect(dispatchEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: { latestVersion: "2.0.0", oldVersion: "1.0.0" },
+          type: "spa-guard:version-change",
+        }),
+      );
+      expect(mockLocationReload).not.toHaveBeenCalled();
+    });
+
+    it("does not call location.reload() when version is unchanged", async () => {
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json" },
+        version: "1.0.0",
+      });
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        json: async () => ({ version: "1.0.0" }),
+        ok: true,
+      });
+
+      mod.startVersionCheck();
+      await vi.advanceTimersByTimeAsync(1000);
+
+      expect(mockLocationReload).not.toHaveBeenCalled();
     });
   });
 });

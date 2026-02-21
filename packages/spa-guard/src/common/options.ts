@@ -7,6 +7,7 @@ const defaultOptions: Options = {
   checkVersion: {
     interval: 60_000,
     mode: "html",
+    onUpdate: "reload",
   },
   enableRetryReset: true,
   fallback: {
@@ -48,6 +49,13 @@ export interface Options {
      * @default "html"
      */
     mode?: "html" | "json";
+    /**
+     * Behavior when a version change is detected.
+     * - "reload": Automatically calls location.reload() after dispatching the event.
+     * - "event": Only dispatches the spa-guard:version-change CustomEvent (no reload).
+     * @default "reload"
+     */
+    onUpdate?: "event" | "reload";
   };
 
   /**

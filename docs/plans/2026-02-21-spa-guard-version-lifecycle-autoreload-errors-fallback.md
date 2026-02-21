@@ -91,11 +91,11 @@ Four improvements from revise.txt and revise2.txt:
 - Modify: `packages/spa-guard/src/common/options.ts`
 - Modify: `packages/spa-guard/src/common/checkVersion.ts`
 
-- [ ] add `checkVersion.onUpdate?: "reload" | "event"` to Options interface, default `"reload"` in `defaultOptions`
-- [ ] update `getOptions()` - already merges `checkVersion` sub-object, so no extra work needed
-- [ ] in `onVersionChange()`: after dispatching the CustomEvent, check `getOptions().checkVersion?.onUpdate`; if `"reload"` (default), call `location.reload()`; if `"event"`, do nothing extra (current behavior)
-- [ ] write tests for: default reload behavior on version change, explicit `"event"` mode dispatches event without reload, explicit `"reload"` mode reloads
-- [ ] run project test suite - must pass before task 6
+- [x] add `checkVersion.onUpdate?: "reload" | "event"` to Options interface, default `"reload"` in `defaultOptions`
+- [x] update `getOptions()` - already merges `checkVersion` sub-object, so no extra work needed
+- [x] in `onVersionChange()`: after dispatching the CustomEvent, check `getOptions().checkVersion?.onUpdate`; if `"reload"` (default), call `location.reload()`; if `"event"`, do nothing extra (current behavior)
+- [x] write tests for: default reload behavior on version change, explicit `"event"` mode dispatches event without reload, explicit `"reload"` mode reloads
+- [x] run project test suite - must pass before task 6
 
 ### Task 6: Restructure error options - add forceRetry
 
