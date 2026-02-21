@@ -44,13 +44,13 @@ Four improvements from revise.txt and revise2.txt:
 - Modify: `packages/spa-guard/scripts/generate-fallback.ts`
 - Modify: `packages/spa-guard/src/common/fallbackHtml.generated.ts`
 
-- [ ] create `fallback-error.html` - minimal error fallback similar to the old pre-unification style: centered on page, no colors on heading (just default), plain default `<button>` elements (no background-color, no border styling, no border-radius), no custom fonts (no font-family at all), no animations, no spinner; keep data-spa-guard attributes for action/content binding; just: heading "Something went wrong", message paragraph, "Try again" button (hidden by default), "Reload page" button with onclick, Error ID span
-- [ ] create `fallback-loading.html` - minimal loading fallback: centered on page/block, just plain text "Loading..." (an `<h2>` or `<p>`), no spinner, no animation, no styles beyond centering; include data-spa-guard-section="retrying" and data-spa-guard-content="attempt" span for retry attempt display
-- [ ] delete old `fallback.html`
-- [ ] update `generate-fallback.ts` to read both HTML files and generate two exports: `defaultErrorFallbackHtml` and `defaultLoadingFallbackHtml`
-- [ ] update `fallbackHtml.generated.ts` to export both constants (auto-generated)
-- [ ] write tests for generator script producing both constants
-- [ ] run project test suite - must pass before task 3
+- [x] create `fallback-error.html` - minimal error fallback similar to the old pre-unification style: centered on page, no colors on heading (just default), plain default `<button>` elements (no background-color, no border styling, no border-radius), no custom fonts (no font-family at all), no animations, no spinner; keep data-spa-guard attributes for action/content binding; just: heading "Something went wrong", message paragraph, "Try again" button (hidden by default), "Reload page" button with onclick, Error ID span
+- [x] create `fallback-loading.html` - minimal loading fallback: centered on page/block, just plain text "Loading..." (an `<h2>` or `<p>`), no spinner, no animation, no styles beyond centering; include data-spa-guard-section="retrying" and data-spa-guard-content="attempt" span for retry attempt display
+- [x] delete old `fallback.html`
+- [x] update `generate-fallback.ts` to read both HTML files and generate two exports: `defaultErrorFallbackHtml` and `defaultLoadingFallbackHtml`
+- [x] update `fallbackHtml.generated.ts` to export both constants (auto-generated)
+- [x] write tests for generator script producing both constants
+- [x] run project test suite - must pass before task 3
 
 ### Task 3: Update React components to use new fallback constants
 

@@ -1,5 +1,5 @@
 import { optionsWindowKey } from "./constants";
-import { defaultFallbackHtml } from "./fallbackHtml.generated";
+import { defaultErrorFallbackHtml } from "./fallbackHtml.generated";
 
 export { optionsWindowKey } from "./constants";
 
@@ -10,7 +10,7 @@ const defaultOptions: Options = {
   },
   enableRetryReset: true,
   fallback: {
-    html: defaultFallbackHtml,
+    html: defaultErrorFallbackHtml,
     selector: "body",
   },
   ignoredErrors: [],

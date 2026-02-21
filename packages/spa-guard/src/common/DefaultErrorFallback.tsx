@@ -2,7 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 
 import type { SpaGuardState } from "../runtime";
 
-import { defaultFallbackHtml } from "./fallbackHtml.generated";
+import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./fallbackHtml.generated";
 
 interface DefaultErrorFallbackProps {
   error: unknown;
@@ -22,9 +22,9 @@ const escapeHtml = (str: string): string =>
 /**
  * Default fallback UI component for error boundaries.
  *
- * Renders the shared fallbackHtml template via dangerouslySetInnerHTML,
- * with string replacements applied for the current state (retrying or error).
- * This ensures visual consistency with the non-React fallback path.
+ * Uses two separate HTML templates: one for loading/retrying state
+ * and one for error state. Renders via dangerouslySetInnerHTML with
+ * string replacements for dynamic content.
  */
 export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
   error,
@@ -35,17 +35,13 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  let html = defaultFallbackHtml;
+  let html: string;
 
   if (isRetrying) {
-    html = html
+    html = defaultLoadingFallbackHtml
       .replace(
-        'data-spa-guard-section="retrying" style="display:none;',
-        'data-spa-guard-section="retrying" style="display:flex;',
-      )
-      .replace(
-        'data-spa-guard-section="error">',
-        'data-spa-guard-section="error" style="display:none">',
+        'data-spa-guard-section="retrying" style="display:none"',
+        'data-spa-guard-section="retrying" style="display:block"',
       )
       .replace(
         'Retry attempt <span data-spa-guard-content="attempt"></span>',
@@ -55,14 +51,14 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
     const heading = isChunk ? "Failed to load module" : "Something went wrong";
     const message = error instanceof Error ? error.message : String(error);
 
-    html = html
+    html = defaultErrorFallbackHtml
       .replace(">Something went wrong</h1>", `>${escapeHtml(heading)}</h1>`)
       .replace(">Please refresh the page to continue.</p>", `>${escapeHtml(message)}</p>`);
 
     if (onReset) {
       html = html.replace(
-        'data-spa-guard-action="try-again" type="button" style="display:none;',
-        'data-spa-guard-action="try-again" type="button" style="display:inline-block;',
+        'data-spa-guard-action="try-again" type="button" style="display:none"',
+        'data-spa-guard-action="try-again" type="button" style="display:inline-block"',
       );
     }
   }
@@ -78,14 +74,6 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
       if (tryAgainBtn) {
         const handler = () => onReset();
         tryAgainBtn.addEventListener("click", handler);
-
-        const reloadBtn = el.querySelector(
-          '[data-spa-guard-action="reload"]',
-        ) as HTMLElement | null;
-        if (reloadBtn) {
-          reloadBtn.style.backgroundColor = "#95a5a6";
-        }
-
         return () => tryAgainBtn.removeEventListener("click", handler);
       }
     }

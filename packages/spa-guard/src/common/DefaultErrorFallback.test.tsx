@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SpaGuardState } from "../runtime";
 
 import { DefaultErrorFallback } from "./DefaultErrorFallback";
-import { defaultFallbackHtml } from "./fallbackHtml.generated";
+import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./fallbackHtml.generated";
 
 const defaultState: SpaGuardState = {
   currentAttempt: 0,
@@ -33,8 +33,8 @@ describe("DefaultErrorFallback", () => {
     vi.restoreAllMocks();
   });
 
-  describe("uses shared fallbackHtml template", () => {
-    it("renders the defaultFallbackHtml template via dangerouslySetInnerHTML", () => {
+  describe("uses separate error and loading templates", () => {
+    it("renders error template data attributes when not retrying", () => {
       const { container } = render(
         <DefaultErrorFallback
           error={new Error("test")}
@@ -44,28 +44,51 @@ describe("DefaultErrorFallback", () => {
         />,
       );
 
-      // The template's data attributes should be present in the rendered DOM
-      expect(container.querySelector('[data-spa-guard-section="retrying"]')).toBeInTheDocument();
-      expect(container.querySelector('[data-spa-guard-section="error"]')).toBeInTheDocument();
       expect(container.querySelector('[data-spa-guard-content="heading"]')).toBeInTheDocument();
       expect(container.querySelector('[data-spa-guard-content="message"]')).toBeInTheDocument();
       expect(container.querySelector('[data-spa-guard-action="reload"]')).toBeInTheDocument();
     });
 
-    it("retrying section is hidden by default in the template", () => {
-      // Verify the static template has retrying hidden
-      expect(defaultFallbackHtml).toContain(
-        'data-spa-guard-section="retrying" style="display:none;',
+    it("renders loading template data attributes when retrying", () => {
+      const { container } = render(
+        <DefaultErrorFallback
+          error={new Error("test")}
+          isChunkError={false}
+          isRetrying={true}
+          spaGuardState={retryingStateAttempt1}
+        />,
       );
+
+      expect(container.querySelector('[data-spa-guard-section="retrying"]')).toBeInTheDocument();
+      expect(container.querySelector('[data-spa-guard-content="attempt"]')).not.toBeInTheDocument();
     });
 
-    it("template contains both retrying and error sections", () => {
-      expect(defaultFallbackHtml).toContain('data-spa-guard-section="retrying"');
-      expect(defaultFallbackHtml).toContain('data-spa-guard-section="error"');
+    it("error template has no spinner or animation keyframes", () => {
+      expect(defaultErrorFallbackHtml).not.toContain("@keyframes");
+      expect(defaultErrorFallbackHtml).not.toContain("animation");
     });
 
-    it("template contains spinner animation keyframes", () => {
-      expect(defaultFallbackHtml).toContain("@keyframes spa-guard-spin");
+    it("loading template has no spinner or animation keyframes", () => {
+      expect(defaultLoadingFallbackHtml).not.toContain("@keyframes");
+      expect(defaultLoadingFallbackHtml).not.toContain("animation");
+    });
+
+    it("error template has no custom font-family", () => {
+      expect(defaultErrorFallbackHtml).not.toContain("font-family");
+    });
+
+    it("loading template has no custom font-family", () => {
+      expect(defaultLoadingFallbackHtml).not.toContain("font-family");
+    });
+
+    it("error template has no custom colors on heading", () => {
+      expect(defaultErrorFallbackHtml).not.toContain("color:#e74c3c");
+      expect(defaultErrorFallbackHtml).not.toContain("color: #e74c3c");
+    });
+
+    it("error template buttons have no background-color or border-radius styling", () => {
+      expect(defaultErrorFallbackHtml).not.toContain("background-color");
+      expect(defaultErrorFallbackHtml).not.toContain("border-radius");
     });
   });
 
@@ -194,22 +217,6 @@ describe("DefaultErrorFallback", () => {
       fireEvent.click(screen.getByRole("button", { name: "Try again" }));
       expect(onReset).toHaveBeenCalledTimes(1);
     });
-
-    it("hides retrying section when not retrying", () => {
-      const { container } = render(
-        <DefaultErrorFallback
-          error={new Error("test")}
-          isChunkError={false}
-          isRetrying={false}
-          spaGuardState={defaultState}
-        />,
-      );
-
-      const retryingSection = container.querySelector(
-        '[data-spa-guard-section="retrying"]',
-      ) as HTMLElement;
-      expect(retryingSection.style.display).toBe("none");
-    });
   });
 
   describe("retrying state", () => {
@@ -239,22 +246,6 @@ describe("DefaultErrorFallback", () => {
       expect(screen.getByText("Retry attempt 2")).toBeInTheDocument();
     });
 
-    it("hides error section when retrying", () => {
-      const { container } = render(
-        <DefaultErrorFallback
-          error={new Error("test")}
-          isChunkError={false}
-          isRetrying={true}
-          spaGuardState={retryingStateAttempt1}
-        />,
-      );
-
-      const errorSection = container.querySelector(
-        '[data-spa-guard-section="error"]',
-      ) as HTMLElement;
-      expect(errorSection.style.display).toBe("none");
-    });
-
     it("shows retrying section when retrying", () => {
       const { container } = render(
         <DefaultErrorFallback
@@ -268,12 +259,12 @@ describe("DefaultErrorFallback", () => {
       const retryingSection = container.querySelector(
         '[data-spa-guard-section="retrying"]',
       ) as HTMLElement;
-      expect(retryingSection.style.display).toBe("flex");
+      expect(retryingSection.style.display).toBe("block");
     });
   });
 
   describe("HTML structure consistency", () => {
-    it("non-React fallback and React fallback share the same base template", () => {
+    it("error template renders action buttons and Error ID span", () => {
       const { container } = render(
         <DefaultErrorFallback
           error={new Error("test")}
@@ -283,10 +274,7 @@ describe("DefaultErrorFallback", () => {
         />,
       );
 
-      // Both paths should use the same data attribute markers
       const markers = [
-        '[data-spa-guard-section="retrying"]',
-        '[data-spa-guard-section="error"]',
         '[data-spa-guard-content="heading"]',
         '[data-spa-guard-action="reload"]',
         ".spa-guard-retry-id",
@@ -297,7 +285,7 @@ describe("DefaultErrorFallback", () => {
       }
     });
 
-    it("renders the same button structure as the non-React fallback template", () => {
+    it("renders the reload button with onclick attribute", () => {
       const { container } = render(
         <DefaultErrorFallback
           error={new Error("test")}
@@ -307,7 +295,6 @@ describe("DefaultErrorFallback", () => {
         />,
       );
 
-      // The reload button from the template should have the onclick attribute
       const reloadBtn = container.querySelector('[data-spa-guard-action="reload"]');
       expect(reloadBtn).toHaveAttribute("onclick", "location.reload()");
     });
