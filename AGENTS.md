@@ -24,7 +24,7 @@ This monorepo contains the following packages:
 
 - **@ovineko/react-router**: Type-safe wrapper for React Router v7 with valibot schema validation, automatic error handling, and typed params
 - **@ovineko/react-error-boundary**: Error boundary utilities for React with optional Sentry integration
-- **@ovineko/spa-guard**: Production-ready chunk load error handling for SPAs — automatic retry with cache busting, `lazyWithRetry` for module-level retry before page reload, beacon error reporting, React error boundaries, Fastify plugin, and Vite plugin
+- **@ovineko/spa-guard**: Production-ready chunk load error handling for SPAs — automatic retry with cache busting, `lazyWithRetry` for module-level retry before page reload, beacon error reporting, React error boundaries, debug test panel, Fastify plugin, and Vite plugin
 - **@ovineko/clean-pkg-json**: Zero-config tool to clean package.json before publishing and restore it after
 - **@ovineko/datamitsu-config**: Internal configuration package for datamitsu tooling (linting, formatting, etc.)
 - **@ovineko/fastify-base**: Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck, and other common integrations
@@ -36,7 +36,7 @@ ovineko/
 ├── packages/                    # All publishable packages
 │   ├── react-router/           # Type-safe React Router v7 wrapper (valibot validation)
 │   ├── react-error-boundary/   # Error boundaries with Sentry integration
-│   ├── spa-guard/              # Chunk load error handling for SPAs (lazyWithRetry, beacons, Vite plugin)
+│   ├── spa-guard/              # Chunk load error handling for SPAs (lazyWithRetry, beacons, debug panel, Vite plugin)
 │   ├── clean-pkg-json/         # Package.json cleanup tool for publishing
 │   ├── datamitsu-config/       # Shared config for datamitsu tooling
 │   └── fastify-base/           # Pre-configured Fastify server with observability

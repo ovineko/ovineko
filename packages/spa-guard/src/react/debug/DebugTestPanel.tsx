@@ -1,4 +1,4 @@
-import { type CSSProperties, useCallback, useMemo, useState } from "react";
+import { type CSSProperties, useCallback, useMemo, useRef, useState } from "react";
 
 import type { SPAGuardEvent } from "../../common/events/types";
 
@@ -55,10 +55,17 @@ const PANEL_STYLE: CSSProperties = {
 
 const HEADER_STYLE: CSSProperties = {
   alignItems: "center",
+  background: "none",
+  border: "none",
+  color: "inherit",
   cursor: "pointer",
   display: "flex",
+  fontFamily: "inherit",
+  fontSize: "inherit",
   justifyContent: "space-between",
+  padding: 0,
   userSelect: "none",
+  width: "100%",
 };
 
 const BUTTON_BASE_STYLE: CSSProperties = {
@@ -148,7 +155,7 @@ const SCENARIOS = [
 
 type ScenarioKey = (typeof SCENARIOS)[number]["key"];
 
-let nextEventId = 0;
+const MAX_EVENT_HISTORY = 100;
 
 function createInitialButtonStates(): Record<ScenarioKey, ButtonState> {
   const states = {} as Record<ScenarioKey, ButtonState>;
@@ -171,10 +178,14 @@ export const DebugTestPanel = ({
   const [buttonStates, setButtonStates] = useState(createInitialButtonStates);
   const [eventHistory, setEventHistory] = useState<EventHistoryEntry[]>([]);
   const spaGuardState = useSpaGuardState();
+  const nextEventIdRef = useRef(0);
 
   useSPAGuardEvents(
     useCallback((event: SPAGuardEvent) => {
-      setEventHistory((prev) => [...prev, { event, id: nextEventId++, timestamp: Date.now() }]);
+      setEventHistory((prev) => {
+        const next = [...prev, { event, id: nextEventIdRef.current++, timestamp: Date.now() }];
+        return next.length > MAX_EVENT_HISTORY ? next.slice(-MAX_EVENT_HISTORY) : next;
+      });
     }, []),
   );
 
@@ -231,16 +242,15 @@ export const DebugTestPanel = ({
 
   return (
     <div data-testid="spa-guard-debug-panel" style={panelStyle}>
-      <div
+      <button
         data-testid="debug-panel-header"
         onClick={() => setIsOpen((o) => !o)}
-        role="button"
         style={HEADER_STYLE}
-        tabIndex={0}
+        type="button"
       >
         <span>spa-guard debug</span>
         <span>{isOpen ? "\u25B2" : "\u25BC"}</span>
-      </div>
+      </button>
 
       {isOpen && (
         <div data-testid="debug-panel-content" style={CONTENT_STYLE}>

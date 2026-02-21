@@ -63,7 +63,7 @@ describe("DebugTestPanel", () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe("rendering", () => {
@@ -205,6 +205,21 @@ describe("DebugTestPanel", () => {
       expect(screen.getByTestId("debug-btn-network-timeout").textContent).toBe("Network Timeout");
       expect(screen.getByTestId("debug-btn-runtime-error").textContent).toBe("Runtime Error");
       expect(screen.getByTestId("debug-btn-finally-error").textContent).toBe("Finally Error");
+    });
+
+    it("shows loading state with ellipsis and disables button while simulator is pending", async () => {
+      // Make the simulator return a promise that never resolves
+      mockSimulateChunkLoadError.mockReturnValue(new Promise(() => {}));
+
+      render(<DebugTestPanel />);
+
+      fireEvent.click(screen.getByTestId("debug-btn-chunk-load-error"));
+
+      await waitFor(() => {
+        const button = screen.getByTestId("debug-btn-chunk-load-error");
+        expect(button.textContent).toBe("ChunkLoadError...");
+        expect(button).toBeDisabled();
+      });
     });
 
     it("shows triggered state after error fires", async () => {

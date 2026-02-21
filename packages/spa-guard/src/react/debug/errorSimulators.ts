@@ -32,8 +32,8 @@ export function simulateNetworkTimeout(delayMs = 3000): Promise<never> {
 }
 
 /**
- * Throws a runtime error synchronously. When called inside a React component's
- * render or event handler, this will be caught by a React error boundary.
+ * Throws a runtime error synchronously. In the DebugTestPanel, this is caught
+ * by the panel's own try/catch and forwarded to the onErrorTriggered callback.
  */
 export function simulateRuntimeError(): never {
   throw new Error("Simulated runtime error from spa-guard debug panel");
