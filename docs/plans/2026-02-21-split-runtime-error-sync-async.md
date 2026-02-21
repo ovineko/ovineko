@@ -73,10 +73,10 @@ React Error Boundaries only catch errors thrown during rendering. The vanilla de
 
 ### Task 5: Verify acceptance criteria
 
-- [ ] Run full test suite (pnpm test in packages/spa-guard)
-- [ ] Run linter (pnpm lint in packages/spa-guard)
-- [ ] Run typecheck (pnpm typecheck in packages/spa-guard)
-- [ ] Verify test coverage meets 80%+
+- [x] Run full test suite (pnpm test in packages/spa-guard)
+- [x] Run linter (pnpm lint in packages/spa-guard)
+- [x] Run typecheck (pnpm typecheck in packages/spa-guard)
+- [x] Verify test coverage meets 80%+
 
 ### Task 6: Update documentation
 
