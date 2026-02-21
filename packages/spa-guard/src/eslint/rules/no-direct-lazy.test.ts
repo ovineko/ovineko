@@ -82,6 +82,24 @@ ruleTester.run("no-direct-lazy", rule, {
       errors: [{ messageId: "noDirectLazy" }],
       output: `import { lazyWithRetry as myLazy } from "${name}/react";\nconst Page = myLazy(() => import("./Page"));`,
     },
+    {
+      // lazy() inside a nested scope (function body) should also be renamed
+      code: 'import { lazy } from "react";\nfunction loadRoutes() { return lazy(() => import("./Page")); }',
+      errors: [{ messageId: "noDirectLazy" }],
+      output: `import { lazyWithRetry } from "${name}/react";\nfunction loadRoutes() { return lazyWithRetry(() => import("./Page")); }`,
+    },
+    {
+      // Shadowed lazy in nested scope should NOT be renamed
+      code: 'import { lazy } from "react";\nconst Page = lazy(() => import("./Page"));\nfunction foo() { const lazy = 1; return lazy; }',
+      errors: [{ messageId: "noDirectLazy" }],
+      output: `import { lazyWithRetry } from "${name}/react";\nconst Page = lazyWithRetry(() => import("./Page"));\nfunction foo() { const lazy = 1; return lazy; }`,
+    },
+    {
+      // Default import with lazy() usage: split import and rename usage
+      code: 'import React, { lazy } from "react";\nconst Page = lazy(() => import("./Page"));',
+      errors: [{ messageId: "noDirectLazy" }],
+      output: `import React from "react";\nimport { lazyWithRetry } from "${name}/react";\nconst Page = lazyWithRetry(() => import("./Page"));`,
+    },
   ],
   valid: [
     {
