@@ -47,10 +47,10 @@ React Error Boundaries only catch errors thrown during rendering. The vanilla de
 - Create: `packages/spa-guard/src/react/DebugSyncErrorTrigger.tsx`
 - Modify: `packages/spa-guard/src/react/index.tsx` (add export)
 
-- [ ] Implement DebugSyncErrorTrigger: useEffect subscribes to CustomEvent, useState stores pending error, throws error during render if set
-- [ ] Export from react/index.tsx
-- [ ] Write tests: verify component throws on event dispatch, verify ErrorBoundary catches the thrown error, verify cleanup removes listener
-- [ ] Run test suite
+- [x] Implement DebugSyncErrorTrigger: useEffect subscribes to CustomEvent, useState stores pending error, throws error during render if set
+- [x] Export from react/index.tsx
+- [x] Write tests: verify component throws on event dispatch, verify ErrorBoundary catches the thrown error, verify cleanup removes listener
+- [x] Run test suite
 
 ### Task 3: Update debug panel buttons
 
