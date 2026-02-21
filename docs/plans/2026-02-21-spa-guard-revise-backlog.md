@@ -60,13 +60,13 @@ The user reports retry attempts resetting mid-cycle (sequence like 1,1,2,1,2,1,2
 - Modify: `packages/spa-guard/src/common/checkVersion.ts`
 - Possibly rename: `packages/spa-guard/src/common/` -> `packages/spa-guard/src/core/`
 
-- [ ] evaluate renaming `common/` to `core/` - check all import paths, tsup entry points, package.json exports; decide go/no-go based on scope
-- [ ] if renaming: update all imports, tsup configs, and package.json exports map
-- [ ] move `startVersionCheck` and `stopVersionCheck` exports from `common/index.ts` to `runtime/index.ts`
-- [ ] update package.json exports if needed (the `./runtime` entry)
-- [ ] update README.md API reference to reflect new import path
-- [ ] write/update tests confirming runtime exports include version check functions
-- [ ] run project test suite - must pass before task 3
+- [x] evaluate renaming `common/` to `core/` - check all import paths, tsup entry points, package.json exports; decide go/no-go based on scope
+- [x] if renaming: update all imports, tsup configs, and package.json exports map
+- [x] move `startVersionCheck` and `stopVersionCheck` exports from `common/index.ts` to `runtime/index.ts`
+- [x] update package.json exports if needed (the `./runtime` entry)
+- [x] update README.md API reference to reflect new import path
+- [x] write/update tests confirming runtime exports include version check functions
+- [x] run project test suite - must pass before task 3
 
 ### Task 3: Add visibility-based version check pausing
 

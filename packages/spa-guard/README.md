@@ -654,7 +654,7 @@ The version is automatically injected by the Vite plugin from your project's `pa
 
 ```tsx
 import { useEffect } from "react";
-import { startVersionCheck } from "@ovineko/spa-guard";
+import { startVersionCheck } from "@ovineko/spa-guard/runtime";
 
 function App() {
   useEffect(() => {
@@ -727,13 +727,8 @@ When default retry is disabled, chunk errors will still emit events (via `subscr
 The core module provides low-level APIs for custom integrations:
 
 ```typescript
-import {
-  events,
-  listen,
-  options,
-  startVersionCheck,
-  disableDefaultRetry,
-} from "@ovineko/spa-guard";
+import { events, listen, options, disableDefaultRetry } from "@ovineko/spa-guard";
+import { startVersionCheck } from "@ovineko/spa-guard/runtime";
 
 // Subscribe to spa-guard events
 events.subscribe((event) => {
@@ -966,8 +961,6 @@ From `@ovineko/spa-guard`:
 - `listen()` - Initialize error listeners
 - `options.getOptions()` - Get merged options from globalThis.window
 - `options.optionsWindowKey` - Window storage key constant
-- `startVersionCheck()` - Start periodic version polling
-- `stopVersionCheck()` - Stop version polling
 - `disableDefaultRetry()` - Disable inline script's automatic retry
 - `enableDefaultRetry()` - Re-enable automatic retry
 - `isDefaultRetryEnabled()` - Check if default retry is enabled
@@ -989,6 +982,8 @@ From `@ovineko/spa-guard/runtime`:
 
 - `getState()` - Get current spa-guard state (currentAttempt, isFallbackShown, isWaiting, lastRetryResetTime, lastResetRetryId)
 - `subscribeToState(callback)` - Subscribe to state changes, returns unsubscribe function
+- `startVersionCheck()` - Start periodic version polling
+- `stopVersionCheck()` - Stop version polling
 - `SpaGuardState` - TypeScript type for state object
 
 **Example:**
@@ -1234,10 +1229,10 @@ spa-guard provides 11 export entry points:
 
 ```typescript
 // Core
-import { events, listen, startVersionCheck, disableDefaultRetry } from "@ovineko/spa-guard";
+import { events, listen, disableDefaultRetry } from "@ovineko/spa-guard";
 
-// Runtime state
-import { getState, subscribeToState } from "@ovineko/spa-guard/runtime";
+// Runtime state + version check
+import { getState, subscribeToState, startVersionCheck } from "@ovineko/spa-guard/runtime";
 
 // React hooks and components
 import {
