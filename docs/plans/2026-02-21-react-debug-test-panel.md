@@ -67,12 +67,12 @@ Create a `DebugTestPanel` React component exported as a separate entry point `@o
 
 - Modify: `packages/spa-guard/src/react/debug/index.tsx`
 
-- [ ] Use `useSPAGuardEvents` hook to collect events into a scrollable history list
-- [ ] Use `useSpaGuardState` hook to display current spa-guard state (attempt, isWaiting, isFallbackShown)
-- [ ] Add clear history button
-- [ ] Add timestamps to event entries via `Date.now()` and `toLocaleTimeString()`
-- [ ] Write tests: events appear in history, state section updates, clear button works
-- [ ] Run test suite - must pass before task 5
+- [x] Use `useSPAGuardEvents` hook to collect events into a scrollable history list
+- [x] Use `useSpaGuardState` hook to display current spa-guard state (attempt, isWaiting, isFallbackShown)
+- [x] Add clear history button
+- [x] Add timestamps to event entries via `Date.now()` and `toLocaleTimeString()`
+- [x] Write tests: events appear in history, state section updates, clear button works
+- [x] Run test suite - must pass before task 5
 
 ### Task 5: Delete TODO.md
 
