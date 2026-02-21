@@ -72,8 +72,7 @@ const rule: Rule.RuleModule = {
 
   meta: {
     docs: {
-      description:
-        "Disallow importing lazy from React directly. Use lazyWithRetry from @ovineko/spa-guard/react instead.",
+      description: `Disallow importing lazy from React directly. Use lazyWithRetry from ${SPA_GUARD_SOURCE} instead.`,
       recommended: true,
     },
     fixable: "code",

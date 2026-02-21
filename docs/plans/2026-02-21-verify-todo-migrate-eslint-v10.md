@@ -89,15 +89,15 @@ Changes:
 
 ### Task 3: Verify acceptance criteria
 
-- [ ] TODO.md is deleted
-- [ ] ESLint plugin uses `satisfies ESLint.Plugin` typing
-- [ ] Plugin name is `@ovineko/spa-guard/eslint` (not just `@ovineko/spa-guard`)
-- [ ] No hardcoded `@ovineko/spa-guard` strings in eslint source files (uses `name` from package.json)
-- [ ] peerDependencies include eslint ^10, no ^8
-- [ ] @types/eslint removed from devDependencies
-- [ ] Run full test suite: `pnpm test`
-- [ ] Run linter: `pnpm lint`
-- [ ] Run typecheck: `pnpm typecheck`
+- [x] TODO.md is deleted
+- [x] ESLint plugin uses `satisfies ESLint.Plugin` typing
+- [x] Plugin name is `@ovineko/spa-guard/eslint` (not just `@ovineko/spa-guard`)
+- [x] No hardcoded `@ovineko/spa-guard` strings in eslint source files (uses `name` from package.json)
+- [x] peerDependencies include eslint ^10, no ^8
+- [x] @types/eslint removed from devDependencies
+- [x] Run full test suite: `pnpm test`
+- [x] Run linter: `pnpm lint`
+- [x] Run typecheck: `pnpm typecheck`
 
 ### Task 4: Update documentation
 

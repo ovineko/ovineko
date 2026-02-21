@@ -32,8 +32,7 @@ const rule: Rule.RuleModule = {
 
   meta: {
     docs: {
-      description:
-        "Disallow importing ErrorBoundary from react-error-boundary directly. Use @ovineko/spa-guard/react-error-boundary instead.",
+      description: `Disallow importing ErrorBoundary from react-error-boundary directly. Use ${SPA_GUARD_SOURCE} instead.`,
       recommended: true,
     },
     fixable: "code",
