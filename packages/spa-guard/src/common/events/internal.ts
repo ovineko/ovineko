@@ -1,6 +1,18 @@
-import type { InternalConfig, SPAGuardEvent, SubscribeFn, UnsubscribeFn } from "./types";
+import type { Logger } from "../logger";
+import type {
+  EmitOptions,
+  InternalConfig,
+  SPAGuardEvent,
+  SubscribeFn,
+  UnsubscribeFn,
+} from "./types";
 
-import { eventSubscribersWindowKey, initializedKey, internalConfigWindowKey } from "../constants";
+import {
+  eventSubscribersWindowKey,
+  initializedKey,
+  internalConfigWindowKey,
+  loggerWindowKey,
+} from "../constants";
 
 if (globalThis.window && !(globalThis.window as any)[eventSubscribersWindowKey]) {
   (globalThis.window as any)[eventSubscribersWindowKey] = new Set<SubscribeFn>();
@@ -25,7 +37,21 @@ export const internalConfig: InternalConfig = (globalThis.window as any)?.[
   inlineScriptLoaded: false,
 };
 
-export const emitEvent = (event: SPAGuardEvent) => {
+export const setLogger = (logger?: Logger): void => {
+  if (globalThis.window !== undefined) {
+    (globalThis.window as any)[loggerWindowKey] = logger;
+  }
+};
+
+export const getLogger = (): Logger | undefined => {
+  return (globalThis.window as any)?.[loggerWindowKey] as Logger | undefined;
+};
+
+export const emitEvent = (event: SPAGuardEvent, options?: EmitOptions) => {
+  if (!options?.silent) {
+    getLogger()?.logEvent(event);
+  }
+
   subscribers.forEach((cb) => {
     try {
       cb(event);

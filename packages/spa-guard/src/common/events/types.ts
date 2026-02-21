@@ -1,3 +1,7 @@
+export interface EmitOptions {
+  silent?: boolean;
+}
+
 export interface InternalConfig {
   defaultRetryEnabled: boolean;
   initialized: boolean;
