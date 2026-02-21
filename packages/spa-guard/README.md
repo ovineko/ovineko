@@ -10,58 +10,7 @@ pnpm add @ovineko/spa-guard
 
 Peer dependencies vary by integration - see sections below for specific requirements.
 
-## Breaking Changes
-
-### v\* - ESLint plugin naming convention changed
-
-The ESLint plugin name changed from `@ovineko/spa-guard` to `@ovineko/spa-guard/eslint`, and the minimum ESLint version was raised from `^8 || ^9` to `^9 || ^10`.
-
-**Migration (recommended):**
-
-```javascript
-// OLD
-import spaGuardPlugin from "@ovineko/spa-guard/eslint";
-export default [
-  {
-    plugins: { "@ovineko/spa-guard": spaGuardPlugin },
-    rules: { "@ovineko/spa-guard/no-direct-error-boundary": "error" },
-  },
-];
-
-// NEW (recommended)
-import spaGuardEslint from "@ovineko/spa-guard/eslint";
-export default [spaGuardEslint.configs.recommended];
-```
-
-If you need manual control over individual rules, the plugin key changed from `@ovineko/spa-guard` to `@ovineko/spa-guard/eslint`:
-
-```javascript
-plugins: { "@ovineko/spa-guard/eslint": spaGuardPlugin }
-rules: { "@ovineko/spa-guard/eslint/no-direct-error-boundary": "error" }
-```
-
-### v\* - `react-lazy` consolidated into `react`
-
-The `@ovineko/spa-guard/react-lazy` export has been removed. All React functionality is now available from a single `@ovineko/spa-guard/react` entry point.
-
-**Migration:**
-
-```typescript
-// OLD (no longer works)
-import { lazyWithRetry } from "@ovineko/spa-guard/react-lazy";
-import type { LazyRetryOptions } from "@ovineko/spa-guard/react-lazy";
-
-// NEW
-import { lazyWithRetry } from "@ovineko/spa-guard/react";
-import type { LazyRetryOptions } from "@ovineko/spa-guard/react";
-```
-
-Both `useSpaGuardState` and `lazyWithRetry` are now exported from the same `@ovineko/spa-guard/react` path:
-
-```typescript
-import { useSpaGuardState, lazyWithRetry } from "@ovineko/spa-guard/react";
-import type { LazyRetryOptions } from "@ovineko/spa-guard/react";
-```
+> **Alpha software:** This package is in active development (`0.0.1-alpha`). The public API may change between versions without migration guides. This README always reflects the current state.
 
 ## Features
 

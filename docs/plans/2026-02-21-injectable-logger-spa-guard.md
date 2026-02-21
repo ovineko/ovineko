@@ -177,11 +177,11 @@ Note: This is an alpha package. No backwards compatibility concerns. Breaking ch
 
 - Modify: `packages/spa-guard/README.md`
 
-- [ ] Remove entire "Breaking Changes" section (lines 13-64 with both migration guides)
-- [ ] Add a short alpha notice near the top (after Install section): this package is in alpha, public API may change between versions without migration guides, README always reflects the current state
-- [ ] Review rest of README for accuracy with current API after logging changes
-- [ ] Add note to CLAUDE.md or project conventions: while in alpha, no need to document breaking changes — just update README to reflect current state
-- [ ] Run linter on README if applicable
+- [x] Remove entire "Breaking Changes" section (lines 13-64 with both migration guides)
+- [x] Add a short alpha notice near the top (after Install section): this package is in alpha, public API may change between versions without migration guides, README always reflects the current state
+- [x] Review rest of README for accuracy with current API after logging changes
+- [x] Add note to CLAUDE.md or project conventions: while in alpha, no need to document breaking changes — just update README to reflect current state
+- [x] Run linter on README if applicable
 
 ### Task 7: Verify acceptance criteria
 
