@@ -139,9 +139,9 @@ Currently there are 3 different fallback UIs: the generated HTML string (used in
 
 - Modify: `AGENTS.md`
 
-- [ ] add section: after any change to core/common code that could affect inline scripts, agents must run `pnpm build:inline` and `pnpm build:inline-trace`
-- [ ] add instruction: check the build output for inline script sizes and update README.md bundle size table accordingly
-- [ ] run project test suite - must pass before task 8
+- [x] add section: after any change to core/common code that could affect inline scripts, agents must run `pnpm build:inline` and `pnpm build:inline-trace`
+- [x] add instruction: check the build output for inline script sizes and update README.md bundle size table accordingly
+- [x] run project test suite - must pass before task 8
 
 ### Task 8: Delete revise.txt and verify
 
