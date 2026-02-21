@@ -56,9 +56,9 @@ Add tests verifying the config export structure.
 
 ### Task 3: Verify acceptance criteria
 
-- [ ] Run full test suite: `pnpm --filter @ovineko/spa-guard test`
-- [ ] Run linter: `pnpm --filter @ovineko/spa-guard lint`
-- [ ] Verify test coverage meets 80%+: `pnpm --filter @ovineko/spa-guard test:coverage`
+- [x] Run full test suite: `pnpm --filter @ovineko/spa-guard test`
+- [x] Run linter: `pnpm --filter @ovineko/spa-guard lint`
+- [x] Verify test coverage meets 80%+: `pnpm --filter @ovineko/spa-guard test:coverage`
 
 ### Task 4: Update documentation
 
