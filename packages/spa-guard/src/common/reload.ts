@@ -8,12 +8,7 @@ import {
   shouldResetRetryCycle,
 } from "./lastReloadTime";
 import { getOptions } from "./options";
-import {
-  clearRetryStateFromUrl,
-  generateRetryId,
-  getRetryStateFromUrl,
-  updateRetryStateInUrl,
-} from "./retryState";
+import { clearRetryStateFromUrl, generateRetryId, getRetryStateFromUrl } from "./retryState";
 import { sendBeacon } from "./sendBeacon";
 import { shouldIgnoreMessages } from "./shouldIgnore";
 
@@ -24,7 +19,18 @@ const buildReloadUrl = (retryId: string, retryAttempt: number): string => {
   return url.toString();
 };
 
+let reloadScheduled = false;
+
+/** @internal Reset for testing only */
+export const resetReloadScheduled = (): void => {
+  reloadScheduled = false;
+};
+
 export const attemptReload = (error: unknown): void => {
+  if (reloadScheduled) {
+    getLogger()?.reloadAlreadyScheduled(error);
+    return;
+  }
   const options = getOptions();
   const reloadDelays = options.reloadDelays ?? [1000, 2000, 5000];
   const useRetryId = options.useRetryId ?? true;
@@ -36,11 +42,13 @@ export const attemptReload = (error: unknown): void => {
   let currentAttempt = retryState ? retryState.retryAttempt : 0;
   let retryId = retryState?.retryId ?? generateRetryId();
 
+  getLogger()?.retryCycleStarting(retryId, currentAttempt);
+
   const retryEnabled = isDefaultRetryEnabled();
 
   emitEvent({
     error,
-    isRetrying: retryEnabled && currentAttempt < reloadDelays.length,
+    isRetrying: retryEnabled && currentAttempt >= 0 && currentAttempt < reloadDelays.length,
     name: "chunk-error",
   });
 
@@ -129,6 +137,9 @@ export const attemptReload = (error: unknown): void => {
     { silent: shouldIgnoreMessages([errorMsg]) },
   );
 
+  reloadScheduled = true;
+  getLogger()?.retrySchedulingReload(retryId, nextAttempt, delay);
+
   setTimeout(() => {
     if (useRetryId && enableRetryReset) {
       setLastReloadTime(retryId, nextAttempt);
@@ -145,8 +156,8 @@ export const attemptReload = (error: unknown): void => {
 
 const showFallbackUI = (): void => {
   const options = getOptions();
-  const fallbackHtml = options.fallback?.html;
-  const selector = options.fallback?.selector ?? "body";
+  const fallbackHtml = options.html?.fallback?.content;
+  const selector = options.html?.fallback?.selector ?? "body";
 
   if (!fallbackHtml) {
     getLogger()?.noFallbackConfigured();
@@ -165,15 +176,9 @@ const showFallbackUI = (): void => {
     if (retryState && retryState.retryAttempt === -1) {
       getLogger()?.clearingRetryState();
       clearRetryStateFromUrl();
+    }
 
-      const retryIdElements = document.getElementsByClassName("spa-guard-retry-id");
-      for (const element of retryIdElements) {
-        element.textContent = retryState.retryId;
-      }
-    } else if (retryState) {
-      updateRetryStateInUrl(retryState.retryId, retryState.retryAttempt + 1);
-      getLogger()?.updatedRetryAttempt(retryState.retryAttempt + 1);
-
+    if (retryState) {
       const retryIdElements = document.getElementsByClassName("spa-guard-retry-id");
       for (const element of retryIdElements) {
         element.textContent = retryState.retryId;

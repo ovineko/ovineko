@@ -126,7 +126,7 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
 
     it("escapes < characters to prevent HTML injection", async () => {
       const result = await invokeTransform({
-        fallback: { html: "<script>alert('xss')</script>" },
+        html: { fallback: { content: "<script>alert('xss')</script>" } },
       });
       const script = result.tags[0].children as string;
 
@@ -138,7 +138,7 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
   describe("fallback HTML minification", () => {
     it("minifies fallback HTML when provided", async () => {
       const { minify } = await import("html-minifier-terser");
-      await invokeTransform({ fallback: { html: "<div>  <p>fallback</p>  </div>" } });
+      await invokeTransform({ html: { fallback: { content: "<div>  <p>fallback</p>  </div>" } } });
 
       expect(minify).toHaveBeenCalledWith(
         "<div>  <p>fallback</p>  </div>",
@@ -155,6 +155,56 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
       await invokeTransform();
 
       expect(minify).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("version auto-generation", () => {
+    it("auto-generates a UUID version when no version is provided", async () => {
+      const result = await invokeTransform();
+      const parsed = parseOptionsFromScript(result.tags[0].children as string);
+
+      expect(parsed.version).toBeDefined();
+      expect(parsed.version).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      );
+    });
+
+    it("uses the explicit version when provided", async () => {
+      const result = await invokeTransform({ version: "1.2.3" });
+      const parsed = parseOptionsFromScript(result.tags[0].children as string);
+
+      expect(parsed.version).toBe("1.2.3");
+    });
+
+    it("uses the same auto-generated version across multiple transforms", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin();
+      const handler = getTransformHandler(plugin);
+
+      const result1 = await handler("<html></html>");
+      const result2 = await handler("<html></html>");
+
+      const parsed1 = parseOptionsFromScript(result1.tags[0].children as string);
+      const parsed2 = parseOptionsFromScript(result2.tags[0].children as string);
+
+      expect(parsed1.version).toBe(parsed2.version);
+    });
+
+    it("generates different versions for different plugin instances", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin1 = spaGuardVitePlugin();
+      const plugin2 = spaGuardVitePlugin();
+
+      const handler1 = getTransformHandler(plugin1);
+      const handler2 = getTransformHandler(plugin2);
+
+      const result1 = await handler1("<html></html>");
+      const result2 = await handler2("<html></html>");
+
+      const parsed1 = parseOptionsFromScript(result1.tags[0].children as string);
+      const parsed2 = parseOptionsFromScript(result2.tags[0].children as string);
+
+      expect(parsed1.version).not.toBe(parsed2.version);
     });
   });
 

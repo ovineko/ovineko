@@ -269,12 +269,13 @@ describe("shouldResetRetryCycle", () => {
     expect(shouldResetRetryCycle(retryState, [1000])).toBe(false);
   });
 
-  it("returns true when enough time has passed since last reload", () => {
+  it("returns true when enough time has passed since last reload (exceeds delay + page load buffer)", () => {
     vi.useFakeTimers();
     vi.setSystemTime(1_000_000);
 
     setLastReloadTime("retry-abc", 1);
-    vi.advanceTimersByTime(2000);
+    // 1000ms delay + 30000ms page load buffer = 31000ms threshold; 35000ms > 31000ms
+    vi.advanceTimersByTime(35_000);
 
     const retryState = { retryAttempt: 1, retryId: "retry-abc" };
     expect(shouldResetRetryCycle(retryState, [1000])).toBe(true);
@@ -311,7 +312,8 @@ describe("shouldResetRetryCycle", () => {
     setLastReloadTime("retry-abc", 1);
     setLastRetryResetInfo("old-id");
 
-    vi.advanceTimersByTime(6000);
+    // Must exceed both minTimeBetweenResets (5000ms) and delay + page load buffer (31000ms)
+    vi.advanceTimersByTime(35_000);
 
     const retryState = { retryAttempt: 1, retryId: "retry-abc" };
     expect(shouldResetRetryCycle(retryState, [1000], 5000)).toBe(true);
@@ -337,10 +339,10 @@ describe("shouldResetRetryCycle", () => {
 
     // attemptNumber = 2, previousDelayIndex = 1, but reloadDelays only has index 0
     setLastReloadTime("retry-abc", 2);
-    vi.advanceTimersByTime(1500);
+    // defaults to 1000ms delay + 30000ms buffer = 31000ms threshold; 35000ms > 31000ms
+    vi.advanceTimersByTime(35_000);
 
     const retryState = { retryAttempt: 2, retryId: "retry-abc" };
-    // defaults to 1000ms, and 1500ms > 1000ms => true
     expect(shouldResetRetryCycle(retryState, [2000])).toBe(true);
   });
 
@@ -357,15 +359,67 @@ describe("shouldResetRetryCycle", () => {
     expect(shouldResetRetryCycle(retryState, [1000, 3000])).toBe(false);
   });
 
-  it("returns true with no lastReset info (no minimum time constraint)", () => {
+  it("returns true with no lastReset info (no minimum time constraint) and enough elapsed time", () => {
     vi.useFakeTimers();
     vi.setSystemTime(1_000_000);
 
     setLastReloadTime("retry-abc", 1);
-    // No setLastRetryResetInfo call
-    vi.advanceTimersByTime(2000);
+    // No setLastRetryResetInfo call - advance past buffer
+    vi.advanceTimersByTime(35_000);
 
     const retryState = { retryAttempt: 1, retryId: "retry-abc" };
     expect(shouldResetRetryCycle(retryState, [1000])).toBe(true);
+  });
+
+  describe("page load buffer (regression: retry count reset mid-cycle)", () => {
+    it("returns false when elapsed time only slightly exceeds delay (page load overhead)", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(1_000_000);
+
+      // Simulate: setLastReloadTime called just before navigation with 1000ms delay
+      setLastReloadTime("retry-abc", 1);
+      // Page load takes ~1500ms (exceeds the 1000ms delay but within page load buffer)
+      vi.advanceTimersByTime(1500);
+
+      const retryState = { retryAttempt: 1, retryId: "retry-abc" };
+      // Should NOT reset - this is a normal page reload continuation
+      expect(shouldResetRetryCycle(retryState, [1000])).toBe(false);
+    });
+
+    it("returns false when elapsed time is 5 seconds over delay (reasonable page load)", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(1_000_000);
+
+      setLastReloadTime("retry-abc", 1);
+      // 1000ms delay + 5000ms page load = 6000ms total
+      vi.advanceTimersByTime(6000);
+
+      const retryState = { retryAttempt: 1, retryId: "retry-abc" };
+      expect(shouldResetRetryCycle(retryState, [1000])).toBe(false);
+    });
+
+    it("returns true when elapsed time greatly exceeds delay (user returned after being away)", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(1_000_000);
+
+      setLastReloadTime("retry-abc", 1);
+      // 60 seconds have passed - user clearly navigated away
+      vi.advanceTimersByTime(60_000);
+
+      const retryState = { retryAttempt: 1, retryId: "retry-abc" };
+      expect(shouldResetRetryCycle(retryState, [1000])).toBe(true);
+    });
+
+    it("returns false for second attempt with 2000ms delay and 3500ms elapsed", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(1_000_000);
+
+      setLastReloadTime("retry-abc", 2);
+      // 2000ms delay + 1500ms page load = 3500ms total
+      vi.advanceTimersByTime(3500);
+
+      const retryState = { retryAttempt: 2, retryId: "retry-abc" };
+      expect(shouldResetRetryCycle(retryState, [1000, 2000, 5000])).toBe(false);
+    });
   });
 });

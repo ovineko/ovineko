@@ -19,7 +19,7 @@ import type { SPAGuardEvent } from "../../src/common/events/types";
 
 import { subscribe } from "../../src/common/events/internal";
 import { getOptions } from "../../src/common/options";
-import { attemptReload } from "../../src/common/reload";
+import { attemptReload, resetReloadScheduled } from "../../src/common/reload";
 import { ErrorBoundary } from "../../src/react-error-boundary";
 import { lazyWithRetry } from "../../src/react/lazyWithRetry";
 
@@ -55,11 +55,13 @@ const setupMockLocation = (url = "http://localhost/"): void => {
 
 const makeOptions = (overrides: Record<string, unknown> = {}) => ({
   enableRetryReset: true,
-  fallback: {
-    html: "<div id='spa-guard-fallback'>Fallback UI</div>",
-    selector: "body",
+  errors: { forceRetry: [], ignore: [] },
+  html: {
+    fallback: {
+      content: "<div id='spa-guard-fallback'>Fallback UI</div>",
+      selector: "body",
+    },
   },
-  ignoredErrors: [],
   lazyRetry: {
     callReloadOnFailure: true,
     retryDelays: [1, 2],
@@ -149,12 +151,14 @@ let unsubscribeEvents: (() => void) | undefined;
 beforeEach(() => {
   setupMockLocation();
   sessionStorage.clear();
+  resetReloadScheduled();
   vi.mocked(getOptions).mockReturnValue(makeOptions());
 });
 
 afterEach(() => {
   unsubscribeEvents?.();
   unsubscribeEvents = undefined;
+  resetReloadScheduled();
   vi.clearAllMocks();
   vi.restoreAllMocks();
 });
@@ -509,9 +513,11 @@ describe("max retries → fallback UI shown", () => {
     vi.mocked(getOptions).mockReturnValue(
       makeOptions({
         enableRetryReset: false,
-        fallback: {
-          html: "<div id='spa-guard-fallback'>Fallback UI</div>",
-          selector: "body",
+        html: {
+          fallback: {
+            content: "<div id='spa-guard-fallback'>Fallback UI</div>",
+            selector: "body",
+          },
         },
         reloadDelays: [1000, 2000, 5000],
         useRetryId: true,
@@ -533,9 +539,11 @@ describe("max retries → fallback UI shown", () => {
     vi.mocked(getOptions).mockReturnValue(
       makeOptions({
         enableRetryReset: false,
-        fallback: {
-          html: "<div id='spa-guard-fallback'>Fallback UI</div>",
-          selector: "body",
+        html: {
+          fallback: {
+            content: "<div id='spa-guard-fallback'>Fallback UI</div>",
+            selector: "body",
+          },
         },
         reloadDelays: [1000, 2000, 5000],
         useRetryId: true,
@@ -576,9 +584,11 @@ describe("max retries → fallback UI shown", () => {
     vi.mocked(getOptions).mockReturnValue(
       makeOptions({
         enableRetryReset: false,
-        fallback: {
-          html: "<div id='spa-guard-fallback'>Fallback UI</div>",
-          selector: "body",
+        html: {
+          fallback: {
+            content: "<div id='spa-guard-fallback'>Fallback UI</div>",
+            selector: "body",
+          },
         },
         reloadDelays: [1000, 2000, 5000],
         reportBeacon: { endpoint: "http://test.example.com/beacon" },
@@ -605,8 +615,8 @@ describe("retry reset after minTimeBetweenResets", () => {
     // URL has attempt=1 for retry ID "old-retry-id"
     setupMockLocation("http://localhost/?spaGuardRetryId=old-retry-id&spaGuardRetryAttempt=1");
 
-    // Last reload was 10 seconds ago — exceeds any reloadDelay
-    const pastTimestamp = Date.now() - 10_000;
+    // Last reload was 40 seconds ago — exceeds delay + page load buffer (1000 + 30000 = 31000ms)
+    const pastTimestamp = Date.now() - 40_000;
     sessionStorage.setItem(
       "__spa_guard_last_reload_timestamp__",
       JSON.stringify({
@@ -619,7 +629,7 @@ describe("retry reset after minTimeBetweenResets", () => {
     vi.mocked(getOptions).mockReturnValue(
       makeOptions({
         enableRetryReset: true,
-        fallback: { html: "<div>Fallback</div>", selector: "body" },
+        html: { fallback: { content: "<div>Fallback</div>", selector: "body" } },
         minTimeBetweenResets: 100, // only 100ms minimum between resets
         reloadDelays: [1000, 2000, 5000],
         useRetryId: true,
@@ -644,7 +654,7 @@ describe("retry reset after minTimeBetweenResets", () => {
   it("starts a fresh retry cycle after reset (retry-attempt with attempt=1)", () => {
     setupMockLocation("http://localhost/?spaGuardRetryId=old-retry-id&spaGuardRetryAttempt=1");
 
-    const pastTimestamp = Date.now() - 10_000;
+    const pastTimestamp = Date.now() - 40_000;
     sessionStorage.setItem(
       "__spa_guard_last_reload_timestamp__",
       JSON.stringify({
@@ -657,7 +667,7 @@ describe("retry reset after minTimeBetweenResets", () => {
     vi.mocked(getOptions).mockReturnValue(
       makeOptions({
         enableRetryReset: true,
-        fallback: { html: "<div>Fallback</div>", selector: "body" },
+        html: { fallback: { content: "<div>Fallback</div>", selector: "body" } },
         minTimeBetweenResets: 100,
         reloadDelays: [1, 2, 5], // tiny delays so setTimeout fires quickly
         useRetryId: true,
@@ -698,7 +708,7 @@ describe("retry reset after minTimeBetweenResets", () => {
     vi.mocked(getOptions).mockReturnValue(
       makeOptions({
         enableRetryReset: true,
-        fallback: { html: "<div>Fallback</div>", selector: "body" },
+        html: { fallback: { content: "<div>Fallback</div>", selector: "body" } },
         minTimeBetweenResets: 100,
         reloadDelays: [1000, 2000, 5000], // delay=1000ms, elapsed=100ms → no reset
         useRetryId: true,

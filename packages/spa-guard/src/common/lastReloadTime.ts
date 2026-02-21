@@ -102,7 +102,12 @@ export const shouldResetRetryCycle = (
   const previousDelayIndex = lastReload.attemptNumber - 1;
   const previousDelay = reloadDelays[previousDelayIndex] ?? 1000;
 
-  return timeSinceReload > previousDelay;
+  // Buffer accounts for page navigation + load time after the retry delay.
+  // Without this, normal retry reloads (where page load exceeds the delay)
+  // would incorrectly trigger a cycle reset.
+  const PAGE_LOAD_BUFFER_MS = 30_000;
+
+  return timeSinceReload > previousDelay + PAGE_LOAD_BUFFER_MS;
 };
 
 export const setLastRetryResetInfo = (previousRetryId: string): void => {

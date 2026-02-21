@@ -12,16 +12,21 @@ export interface Logger {
   logEvent(event: SPAGuardEvent): void;
   noBeaconEndpoint(): void;
   noFallbackConfigured(): void;
+  reloadAlreadyScheduled(error: unknown): void;
+  retryCycleStarting(retryId: string, fromAttempt: number): void;
   retryLimitExceeded(attempt: number, max: number): void;
+  retrySchedulingReload(retryId: string, attempt: number, delay: number): void;
   updatedRetryAttempt(attempt: number): void;
-  versionChanged(oldVersion: null | string, latestVersion: string): void;
   versionChangeDetected(oldVersion: null | string, latestVersion: string): void;
   versionCheckAlreadyRunning(): void;
   versionCheckDisabled(): void;
   versionCheckFailed(error: unknown): void;
   versionCheckHttpError(status: number): void;
   versionCheckParseError(): void;
+  versionCheckPaused(): void;
   versionCheckRequiresEndpoint(): void;
+  versionCheckResumed(): void;
+  versionCheckResumedImmediate(): void;
   versionCheckStarted(mode: string, interval: number, version: string): void;
   versionCheckStopped(): void;
   warn(msg: string, ...args: unknown[]): void;
@@ -112,14 +117,22 @@ export const createLogger = (): Logger => ({
   noFallbackConfigured(): void {
     console.error(`${PREFIX} No fallback UI configured`);
   },
+  reloadAlreadyScheduled(error: unknown): void {
+    console.log(`${PREFIX} Reload already scheduled, ignoring duplicate chunk error:`, error);
+  },
+  retryCycleStarting(retryId: string, fromAttempt: number): void {
+    console.log(`${PREFIX} Retry cycle starting: retryId=${retryId}, fromAttempt=${fromAttempt}`);
+  },
   retryLimitExceeded(attempt: number, max: number): void {
     console.log(`${PREFIX} Retry limit exceeded (${attempt}/${max}), marking as fallback shown`);
   },
+  retrySchedulingReload(retryId: string, attempt: number, delay: number): void {
+    console.log(
+      `${PREFIX} Scheduling reload: retryId=${retryId}, attempt=${attempt}, delay=${delay}ms`,
+    );
+  },
   updatedRetryAttempt(attempt: number): void {
     console.log(`${PREFIX} Updated retry attempt to ${attempt} in URL for fallback UI`);
-  },
-  versionChanged(oldVersion: null | string, latestVersion: string): void {
-    console.warn(`${PREFIX} Version changed: ${oldVersion} → ${latestVersion}`);
   },
   versionChangeDetected(oldVersion: null | string, latestVersion: string): void {
     console.warn(
@@ -141,8 +154,19 @@ export const createLogger = (): Logger => ({
   versionCheckParseError(): void {
     console.warn(`${PREFIX} Failed to parse version from HTML`);
   },
+  versionCheckPaused(): void {
+    console.log(`${PREFIX} Version check paused (tab hidden)`);
+  },
   versionCheckRequiresEndpoint(): void {
     console.warn(`${PREFIX} JSON version check mode requires endpoint`);
+  },
+  versionCheckResumed(): void {
+    console.log(`${PREFIX} Version check resumed (tab visible)`);
+  },
+  versionCheckResumedImmediate(): void {
+    console.log(
+      `${PREFIX} Version check resumed with immediate check (tab visible, interval elapsed)`,
+    );
   },
   versionCheckStarted(mode: string, interval: number, version: string): void {
     console.log(

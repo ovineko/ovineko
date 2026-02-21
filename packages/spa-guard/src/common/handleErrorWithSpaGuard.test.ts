@@ -20,22 +20,29 @@ vi.mock("./serializeError", () => ({
   serializeError: vi.fn(),
 }));
 
+vi.mock("./shouldIgnore", () => ({
+  shouldForceRetry: vi.fn(),
+}));
+
 import { handleErrorWithSpaGuard } from "./handleErrorWithSpaGuard";
 import { isChunkError } from "./isChunkError";
 import { attemptReload } from "./reload";
 import { getRetryInfoForBeacon } from "./retryState";
 import { sendBeacon } from "./sendBeacon";
 import { serializeError } from "./serializeError";
+import { shouldForceRetry } from "./shouldIgnore";
 
 const mockIsChunkError = vi.mocked(isChunkError);
 const mockAttemptReload = vi.mocked(attemptReload);
 const mockGetRetryInfoForBeacon = vi.mocked(getRetryInfoForBeacon);
 const mockSendBeacon = vi.mocked(sendBeacon);
 const mockSerializeError = vi.mocked(serializeError);
+const mockShouldForceRetry = vi.mocked(shouldForceRetry);
 
 describe("handleErrorWithSpaGuard", () => {
   beforeEach(() => {
     mockIsChunkError.mockReturnValue(false);
+    mockShouldForceRetry.mockReturnValue(false);
     mockAttemptReload.mockReset();
     mockGetRetryInfoForBeacon.mockReturnValue({});
     mockSendBeacon.mockReset();
@@ -409,6 +416,61 @@ describe("handleErrorWithSpaGuard", () => {
       handleErrorWithSpaGuard(error, { eventName: "test-event" });
 
       expect(mockGetRetryInfoForBeacon).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("forceRetry → attemptReload path", () => {
+    it("calls attemptReload when shouldForceRetry returns true", () => {
+      mockShouldForceRetry.mockReturnValue(true);
+      const error = new Error("StaleModule: component version mismatch");
+
+      handleErrorWithSpaGuard(error, { eventName: "test-event" });
+
+      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockAttemptReload).toHaveBeenCalledWith(error);
+    });
+
+    it("does not call sendBeacon when forceRetry triggers reload", () => {
+      mockShouldForceRetry.mockReturnValue(true);
+      const error = new Error("StaleModule error");
+
+      handleErrorWithSpaGuard(error, { eventName: "test-event" });
+
+      expect(mockSendBeacon).not.toHaveBeenCalled();
+    });
+
+    it("does not call attemptReload for forceRetry when autoRetryChunkErrors=false", () => {
+      mockShouldForceRetry.mockReturnValue(true);
+      const error = new Error("StaleModule error");
+
+      handleErrorWithSpaGuard(error, { autoRetryChunkErrors: false, eventName: "test-event" });
+
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls shouldForceRetry with the error message", () => {
+      const error = new Error("my custom error message");
+
+      handleErrorWithSpaGuard(error, { eventName: "test-event" });
+
+      expect(mockShouldForceRetry).toHaveBeenCalledWith(["my custom error message"]);
+    });
+
+    it("calls shouldForceRetry with String(error) for non-Error values", () => {
+      handleErrorWithSpaGuard("string error", { eventName: "test-event" });
+
+      expect(mockShouldForceRetry).toHaveBeenCalledWith(["string error"]);
+    });
+
+    it("chunk error takes priority over forceRetry (both true)", () => {
+      mockIsChunkError.mockReturnValue(true);
+      mockShouldForceRetry.mockReturnValue(true);
+      const error = new Error("chunk error that also matches forceRetry");
+
+      handleErrorWithSpaGuard(error, { eventName: "test-event" });
+
+      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
     });
   });
 });

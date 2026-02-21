@@ -1,6 +1,7 @@
 import type { Plugin } from "vite";
 
 import { minify } from "html-minifier-terser";
+import crypto from "node:crypto";
 import fsPromise from "node:fs/promises";
 import path from "node:path";
 
@@ -33,10 +34,13 @@ const getInlineScript = async (options: VitePluginOptions) => {
 
   const processedOptions = { ...options, trace: undefined };
 
-  if (processedOptions.fallback?.html) {
-    processedOptions.fallback = {
-      ...processedOptions.fallback,
-      html: await minifyHtml(processedOptions.fallback.html),
+  if (processedOptions.html?.fallback?.content) {
+    processedOptions.html = {
+      ...processedOptions.html,
+      fallback: {
+        ...processedOptions.html.fallback,
+        content: await minifyHtml(processedOptions.html.fallback.content),
+      },
     };
   }
 
@@ -44,26 +48,15 @@ const getInlineScript = async (options: VitePluginOptions) => {
 };
 
 export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
-  let packageVersion: string | undefined;
+  const autoVersion = crypto.randomUUID();
 
   return {
-    configResolved: async (config) => {
-      if (!options.version) {
-        try {
-          const packageJsonPath = path.join(config.root, "package.json");
-          const packageJson = JSON.parse(await fsPromise.readFile(packageJsonPath, "utf8"));
-          packageVersion = packageJson.version;
-        } catch {
-          // package.json may not exist or may not have a version field
-        }
-      }
-    },
     name: `${name}/vite-plugin`,
     transformIndexHtml: {
       handler: async (html) => {
         const finalOptions: VitePluginOptions = {
           ...options,
-          version: options.version ?? packageVersion,
+          version: options.version ?? autoVersion,
         };
 
         const inlineScript = await getInlineScript(finalOptions);

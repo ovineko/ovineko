@@ -5,7 +5,7 @@ vi.mock("./options", () => ({
 }));
 
 import { getOptions } from "./options";
-import { shouldIgnoreBeacon, shouldIgnoreMessages } from "./shouldIgnore";
+import { shouldForceRetry, shouldIgnoreBeacon, shouldIgnoreMessages } from "./shouldIgnore";
 
 const mockGetOptions = vi.mocked(getOptions);
 
@@ -14,32 +14,37 @@ describe("shouldIgnoreMessages", () => {
     vi.clearAllMocks();
   });
 
-  describe("empty ignoredErrors array (nothing ignored)", () => {
+  describe("empty errors.ignore array (nothing ignored)", () => {
     beforeEach(() => {
-      mockGetOptions.mockReturnValue({ ignoredErrors: [] });
+      mockGetOptions.mockReturnValue({ errors: { ignore: [] } });
     });
 
-    it("returns false when ignoredErrors is empty and message is provided", () => {
+    it("returns false when errors.ignore is empty and message is provided", () => {
       expect(shouldIgnoreMessages(["some error message"])).toBe(false);
     });
 
-    it("returns false when ignoredErrors is empty and multiple messages are provided", () => {
+    it("returns false when errors.ignore is empty and multiple messages are provided", () => {
       expect(shouldIgnoreMessages(["error one", "error two"])).toBe(false);
     });
 
-    it("returns false when ignoredErrors is empty and no messages are provided", () => {
+    it("returns false when errors.ignore is empty and no messages are provided", () => {
       expect(shouldIgnoreMessages([])).toBe(false);
     });
 
-    it("returns false when ignoredErrors is undefined (defaults to empty)", () => {
+    it("returns false when errors is undefined (defaults to empty)", () => {
       mockGetOptions.mockReturnValue({});
+      expect(shouldIgnoreMessages(["some error message"])).toBe(false);
+    });
+
+    it("returns false when errors.ignore is undefined (defaults to empty)", () => {
+      mockGetOptions.mockReturnValue({ errors: {} });
       expect(shouldIgnoreMessages(["some error message"])).toBe(false);
     });
   });
 
-  describe("ignoredErrors pattern matching (exact match)", () => {
+  describe("errors.ignore pattern matching (exact match)", () => {
     beforeEach(() => {
-      mockGetOptions.mockReturnValue({ ignoredErrors: ["ChunkLoadError"] });
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["ChunkLoadError"] } });
     });
 
     it("returns true when message exactly matches an ignored pattern", () => {
@@ -59,9 +64,9 @@ describe("shouldIgnoreMessages", () => {
     });
   });
 
-  describe("ignoredErrors substring matching", () => {
+  describe("errors.ignore substring matching", () => {
     beforeEach(() => {
-      mockGetOptions.mockReturnValue({ ignoredErrors: ["chunk"] });
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["chunk"] } });
     });
 
     it("returns true when message contains the ignored substring", () => {
@@ -81,24 +86,24 @@ describe("shouldIgnoreMessages", () => {
     });
 
     it("returns true when ignored pattern is a substring of a longer message", () => {
-      mockGetOptions.mockReturnValue({ ignoredErrors: ["TypeError"] });
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["TypeError"] } });
       expect(shouldIgnoreMessages(["Uncaught TypeError: Cannot read property"])).toBe(true);
     });
 
     it("matches against multiple ignored patterns (any match returns true)", () => {
-      mockGetOptions.mockReturnValue({ ignoredErrors: ["chunk", "network", "timeout"] });
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["chunk", "network", "timeout"] } });
       expect(shouldIgnoreMessages(["network connection failed"])).toBe(true);
     });
 
     it("returns false when none of multiple ignored patterns match", () => {
-      mockGetOptions.mockReturnValue({ ignoredErrors: ["chunk", "network", "timeout"] });
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["chunk", "network", "timeout"] } });
       expect(shouldIgnoreMessages(["unexpected error occurred"])).toBe(false);
     });
   });
 
   describe("case-sensitive matching", () => {
     beforeEach(() => {
-      mockGetOptions.mockReturnValue({ ignoredErrors: ["ChunkLoadError"] });
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["ChunkLoadError"] } });
     });
 
     it("returns false when message matches only by different casing (matching is case-sensitive)", () => {
@@ -116,7 +121,7 @@ describe("shouldIgnoreMessages", () => {
 
   describe("edge cases: undefined and non-string values in messages array", () => {
     beforeEach(() => {
-      mockGetOptions.mockReturnValue({ ignoredErrors: ["ignored-error"] });
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["ignored-error"] } });
     });
 
     it("returns false when messages array contains only undefined values", () => {
@@ -147,6 +152,92 @@ describe("shouldIgnoreMessages", () => {
   });
 });
 
+describe("shouldForceRetry", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe("empty errors.forceRetry array", () => {
+    beforeEach(() => {
+      mockGetOptions.mockReturnValue({ errors: { forceRetry: [] } });
+    });
+
+    it("returns false when forceRetry is empty and message is provided", () => {
+      expect(shouldForceRetry(["some error message"])).toBe(false);
+    });
+
+    it("returns false when forceRetry is empty and no messages are provided", () => {
+      expect(shouldForceRetry([])).toBe(false);
+    });
+
+    it("returns false when errors is undefined (defaults to empty)", () => {
+      mockGetOptions.mockReturnValue({});
+      expect(shouldForceRetry(["some error"])).toBe(false);
+    });
+
+    it("returns false when errors.forceRetry is undefined (defaults to empty)", () => {
+      mockGetOptions.mockReturnValue({ errors: {} });
+      expect(shouldForceRetry(["some error"])).toBe(false);
+    });
+  });
+
+  describe("forceRetry pattern matching", () => {
+    beforeEach(() => {
+      mockGetOptions.mockReturnValue({ errors: { forceRetry: ["StaleModule"] } });
+    });
+
+    it("returns true when message exactly matches a forceRetry pattern", () => {
+      expect(shouldForceRetry(["StaleModule"])).toBe(true);
+    });
+
+    it("returns false when message does not match any forceRetry pattern", () => {
+      expect(shouldForceRetry(["SomeOtherError"])).toBe(false);
+    });
+
+    it("returns true when one of multiple messages matches a forceRetry pattern", () => {
+      expect(shouldForceRetry(["unrelated error", "StaleModule detected"])).toBe(true);
+    });
+
+    it("returns true when forceRetry pattern is a substring of the message", () => {
+      expect(shouldForceRetry(["Error: StaleModule in component"])).toBe(true);
+    });
+  });
+
+  describe("forceRetry with multiple patterns", () => {
+    beforeEach(() => {
+      mockGetOptions.mockReturnValue({
+        errors: { forceRetry: ["StaleModule", "VersionMismatch", "DeployError"] },
+      });
+    });
+
+    it("returns true when any pattern matches", () => {
+      expect(shouldForceRetry(["VersionMismatch occurred"])).toBe(true);
+    });
+
+    it("returns false when no pattern matches", () => {
+      expect(shouldForceRetry(["unrelated error"])).toBe(false);
+    });
+  });
+
+  describe("forceRetry edge cases", () => {
+    beforeEach(() => {
+      mockGetOptions.mockReturnValue({ errors: { forceRetry: ["retry-this"] } });
+    });
+
+    it("skips undefined values in messages array", () => {
+      expect(shouldForceRetry([undefined, "retry-this"])).toBe(true);
+    });
+
+    it("returns false when messages array contains only undefined values", () => {
+      expect(shouldForceRetry([undefined, undefined])).toBe(false);
+    });
+
+    it("is case-sensitive", () => {
+      expect(shouldForceRetry(["RETRY-THIS"])).toBe(false);
+    });
+  });
+});
+
 describe("shouldIgnoreBeacon", () => {
   afterEach(() => {
     vi.clearAllMocks();
@@ -154,7 +245,7 @@ describe("shouldIgnoreBeacon", () => {
 
   describe("beacon with errorMessage", () => {
     beforeEach(() => {
-      mockGetOptions.mockReturnValue({ ignoredErrors: ["ChunkLoadError"] });
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["ChunkLoadError"] } });
     });
 
     it("returns true when errorMessage matches an ignored pattern", () => {
@@ -168,7 +259,7 @@ describe("shouldIgnoreBeacon", () => {
 
   describe("beacon with eventMessage", () => {
     beforeEach(() => {
-      mockGetOptions.mockReturnValue({ ignoredErrors: ["Script error"] });
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["Script error"] } });
     });
 
     it("returns true when eventMessage matches an ignored pattern", () => {
@@ -182,7 +273,7 @@ describe("shouldIgnoreBeacon", () => {
 
   describe("beacon with both errorMessage and eventMessage", () => {
     beforeEach(() => {
-      mockGetOptions.mockReturnValue({ ignoredErrors: ["ignored"] });
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["ignored"] } });
     });
 
     it("returns true when errorMessage matches even if eventMessage does not", () => {
@@ -212,7 +303,7 @@ describe("shouldIgnoreBeacon", () => {
 
   describe("beacon with missing message fields", () => {
     beforeEach(() => {
-      mockGetOptions.mockReturnValue({ ignoredErrors: ["ignored"] });
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["ignored"] } });
     });
 
     it("returns false when beacon has no errorMessage and no eventMessage", () => {
@@ -228,9 +319,9 @@ describe("shouldIgnoreBeacon", () => {
     });
   });
 
-  describe("empty ignoredErrors array", () => {
+  describe("empty errors.ignore array", () => {
     beforeEach(() => {
-      mockGetOptions.mockReturnValue({ ignoredErrors: [] });
+      mockGetOptions.mockReturnValue({ errors: { ignore: [] } });
     });
 
     it("returns false even when errorMessage is present", () => {

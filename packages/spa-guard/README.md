@@ -21,10 +21,10 @@ Peer dependencies vary by integration - see sections below for specific requirem
 - ✅ **Infinite loop protection** - Prevents rapid retry resets with configurable minimum time between resets
 - ✅ **Graceful fallback UI** - Shows user-friendly error screen after all retry attempts are exhausted
 - ✅ **Configurable injection target** - Inject fallback UI into any element via CSS selector (default: `body`)
-- ✅ **Error filtering** - Filter out specific errors from logging and reporting via `ignoredErrors` option
+- ✅ **Error filtering** - Filter out specific errors via `errors.ignore`, or force retry/reload via `errors.forceRetry`
 - ✅ **Deep error serialization** - Captures detailed error information for server-side analysis
 - ✅ **Smart beacon reporting** - Sends error reports only after retry exhaustion to prevent spam
-- ✅ **Dual build system** - Production minified (~5.9 KB) and trace minified (~7.3 KB) builds for different environments
+- ✅ **Dual build system** - Production minified (~8.3 KB) and trace minified (~13.3 KB) builds for different environments
 - ✅ **Global error listeners** - Captures `error`, `unhandledrejection`, and `securitypolicyviolation` events
 - ✅ **Vite plugin for inline script injection** - Runs before all chunks to catch early errors
 - ✅ **HTML minification** - Automatically minifies fallback HTML to reduce bundle size
@@ -53,22 +53,27 @@ export default defineConfig({
     spaGuardVitePlugin({
       // Production configuration
       reloadDelays: [1000, 2000, 5000], // 3 attempts with increasing delays
-      fallback: {
-        html: `
-          <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
-            <div style="text-align:center">
-              <h1>Something went wrong</h1>
-              <p>Please refresh the page to continue.</p>
-              <button onclick="location.reload()">Refresh Page</button>
+      html: {
+        fallback: {
+          content: `
+            <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
+              <div style="text-align:center">
+                <h1>Something went wrong</h1>
+                <p>Please refresh the page to continue.</p>
+                <button onclick="location.reload()">Refresh Page</button>
+              </div>
             </div>
-          </div>
-        `,
-        selector: "body", // CSS selector where to inject fallback UI (default: "body")
+          `,
+          selector: "body", // CSS selector where to inject fallback UI (default: "body")
+        },
       },
       reportBeacon: {
         endpoint: "/api/beacon",
       },
-      ignoredErrors: [], // Filter out specific error messages from reporting
+      errors: {
+        ignore: [], // Filter out specific error messages from reporting
+        forceRetry: [], // Custom error messages that trigger retry/reload (like chunk errors)
+      },
       useRetryId: true, // Use query parameters for cache busting (default: true)
     }),
     react(),
@@ -83,7 +88,7 @@ export default defineConfig({
 export default defineConfig({
   plugins: [
     spaGuardVitePlugin({
-      trace: true, // Enable verbose logging (10KB instead of 5KB)
+      trace: true, // Enable verbose logging (~13KB instead of ~8KB)
       reloadDelays: [1000, 2000],
       reportBeacon: { endpoint: "/api/beacon" },
     }),
@@ -214,18 +219,23 @@ spaGuardVitePlugin({
   minTimeBetweenResets: 5000, // Min time between retry resets in ms (default: 5000)
 
   // Fallback UI configuration
-  fallback: {
-    html: `
-      <div style="...">
-        <h1>Something went wrong</h1>
-        <button onclick="location.reload()">Refresh</button>
-      </div>
-    `,
-    selector: "body", // CSS selector for injection target (default: "body")
+  html: {
+    fallback: {
+      content: `
+        <div style="...">
+          <h1>Something went wrong</h1>
+          <button onclick="location.reload()">Refresh</button>
+        </div>
+      `,
+      selector: "body", // CSS selector for injection target (default: "body")
+    },
   },
 
-  // Error filtering
-  ignoredErrors: [], // Array of error message substrings to ignore
+  // Error filtering and retry
+  errors: {
+    ignore: [], // Array of error message substrings to ignore
+    forceRetry: [], // Array of error message substrings that trigger retry/reload
+  },
 
   // Beacon reporting
   reportBeacon: {
@@ -233,7 +243,7 @@ spaGuardVitePlugin({
   },
 
   // Build mode
-  trace: false, // Set to true for verbose debug build (10KB vs 5KB)
+  trace: false, // Set to true for verbose debug build (~13KB vs ~8KB)
 });
 ```
 
@@ -254,20 +264,29 @@ interface Options {
   enableRetryReset?: boolean; // Auto-reset retry cycle when enough time passes (default: true)
   minTimeBetweenResets?: number; // Min time between retry resets to prevent loops (default: 5000)
 
-  version?: string; // App version (auto-injected by Vite plugin from package.json)
+  version?: string; // App version (auto-generated UUID if not specified)
 
   checkVersion?: {
     mode?: "html" | "json"; // Detection mode (default: "html")
     interval?: number; // Polling interval in ms (default: 60000)
     endpoint?: string; // JSON endpoint URL (required for "json" mode)
+    onUpdate?: "reload" | "event"; // Behavior on version change (default: "reload")
   };
 
-  fallback?: {
-    html?: string; // Custom error UI HTML (default: basic error screen)
-    selector?: string; // CSS selector for injection target (default: "body")
+  errors?: {
+    ignore?: string[]; // Error message substrings to filter out (default: [])
+    forceRetry?: string[]; // Error message substrings that trigger retry/reload (default: [])
   };
 
-  ignoredErrors?: string[]; // Error message substrings to filter out (default: [])
+  html?: {
+    fallback?: {
+      content?: string; // Custom error UI HTML (default: minimal error screen)
+      selector?: string; // CSS selector for injection target (default: "body")
+    };
+    loading?: {
+      content?: string; // Custom loading/retrying UI HTML (default: minimal loading screen)
+    };
+  };
 
   reportBeacon?: {
     endpoint?: string; // Server endpoint for beacon reports
@@ -295,20 +314,21 @@ interface VitePluginOptions extends Options {
   checkVersion: {
     mode: "html",
     interval: 60_000,
+    onUpdate: "reload",
   },
-  fallback: {
-    html: `
-      <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
-        <div style="text-align:center">
-          <h1>Something went wrong</h1>
-          <p>Please refresh the page to continue.</p>
-          <button onclick="location.reload()">Refresh Page</button>
-        </div>
-      </div>
-    `,
-    selector: "body",
+  errors: {
+    ignore: [],
+    forceRetry: [],
   },
-  ignoredErrors: [],
+  html: {
+    fallback: {
+      content: defaultErrorFallbackHtml, // minimal error screen (auto-generated)
+      selector: "body",
+    },
+    loading: {
+      content: defaultLoadingFallbackHtml, // minimal loading screen (auto-generated)
+    },
+  },
 }
 ```
 
@@ -479,13 +499,12 @@ function App() {
 
 **Default Fallback Component:**
 
-Both error boundaries use `DefaultErrorFallback` by default, which provides:
+Both error boundaries use `DefaultErrorFallback` by default, which uses two minimal HTML templates:
 
-- Loading spinner with retry attempt counter
-- Error message display
-- "Try again" button (for non-chunk errors)
-- "Reload page" button
-- Minimal inline styles (no external dependencies)
+- **Error state:** Heading, message paragraph, "Try again" button (non-chunk errors), "Reload page" button, error ID. No colors, no custom fonts, no animations - plain default browser styling.
+- **Loading/retrying state:** Centered "Loading..." text with retry attempt counter. No spinner, no animation.
+
+These templates are auto-generated as TypeScript string constants (`defaultErrorFallbackHtml` and `defaultLoadingFallbackHtml`) and can be imported for use in custom integrations.
 
 **Error flow:**
 
@@ -648,13 +667,31 @@ function createDebugger(options?: {
 
 spa-guard can proactively detect new deployments by periodically polling for version changes. This helps notify users before chunk errors occur.
 
-The version is automatically injected by the Vite plugin from your project's `package.json`.
+The version is automatically generated by the Vite plugin using `crypto.randomUUID()` if not explicitly provided. Each build gets a unique version, so version checking works with zero configuration.
 
 #### Setup
 
+The simplest way to enable version checking is with `recommendedSetup()`:
+
 ```tsx
 import { useEffect } from "react";
-import { startVersionCheck } from "@ovineko/spa-guard";
+import { recommendedSetup } from "@ovineko/spa-guard/runtime";
+
+function App() {
+  useEffect(() => {
+    const cleanup = recommendedSetup();
+    return cleanup;
+  }, []);
+
+  return <YourApp />;
+}
+```
+
+For more control, use `startVersionCheck()` directly:
+
+```tsx
+import { useEffect } from "react";
+import { startVersionCheck } from "@ovineko/spa-guard/runtime";
 
 function App() {
   useEffect(() => {
@@ -684,11 +721,12 @@ Configure version checking via the Vite plugin options:
 
 ```typescript
 spaGuardVitePlugin({
-  // version is auto-detected from package.json
+  // version is auto-generated if not specified
   checkVersion: {
     mode: "html", // "html" (default) or "json"
     interval: 60_000, // polling interval in ms (default: 60s)
     endpoint: "/api/version", // required for "json" mode
+    onUpdate: "reload", // "reload" (default) or "event"
   },
 });
 ```
@@ -698,10 +736,34 @@ spaGuardVitePlugin({
 - **HTML mode** (default): Re-fetches the current page and parses the version from the injected `__SPA_GUARD_OPTIONS__`. No extra server endpoint needed.
 - **JSON mode**: Fetches a dedicated JSON endpoint that returns `{ "version": "1.2.3" }`. Lower bandwidth, but requires a server endpoint.
 
+**Auto-reload on version change:**
+
+By default (`onUpdate: "reload"`), when a new version is detected, spa-guard dispatches a `spa-guard:version-change` CustomEvent and then automatically calls `location.reload()`. Set `onUpdate: "event"` to only dispatch the event without reloading, allowing your app to handle the update notification (e.g., show a banner prompting the user to refresh).
+
+```typescript
+spaGuardVitePlugin({
+  checkVersion: {
+    onUpdate: "event", // Don't auto-reload, just dispatch the event
+  },
+});
+```
+
 #### API
 
+- `recommendedSetup(overrides?)` - Enable recommended runtime features (version checking, etc.) with sensible defaults. Returns a cleanup function.
 - `startVersionCheck()` - Start periodic version polling. No-op if no version is configured or already running.
 - `stopVersionCheck()` - Stop version polling and clear the interval.
+
+#### Tab Visibility and Focus
+
+Version polling automatically pauses when the browser tab is hidden (Page Visibility API) or the window loses focus, and resumes when the tab becomes visible or the window regains focus. When resuming:
+
+- If enough time has passed (>= polling interval), a check runs immediately and polling resumes
+- If less time has passed, polling resumes after the remaining interval
+
+Additionally, if the tab is hidden or the window is unfocused when `startVersionCheck()` is called, polling is deferred until the tab/window becomes active. Concurrent version checks are deduplicated - overlapping visibility and focus events won't trigger multiple fetches.
+
+This is handled transparently - no configuration needed.
 
 ### Retry Control
 
@@ -727,13 +789,8 @@ When default retry is disabled, chunk errors will still emit events (via `subscr
 The core module provides low-level APIs for custom integrations:
 
 ```typescript
-import {
-  events,
-  listen,
-  options,
-  startVersionCheck,
-  disableDefaultRetry,
-} from "@ovineko/spa-guard";
+import { events, listen, options, disableDefaultRetry } from "@ovineko/spa-guard";
+import { startVersionCheck } from "@ovineko/spa-guard/runtime";
 
 // Subscribe to spa-guard events
 events.subscribe((event) => {
@@ -912,20 +969,29 @@ interface Options {
   enableRetryReset?: boolean; // Auto-reset retry cycle when enough time passes (default: true)
   minTimeBetweenResets?: number; // Min time between retry resets in ms (default: 5000)
 
-  version?: string; // App version (auto-injected by Vite plugin)
+  version?: string; // App version (auto-generated UUID if not specified)
 
   checkVersion?: {
     mode?: "html" | "json"; // Detection mode (default: "html")
     interval?: number; // Polling interval in ms (default: 60000)
     endpoint?: string; // JSON endpoint URL (required for "json" mode)
+    onUpdate?: "reload" | "event"; // Behavior on version change (default: "reload")
   };
 
-  fallback?: {
-    html?: string; // Custom error UI HTML
-    selector?: string; // CSS selector for injection target (default: "body")
+  errors?: {
+    ignore?: string[]; // Error message substrings to filter out (default: [])
+    forceRetry?: string[]; // Error message substrings that trigger retry/reload (default: [])
   };
 
-  ignoredErrors?: string[]; // Error message substrings to filter out (default: [])
+  html?: {
+    fallback?: {
+      content?: string; // Custom error UI HTML
+      selector?: string; // CSS selector for injection target (default: "body")
+    };
+    loading?: {
+      content?: string; // Custom loading/retrying UI HTML
+    };
+  };
 
   reportBeacon?: {
     endpoint?: string; // Error reporting endpoint
@@ -966,8 +1032,6 @@ From `@ovineko/spa-guard`:
 - `listen()` - Initialize error listeners
 - `options.getOptions()` - Get merged options from globalThis.window
 - `options.optionsWindowKey` - Window storage key constant
-- `startVersionCheck()` - Start periodic version polling
-- `stopVersionCheck()` - Stop version polling
 - `disableDefaultRetry()` - Disable inline script's automatic retry
 - `enableDefaultRetry()` - Re-enable automatic retry
 - `isDefaultRetryEnabled()` - Check if default retry is enabled
@@ -987,9 +1051,13 @@ From `@ovineko/spa-guard/schema/parse`:
 
 From `@ovineko/spa-guard/runtime`:
 
+- `recommendedSetup(overrides?)` - Enable recommended runtime features with sensible defaults, returns cleanup function
 - `getState()` - Get current spa-guard state (currentAttempt, isFallbackShown, isWaiting, lastRetryResetTime, lastResetRetryId)
 - `subscribeToState(callback)` - Subscribe to state changes, returns unsubscribe function
+- `startVersionCheck()` - Start periodic version polling
+- `stopVersionCheck()` - Stop version polling
 - `SpaGuardState` - TypeScript type for state object
+- `RecommendedSetupOptions` - TypeScript type for recommendedSetup overrides
 
 **Example:**
 
@@ -1218,7 +1286,7 @@ spa-guard provides 11 export entry points:
 
 | Export                   | Description                                                                                                                   | Peer Dependencies               |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `.`                      | Core functionality (events, listen, options, version checker, retry control)                                                  | None                            |
+| `.`                      | Core functionality (events, listen, options, retry control)                                                                   | None                            |
 | `./schema`               | BeaconSchema type definitions                                                                                                 | `typebox@^1`                    |
 | `./schema/parse`         | Beacon parsing utilities                                                                                                      | `typebox@^1`                    |
 | `./runtime`              | Runtime state management and subscriptions                                                                                    | None                            |
@@ -1234,10 +1302,10 @@ spa-guard provides 11 export entry points:
 
 ```typescript
 // Core
-import { events, listen, startVersionCheck, disableDefaultRetry } from "@ovineko/spa-guard";
+import { events, listen, disableDefaultRetry } from "@ovineko/spa-guard";
 
-// Runtime state
-import { getState, subscribeToState } from "@ovineko/spa-guard/runtime";
+// Runtime state + version check
+import { getState, subscribeToState, startVersionCheck } from "@ovineko/spa-guard/runtime";
 
 // React hooks and components
 import {
@@ -1273,8 +1341,8 @@ import spaGuardEslint from "@ovineko/spa-guard/eslint";
 
 ## Build Sizes
 
-- **Production:** `dist-inline/index.js` ~5.9 KB minified (Terser)
-- **Trace:** `dist-inline-trace/index.js` ~7.3 KB minified (Terser)
+- **Production:** `dist-inline/index.js` ~8.3 KB minified (Terser)
+- **Trace:** `dist-inline-trace/index.js` ~13.3 KB minified (Terser)
 - **Main library:** `dist/` varies by export
 
 ## Advanced Usage
@@ -1298,53 +1366,55 @@ Provide fully custom HTML for error screen:
 
 ```typescript
 spaGuardVitePlugin({
-  fallback: {
-    html: `
-      <style>
-        .spa-guard-error {
-          font-family: system-ui, -apple-system, sans-serif;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 100vh;
-          margin: 0;
-          padding: 20px;
-          box-sizing: border-box;
-        }
-        .spa-guard-container {
-          max-width: 500px;
-          text-align: center;
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(10px);
-          padding: 40px;
-          border-radius: 20px;
-        }
-        .spa-guard-button {
-          background: white;
-          color: #667eea;
-          border: none;
-          padding: 12px 24px;
-          font-size: 16px;
-          font-weight: 600;
-          border-radius: 8px;
-          cursor: pointer;
-          margin-top: 20px;
-        }
-        .spa-guard-button:hover {
-          transform: scale(1.05);
-        }
-      </style>
-      <div class="spa-guard-error">
-        <div class="spa-guard-container">
-          <h1>⚠️ Application Error</h1>
-          <p>We're experiencing technical difficulties. Please try reloading the page.</p>
-          <button class="spa-guard-button" onclick="location.reload()">Reload Application</button>
+  html: {
+    fallback: {
+      content: `
+        <style>
+          .spa-guard-error {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+          }
+          .spa-guard-container {
+            max-width: 500px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+          }
+          .spa-guard-button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+          }
+          .spa-guard-button:hover {
+            transform: scale(1.05);
+          }
+        </style>
+        <div class="spa-guard-error">
+          <div class="spa-guard-container">
+            <h1>⚠️ Application Error</h1>
+            <p>We're experiencing technical difficulties. Please try reloading the page.</p>
+            <button class="spa-guard-button" onclick="location.reload()">Reload Application</button>
+          </div>
         </div>
-      </div>
-    `,
-    selector: "body", // Inject into document.body
+      `,
+      selector: "body", // Inject into document.body
+    },
   },
 });
 ```
@@ -1355,36 +1425,41 @@ Inject fallback UI into a specific element instead of `<body>`:
 
 ```typescript
 spaGuardVitePlugin({
-  fallback: {
-    html: `<div>Error occurred. <button onclick="location.reload()">Retry</button></div>`,
-    selector: "#app", // Inject into <div id="app">
+  html: {
+    fallback: {
+      content: `<div>Error occurred. <button onclick="location.reload()">Retry</button></div>`,
+      selector: "#app", // Inject into <div id="app">
+    },
   },
 });
 ```
 
-### Error Filtering
+### Error Filtering and Force Retry
 
-Filter out specific errors from being logged or reported:
+Filter out specific errors from reporting, or force certain errors to trigger the retry/reload process:
 
 ```typescript
 spaGuardVitePlugin({
-  ignoredErrors: [
-    "ResizeObserver loop", // Ignore benign ResizeObserver errors
-    "Non-Error promise rejection", // Ignore specific promise rejections
-    "Script error", // Ignore generic script errors from third-party scripts
-  ],
+  errors: {
+    ignore: [
+      "ResizeObserver loop", // Ignore benign ResizeObserver errors
+      "Non-Error promise rejection", // Ignore specific promise rejections
+      "Script error", // Ignore generic script errors from third-party scripts
+    ],
+    forceRetry: [
+      "STALE_DEPLOYMENT", // Custom errors that should trigger retry like chunk errors
+      "MODULE_NOT_FOUND", // Framework-specific stale module errors
+    ],
+  },
   reportBeacon: {
     endpoint: "/api/beacon",
   },
 });
 ```
 
-**How it works:**
+**`errors.ignore`** - Errors containing any of these substrings will not be logged to console and beacons will not be sent. Case-sensitive substring matching.
 
-- Errors containing any of the `ignoredErrors` substrings will not be logged to console
-- Beacons for filtered errors will not be sent to the server
-- Useful for filtering out known benign errors or third-party script noise
-- Case-sensitive substring matching
+**`errors.forceRetry`** - Errors containing any of these substrings will trigger the same retry/reload process as chunk load errors (calls `attemptReload()`). Useful for custom error patterns that indicate a stale deployment. Case-sensitive substring matching.
 
 ### Custom Retry Strategy
 
