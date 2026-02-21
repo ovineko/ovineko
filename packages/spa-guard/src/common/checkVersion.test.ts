@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { Logger } from "./logger";
 import type { Options } from "./options";
 
-import { optionsWindowKey } from "./constants";
+import { loggerWindowKey, optionsWindowKey } from "./constants";
 
 const setWindowOptions = (opts: Options) => {
   (globalThis.window as any)[optionsWindowKey] = opts;
@@ -10,6 +11,41 @@ const setWindowOptions = (opts: Options) => {
 
 const clearWindowOptions = () => {
   delete (globalThis.window as any)[optionsWindowKey];
+};
+
+const createMockLogger = (): Logger => ({
+  beaconSendFailed: vi.fn(),
+  capturedError: vi.fn(),
+  clearingRetryState: vi.fn(),
+  error: vi.fn(),
+  fallbackAlreadyShown: vi.fn(),
+  fallbackInjectFailed: vi.fn(),
+  fallbackTargetNotFound: vi.fn(),
+  log: vi.fn(),
+  logEvent: vi.fn(),
+  noBeaconEndpoint: vi.fn(),
+  noFallbackConfigured: vi.fn(),
+  retryLimitExceeded: vi.fn(),
+  updatedRetryAttempt: vi.fn(),
+  versionChanged: vi.fn(),
+  versionChangeDetected: vi.fn(),
+  versionCheckAlreadyRunning: vi.fn(),
+  versionCheckDisabled: vi.fn(),
+  versionCheckFailed: vi.fn(),
+  versionCheckHttpError: vi.fn(),
+  versionCheckParseError: vi.fn(),
+  versionCheckRequiresEndpoint: vi.fn(),
+  versionCheckStarted: vi.fn(),
+  versionCheckStopped: vi.fn(),
+  warn: vi.fn(),
+});
+
+const setWindowLogger = (logger: Logger) => {
+  (globalThis.window as any)[loggerWindowKey] = logger;
+};
+
+const clearWindowLogger = () => {
+  delete (globalThis.window as any)[loggerWindowKey];
 };
 
 const loadModule = async () => {
@@ -20,12 +56,16 @@ const loadModule = async () => {
 describe("common/checkVersion", () => {
   let mod: Awaited<ReturnType<typeof loadModule>>;
   let originalFetch: typeof globalThis.fetch;
+  let mockLogger: ReturnType<typeof createMockLogger>;
 
   beforeEach(async () => {
     originalFetch = globalThis.fetch;
     vi.useFakeTimers();
     vi.resetModules();
     clearWindowOptions();
+
+    mockLogger = createMockLogger();
+    setWindowLogger(mockLogger);
 
     mod = await loadModule();
   });
@@ -36,46 +76,36 @@ describe("common/checkVersion", () => {
     vi.useRealTimers();
     vi.restoreAllMocks();
     clearWindowOptions();
+    clearWindowLogger();
   });
 
   describe("startVersionCheck", () => {
-    it("warns and returns when no version is configured", () => {
+    it("calls versionCheckDisabled when no version is configured", () => {
       setWindowOptions({});
-      const consoleWarn = vi.spyOn(console, "warn");
 
       mod.startVersionCheck();
 
-      expect(consoleWarn).toHaveBeenCalledWith(
-        expect.stringContaining("Version checking disabled"),
-      );
+      expect(mockLogger.versionCheckDisabled).toHaveBeenCalledTimes(1);
     });
 
-    it("warns when called twice (duplicate start)", () => {
+    it("calls versionCheckAlreadyRunning when called twice (duplicate start)", () => {
       setWindowOptions({ checkVersion: { interval: 5000 }, version: "1.0.0" });
-      const consoleWarn = vi.spyOn(console, "warn");
 
       mod.startVersionCheck();
       mod.startVersionCheck();
 
-      expect(consoleWarn).toHaveBeenCalledWith(
-        expect.stringContaining("Version check already running"),
-      );
+      expect(mockLogger.versionCheckAlreadyRunning).toHaveBeenCalledTimes(1);
     });
 
-    it("logs the start message with mode, interval, and version", () => {
+    it("calls versionCheckStarted with mode, interval, and version", () => {
       setWindowOptions({
         checkVersion: { endpoint: "/api/version", interval: 30_000, mode: "json" },
         version: "1.0.0",
       });
-      const consoleLog = vi.spyOn(console, "log");
 
       mod.startVersionCheck();
 
-      expect(consoleLog).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Starting version check (mode: json, interval: 30000ms, current: 1.0.0)",
-        ),
-      );
+      expect(mockLogger.versionCheckStarted).toHaveBeenCalledWith("json", 30_000, "1.0.0");
     });
 
     it("is a no-op in SSR (no window)", async () => {
@@ -229,7 +259,7 @@ describe("common/checkVersion", () => {
   });
 
   describe("fetch error handling", () => {
-    it("logs error and continues when fetch fails", async () => {
+    it("calls versionCheckFailed when fetch fails", async () => {
       setWindowOptions({
         checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json" },
         version: "1.0.0",
@@ -238,16 +268,11 @@ describe("common/checkVersion", () => {
       const networkError = new Error("Network error");
       globalThis.fetch = vi.fn().mockRejectedValue(networkError);
 
-      const consoleError = vi.spyOn(console, "error");
-
       mod.startVersionCheck();
 
       await vi.advanceTimersByTimeAsync(1000);
 
-      expect(consoleError).toHaveBeenCalledWith(
-        expect.stringContaining("Version check failed"),
-        networkError,
-      );
+      expect(mockLogger.versionCheckFailed).toHaveBeenCalledWith(networkError);
     });
 
     it("continues checking after a fetch error", async () => {
@@ -302,18 +327,16 @@ describe("common/checkVersion", () => {
       expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 
-    it("logs when stopped", () => {
+    it("calls versionCheckStopped when stopped", () => {
       setWindowOptions({
         checkVersion: { interval: 1000 },
         version: "1.0.0",
       });
 
-      const consoleLog = vi.spyOn(console, "log");
-
       mod.startVersionCheck();
       mod.stopVersionCheck();
 
-      expect(consoleLog).toHaveBeenCalledWith(expect.stringContaining("Version check stopped"));
+      expect(mockLogger.versionCheckStopped).toHaveBeenCalledTimes(1);
     });
 
     it("does nothing when called without a running check", () => {
@@ -323,32 +346,26 @@ describe("common/checkVersion", () => {
   });
 
   describe("fetchRemoteVersion", () => {
-    it("returns null and warns when JSON mode has no endpoint", async () => {
+    it("returns null and calls versionCheckRequiresEndpoint when JSON mode has no endpoint", async () => {
       setWindowOptions({});
-      const consoleWarn = vi.spyOn(console, "warn");
 
       const result = await mod.fetchRemoteVersion("json");
 
       expect(result).toBeNull();
-      expect(consoleWarn).toHaveBeenCalledWith(
-        expect.stringContaining("JSON version check mode requires endpoint"),
-      );
+      expect(mockLogger.versionCheckRequiresEndpoint).toHaveBeenCalledTimes(1);
     });
 
-    it("returns null and warns when HTML does not contain version", async () => {
+    it("returns null and calls versionCheckParseError when HTML does not contain version", async () => {
       setWindowOptions({});
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         text: async () => "<html><head></head><body>Hello</body></html>",
       });
-      const consoleWarn = vi.spyOn(console, "warn");
 
       const result = await mod.fetchRemoteVersion("html");
 
       expect(result).toBeNull();
-      expect(consoleWarn).toHaveBeenCalledWith(
-        expect.stringContaining("Failed to parse version from HTML"),
-      );
+      expect(mockLogger.versionCheckParseError).toHaveBeenCalledTimes(1);
     });
 
     it("parses version from HTML with typical serialized options format", async () => {
@@ -388,36 +405,69 @@ describe("common/checkVersion", () => {
       expect(result).toBeNull();
     });
 
-    it("returns null and warns on non-OK HTTP response in JSON mode", async () => {
+    it("returns null and calls versionCheckHttpError on non-OK HTTP response in JSON mode", async () => {
       setWindowOptions({ checkVersion: { endpoint: "/api/version" } });
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 500,
       });
-      const consoleWarn = vi.spyOn(console, "warn");
 
       const result = await mod.fetchRemoteVersion("json");
 
       expect(result).toBeNull();
-      expect(consoleWarn).toHaveBeenCalledWith(
-        expect.stringContaining("Version check HTTP error: 500"),
-      );
+      expect(mockLogger.versionCheckHttpError).toHaveBeenCalledWith(500);
     });
 
-    it("returns null and warns on non-OK HTTP response in HTML mode", async () => {
+    it("returns null and calls versionCheckHttpError on non-OK HTTP response in HTML mode", async () => {
       setWindowOptions({});
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 404,
       });
-      const consoleWarn = vi.spyOn(console, "warn");
 
       const result = await mod.fetchRemoteVersion("html");
 
       expect(result).toBeNull();
-      expect(consoleWarn).toHaveBeenCalledWith(
-        expect.stringContaining("Version check HTTP error: 404"),
-      );
+      expect(mockLogger.versionCheckHttpError).toHaveBeenCalledWith(404);
+    });
+  });
+
+  describe("Logger method calls", () => {
+    it("calls versionChanged when a new version is detected", async () => {
+      setWindowOptions({ checkVersion: { interval: 1000, mode: "html" }, version: "1.0.0" });
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        text: async () => 'window.__SPA_GUARD_OPTIONS__={"version":"1.0.1"}',
+      });
+
+      mod.startVersionCheck();
+      await vi.advanceTimersByTimeAsync(1000);
+
+      expect(mockLogger.versionChanged).toHaveBeenCalledWith("1.0.0", "1.0.1");
+    });
+
+    it("calls versionChangeDetected when a new version is detected", async () => {
+      setWindowOptions({ checkVersion: { interval: 1000, mode: "html" }, version: "1.0.0" });
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        text: async () => 'window.__SPA_GUARD_OPTIONS__={"version":"1.0.1"}',
+      });
+
+      mod.startVersionCheck();
+      await vi.advanceTimersByTimeAsync(1000);
+
+      expect(mockLogger.versionChangeDetected).toHaveBeenCalledWith("1.0.0", "1.0.1");
+    });
+
+    it("does not call Logger methods when no logger is set", () => {
+      clearWindowLogger();
+      setWindowOptions({});
+
+      mod.startVersionCheck();
+
+      expect(mockLogger.versionCheckDisabled).not.toHaveBeenCalled();
     });
   });
 });

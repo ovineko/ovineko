@@ -143,13 +143,13 @@ Note: This is an alpha package. No backwards compatibility concerns. Breaking ch
 - Modify: `packages/spa-guard/src/common/sendBeacon.ts`
 - Modify: `packages/spa-guard/src/common/checkVersion.ts`
 
-- [ ] sendBeacon.ts: replace 2 console calls with Logger methods:
+- [x] sendBeacon.ts: replace 2 console calls with Logger methods:
   - Line 15: `console.warn(logMessage("Report endpoint..."))` -> `getLogger()?.noBeaconEndpoint()`
   - Line 32: `console.error(logMessage("Failed to send beacon:"), error)` -> `getLogger()?.beaconSendFailed(error)`
-- [ ] checkVersion.ts: replace 11 console calls with specific Logger methods for version-check diagnostics
-- [ ] Remove `logMessage` imports from both files
-- [ ] Update/add tests
-- [ ] Run project test suite - must pass before task 5
+- [x] checkVersion.ts: replace 11 console calls with specific Logger methods for version-check diagnostics
+- [x] Remove `logMessage` imports from both files
+- [x] Update/add tests
+- [x] Run project test suite - must pass before task 5
 
 ### Task 5: Update entry points and clean up log.ts
 
