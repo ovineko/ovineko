@@ -54,11 +54,11 @@ When `useRetryId: false`, the code skips ALL URL parameter handling - both `spaG
 
 ### Task 3: Verify acceptance criteria
 
-- [ ] Manual test: `useRetryId: false` keeps `spaGuardRetryAttempt` in URL across reloads, increments correctly, reaches exhaustion
-- [ ] Manual test: `useRetryId: false` does NOT put `spaGuardRetryId` in URL
-- [ ] Manual test: `useRetryId: true` still works with both URL params as before (no regression)
-- [ ] Run full test suite (`pnpm test` or project-specific command)
-- [ ] Run linter (`pnpm lint` or project-specific command)
+- [x] Manual test: `useRetryId: false` keeps `spaGuardRetryAttempt` in URL across reloads, increments correctly, reaches exhaustion
+- [x] Manual test: `useRetryId: false` does NOT put `spaGuardRetryId` in URL
+- [x] Manual test: `useRetryId: true` still works with both URL params as before (no regression)
+- [x] Run full test suite (`pnpm test` or project-specific command)
+- [x] Run linter (`pnpm lint` or project-specific command)
 
 ### Task 4: Update documentation
 
