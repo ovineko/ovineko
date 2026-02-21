@@ -46,9 +46,9 @@ The ESLint rule `no-direct-lazy` in packages/spa-guard correctly transforms the 
 
 ### Task 3: Verify acceptance criteria
 
-- [ ] Manual test: ESLint autofix of `import { lazy } from "react"; const Page = lazy(() => import("./Page"));` produces `import { lazyWithRetry } from "@ovineko/spa-guard/react"; const Page = lazyWithRetry(() => import("./Page"));`
-- [ ] Run full test suite (use project-specific command)
-- [ ] Run linter (use project-specific command)
+- [x] Manual test: ESLint autofix of `import { lazy } from "react"; const Page = lazy(() => import("./Page"));` produces `import { lazyWithRetry } from "@ovineko/spa-guard/react"; const Page = lazyWithRetry(() => import("./Page"));`
+- [x] Run full test suite (use project-specific command)
+- [x] Run linter (use project-specific command)
 
 ### Task 4: Update documentation
 
