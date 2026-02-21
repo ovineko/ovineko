@@ -62,6 +62,6 @@ Add tests verifying the config export structure.
 
 ### Task 4: Update documentation
 
-- [ ] Update README.md if user-facing changes (done in Task 2)
-- [ ] Update CLAUDE.md if internal patterns changed
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Update README.md if user-facing changes (done in Task 2)
+- [x] Update CLAUDE.md if internal patterns changed
+- [x] Move this plan to `docs/plans/completed/`
