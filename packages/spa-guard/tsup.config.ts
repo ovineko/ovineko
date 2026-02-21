@@ -10,7 +10,6 @@ export default tsup.defineConfig({
     "src/common/index.ts",
     "src/react-error-boundary/index.tsx",
     "src/react/index.tsx",
-    "src/react/debug/index.ts",
     "src/runtime/index.ts",
     "src/runtime/debug/index.ts",
     "src/schema/index.ts",

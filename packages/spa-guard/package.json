@@ -68,10 +68,6 @@
       "types": "./dist/vite-plugin/index.d.ts",
       "default": "./dist/vite-plugin/index.js"
     },
-    "./react/debug": {
-      "types": "./dist/react/debug/index.d.ts",
-      "default": "./dist/react/debug/index.js"
-    },
     "./react-error-boundary": {
       "types": "./dist/react-error-boundary/index.d.ts",
       "default": "./dist/react-error-boundary/index.js"

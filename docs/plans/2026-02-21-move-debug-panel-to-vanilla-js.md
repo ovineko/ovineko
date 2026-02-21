@@ -104,10 +104,10 @@ createDebugger returns a function. Calling that function destroys the panel. The
 - Modify: `packages/spa-guard/package.json` (remove "./react/debug" export)
 - Modify: `packages/spa-guard/tsup.config.ts` (remove react/debug entry)
 
-- [ ] Delete all files in src/react/debug/
-- [ ] Remove "./react/debug" export from package.json
-- [ ] Remove react/debug entry from tsup.config.ts
-- [ ] Run build and tests to verify no breakage
+- [x] Delete all files in src/react/debug/
+- [x] Remove "./react/debug" export from package.json
+- [x] Remove react/debug entry from tsup.config.ts
+- [x] Run build and tests to verify no breakage
 
 ### Task 5: Delete revise.txt
 
