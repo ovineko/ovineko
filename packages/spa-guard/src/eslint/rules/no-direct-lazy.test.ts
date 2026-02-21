@@ -58,6 +58,30 @@ ruleTester.run("no-direct-lazy", rule, {
       errors: [{ messageId: "noDirectLazy" }],
       output: `import { useState as state } from "react";\nimport { lazyWithRetry } from "${name}/react";`,
     },
+    {
+      // lazy() usage should be renamed alongside import
+      code: 'import { lazy } from "react";\nconst Page = lazy(() => import("./Page"));',
+      errors: [{ messageId: "noDirectLazy" }],
+      output: `import { lazyWithRetry } from "${name}/react";\nconst Page = lazyWithRetry(() => import("./Page"));`,
+    },
+    {
+      // Multi-import with lazy() usage: split import and rename usage
+      code: 'import { useState, lazy } from "react";\nconst Page = lazy(() => import("./Page"));',
+      errors: [{ messageId: "noDirectLazy" }],
+      output: `import { useState } from "react";\nimport { lazyWithRetry } from "${name}/react";\nconst Page = lazyWithRetry(() => import("./Page"));`,
+    },
+    {
+      // Multiple lazy() usages in same file: all references renamed
+      code: 'import { lazy } from "react";\nconst Page = lazy(() => import("./Page"));\nconst Home = lazy(() => import("./Home"));',
+      errors: [{ messageId: "noDirectLazy" }],
+      output: `import { lazyWithRetry } from "${name}/react";\nconst Page = lazyWithRetry(() => import("./Page"));\nconst Home = lazyWithRetry(() => import("./Home"));`,
+    },
+    {
+      // Aliased import with usage: myLazy usage should stay unchanged
+      code: 'import { lazy as myLazy } from "react";\nconst Page = myLazy(() => import("./Page"));',
+      errors: [{ messageId: "noDirectLazy" }],
+      output: `import { lazyWithRetry as myLazy } from "${name}/react";\nconst Page = myLazy(() => import("./Page"));`,
+    },
   ],
   valid: [
     {
