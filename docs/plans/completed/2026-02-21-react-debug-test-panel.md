@@ -92,6 +92,6 @@ Create a `DebugTestPanel` React component exported as a separate entry point `@o
 
 ### Task 7: Update documentation
 
-- [ ] Update `packages/spa-guard/README.md` with react/debug usage section
-- [ ] Update `CLAUDE.md` if any new internal patterns were introduced
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Update `packages/spa-guard/README.md` with react/debug usage section
+- [x] Update `CLAUDE.md` if any new internal patterns were introduced
+- [x] Move this plan to `docs/plans/completed/`
