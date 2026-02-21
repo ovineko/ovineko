@@ -43,7 +43,7 @@ import {
   shouldResetRetryCycle,
 } from "./lastReloadTime";
 import { getOptions } from "./options";
-import { attemptReload } from "./reload";
+import { attemptReload, resetReloadScheduled } from "./reload";
 import {
   clearRetryStateFromUrl,
   generateRetryId,
@@ -80,7 +80,10 @@ const createMockLogger = () => ({
   logEvent: vi.fn(),
   noBeaconEndpoint: vi.fn(),
   noFallbackConfigured: vi.fn(),
+  reloadAlreadyScheduled: vi.fn(),
+  retryCycleStarting: vi.fn(),
   retryLimitExceeded: vi.fn(),
+  retrySchedulingReload: vi.fn(),
   updatedRetryAttempt: vi.fn(),
   versionChanged: vi.fn(),
   versionChangeDetected: vi.fn(),
@@ -138,6 +141,7 @@ describe("attemptReload", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     setupMockLocation();
+    resetReloadScheduled();
     mockLogger = createMockLogger();
     mockGetLogger.mockReturnValue(mockLogger);
     mockGetOptions.mockReturnValue(defaultOptions);
@@ -151,6 +155,7 @@ describe("attemptReload", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.clearAllMocks();
+    resetReloadScheduled();
   });
 
   describe("basic reload cycle - attempt 0", () => {
@@ -996,6 +1001,102 @@ describe("attemptReload", () => {
       );
 
       expect(() => attemptReload(new Error("chunk error"))).not.toThrow();
+    });
+
+    it("calls retryCycleStarting with retryId and current attempt", () => {
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      expect(mockLogger.retryCycleStarting).toHaveBeenCalledWith("generated-retry-id", 0);
+    });
+
+    it("calls retrySchedulingReload before scheduling the reload timeout", () => {
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      expect(mockLogger.retrySchedulingReload).toHaveBeenCalledWith("generated-retry-id", 1, 1000);
+    });
+  });
+
+  describe("reload deduplication guard", () => {
+    it("ignores second attemptReload call while a reload is already scheduled", () => {
+      const error1 = new Error("first chunk error");
+      const error2 = new Error("second chunk error");
+
+      attemptReload(error1);
+
+      // First call emits chunk-error + retry-attempt = 2 events
+      expect(mockEmitEvent).toHaveBeenCalledTimes(2);
+
+      attemptReload(error2);
+
+      // Second call should be a no-op, no additional events emitted
+      expect(mockEmitEvent).toHaveBeenCalledTimes(2);
+    });
+
+    it("calls reloadAlreadyScheduled logger method on duplicate call", () => {
+      const error1 = new Error("first chunk error");
+      const error2 = new Error("second chunk error");
+
+      attemptReload(error1);
+      attemptReload(error2);
+
+      expect(mockLogger.reloadAlreadyScheduled).toHaveBeenCalledWith(error2);
+    });
+
+    it("allows new attemptReload after resetReloadScheduled is called", () => {
+      const error1 = new Error("first chunk error");
+      const error2 = new Error("second chunk error");
+
+      attemptReload(error1);
+      expect(mockEmitEvent).toHaveBeenCalledTimes(2);
+
+      resetReloadScheduled();
+
+      attemptReload(error2);
+      // Should emit 2 more events (chunk-error + retry-attempt)
+      expect(mockEmitEvent).toHaveBeenCalledTimes(4);
+    });
+
+    it("does not set reloadScheduled flag when fallback is shown (attempt=-1)", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
+        [] as unknown as HTMLCollectionOf<Element>,
+      );
+
+      attemptReload(new Error("first error"));
+
+      // Should still allow subsequent calls since no reload was scheduled
+      mockEmitEvent.mockClear();
+      mockGetRetryStateFromUrl.mockReturnValue(null);
+
+      attemptReload(new Error("second error"));
+
+      // Should emit events for the second call
+      expect(mockEmitEvent).toHaveBeenCalled();
+    });
+
+    it("does not set reloadScheduled flag when retries are exhausted", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
+        [] as unknown as HTMLCollectionOf<Element>,
+      );
+
+      attemptReload(new Error("first error"));
+
+      // Should still allow subsequent calls since no reload was scheduled
+      mockEmitEvent.mockClear();
+      mockGetRetryStateFromUrl.mockReturnValue(null);
+
+      attemptReload(new Error("second error"));
+
+      expect(mockEmitEvent).toHaveBeenCalled();
     });
   });
 });

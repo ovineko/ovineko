@@ -24,7 +24,18 @@ const buildReloadUrl = (retryId: string, retryAttempt: number): string => {
   return url.toString();
 };
 
+let reloadScheduled = false;
+
+/** @internal Reset for testing only */
+export const resetReloadScheduled = (): void => {
+  reloadScheduled = false;
+};
+
 export const attemptReload = (error: unknown): void => {
+  if (reloadScheduled) {
+    getLogger()?.reloadAlreadyScheduled(error);
+    return;
+  }
   const options = getOptions();
   const reloadDelays = options.reloadDelays ?? [1000, 2000, 5000];
   const useRetryId = options.useRetryId ?? true;
@@ -35,6 +46,8 @@ export const attemptReload = (error: unknown): void => {
 
   let currentAttempt = retryState ? retryState.retryAttempt : 0;
   let retryId = retryState?.retryId ?? generateRetryId();
+
+  getLogger()?.retryCycleStarting(retryId, currentAttempt);
 
   const retryEnabled = isDefaultRetryEnabled();
 
@@ -128,6 +141,9 @@ export const attemptReload = (error: unknown): void => {
     },
     { silent: shouldIgnoreMessages([errorMsg]) },
   );
+
+  reloadScheduled = true;
+  getLogger()?.retrySchedulingReload(retryId, nextAttempt, delay);
 
   setTimeout(() => {
     if (useRetryId && enableRetryReset) {

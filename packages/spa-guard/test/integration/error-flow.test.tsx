@@ -19,7 +19,7 @@ import type { SPAGuardEvent } from "../../src/common/events/types";
 
 import { subscribe } from "../../src/common/events/internal";
 import { getOptions } from "../../src/common/options";
-import { attemptReload } from "../../src/common/reload";
+import { attemptReload, resetReloadScheduled } from "../../src/common/reload";
 import { ErrorBoundary } from "../../src/react-error-boundary";
 import { lazyWithRetry } from "../../src/react/lazyWithRetry";
 
@@ -149,12 +149,14 @@ let unsubscribeEvents: (() => void) | undefined;
 beforeEach(() => {
   setupMockLocation();
   sessionStorage.clear();
+  resetReloadScheduled();
   vi.mocked(getOptions).mockReturnValue(makeOptions());
 });
 
 afterEach(() => {
   unsubscribeEvents?.();
   unsubscribeEvents = undefined;
+  resetReloadScheduled();
   vi.clearAllMocks();
   vi.restoreAllMocks();
 });
@@ -605,8 +607,8 @@ describe("retry reset after minTimeBetweenResets", () => {
     // URL has attempt=1 for retry ID "old-retry-id"
     setupMockLocation("http://localhost/?spaGuardRetryId=old-retry-id&spaGuardRetryAttempt=1");
 
-    // Last reload was 10 seconds ago — exceeds any reloadDelay
-    const pastTimestamp = Date.now() - 10_000;
+    // Last reload was 40 seconds ago — exceeds delay + page load buffer (1000 + 30000 = 31000ms)
+    const pastTimestamp = Date.now() - 40_000;
     sessionStorage.setItem(
       "__spa_guard_last_reload_timestamp__",
       JSON.stringify({
@@ -644,7 +646,7 @@ describe("retry reset after minTimeBetweenResets", () => {
   it("starts a fresh retry cycle after reset (retry-attempt with attempt=1)", () => {
     setupMockLocation("http://localhost/?spaGuardRetryId=old-retry-id&spaGuardRetryAttempt=1");
 
-    const pastTimestamp = Date.now() - 10_000;
+    const pastTimestamp = Date.now() - 40_000;
     sessionStorage.setItem(
       "__spa_guard_last_reload_timestamp__",
       JSON.stringify({

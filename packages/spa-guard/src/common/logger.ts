@@ -12,7 +12,10 @@ export interface Logger {
   logEvent(event: SPAGuardEvent): void;
   noBeaconEndpoint(): void;
   noFallbackConfigured(): void;
+  reloadAlreadyScheduled(error: unknown): void;
+  retryCycleStarting(retryId: string, fromAttempt: number): void;
   retryLimitExceeded(attempt: number, max: number): void;
+  retrySchedulingReload(retryId: string, attempt: number, delay: number): void;
   updatedRetryAttempt(attempt: number): void;
   versionChanged(oldVersion: null | string, latestVersion: string): void;
   versionChangeDetected(oldVersion: null | string, latestVersion: string): void;
@@ -112,8 +115,19 @@ export const createLogger = (): Logger => ({
   noFallbackConfigured(): void {
     console.error(`${PREFIX} No fallback UI configured`);
   },
+  reloadAlreadyScheduled(error: unknown): void {
+    console.log(`${PREFIX} Reload already scheduled, ignoring duplicate chunk error:`, error);
+  },
+  retryCycleStarting(retryId: string, fromAttempt: number): void {
+    console.log(`${PREFIX} Retry cycle starting: retryId=${retryId}, fromAttempt=${fromAttempt}`);
+  },
   retryLimitExceeded(attempt: number, max: number): void {
     console.log(`${PREFIX} Retry limit exceeded (${attempt}/${max}), marking as fallback shown`);
+  },
+  retrySchedulingReload(retryId: string, attempt: number, delay: number): void {
+    console.log(
+      `${PREFIX} Scheduling reload: retryId=${retryId}, attempt=${attempt}, delay=${delay}ms`,
+    );
   },
   updatedRetryAttempt(attempt: number): void {
     console.log(`${PREFIX} Updated retry attempt to ${attempt} in URL for fallback UI`);
