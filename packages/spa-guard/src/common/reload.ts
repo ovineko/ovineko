@@ -8,12 +8,7 @@ import {
   shouldResetRetryCycle,
 } from "./lastReloadTime";
 import { getOptions } from "./options";
-import {
-  clearRetryStateFromUrl,
-  generateRetryId,
-  getRetryStateFromUrl,
-  updateRetryStateInUrl,
-} from "./retryState";
+import { clearRetryStateFromUrl, generateRetryId, getRetryStateFromUrl } from "./retryState";
 import { sendBeacon } from "./sendBeacon";
 import { shouldIgnoreMessages } from "./shouldIgnore";
 
@@ -181,9 +176,6 @@ const showFallbackUI = (): void => {
     if (retryState && retryState.retryAttempt === -1) {
       getLogger()?.clearingRetryState();
       clearRetryStateFromUrl();
-    } else if (retryState) {
-      updateRetryStateInUrl(retryState.retryId, retryState.retryAttempt + 1);
-      getLogger()?.updatedRetryAttempt(retryState.retryAttempt + 1);
     }
 
     if (retryState) {

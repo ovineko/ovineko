@@ -315,7 +315,20 @@ describe("listenInternal", () => {
       expect(mockPreventDefault).toHaveBeenCalledTimes(1);
     });
 
-    it("calls attemptReload with the full event for chunk errors", () => {
+    it("calls attemptReload with event.error for chunk errors", () => {
+      mockIsChunkError.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      const innerError = new Error("Failed to fetch dynamically imported module");
+      const event = {
+        error: innerError,
+        message: "Failed to fetch dynamically imported module",
+        preventDefault: vi.fn(),
+      };
+      handlers.error!(event);
+      expect(mockAttemptReload).toHaveBeenCalledWith(innerError);
+    });
+
+    it("falls back to full event when event.error is undefined", () => {
       mockIsChunkError.mockReturnValue(true);
       const { handlers } = captureListeners();
       const event = {
@@ -915,13 +928,14 @@ describe("listenInternal", () => {
   });
 
   describe("forceRetry errors trigger attemptReload", () => {
-    it("calls attemptReload when error message matches forceRetry pattern", () => {
+    it("calls attemptReload with event.error when error message matches forceRetry pattern", () => {
       mockIsChunkError.mockReturnValue(false);
       mockShouldForceRetry.mockReturnValue(true);
       const { handlers } = captureListeners();
-      const event = { message: "StaleModule detected", preventDefault: vi.fn() };
+      const innerError = new Error("StaleModule detected");
+      const event = { error: innerError, message: "StaleModule detected", preventDefault: vi.fn() };
       handlers.error!(event);
-      expect(mockAttemptReload).toHaveBeenCalledWith(event);
+      expect(mockAttemptReload).toHaveBeenCalledWith(innerError);
     });
 
     it("calls event.preventDefault() for forceRetry error events", () => {
@@ -992,9 +1006,10 @@ describe("listenInternal", () => {
       mockIsChunkError.mockReturnValue(true);
       mockShouldForceRetry.mockReturnValue(true);
       const { handlers } = captureListeners();
-      const event = { message: "ChunkLoadError", preventDefault: vi.fn() };
+      const innerError = new Error("ChunkLoadError");
+      const event = { error: innerError, message: "ChunkLoadError", preventDefault: vi.fn() };
       handlers.error!(event);
-      expect(mockAttemptReload).toHaveBeenCalledWith(event);
+      expect(mockAttemptReload).toHaveBeenCalledWith(innerError);
       // shouldForceRetry is not even checked since isChunkError returns first
       expect(mockShouldForceRetry).not.toHaveBeenCalled();
     });

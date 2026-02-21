@@ -40,13 +40,13 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
 
       if (isChunkError(event)) {
         event.preventDefault();
-        attemptReload(event);
+        attemptReload(event.error ?? event);
         return;
       }
 
       if (shouldForceRetry([event.message])) {
         event.preventDefault();
-        attemptReload(event);
+        attemptReload(event.error ?? event);
         return;
       }
 

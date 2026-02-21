@@ -655,7 +655,7 @@ describe("attemptReload", () => {
       expect(mockEmitEvent).not.toHaveBeenCalledWith({ name: "fallback-ui-shown" });
     });
 
-    it("updates retry state in URL when fallback is shown with existing retry state", () => {
+    it("does not increment retry state in URL when fallback is shown with exhausted retries", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
       const mockEl = { innerHTML: "" };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
@@ -667,7 +667,7 @@ describe("attemptReload", () => {
 
       attemptReload(error);
 
-      expect(mockUpdateRetryStateInUrl).toHaveBeenCalledWith("r1", 4);
+      expect(mockUpdateRetryStateInUrl).not.toHaveBeenCalled();
     });
 
     it("clears retry state from URL when fallback is shown with attempt=-1 state", () => {
@@ -968,7 +968,7 @@ describe("attemptReload", () => {
       expect(mockLogger.clearingRetryState).toHaveBeenCalledTimes(1);
     });
 
-    it("calls updatedRetryAttempt when showing fallback with existing retry state", () => {
+    it("does not call updatedRetryAttempt when showing fallback with exhausted retries", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
       const mockEl = { innerHTML: "" };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
@@ -978,7 +978,7 @@ describe("attemptReload", () => {
 
       attemptReload(new Error("chunk error"));
 
-      expect(mockLogger.updatedRetryAttempt).toHaveBeenCalledWith(4);
+      expect(mockLogger.updatedRetryAttempt).not.toHaveBeenCalled();
     });
 
     it("calls fallbackInjectFailed when querySelector throws", () => {

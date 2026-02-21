@@ -163,15 +163,15 @@ export const startVersionCheck = (): void => {
 
   getLogger()?.versionCheckStarted(mode, interval, lastKnownVersion);
 
-  lastCheckTimestamp = Date.now();
-
   // Only start polling if tab is visible and window is focused
   const isTabVisible = document.visibilityState === "visible";
   const isWindowFocused = document.hasFocus();
 
   if (isTabVisible && isWindowFocused) {
+    lastCheckTimestamp = Date.now();
     startPolling(mode, interval);
   } else {
+    lastCheckTimestamp = 0;
     getLogger()?.versionCheckPaused();
   }
 

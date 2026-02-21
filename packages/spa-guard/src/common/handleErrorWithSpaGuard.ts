@@ -3,6 +3,7 @@ import { attemptReload } from "./reload";
 import { getRetryInfoForBeacon } from "./retryState";
 import { sendBeacon } from "./sendBeacon";
 import { serializeError } from "./serializeError";
+import { shouldForceRetry } from "./shouldIgnore";
 
 export interface HandleErrorOptions {
   autoRetryChunkErrors?: boolean;
@@ -29,8 +30,10 @@ export const handleErrorWithSpaGuard = (error: unknown, options: HandleErrorOpti
   onError?.(error);
 
   const isChunk = isChunkError(error);
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const isForceRetry = shouldForceRetry([errorMessage]);
 
-  if (isChunk && autoRetryChunkErrors) {
+  if ((isChunk || isForceRetry) && autoRetryChunkErrors) {
     attemptReload(error);
   } else if (sendBeaconOnError) {
     sendBeacon({

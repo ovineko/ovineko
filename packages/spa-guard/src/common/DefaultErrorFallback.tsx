@@ -77,7 +77,7 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
         return () => tryAgainBtn.removeEventListener("click", handler);
       }
     }
-  }, [onReset]);
+  }, [onReset, html]);
 
   const innerHtml = useMemo(() => ({ __html: html }), [html]);
 
