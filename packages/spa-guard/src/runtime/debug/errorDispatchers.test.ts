@@ -165,6 +165,15 @@ describe("dispatchAsyncRuntimeError", () => {
 });
 
 describe("dispatchSyncRuntimeError", () => {
+  const handlers: Array<(e: Event) => void> = [];
+
+  afterEach(() => {
+    for (const h of handlers) {
+      globalThis.removeEventListener(debugSyncErrorEventType, h);
+    }
+    handlers.length = 0;
+  });
+
   it("returns void", () => {
     const result = dispatchSyncRuntimeError();
     expect(result).toBeUndefined();
@@ -172,10 +181,10 @@ describe("dispatchSyncRuntimeError", () => {
 
   it("fires a CustomEvent on window with the correct type", () => {
     const spy = vi.fn();
+    handlers.push(spy);
     globalThis.addEventListener(debugSyncErrorEventType, spy);
     dispatchSyncRuntimeError();
     expect(spy).toHaveBeenCalledOnce();
-    globalThis.removeEventListener(debugSyncErrorEventType, spy);
   });
 
   it("passes an Error in event.detail.error", () => {
@@ -183,9 +192,9 @@ describe("dispatchSyncRuntimeError", () => {
     const handler = (e: Event) => {
       receivedDetail = (e as CustomEvent).detail as { error: unknown };
     };
+    handlers.push(handler);
     globalThis.addEventListener(debugSyncErrorEventType, handler);
     dispatchSyncRuntimeError();
-    globalThis.removeEventListener(debugSyncErrorEventType, handler);
 
     expect(receivedDetail).toBeDefined();
     expect(receivedDetail!.error).toBeInstanceOf(Error);
@@ -196,9 +205,9 @@ describe("dispatchSyncRuntimeError", () => {
     const handler = (e: Event) => {
       receivedError = (e as CustomEvent).detail.error as Error;
     };
+    handlers.push(handler);
     globalThis.addEventListener(debugSyncErrorEventType, handler);
     dispatchSyncRuntimeError();
-    globalThis.removeEventListener(debugSyncErrorEventType, handler);
 
     expect(receivedError!.message).toBe("Simulated sync runtime error from spa-guard debug panel");
   });
@@ -208,9 +217,9 @@ describe("dispatchSyncRuntimeError", () => {
     const handler = (e: Event) => {
       receivedError = (e as CustomEvent).detail.error as unknown;
     };
+    handlers.push(handler);
     globalThis.addEventListener(debugSyncErrorEventType, handler);
     dispatchSyncRuntimeError();
-    globalThis.removeEventListener(debugSyncErrorEventType, handler);
 
     expect(isChunkError(receivedError)).toBe(false);
   });

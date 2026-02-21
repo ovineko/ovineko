@@ -21,7 +21,9 @@ export function DebugSyncErrorTrigger(): null {
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<{ error: Error }>).detail;
-      setError(detail.error);
+      if (detail?.error instanceof Error) {
+        setError(detail.error);
+      }
     };
     globalThis.addEventListener(debugSyncErrorEventType, handler);
     return () => {
