@@ -8,13 +8,25 @@ import {
   shouldResetRetryCycle,
 } from "./lastReloadTime";
 import { getOptions } from "./options";
-import { clearRetryStateFromUrl, generateRetryId, getRetryStateFromUrl } from "./retryState";
+import {
+  clearRetryAttemptFromUrl,
+  clearRetryStateFromUrl,
+  generateRetryId,
+  getRetryAttemptFromUrl,
+  getRetryStateFromUrl,
+} from "./retryState";
 import { sendBeacon } from "./sendBeacon";
 import { shouldIgnoreMessages } from "./shouldIgnore";
 
 const buildReloadUrl = (retryId: string, retryAttempt: number): string => {
   const url = new URL(globalThis.window.location.href);
   url.searchParams.set(RETRY_ID_PARAM, retryId);
+  url.searchParams.set(RETRY_ATTEMPT_PARAM, String(retryAttempt));
+  return url.toString();
+};
+
+const buildReloadUrlAttemptOnly = (retryAttempt: number): string => {
+  const url = new URL(globalThis.window.location.href);
   url.searchParams.set(RETRY_ATTEMPT_PARAM, String(retryAttempt));
   return url.toString();
 };
@@ -37,7 +49,13 @@ export const attemptReload = (error: unknown): void => {
   const enableRetryReset = options.enableRetryReset ?? true;
   const minTimeBetweenResets = options.minTimeBetweenResets ?? 5000;
 
-  const retryState = useRetryId ? getRetryStateFromUrl() : null;
+  let retryState;
+  if (useRetryId) {
+    retryState = getRetryStateFromUrl();
+  } else {
+    const attempt = getRetryAttemptFromUrl();
+    retryState = attempt === null ? null : { retryAttempt: attempt, retryId: generateRetryId() };
+  }
 
   let currentAttempt = retryState ? retryState.retryAttempt : 0;
   let retryId = retryState?.retryId ?? generateRetryId();
@@ -118,6 +136,10 @@ export const attemptReload = (error: unknown): void => {
       }),
     });
 
+    if (!useRetryId) {
+      clearRetryAttemptFromUrl();
+    }
+
     showFallbackUI();
     return;
   }
@@ -149,7 +171,7 @@ export const attemptReload = (error: unknown): void => {
       const reloadUrl = buildReloadUrl(retryId, nextAttempt);
       globalThis.window.location.href = reloadUrl;
     } else {
-      globalThis.window.location.reload();
+      globalThis.window.location.href = buildReloadUrlAttemptOnly(nextAttempt);
     }
   }, delay);
 };
@@ -172,10 +194,13 @@ const showFallbackUI = (): void => {
     }
     targetElement.innerHTML = fallbackHtml;
 
+    const useRetryId = options.useRetryId ?? true;
     const retryState = getRetryStateFromUrl();
     if (retryState && retryState.retryAttempt === -1) {
       getLogger()?.clearingRetryState();
       clearRetryStateFromUrl();
+    } else if (!useRetryId && !retryState) {
+      clearRetryAttemptFromUrl();
     }
 
     if (retryState) {

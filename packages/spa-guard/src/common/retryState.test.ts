@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
 import {
+  clearRetryAttemptFromUrl,
   clearRetryStateFromUrl,
   generateRetryId,
+  getRetryAttemptFromUrl,
   getRetryInfoForBeacon,
   getRetryStateFromUrl,
   updateRetryStateInUrl,
@@ -229,6 +231,113 @@ describe("clearRetryStateFromUrl", () => {
       throw new Error("replaceState unavailable");
     });
     expect(() => clearRetryStateFromUrl()).not.toThrow();
+  });
+});
+
+describe("getRetryAttemptFromUrl", () => {
+  beforeEach(() => {
+    setupMockLocation();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns null when no retry attempt param present", () => {
+    setupMockLocation("http://localhost/");
+    expect(getRetryAttemptFromUrl()).toBeNull();
+  });
+
+  it("returns parsed number when retryAttempt param present", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=3`);
+    expect(getRetryAttemptFromUrl()).toBe(3);
+  });
+
+  it("returns attempt even without retryId param", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=2`);
+    expect(getRetryAttemptFromUrl()).toBe(2);
+  });
+
+  it("returns attempt when both params present", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=abc&${RETRY_ATTEMPT_PARAM}=5`);
+    expect(getRetryAttemptFromUrl()).toBe(5);
+  });
+
+  it("parses retryAttempt=0 correctly", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=0`);
+    expect(getRetryAttemptFromUrl()).toBe(0);
+  });
+
+  it("returns null when retryAttempt is NaN", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=not-a-number`);
+    expect(getRetryAttemptFromUrl()).toBeNull();
+  });
+
+  it("returns null when retryAttempt is empty string", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=`);
+    expect(getRetryAttemptFromUrl()).toBeNull();
+  });
+
+  it("handles URL with path and other params", () => {
+    setupMockLocation(`http://localhost/some/path?foo=bar&${RETRY_ATTEMPT_PARAM}=1&baz=qux`);
+    expect(getRetryAttemptFromUrl()).toBe(1);
+  });
+
+  it("returns null when window.location throws", () => {
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      get() {
+        throw new Error("location unavailable");
+      },
+    });
+    expect(getRetryAttemptFromUrl()).toBeNull();
+  });
+});
+
+describe("clearRetryAttemptFromUrl", () => {
+  beforeEach(() => {
+    setupMockLocation();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("removes only retryAttempt param from URL, preserves retryId", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=test-id&${RETRY_ATTEMPT_PARAM}=2`);
+    clearRetryAttemptFromUrl();
+    expect(mockHistoryReplaceState).toHaveBeenCalledOnce();
+    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
+    expect(calledUrl.searchParams.has(RETRY_ATTEMPT_PARAM)).toBe(false);
+    expect(calledUrl.searchParams.get(RETRY_ID_PARAM)).toBe("test-id");
+  });
+
+  it("removes retryAttempt when it is the only param", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=3`);
+    clearRetryAttemptFromUrl();
+    expect(mockHistoryReplaceState).toHaveBeenCalledOnce();
+    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
+    expect(calledUrl.searchParams.has(RETRY_ATTEMPT_PARAM)).toBe(false);
+  });
+
+  it("preserves other URL params when clearing", () => {
+    setupMockLocation(`http://localhost/?foo=bar&${RETRY_ATTEMPT_PARAM}=1&baz=qux`);
+    clearRetryAttemptFromUrl();
+    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
+    expect(calledUrl.searchParams.get("foo")).toBe("bar");
+    expect(calledUrl.searchParams.get("baz")).toBe("qux");
+  });
+
+  it("does not throw when there is no retry attempt param to remove", () => {
+    setupMockLocation("http://localhost/");
+    expect(() => clearRetryAttemptFromUrl()).not.toThrow();
+  });
+
+  it("does not throw when window.history.replaceState throws", () => {
+    mockHistoryReplaceState.mockImplementation(() => {
+      throw new Error("replaceState unavailable");
+    });
+    expect(() => clearRetryAttemptFromUrl()).not.toThrow();
   });
 });
 

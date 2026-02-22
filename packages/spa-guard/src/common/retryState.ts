@@ -60,6 +60,32 @@ export const generateRetryId = (): string => {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 15)}`;
 };
 
+export const getRetryAttemptFromUrl = (): null | number => {
+  try {
+    const params = new URLSearchParams(globalThis.window.location.search);
+    const retryAttempt = params.get(RETRY_ATTEMPT_PARAM);
+
+    if (retryAttempt) {
+      const parsed = parseInt(retryAttempt, 10);
+      if (Number.isNaN(parsed)) {
+        return null;
+      }
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+export const clearRetryAttemptFromUrl = (): void => {
+  try {
+    const url = new URL(globalThis.window.location.href);
+    url.searchParams.delete(RETRY_ATTEMPT_PARAM);
+    globalThis.window.history.replaceState(null, "", url.toString());
+  } catch {}
+};
+
 export const getRetryInfoForBeacon = (): { retryAttempt?: number; retryId?: string } => {
   const retryState = getRetryStateFromUrl();
   if (!retryState) {
