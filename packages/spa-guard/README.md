@@ -375,6 +375,8 @@ interface BeaconSchema {
   errorMessage?: string; // Error message
   eventMessage?: string; // Event-specific message
   eventName?: string; // Event type (e.g., 'chunk_error_max_reloads', 'error', 'unhandledrejection')
+  retryAttempt?: number; // Current retry attempt at time of beacon
+  retryId?: string; // ID of the retry cycle
   serialized?: string; // Serialized error details (JSON string)
 }
 ```
@@ -1019,6 +1021,8 @@ interface BeaconSchema {
   errorMessage?: string;
   eventMessage?: string;
   eventName?: string;
+  retryAttempt?: number; // Current retry attempt at time of beacon
+  retryId?: string; // ID of the retry cycle
   serialized?: string; // JSON stringified error details
 }
 ```
