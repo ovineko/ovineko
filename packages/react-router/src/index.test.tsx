@@ -4,7 +4,7 @@ import { createMemoryRouter, MemoryRouter, RouterProvider } from "react-router";
 
 import { render, screen } from "@testing-library/react";
 import * as v from "valibot";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
   createRouteWithoutParams,
@@ -805,6 +805,10 @@ describe("useSearchParams redirect on error", () => {
 });
 
 describe("setGlobalErrorRedirect", () => {
+  afterEach(() => {
+    setGlobalErrorRedirect("/");
+  });
+
   it("should use global error redirect if route-level not specified", () => {
     setGlobalErrorRedirect("/global-error");
 

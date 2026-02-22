@@ -34,8 +34,8 @@ Two tasks:
 - Modify: `packages/react-router/src/index.test.tsx`
 - Modify: `packages/react-router/src/validation.test.ts`
 
-- [x] In `index.test.tsx:116-118`, replace `%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82` with `caf%C3%A9` and `"привет"` with `"café"`
-- [x] In `validation.test.ts:14`, replace `%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82` with `%E4%B8%96%E7%95%8C` and `"привет"` with `"世界"` (keeps test meaningful for multi-byte UTF-8)
+- [x] In `index.test.tsx:116-118`, replace `%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82` with `caf%C3%A9` and `"privet"` (Cyrillic) with `"café"`
+- [x] In `validation.test.ts:14`, replace `%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82` with `%E4%B8%96%E7%95%8C` and `"privet"` (Cyrillic) with `"世界"` (keeps test meaningful for multi-byte UTF-8)
 - [x] Run `pnpm test` in `packages/react-router` to confirm tests still pass
 
 ### Task 2: Translate completed plan file to English
