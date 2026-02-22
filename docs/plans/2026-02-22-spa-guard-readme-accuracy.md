@@ -45,10 +45,10 @@ Update README.md to match the current source code. Four categories of discrepanc
 **Files:**
 - Modify: `packages/spa-guard/README.md`
 
-- [ ] Update Quick Start Fastify example to use 3-param callback signature `(beacon, request, reply)`
-- [ ] Update "Fastify Integration" detailed example to use 3-param callback signature
-- [ ] Update `FastifySPAGuardOptions` in API Reference to show correct types (`FastifyRequest`, `FastifyReply`, `BeaconHandlerResult | void`)
-- [ ] Add `BeaconHandlerResult` interface documentation (`{ skipDefaultLog?: boolean }`) with brief explanation
+- [x] Update Quick Start Fastify example to use 3-param callback signature `(beacon, request, reply)`
+- [x] Update "Fastify Integration" detailed example to use 3-param callback signature
+- [x] Update `FastifySPAGuardOptions` in API Reference to show correct types (`FastifyRequest`, `FastifyReply`, `BeaconHandlerResult | void`)
+- [x] Add `BeaconHandlerResult` interface documentation (`{ skipDefaultLog?: boolean }`) with brief explanation
 
 ### Task 3: Fix React ErrorBoundary documentation
 

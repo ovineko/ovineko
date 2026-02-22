@@ -108,7 +108,7 @@ const app = Fastify();
 
 app.register(fastifySPAGuard, {
   path: "/api/beacon",
-  onBeacon: async (beacon, request) => {
+  onBeacon: async (beacon, request, reply) => {
     // Log to Sentry, DataDog, or your monitoring service
     request.log.error(beacon, "Client error received");
 
@@ -343,7 +343,7 @@ app.register(fastifySPAGuard, {
   path: "/api/beacon",
 
   // Custom beacon handler
-  onBeacon: async (beacon, request) => {
+  onBeacon: async (beacon, request, reply) => {
     const error = new Error(beacon.errorMessage || "Unknown client error");
 
     // Log structured data
@@ -362,7 +362,7 @@ app.register(fastifySPAGuard, {
   },
 
   // Handle unknown/invalid beacon formats
-  onUnknownBeacon: async (body, request) => {
+  onUnknownBeacon: async (body, request, reply) => {
     request.log.warn({ body }, "Received unknown beacon format");
   },
 });
@@ -955,10 +955,28 @@ Registers a POST endpoint to receive beacon data from clients.
 ```typescript
 interface FastifySPAGuardOptions {
   path: string; // Route path (e.g., "/api/beacon")
-  onBeacon?: (beacon: BeaconSchema, request: any) => Promise<void> | void;
-  onUnknownBeacon?: (body: unknown, request: any) => Promise<void> | void;
+  onBeacon?: (
+    beacon: BeaconSchema,
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ) => BeaconHandlerResult | Promise<BeaconHandlerResult | void> | void;
+  onUnknownBeacon?: (
+    body: unknown,
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ) => BeaconHandlerResult | Promise<BeaconHandlerResult | void> | void;
 }
 ```
+
+**BeaconHandlerResult:**
+
+```typescript
+interface BeaconHandlerResult {
+  skipDefaultLog?: boolean; // If true, skips default logging behavior
+}
+```
+
+Return `{ skipDefaultLog: true }` from `onBeacon` or `onUnknownBeacon` to suppress the default Fastify request log entry (useful when you handle logging yourself).
 
 ### Types
 
