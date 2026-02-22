@@ -78,6 +78,6 @@ Two tasks:
 
 ### Task 6: Verify no Cyrillic text remains
 
-- [x] Run `grep -rn "[а-яА-ЯёЁ]" . --include="*.ts" --include="*.tsx" --include="*.md" --include="*.js" --include="*.json" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git` from project root
+- [x] Run `grep -rnP "[\x{0400}-\x{04FF}]" . --include="*.ts" --include="*.tsx" --include="*.md" --include="*.js" --include="*.json" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git` from project root
 - [x] Confirm only `.ralphex/` progress files (if any) remain — those are acceptable
 - [x] Run `pnpm test` from root to confirm all tests pass
