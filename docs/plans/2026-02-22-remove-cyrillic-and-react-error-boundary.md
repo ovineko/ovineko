@@ -61,8 +61,8 @@ Two tasks:
 
 - Modify: `README.md`
 
-- [ ] Remove the `@ovineko/react-error-boundary` row from the Packages table
-- [ ] Remove `react-error-boundary/` line from the Project Structure code block
+- [x] Remove the `@ovineko/react-error-boundary` row from the Packages table
+- [x] Remove `react-error-boundary/` line from the Project Structure code block
 
 ### Task 5: Update AGENTS.md
 
