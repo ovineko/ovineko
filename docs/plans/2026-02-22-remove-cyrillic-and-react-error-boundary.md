@@ -53,7 +53,7 @@ Two tasks:
 
 - Delete: `packages/react-error-boundary/` (entire directory)
 
-- [ ] Delete the entire `packages/react-error-boundary/` directory using `rm -rf packages/react-error-boundary`
+- [x] Delete the entire `packages/react-error-boundary/` directory using `rm -rf packages/react-error-boundary`
 
 ### Task 4: Update root README.md
 
