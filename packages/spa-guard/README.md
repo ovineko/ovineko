@@ -948,14 +948,9 @@ export default defineConfig({
 
 ### Fastify Plugin
 
-#### `fastifySPAGuard(fastify, options: FastifySPAGuardOptions): Promise<void>`
+#### `fastifySPAGuard: FastifyPluginAsync<FastifySPAGuardOptions>`
 
-Registers a POST endpoint to receive beacon data from clients.
-
-**Parameters:**
-
-- `fastify` - Fastify instance
-- `options: FastifySPAGuardOptions` - Configuration object
+Fastify plugin that registers a POST endpoint to receive beacon data from clients. Use with `app.register()`.
 
 **FastifySPAGuardOptions:**
 
@@ -1322,8 +1317,8 @@ spa-guard provides 11 export entry points:
 | `./react`                | React hooks and components (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry, DebugSyncErrorTrigger) | `react@^19`                                       |
 | `./runtime/debug`        | Debug panel factory (`createDebugger`) - framework-agnostic vanilla JS                                                        | None                                              |
 | `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                                                        | `react@^19`, `react-router@^7`                    |
-| `./fastify`              | Fastify server plugin                                                                                                         | `fastify@^4 \|\| ^5`, `fastify-plugin@^4 \|\| ^5` |
-| `./vite-plugin`          | Vite build plugin                                                                                                             | `vite@^7 \|\| ^8`                                 |
+| `./fastify`              | Fastify server plugin                                                                                                         | `fastify@^5 \|\| ^4`, `fastify-plugin@^5 \|\| ^4` |
+| `./vite-plugin`          | Vite build plugin                                                                                                             | `vite@^8 \|\| ^7`                                 |
 | `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                | `react@^19`                                       |
 | `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                | `eslint@^9 \|\| ^10` (optional)                   |
 
