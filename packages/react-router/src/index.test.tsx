@@ -112,10 +112,8 @@ describe("createRouteWithParams", () => {
       const route = createRouteWithParams("/users/:name", {
         params: v.object({ name: v.string() }),
       });
-      const params = route.parseURLParams(
-        "https://example.com/users/%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82",
-      );
-      expect(params).toEqual({ name: "привет" });
+      const params = route.parseURLParams("https://example.com/users/caf%C3%A9");
+      expect(params).toEqual({ name: "café" });
     });
 
     it("should throw URLParseError for invalid URL", () => {
