@@ -63,7 +63,7 @@ Update README.md to match the current source code. Four categories of discrepanc
 **Files:**
 - Modify: `packages/spa-guard/README.md`
 
-- [ ] Update `./fastify` row in module exports table to list `fastify@^4 \|\| ^5, fastify-plugin@^4 \|\| ^5`
+- [x] Update `./fastify` row in module exports table to list `fastify@^4 \|\| ^5, fastify-plugin@^4 \|\| ^5`
 
 ### Task 5: Verify no other discrepancies remain
 

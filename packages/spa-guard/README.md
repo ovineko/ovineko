@@ -1313,19 +1313,19 @@ interface Options {
 
 spa-guard provides 11 export entry points:
 
-| Export                   | Description                                                                                                                   | Peer Dependencies               |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `.`                      | Core functionality (events, listen, options, retry control)                                                                   | None                            |
-| `./schema`               | BeaconSchema type definitions                                                                                                 | `typebox@^1`                    |
-| `./schema/parse`         | Beacon parsing utilities                                                                                                      | `typebox@^1`                    |
-| `./runtime`              | Runtime state management and subscriptions                                                                                    | None                            |
-| `./react`                | React hooks and components (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry, DebugSyncErrorTrigger) | `react@^19`                     |
-| `./runtime/debug`        | Debug panel factory (`createDebugger`) - framework-agnostic vanilla JS                                                        | None                            |
-| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                                                        | `react@^19`, `react-router@^7`  |
-| `./fastify`              | Fastify server plugin                                                                                                         | `fastify@^4 \|\| ^5`            |
-| `./vite-plugin`          | Vite build plugin                                                                                                             | `vite@^7 \|\| ^8`               |
-| `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                | `react@^19`                     |
-| `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                | `eslint@^9 \|\| ^10` (optional) |
+| Export                   | Description                                                                                                                   | Peer Dependencies                                 |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `.`                      | Core functionality (events, listen, options, retry control)                                                                   | None                                              |
+| `./schema`               | BeaconSchema type definitions                                                                                                 | `typebox@^1`                                      |
+| `./schema/parse`         | Beacon parsing utilities                                                                                                      | `typebox@^1`                                      |
+| `./runtime`              | Runtime state management and subscriptions                                                                                    | None                                              |
+| `./react`                | React hooks and components (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry, DebugSyncErrorTrigger) | `react@^19`                                       |
+| `./runtime/debug`        | Debug panel factory (`createDebugger`) - framework-agnostic vanilla JS                                                        | None                                              |
+| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                                                        | `react@^19`, `react-router@^7`                    |
+| `./fastify`              | Fastify server plugin                                                                                                         | `fastify@^4 \|\| ^5`, `fastify-plugin@^4 \|\| ^5` |
+| `./vite-plugin`          | Vite build plugin                                                                                                             | `vite@^7 \|\| ^8`                                 |
+| `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                | `react@^19`                                       |
+| `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                | `eslint@^9 \|\| ^10` (optional)                   |
 
 **Import examples:**
 
