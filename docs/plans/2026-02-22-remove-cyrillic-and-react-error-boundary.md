@@ -70,11 +70,11 @@ Two tasks:
 
 - Modify: `AGENTS.md`
 
-- [ ] Remove `@ovineko/react-error-boundary` bullet from Project Overview list (line 26)
-- [ ] Remove `├── react-error-boundary/` from Repository Structure tree (line 38)
-- [ ] Remove `react-error-boundary` from the build example comment (line 145)
-- [ ] Remove the `@ovineko/react-error-boundary: workspace:*` example code block in Dependency Version Rules section (lines 194-200)
-- [ ] Remove "Error boundaries require @ovineko/react-error-boundary" note under @ovineko/react-router section (line 380)
+- [x] Remove `@ovineko/react-error-boundary` bullet from Project Overview list (line 26)
+- [x] Remove `├── react-error-boundary/` from Repository Structure tree (line 38)
+- [x] Remove `react-error-boundary` from the build example comment (line 145)
+- [x] Remove the `@ovineko/react-error-boundary: workspace:*` example code block in Dependency Version Rules section (lines 194-200)
+- [x] Remove "Error boundaries require @ovineko/react-error-boundary" note under @ovineko/react-router section (line 380)
 
 ### Task 6: Verify no Cyrillic text remains
 
