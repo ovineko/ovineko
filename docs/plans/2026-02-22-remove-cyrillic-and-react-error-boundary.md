@@ -44,8 +44,8 @@ Two tasks:
 
 - Modify: `packages/spa-guard/docs/plans/completed/2026-02-20-lazy-retry-integration.md`
 
-- [ ] Translate all Russian sections to English (Overview description, Context section prose, Development Approach phases, Progress Tracking section, Technical Details comments, API usage comments)
-- [ ] Preserve all code blocks, markdown structure, and checked task items unchanged
+- [x] Translate all Russian sections to English (Overview description, Context section prose, Development Approach phases, Progress Tracking section, Technical Details comments, API usage comments)
+- [x] Preserve all code blocks, markdown structure, and checked task items unchanged
 
 ### Task 3: Delete react-error-boundary package
 
