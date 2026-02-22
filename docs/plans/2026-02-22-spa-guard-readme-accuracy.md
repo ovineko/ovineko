@@ -55,8 +55,8 @@ Update README.md to match the current source code. Four categories of discrepanc
 **Files:**
 - Modify: `packages/spa-guard/README.md`
 
-- [ ] Fix `ErrorBoundaryProps.fallback` type to `((props: FallbackProps) => React.ReactElement) | React.ComponentType<FallbackProps>`
-- [ ] Add `spaGuardState: SpaGuardState` and `errorInfo: null | React.ErrorInfo` to FallbackProps in the custom fallback example
+- [x] Fix `ErrorBoundaryProps.fallback` type to `((props: FallbackProps) => React.ReactElement) | React.ComponentType<FallbackProps>`
+- [x] Add `spaGuardState: SpaGuardState` and `errorInfo: null | React.ErrorInfo` to FallbackProps in the custom fallback example
 
 ### Task 4: Fix module table peer deps for fastify
 

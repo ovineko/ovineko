@@ -469,7 +469,7 @@ This component renders nothing under normal conditions. It only throws when trig
 interface ErrorBoundaryProps {
   autoRetryChunkErrors?: boolean; // Auto-reload on chunk errors (default: true)
   sendBeaconOnError?: boolean; // Send error reports to server (default: true)
-  fallback?: React.ComponentType<FallbackProps>; // Custom fallback component
+  fallback?: ((props: FallbackProps) => React.ReactElement) | React.ComponentType<FallbackProps>; // Custom fallback component or render function
   fallbackRender?: (props: FallbackProps) => React.ReactElement; // Render prop alternative
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void; // Error callback
   resetKeys?: Array<unknown>; // Keys that trigger error reset when changed
@@ -482,7 +482,14 @@ interface ErrorBoundaryProps {
 ```tsx
 import { ErrorBoundary, type FallbackProps } from "@ovineko/spa-guard/react-error-boundary";
 
-const CustomFallback = ({ error, resetError, isChunkError, isRetrying }: FallbackProps) => (
+const CustomFallback = ({
+  error,
+  errorInfo,
+  resetError,
+  isChunkError,
+  isRetrying,
+  spaGuardState,
+}: FallbackProps) => (
   <div>
     <h1>{isChunkError ? "Failed to load" : "Something went wrong"}</h1>
     <p>{error.message}</p>
