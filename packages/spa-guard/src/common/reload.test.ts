@@ -1212,6 +1212,49 @@ describe("attemptReload", () => {
       expect(mockEmitEvent).toHaveBeenCalled();
     });
 
+    it("prevents re-entrant calls when a subscriber calls attemptReload during chunk-error emission", () => {
+      // Simulate a subscriber that re-enters attemptReload during the chunk-error event
+      mockEmitEvent.mockImplementationOnce(() => {
+        // This recursive call should be blocked by the re-entrant guard
+        attemptReload(new Error("reentrant error"));
+      });
+
+      attemptReload(new Error("original error"));
+
+      // The reentrant call should have been blocked - reloadAlreadyScheduled should be called
+      expect(mockLogger.reloadAlreadyScheduled).toHaveBeenCalledWith(new Error("reentrant error"));
+    });
+
+    it("resets reloadScheduled when emitEvent throws an exception", () => {
+      mockEmitEvent.mockImplementationOnce(() => {
+        throw new Error("logger exploded");
+      });
+
+      // First call throws internally but should reset reloadScheduled
+      attemptReload(new Error("chunk error"));
+
+      // Second call should NOT be blocked by reloadAlreadyScheduled
+      mockEmitEvent.mockClear();
+      attemptReload(new Error("second error"));
+
+      expect(mockEmitEvent).toHaveBeenCalled();
+      expect(mockLogger.reloadAlreadyScheduled).not.toHaveBeenCalled();
+    });
+
+    it("resets reloadScheduled when logger.retryCycleStarting throws", () => {
+      mockLogger.retryCycleStarting.mockImplementationOnce(() => {
+        throw new Error("logger method threw");
+      });
+
+      attemptReload(new Error("chunk error"));
+
+      // Should recover and allow subsequent calls
+      attemptReload(new Error("second error"));
+
+      expect(mockEmitEvent).toHaveBeenCalled();
+      expect(mockLogger.reloadAlreadyScheduled).not.toHaveBeenCalled();
+    });
+
     it("does not set reloadScheduled flag when retries are exhausted", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
       const mockEl = { innerHTML: "", querySelector: () => null };

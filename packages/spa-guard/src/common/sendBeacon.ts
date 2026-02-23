@@ -27,7 +27,7 @@ export const sendBeacon = (beacon: BeaconSchema) => {
     isSendBeaconAvailable &&
     globalThis.window.navigator.sendBeacon(options.reportBeacon.endpoint, body);
 
-  if (!isSentBeacon) {
+  if (!isSentBeacon && typeof fetch === "function") {
     fetch(options.reportBeacon.endpoint, { body, keepalive: true, method: "POST" }).catch(
       (error) => {
         getLogger()?.beaconSendFailed(error);

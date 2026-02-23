@@ -33,7 +33,7 @@ const buildReloadUrlAttemptOnly = (retryAttempt: number): string => {
 
 let reloadScheduled = false;
 
-/** @internal Reset for testing only */
+/** @internal */
 export const resetReloadScheduled = (): void => {
   reloadScheduled = false;
 };
@@ -43,137 +43,147 @@ export const attemptReload = (error: unknown): void => {
     getLogger()?.reloadAlreadyScheduled(error);
     return;
   }
-  const options = getOptions();
-  const reloadDelays = options.reloadDelays ?? [1000, 2000, 5000];
-  const useRetryId = options.useRetryId ?? true;
-  const enableRetryReset = options.enableRetryReset ?? true;
-  const minTimeBetweenResets = options.minTimeBetweenResets ?? 5000;
 
-  let retryState;
-  if (useRetryId) {
-    retryState = getRetryStateFromUrl();
-  } else {
-    const attempt = getRetryAttemptFromUrl();
-    retryState = attempt === null ? null : { retryAttempt: attempt, retryId: generateRetryId() };
-  }
+  // Set early to prevent re-entrant calls from synchronous event subscribers
+  reloadScheduled = true;
 
-  let currentAttempt = retryState ? retryState.retryAttempt : 0;
-  let retryId = retryState?.retryId ?? generateRetryId();
+  try {
+    const options = getOptions();
+    const reloadDelays = options.reloadDelays ?? [1000, 2000, 5000];
+    const useRetryId = options.useRetryId ?? true;
+    const enableRetryReset = options.enableRetryReset ?? true;
+    const minTimeBetweenResets = options.minTimeBetweenResets ?? 5000;
 
-  getLogger()?.retryCycleStarting(retryId, currentAttempt);
-
-  const retryEnabled = isDefaultRetryEnabled();
-
-  emitEvent({
-    error,
-    isRetrying: retryEnabled && currentAttempt >= 0 && currentAttempt < reloadDelays.length,
-    name: "chunk-error",
-  });
-
-  if (!retryEnabled) {
-    return;
-  }
-
-  if (
-    enableRetryReset &&
-    retryState &&
-    retryState.retryAttempt > 0 &&
-    shouldResetRetryCycle(retryState, reloadDelays, minTimeBetweenResets)
-  ) {
-    const lastReload = getLastReloadTime();
-    const timeSinceReload = lastReload ? Date.now() - lastReload.timestamp : 0;
-
-    clearRetryStateFromUrl();
-    clearLastReloadTime();
-    setLastRetryResetInfo(retryState.retryId);
-
-    const errorMsg = String(error);
-
-    emitEvent(
-      {
-        name: "retry-reset",
-        previousAttempt: retryState.retryAttempt,
-        previousRetryId: retryState.retryId,
-        timeSinceReload,
-      },
-      { silent: shouldIgnoreMessages([errorMsg]) },
-    );
-
-    currentAttempt = 0;
-    retryId = generateRetryId();
-  }
-
-  if (currentAttempt === -1) {
-    const errorMsg = String(error);
-    if (!shouldIgnoreMessages([errorMsg])) {
-      getLogger()?.fallbackAlreadyShown(error);
+    let retryState;
+    if (useRetryId) {
+      retryState = getRetryStateFromUrl();
+    } else {
+      const attempt = getRetryAttemptFromUrl();
+      retryState = attempt === null ? null : { retryAttempt: attempt, retryId: generateRetryId() };
     }
-    showFallbackUI();
-    return;
-  }
 
-  if (currentAttempt >= reloadDelays.length) {
-    const errorMsg = String(error);
+    let currentAttempt = retryState ? retryState.retryAttempt : 0;
+    let retryId = retryState?.retryId ?? generateRetryId();
 
-    emitEvent(
-      {
-        finalAttempt: currentAttempt,
-        name: "retry-exhausted",
-        retryId: retryState?.retryId ?? "",
-      },
-      { silent: shouldIgnoreMessages([errorMsg]) },
-    );
+    getLogger()?.retryCycleStarting(retryId, currentAttempt);
 
-    sendBeacon({
-      errorMessage: "Exceeded maximum reload attempts",
-      eventName: "chunk_error_max_reloads",
-      retryAttempt: currentAttempt,
-      retryId: retryState?.retryId,
-      serialized: JSON.stringify({
-        error: String(error),
-        retryAttempt: currentAttempt,
-        retryId: retryState?.retryId,
-      }),
+    const retryEnabled = isDefaultRetryEnabled();
+
+    emitEvent({
+      error,
+      isRetrying: retryEnabled && currentAttempt >= 0 && currentAttempt < reloadDelays.length,
+      name: "chunk-error",
     });
 
-    if (!useRetryId) {
-      clearRetryAttemptFromUrl();
+    if (!retryEnabled) {
+      reloadScheduled = false;
+      return;
     }
 
-    showFallbackUI();
-    return;
+    if (
+      enableRetryReset &&
+      retryState &&
+      retryState.retryAttempt > 0 &&
+      shouldResetRetryCycle(retryState, reloadDelays, minTimeBetweenResets)
+    ) {
+      const lastReload = getLastReloadTime();
+      const timeSinceReload = lastReload ? Date.now() - lastReload.timestamp : 0;
+
+      clearRetryStateFromUrl();
+      clearLastReloadTime();
+      setLastRetryResetInfo(retryState.retryId);
+
+      const errorMsg = String(error);
+
+      emitEvent(
+        {
+          name: "retry-reset",
+          previousAttempt: retryState.retryAttempt,
+          previousRetryId: retryState.retryId,
+          timeSinceReload,
+        },
+        { silent: shouldIgnoreMessages([errorMsg]) },
+      );
+
+      currentAttempt = 0;
+      retryId = generateRetryId();
+    }
+
+    if (currentAttempt === -1) {
+      const errorMsg = String(error);
+      if (!shouldIgnoreMessages([errorMsg])) {
+        getLogger()?.fallbackAlreadyShown(error);
+      }
+      reloadScheduled = false;
+      showFallbackUI();
+      return;
+    }
+
+    if (currentAttempt >= reloadDelays.length) {
+      const errorMsg = String(error);
+
+      emitEvent(
+        {
+          finalAttempt: currentAttempt,
+          name: "retry-exhausted",
+          retryId: retryState?.retryId ?? "",
+        },
+        { silent: shouldIgnoreMessages([errorMsg]) },
+      );
+
+      sendBeacon({
+        errorMessage: "Exceeded maximum reload attempts",
+        eventName: "chunk_error_max_reloads",
+        retryAttempt: currentAttempt,
+        retryId: retryState?.retryId,
+        serialized: JSON.stringify({
+          error: String(error),
+          retryAttempt: currentAttempt,
+          retryId: retryState?.retryId,
+        }),
+      });
+
+      if (!useRetryId) {
+        clearRetryAttemptFromUrl();
+      }
+
+      reloadScheduled = false;
+      showFallbackUI();
+      return;
+    }
+
+    const nextAttempt = currentAttempt + 1;
+    const delay = reloadDelays[currentAttempt] ?? 1000;
+
+    const errorMsg = String(error);
+
+    emitEvent(
+      {
+        attempt: nextAttempt,
+        delay,
+        name: "retry-attempt",
+        retryId,
+      },
+      { silent: shouldIgnoreMessages([errorMsg]) },
+    );
+
+    getLogger()?.retrySchedulingReload(retryId, nextAttempt, delay);
+
+    setTimeout(() => {
+      if (useRetryId && enableRetryReset) {
+        setLastReloadTime(retryId, nextAttempt);
+      }
+
+      if (useRetryId) {
+        const reloadUrl = buildReloadUrl(retryId, nextAttempt);
+        globalThis.window.location.href = reloadUrl;
+      } else {
+        globalThis.window.location.href = buildReloadUrlAttemptOnly(nextAttempt);
+      }
+    }, delay);
+  } catch {
+    reloadScheduled = false;
   }
-
-  const nextAttempt = currentAttempt + 1;
-  const delay = reloadDelays[currentAttempt] ?? 1000;
-
-  const errorMsg = String(error);
-
-  emitEvent(
-    {
-      attempt: nextAttempt,
-      delay,
-      name: "retry-attempt",
-      retryId,
-    },
-    { silent: shouldIgnoreMessages([errorMsg]) },
-  );
-
-  reloadScheduled = true;
-  getLogger()?.retrySchedulingReload(retryId, nextAttempt, delay);
-
-  setTimeout(() => {
-    if (useRetryId && enableRetryReset) {
-      setLastReloadTime(retryId, nextAttempt);
-    }
-
-    if (useRetryId) {
-      const reloadUrl = buildReloadUrl(retryId, nextAttempt);
-      globalThis.window.location.href = reloadUrl;
-    } else {
-      globalThis.window.location.href = buildReloadUrlAttemptOnly(nextAttempt);
-    }
-  }, delay);
 };
 
 const showFallbackUI = (): void => {

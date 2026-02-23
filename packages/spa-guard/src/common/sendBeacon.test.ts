@@ -364,6 +364,36 @@ describe("sendBeacon", () => {
       });
     });
 
+    describe("fetch unavailable", () => {
+      let originalFetch: typeof globalThis.fetch;
+      let originalSendBeacon: typeof navigator.sendBeacon;
+
+      beforeEach(() => {
+        originalFetch = globalThis.fetch;
+        originalSendBeacon = navigator.sendBeacon;
+        Object.defineProperty(globalThis.navigator, "sendBeacon", {
+          configurable: true,
+          value: undefined,
+          writable: true,
+        });
+        // Remove fetch from global
+        (globalThis as any).fetch = undefined;
+      });
+
+      afterEach(() => {
+        globalThis.fetch = originalFetch;
+        Object.defineProperty(globalThis.navigator, "sendBeacon", {
+          configurable: true,
+          value: originalSendBeacon,
+          writable: true,
+        });
+      });
+
+      it("does not throw when both sendBeacon and fetch are unavailable", () => {
+        expect(() => sendBeacon(makeBeacon())).not.toThrow();
+      });
+    });
+
     describe("SSR / non-browser environment", () => {
       let originalWindow: typeof globalThis.window;
 
