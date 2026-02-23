@@ -71,10 +71,10 @@ Add three features to @ovineko/spa-guard based on TODO.md analysis (verified aga
 - Modify: `packages/spa-guard/src/common/index.ts` (export BeaconError)
 - Modify: `packages/spa-guard/src/fastify/index.ts` (re-export BeaconError)
 
-- [ ] Create BeaconError class that wraps BeaconSchema into structured Error with typed properties (appName, errorMessage, eventName, retryAttempt, retryId, serialized, eventMessage) and toJSON()
-- [ ] Export from common/index.ts and fastify/index.ts
-- [ ] Write unit tests covering: full beacon, partial beacon, instanceof checks, toJSON output
-- [ ] Run test suite - must pass before task 4
+- [x] Create BeaconError class that wraps BeaconSchema into structured Error with typed properties (appName, errorMessage, eventName, retryAttempt, retryId, serialized, eventMessage) and toJSON()
+- [x] Export from common/index.ts and fastify/index.ts
+- [x] Write unit tests covering: full beacon, partial beacon, instanceof checks, toJSON output
+- [x] Run test suite - must pass before task 4
 
 ### Task 4: Verify acceptance criteria
 

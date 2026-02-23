@@ -4,6 +4,8 @@ import fp from "fastify-plugin";
 
 import type { BeaconSchema } from "../schema";
 
+export { BeaconError } from "../common/errors/BeaconError";
+
 import { name } from "../../package.json";
 import { logMessage } from "../common/log";
 import { parseBeacon } from "../schema/parse";
