@@ -53,10 +53,10 @@ Add two new error simulations to the spa-guard debug panel that correspond to th
 
 ### Task 3: Verify acceptance criteria
 
-- [ ] Run full test suite (pnpm test)
-- [ ] Run linter (pnpm lint)
-- [ ] Run type check (pnpm typecheck)
-- [ ] Verify test coverage meets 80%+
+- [x] Run full test suite (pnpm test)
+- [x] Run linter (pnpm lint)
+- [x] Run type check (pnpm typecheck)
+- [x] Verify test coverage meets 80%+
 
 ### Task 4: Update documentation
 
