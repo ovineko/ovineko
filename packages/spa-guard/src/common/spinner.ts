@@ -57,7 +57,9 @@ export function showSpinner(options?: { background?: string }): () => void {
   wrapper.innerHTML = html;
   const overlay = wrapper.firstElementChild as HTMLElement;
 
-  savedOverflow = document.body.style.overflow;
+  if (!existing) {
+    savedOverflow = document.body.style.overflow;
+  }
   document.body.style.overflow = "hidden";
   document.body.append(overlay);
 

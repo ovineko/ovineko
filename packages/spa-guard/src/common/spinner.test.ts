@@ -156,6 +156,14 @@ describe("spinner", () => {
       expect(spinners.length).toBe(1);
     });
 
+    it("preserves original overflow when called twice", () => {
+      document.body.style.overflow = "auto";
+      showSpinner();
+      showSpinner();
+      dismissSpinner();
+      expect(document.body.style.overflow).toBe("auto");
+    });
+
     it("uses custom background from options parameter", () => {
       showSpinner({ background: "#333" });
       const overlay = document.getElementById(SPINNER_ID);
