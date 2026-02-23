@@ -37,6 +37,9 @@ Peer dependencies vary by integration - see sections below for specific requirem
 - ✅ **Event hooks** - React hooks for subscribing to spa-guard events (`useSPAGuardEvents`, `useSPAGuardChunkError`)
 - ✅ **Retry control** - Programmatic control over default retry behavior (`disableDefaultRetry`, `enableDefaultRetry`)
 - ✅ **ESLint plugin** - Enforces usage of spa-guard wrappers instead of direct React imports
+- ✅ **ForceRetryError** - Typed error class that triggers automatic retry without `forceRetry` config
+- ✅ **appName option** - Beacon source identification for monorepo setups
+- ✅ **BeaconError** - Utility class for error tracking service integration (Sentry, Datadog, etc.)
 
 ## Quick Start
 
@@ -52,6 +55,7 @@ export default defineConfig({
   plugins: [
     spaGuardVitePlugin({
       // Production configuration
+      appName: "my-app", // Identifies this app in beacon reports (useful for monorepos)
       reloadDelays: [1000, 2000, 5000], // 3 attempts with increasing delays
       html: {
         fallback: {
@@ -245,6 +249,9 @@ The Vite plugin injects an inline script into your HTML `<head>` that runs **bef
 import { spaGuardVitePlugin } from "@ovineko/spa-guard/vite-plugin";
 
 spaGuardVitePlugin({
+  // App identification (useful for monorepos)
+  appName: "my-app", // Included in beacon payloads for source identification
+
   // Retry configuration
   reloadDelays: [1000, 2000, 5000], // Array of delays in milliseconds
   useRetryId: true, // Use query parameters for cache busting (default: true)
@@ -292,6 +299,7 @@ spaGuardVitePlugin({
 
 ```typescript
 interface Options {
+  appName?: string; // App name for beacon source identification (monorepo setups)
   reloadDelays?: number[]; // Array of retry delays in ms (default: [1000, 2000, 5000])
   useRetryId?: boolean; // Use query params for cache busting (default: true)
   enableRetryReset?: boolean; // Auto-reset retry cycle when enough time passes (default: true)
@@ -379,9 +387,10 @@ app.register(fastifySPAGuard, {
   onBeacon: async (beacon, request, reply) => {
     const error = new Error(beacon.errorMessage || "Unknown client error");
 
-    // Log structured data
+    // Log structured data (appName identifies the source app in monorepos)
     request.log.error(
       {
+        appName: beacon.appName,
         errorMessage: beacon.errorMessage,
         eventName: beacon.eventName,
         eventMessage: beacon.eventMessage,
@@ -405,6 +414,7 @@ app.register(fastifySPAGuard, {
 
 ```typescript
 interface BeaconSchema {
+  appName?: string; // Source app name (from appName option, useful for monorepos)
   errorMessage?: string; // Error message
   eventMessage?: string; // Event-specific message
   eventName?: string; // Event type (e.g., 'chunk_error_max_reloads', 'error', 'unhandledrejection')
@@ -420,6 +430,81 @@ interface BeaconSchema {
 - `error` - Non-chunk global error
 - `unhandledrejection` - Non-chunk promise rejection
 - `securitypolicyviolation` - CSP violation
+
+### BeaconError
+
+`BeaconError` is a utility class that wraps beacon data into a structured `Error` object with typed properties. This makes it easy to integrate with error tracking services like Sentry, Datadog, and others that expect `Error` instances.
+
+```typescript
+import { BeaconError, fastifySPAGuard } from "@ovineko/spa-guard/fastify";
+
+app.register(fastifySPAGuard, {
+  path: "/api/beacon",
+  onBeacon: async (beacon, request) => {
+    const error = new BeaconError(beacon);
+
+    // Typed properties from the beacon
+    error.appName; // string | undefined
+    error.errorMessage; // string | undefined
+    error.eventName; // string | undefined
+    error.retryAttempt; // number | undefined
+    error.retryId; // string | undefined
+    error.serialized; // string | undefined
+    error.eventMessage; // string | undefined
+
+    // Standard Error properties
+    error.name; // "BeaconError"
+    error.message; // errorMessage ?? eventMessage ?? "Unknown beacon error"
+    error instanceof Error; // true
+    error instanceof BeaconError; // true
+
+    // JSON serialization
+    error.toJSON(); // { appName, errorMessage, eventMessage, ... }
+  },
+});
+```
+
+**Sentry integration:**
+
+```typescript
+import * as Sentry from "@sentry/node";
+import { BeaconError, fastifySPAGuard } from "@ovineko/spa-guard/fastify";
+
+app.register(fastifySPAGuard, {
+  path: "/api/beacon",
+  onBeacon: async (beacon) => {
+    const error = new BeaconError(beacon);
+    Sentry.captureException(error, {
+      tags: {
+        appName: error.appName,
+        eventName: error.eventName,
+      },
+      extra: error.toJSON(),
+    });
+    return { skipDefaultLog: true };
+  },
+});
+```
+
+**Datadog integration:**
+
+```typescript
+import tracer from "dd-trace";
+import { BeaconError, fastifySPAGuard } from "@ovineko/spa-guard/fastify";
+
+app.register(fastifySPAGuard, {
+  path: "/api/beacon",
+  onBeacon: async (beacon) => {
+    const error = new BeaconError(beacon);
+    const span = tracer.scope().active();
+    span?.setTag("error", true);
+    span?.setTag("error.message", error.message);
+    span?.setTag("error.type", error.eventName);
+    if (error.appName) span?.setTag("app.name", error.appName);
+    return { skipDefaultLog: true };
+  },
+});
+```
 
 ### React Integration
 
@@ -1019,6 +1104,7 @@ Return `{ skipDefaultLog: true }` from `onBeacon` or `onUnknownBeacon` to suppre
 
 ```typescript
 interface Options {
+  appName?: string; // App name for beacon source identification (monorepo setups)
   reloadDelays?: number[]; // Retry delays in ms (default: [1000, 2000, 5000])
   useRetryId?: boolean; // Use query params for cache busting (default: true)
   enableRetryReset?: boolean; // Auto-reset retry cycle when enough time passes (default: true)
@@ -1071,6 +1157,7 @@ interface VitePluginOptions extends Options {
 
 ```typescript
 interface BeaconSchema {
+  appName?: string; // Source app name (from appName option)
   errorMessage?: string;
   eventMessage?: string;
   eventName?: string;
@@ -1092,6 +1179,8 @@ From `@ovineko/spa-guard`:
 - `disableDefaultRetry()` - Disable inline script's automatic retry
 - `enableDefaultRetry()` - Re-enable automatic retry
 - `isDefaultRetryEnabled()` - Check if default retry is enabled
+- `ForceRetryError` - Error class that triggers automatic retry when thrown
+- `BeaconError` - Utility class that wraps beacon data into a structured Error
 
 ### Schema Exports
 
@@ -1113,6 +1202,7 @@ From `@ovineko/spa-guard/runtime`:
 - `subscribeToState(callback)` - Subscribe to state changes, returns unsubscribe function
 - `startVersionCheck()` - Start periodic version polling
 - `stopVersionCheck()` - Stop version polling
+- `ForceRetryError` - Error class that triggers automatic retry when thrown
 - `SpaGuardState` - TypeScript type for state object
 - `RecommendedSetupOptions` - TypeScript type for recommendedSetup overrides
 
@@ -1343,14 +1433,14 @@ spa-guard provides 11 export entry points:
 
 | Export                   | Description                                                                                                                   | Peer Dependencies                                 |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `.`                      | Core functionality (events, listen, options, retry control)                                                                   | None                                              |
+| `.`                      | Core functionality (events, listen, options, retry control, ForceRetryError, BeaconError)                                     | None                                              |
 | `./schema`               | BeaconSchema type definitions                                                                                                 | `typebox@^1`                                      |
 | `./schema/parse`         | Beacon parsing utilities                                                                                                      | `typebox@^1`                                      |
-| `./runtime`              | Runtime state management and subscriptions                                                                                    | None                                              |
+| `./runtime`              | Runtime state management, subscriptions, and ForceRetryError                                                                  | None                                              |
 | `./react`                | React hooks and components (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry, DebugSyncErrorTrigger) | `react@^19`                                       |
 | `./runtime/debug`        | Debug panel factory (`createDebugger`) - framework-agnostic vanilla JS                                                        | None                                              |
 | `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                                                        | `react@^19`, `react-router@^7`                    |
-| `./fastify`              | Fastify server plugin                                                                                                         | `fastify@^5 \|\| ^4`, `fastify-plugin@^5 \|\| ^4` |
+| `./fastify`              | Fastify server plugin and BeaconError                                                                                         | `fastify@^5 \|\| ^4`, `fastify-plugin@^5 \|\| ^4` |
 | `./vite-plugin`          | Vite build plugin                                                                                                             | `vite@^8 \|\| ^7`                                 |
 | `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                | `react@^19`                                       |
 | `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                | `eslint@^9 \|\| ^10` (optional)                   |
@@ -1358,22 +1448,32 @@ spa-guard provides 11 export entry points:
 **Import examples:**
 
 ```typescript
-// Core
-import { events, listen, disableDefaultRetry } from "@ovineko/spa-guard";
+// Core (ForceRetryError and BeaconError also available here)
+import {
+  events,
+  listen,
+  disableDefaultRetry,
+  ForceRetryError,
+  BeaconError,
+} from "@ovineko/spa-guard";
 
-// Runtime state + version check
-import { getState, subscribeToState, startVersionCheck } from "@ovineko/spa-guard/runtime";
+// Runtime state + version check + ForceRetryError
+import {
+  getState,
+  subscribeToState,
+  startVersionCheck,
+  ForceRetryError,
+} from "@ovineko/spa-guard/runtime";
 
-// React hooks and components
+// React hooks, components, and ForceRetryError
 import {
   useSpaGuardState,
   useSPAGuardEvents,
   useSPAGuardChunkError,
   DebugSyncErrorTrigger,
+  ForceRetryError,
+  lazyWithRetry,
 } from "@ovineko/spa-guard/react";
-
-// Lazy imports with retry
-import { lazyWithRetry } from "@ovineko/spa-guard/react";
 import type { LazyRetryOptions } from "@ovineko/spa-guard/react";
 
 // Debug panel (framework-agnostic)
@@ -1389,8 +1489,8 @@ import type { BeaconSchema } from "@ovineko/spa-guard/schema";
 // Vite plugin
 import { spaGuardVitePlugin } from "@ovineko/spa-guard/vite-plugin";
 
-// Fastify
-import { fastifySPAGuard } from "@ovineko/spa-guard/fastify";
+// Fastify (BeaconError also available here)
+import { fastifySPAGuard, BeaconError } from "@ovineko/spa-guard/fastify";
 
 // ESLint plugin
 import spaGuardEslint from "@ovineko/spa-guard/eslint";
@@ -1526,6 +1626,42 @@ spaGuardVitePlugin({
 **`errors.ignore`** - Errors containing any of these substrings will not be logged to console and beacons will not be sent. Case-sensitive substring matching.
 
 **`errors.forceRetry`** - Errors containing any of these substrings will trigger the same retry/reload process as chunk load errors (calls `attemptReload()`). Useful for custom error patterns that indicate a stale deployment. Case-sensitive substring matching.
+
+### ForceRetryError
+
+`ForceRetryError` is a typed error class that automatically triggers spa-guard's retry mechanism when thrown, without requiring any `errors.forceRetry` configuration. It works by prepending a magic substring to the error message that spa-guard always recognizes.
+
+```typescript
+import { ForceRetryError } from "@ovineko/spa-guard/react";
+// or
+import { ForceRetryError } from "@ovineko/spa-guard/runtime";
+
+// Throw in any error handler to trigger automatic retry
+throw new ForceRetryError("stale module detected");
+
+// Works with no message too
+throw new ForceRetryError();
+```
+
+**Use cases:**
+
+- Custom module loaders that detect stale deployments
+- Service workers that need to force a refresh
+- API responses indicating version mismatch
+
+**How it works:**
+
+1. `ForceRetryError` prepends a magic substring (`__SPA_GUARD_FORCE_RETRY__`) to the error message
+2. `shouldForceRetry()` always checks for this substring, regardless of `errors.forceRetry` config
+3. When matched, spa-guard triggers the same retry/reload cycle as chunk load errors
+
+```typescript
+const err = new ForceRetryError("version mismatch");
+err.name; // "ForceRetryError"
+err.message; // "__SPA_GUARD_FORCE_RETRY__version mismatch"
+err instanceof ForceRetryError; // true
+err instanceof Error; // true
+```
 
 ### Custom Retry Strategy
 

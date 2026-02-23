@@ -87,7 +87,7 @@ Add three features to @ovineko/spa-guard based on TODO.md analysis (verified aga
 
 ### Task 5: Update documentation
 
-- [ ] Update README.md with ForceRetryError usage examples
-- [ ] Update README.md with appName configuration examples (vite plugin + backend)
-- [ ] Update README.md with BeaconError integration examples (Sentry, Datadog)
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Update README.md with ForceRetryError usage examples
+- [x] Update README.md with appName configuration examples (vite plugin + backend)
+- [x] Update README.md with BeaconError integration examples (Sentry, Datadog)
+- [x] Move this plan to `docs/plans/completed/`
