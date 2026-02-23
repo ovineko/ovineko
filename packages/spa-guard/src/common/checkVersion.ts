@@ -240,4 +240,5 @@ export const _resetForTesting = (): void => {
   lastKnownVersion = null;
   lastCheckTimestamp = null;
   checkInProgress = false;
+  stopped = false;
 };
