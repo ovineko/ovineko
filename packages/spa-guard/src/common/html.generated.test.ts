@@ -4,9 +4,9 @@ import {
   defaultErrorFallbackHtml,
   defaultLoadingFallbackHtml,
   defaultSpinnerHtml,
-} from "./fallbackHtml.generated";
+} from "./html.generated";
 
-describe("fallbackHtml.generated", () => {
+describe("html.generated", () => {
   describe("defaultErrorFallbackHtml", () => {
     it("is a non-empty string", () => {
       expect(typeof defaultErrorFallbackHtml).toBe("string");

@@ -1,5 +1,5 @@
 import { optionsWindowKey } from "./constants";
-import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./fallbackHtml.generated";
+import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./html.generated";
 
 export { optionsWindowKey } from "./constants";
 

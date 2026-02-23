@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { optionsWindowKey } from "./constants";
-import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./fallbackHtml.generated";
+import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./html.generated";
 import { getOptions } from "./options";
 
 const setWindowOptions = (options: Record<string, unknown>): void => {

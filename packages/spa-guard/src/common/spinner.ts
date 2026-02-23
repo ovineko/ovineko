@@ -1,4 +1,4 @@
-import { defaultSpinnerHtml } from "./fallbackHtml.generated";
+import { defaultSpinnerHtml } from "./html.generated";
 import { getOptions } from "./options";
 
 export const SPINNER_ID = "__spa-guard-spinner";

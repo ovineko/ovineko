@@ -55,10 +55,10 @@ Three refactoring tasks from revise.txt:
 - Modify: `src/common/options.test.ts` - update import path
 - Modify: `src/common/spinner.ts` - update import path (from task 1)
 
-- [ ] Rename file and test file
-- [ ] Update OUTPUT_PATH in scripts/generate-fallback.ts
-- [ ] Update all imports (options.ts, DefaultErrorFallback.tsx, DefaultErrorFallback.test.tsx, options.test.ts, spinner.ts, html.generated.test.ts)
-- [ ] Run project test suite - must pass before task 3
+- [x] Rename file and test file
+- [x] Update OUTPUT_PATH in scripts/generate-fallback.ts
+- [x] Update all imports (options.ts, DefaultErrorFallback.tsx, DefaultErrorFallback.test.tsx, options.test.ts, spinner.ts, html.generated.test.ts)
+- [x] Run project test suite - must pass before task 3
 
 ### Task 3: Rename subpackage ./server to ./node
 

@@ -2,7 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 
 import type { SpaGuardState } from "../runtime";
 
-import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./fallbackHtml.generated";
+import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./html.generated";
 import { applyI18n, getI18n } from "./i18n";
 import { getOptions } from "./options";
 

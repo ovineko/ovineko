@@ -9,7 +9,7 @@ vi.mock("./options", () => ({
 import type { SpaGuardState } from "../runtime";
 
 import { DefaultErrorFallback } from "./DefaultErrorFallback";
-import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./fallbackHtml.generated";
+import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./html.generated";
 import { getOptions } from "./options";
 
 const defaultState: SpaGuardState = {

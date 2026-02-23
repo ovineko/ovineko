@@ -5,7 +5,7 @@ import path from "node:path";
 const ERROR_HTML_PATH = path.join(import.meta.dirname, "../src/fallback-error.html");
 const LOADING_HTML_PATH = path.join(import.meta.dirname, "../src/fallback-loading.html");
 const SPINNER_HTML_PATH = path.join(import.meta.dirname, "../src/spinner.html");
-const OUTPUT_PATH = path.join(import.meta.dirname, "../src/common/fallbackHtml.generated.ts");
+const OUTPUT_PATH = path.join(import.meta.dirname, "../src/common/html.generated.ts");
 
 const minifyOptions = {
   collapseWhitespace: true,
