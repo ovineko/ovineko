@@ -6,8 +6,10 @@ import {
   dispatchAsyncRuntimeError,
   dispatchChunkLoadError,
   dispatchFinallyError,
+  dispatchForceRetryError,
   dispatchNetworkTimeout,
   dispatchSyncRuntimeError,
+  dispatchUnhandledRejection,
 } from "./errorDispatchers";
 
 type ButtonStatus = "default" | "loading" | "triggered";
@@ -25,6 +27,12 @@ const SCENARIOS: Scenario[] = [
   { dispatch: dispatchSyncRuntimeError, key: "sync-runtime-error", label: "Sync Runtime Error" },
   { dispatch: dispatchAsyncRuntimeError, key: "async-runtime-error", label: "Async Runtime Error" },
   { dispatch: dispatchFinallyError, key: "finally-error", label: "Finally Error" },
+  { dispatch: dispatchForceRetryError, key: "force-retry-error", label: "ForceRetry Error" },
+  {
+    dispatch: dispatchUnhandledRejection,
+    key: "unhandled-rejection",
+    label: "Unhandled Rejection",
+  },
 ];
 
 const POSITION_MAP: Record<Position, string> = {

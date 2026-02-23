@@ -43,13 +43,13 @@ Add two new error simulations to the spa-guard debug panel that correspond to th
 - Modify: `packages/spa-guard/src/runtime/debug/index.ts`
 - Modify: `packages/spa-guard/src/runtime/debug/index.test.ts`
 
-- [ ] Import `dispatchForceRetryError` and `dispatchUnhandledRejection` from `./errorDispatchers`
-- [ ] Add two entries to SCENARIOS array: `{ dispatch: dispatchForceRetryError, key: "force-retry-error", label: "ForceRetry Error" }` and `{ dispatch: dispatchUnhandledRejection, key: "unhandled-rejection", label: "Unhandled Rejection" }`
-- [ ] Update test "renders all 5 error buttons" to check for 7 buttons including the new keys
-- [ ] Add tests that clicking "force-retry-error" calls `dispatchForceRetryError` and clicking "unhandled-rejection" calls `dispatchUnhandledRejection`
-- [ ] Update test "shows default labels initially" to include the two new labels
-- [ ] Update mock setup in index.test.ts to include the two new dispatchers
-- [ ] Run project test suite - must pass before task 3
+- [x] Import `dispatchForceRetryError` and `dispatchUnhandledRejection` from `./errorDispatchers`
+- [x] Add two entries to SCENARIOS array: `{ dispatch: dispatchForceRetryError, key: "force-retry-error", label: "ForceRetry Error" }` and `{ dispatch: dispatchUnhandledRejection, key: "unhandled-rejection", label: "Unhandled Rejection" }`
+- [x] Update test "renders all 5 error buttons" to check for 7 buttons including the new keys
+- [x] Add tests that clicking "force-retry-error" calls `dispatchForceRetryError` and clicking "unhandled-rejection" calls `dispatchUnhandledRejection`
+- [x] Update test "shows default labels initially" to include the two new labels
+- [x] Update mock setup in index.test.ts to include the two new dispatchers
+- [x] Run project test suite - must pass before task 3
 
 ### Task 3: Verify acceptance criteria
 

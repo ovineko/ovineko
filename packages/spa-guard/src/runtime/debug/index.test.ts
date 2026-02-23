@@ -15,8 +15,10 @@ vi.mock("./errorDispatchers", () => ({
   dispatchAsyncRuntimeError: vi.fn(),
   dispatchChunkLoadError: vi.fn(),
   dispatchFinallyError: vi.fn(),
+  dispatchForceRetryError: vi.fn(),
   dispatchNetworkTimeout: vi.fn(),
   dispatchSyncRuntimeError: vi.fn(),
+  dispatchUnhandledRejection: vi.fn(),
 }));
 
 import { subscribe } from "../../common/events/internal";
@@ -25,8 +27,10 @@ import {
   dispatchAsyncRuntimeError,
   dispatchChunkLoadError,
   dispatchFinallyError,
+  dispatchForceRetryError,
   dispatchNetworkTimeout,
   dispatchSyncRuntimeError,
+  dispatchUnhandledRejection,
 } from "./errorDispatchers";
 
 const mockSubscribe = vi.mocked(subscribe);
@@ -36,6 +40,8 @@ const mockDispatchNetworkTimeout = vi.mocked(dispatchNetworkTimeout);
 const mockDispatchSyncRuntimeError = vi.mocked(dispatchSyncRuntimeError);
 const mockDispatchAsyncRuntimeError = vi.mocked(dispatchAsyncRuntimeError);
 const mockDispatchFinallyError = vi.mocked(dispatchFinallyError);
+const mockDispatchForceRetryError = vi.mocked(dispatchForceRetryError);
+const mockDispatchUnhandledRejection = vi.mocked(dispatchUnhandledRejection);
 
 const defaultState: SpaGuardState = {
   currentAttempt: 0,
@@ -212,7 +218,7 @@ describe("createDebugger - buttons", () => {
   beforeEach(setupMocks);
   afterEach(cleanupDom);
 
-  it("renders all 5 error buttons", async () => {
+  it("renders all 7 error buttons", async () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     expect(getButton("chunk-load-error")).not.toBeNull();
@@ -220,6 +226,8 @@ describe("createDebugger - buttons", () => {
     expect(getButton("sync-runtime-error")).not.toBeNull();
     expect(getButton("async-runtime-error")).not.toBeNull();
     expect(getButton("finally-error")).not.toBeNull();
+    expect(getButton("force-retry-error")).not.toBeNull();
+    expect(getButton("unhandled-rejection")).not.toBeNull();
     destroy();
   });
 
@@ -263,6 +271,22 @@ describe("createDebugger - buttons", () => {
     destroy();
   });
 
+  it("calls dispatchForceRetryError when force-retry-error button is clicked", async () => {
+    const { createDebugger: create } = await import("./index");
+    const destroy = create();
+    getButton("force-retry-error")!.click();
+    expect(mockDispatchForceRetryError).toHaveBeenCalledOnce();
+    destroy();
+  });
+
+  it("calls dispatchUnhandledRejection when unhandled-rejection button is clicked", async () => {
+    const { createDebugger: create } = await import("./index");
+    const destroy = create();
+    getButton("unhandled-rejection")!.click();
+    expect(mockDispatchUnhandledRejection).toHaveBeenCalledOnce();
+    destroy();
+  });
+
   it("shows default labels initially", async () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
@@ -271,6 +295,8 @@ describe("createDebugger - buttons", () => {
     expect(getButton("sync-runtime-error")!.textContent).toBe("Sync Runtime Error");
     expect(getButton("async-runtime-error")!.textContent).toBe("Async Runtime Error");
     expect(getButton("finally-error")!.textContent).toBe("Finally Error");
+    expect(getButton("force-retry-error")!.textContent).toBe("ForceRetry Error");
+    expect(getButton("unhandled-rejection")!.textContent).toBe("Unhandled Rejection");
     destroy();
   });
 
