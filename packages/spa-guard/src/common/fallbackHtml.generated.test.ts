@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./fallbackHtml.generated";
+import {
+  defaultErrorFallbackHtml,
+  defaultLoadingFallbackHtml,
+  defaultSpinnerHtml,
+} from "./fallbackHtml.generated";
 
 describe("fallbackHtml.generated", () => {
   describe("defaultErrorFallbackHtml", () => {
@@ -113,6 +117,38 @@ describe("fallbackHtml.generated", () => {
 
     it("is minified (no newlines)", () => {
       expect(defaultLoadingFallbackHtml).not.toContain("\n");
+    });
+  });
+
+  describe("defaultSpinnerHtml", () => {
+    it("is a non-empty string", () => {
+      expect(typeof defaultSpinnerHtml).toBe("string");
+      expect(defaultSpinnerHtml.length).toBeGreaterThan(0);
+    });
+
+    it("contains SVG element", () => {
+      expect(defaultSpinnerHtml).toContain("<svg");
+      expect(defaultSpinnerHtml).toContain("</svg>");
+    });
+
+    it("contains spinner animation keyframes", () => {
+      expect(defaultSpinnerHtml).toContain("@keyframes spa-guard-spin");
+    });
+
+    it("contains animation style on SVG", () => {
+      expect(defaultSpinnerHtml).toContain("animation:");
+    });
+
+    it("contains circle elements for spinner tracks", () => {
+      expect(defaultSpinnerHtml).toContain("<circle");
+    });
+
+    it("contains stroke-dasharray for animated arc", () => {
+      expect(defaultSpinnerHtml).toContain("stroke-dasharray");
+    });
+
+    it("is minified (no newlines)", () => {
+      expect(defaultSpinnerHtml).not.toContain("\n");
     });
   });
 
