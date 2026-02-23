@@ -378,10 +378,10 @@ describe("common/logger", () => {
     it("versionCheckStarted logs at log level with details", () => {
       const logger = createLogger();
 
-      logger.versionCheckStarted("html", 60_000, "1.0.0");
+      logger.versionCheckStarted("html", 300_000, "1.0.0");
 
       expect(logSpy).toHaveBeenCalledWith(
-        "[spa-guard] Starting version check (mode: html, interval: 60000ms, current: 1.0.0)",
+        "[spa-guard] Starting version check (mode: html, interval: 300000ms, current: 1.0.0)",
       );
     });
 

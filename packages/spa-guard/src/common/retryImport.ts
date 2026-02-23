@@ -9,16 +9,17 @@ const wait = (ms: number, signal?: AbortSignal): Promise<void> =>
       return;
     }
 
-    const timeoutId = setTimeout(resolve, ms);
+    const onAbort = () => {
+      clearTimeout(timeoutId);
+      reject(signal!.reason ?? new DOMException("Aborted", "AbortError"));
+    };
 
-    signal?.addEventListener(
-      "abort",
-      () => {
-        clearTimeout(timeoutId);
-        reject(signal.reason ?? new DOMException("Aborted", "AbortError"));
-      },
-      { once: true },
-    );
+    const timeoutId = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+
+    signal?.addEventListener("abort", onAbort, { once: true });
   });
 
 /**

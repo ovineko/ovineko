@@ -23,7 +23,6 @@ This follows the same philosophy as `@shibanet0/datamitsu-config` (opinionated c
 This monorepo contains the following packages:
 
 - **@ovineko/react-router**: Type-safe wrapper for React Router v7 with valibot schema validation, automatic error handling, and typed params
-- **@ovineko/react-error-boundary**: Error boundary utilities for React with optional Sentry integration
 - **@ovineko/spa-guard**: Production-ready chunk load error handling for SPAs — automatic retry with cache busting, `lazyWithRetry` for module-level retry before page reload, beacon error reporting, React error boundaries, debug test panel, Fastify plugin, and Vite plugin
 - **@ovineko/clean-pkg-json**: Zero-config tool to clean package.json before publishing and restore it after
 - **@ovineko/datamitsu-config**: Internal configuration package for datamitsu tooling (linting, formatting, etc.)
@@ -35,7 +34,6 @@ This monorepo contains the following packages:
 ovineko/
 ├── packages/                    # All publishable packages
 │   ├── react-router/           # Type-safe React Router v7 wrapper (valibot validation)
-│   ├── react-error-boundary/   # Error boundaries with Sentry integration
 │   ├── spa-guard/              # Chunk load error handling for SPAs (lazyWithRetry, beacons, debug panel, Vite plugin)
 │   ├── clean-pkg-json/         # Package.json cleanup tool for publishing
 │   ├── datamitsu-config/       # Shared config for datamitsu tooling
@@ -142,7 +140,7 @@ turbo build
 
 # Build a specific package
 cd packages/<package-name>
-pnpm build              # For packages with 'build' script (react-router, react-error-boundary)
+pnpm build              # For packages with 'build' script (react-router)
 pnpm build:lib          # For packages with 'build:lib' script (clean-pkg-json)
 
 # Build process:
@@ -190,14 +188,6 @@ Before publishing any package:
 > **CRITICAL:** Follow syncpack rules for version ranges
 
 - **Internal packages** (workspace): Always use `workspace:*`
-
-  ```json
-  {
-    "dependencies": {
-      "@ovineko/react-error-boundary": "workspace:*"
-    }
-  }
-  ```
 
 - **Peer dependencies**: Always use caret (`^`) for compatibility range
 
@@ -377,7 +367,6 @@ When modifying a package, always run its tests and ensure the build succeeds bef
 
 - Requires React Router v7 as peer dependency
 - URL params validated at runtime with valibot
-- Error boundaries require @ovineko/react-error-boundary
 
 ### @ovineko/spa-guard
 

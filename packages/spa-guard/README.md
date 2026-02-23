@@ -97,6 +97,39 @@ export default defineConfig({
 });
 ```
 
+### Testing
+
+Console logs are suppressed by default during tests to keep the output clean and readable. This makes it easier to identify which tests passed or failed.
+
+To run tests with console output visible (useful for debugging):
+
+```bash
+# Run tests with console logs enabled
+DEBUG=true pnpm test
+
+# Or use the convenience script
+pnpm test:debug
+
+# Watch mode with console logs
+pnpm test:debug:watch
+```
+
+Other test commands:
+
+```bash
+# Run tests (clean output, no console logs)
+pnpm test
+
+# Watch mode (clean output)
+pnpm test:watch
+
+# Coverage report
+pnpm test:coverage
+
+# Interactive UI
+pnpm test:ui
+```
+
 ### Fastify Server
 
 ```typescript
@@ -108,7 +141,7 @@ const app = Fastify();
 
 app.register(fastifySPAGuard, {
   path: "/api/beacon",
-  onBeacon: async (beacon, request) => {
+  onBeacon: async (beacon, request, reply) => {
     // Log to Sentry, DataDog, or your monitoring service
     request.log.error(beacon, "Client error received");
 
@@ -268,7 +301,7 @@ interface Options {
 
   checkVersion?: {
     mode?: "html" | "json"; // Detection mode (default: "html")
-    interval?: number; // Polling interval in ms (default: 60000)
+    interval?: number; // Polling interval in ms (default: 300000)
     endpoint?: string; // JSON endpoint URL (required for "json" mode)
     onUpdate?: "reload" | "event"; // Behavior on version change (default: "reload")
   };
@@ -313,7 +346,7 @@ interface VitePluginOptions extends Options {
   minTimeBetweenResets: 5000,
   checkVersion: {
     mode: "html",
-    interval: 60_000,
+    interval: 300_000,
     onUpdate: "reload",
   },
   errors: {
@@ -343,7 +376,7 @@ app.register(fastifySPAGuard, {
   path: "/api/beacon",
 
   // Custom beacon handler
-  onBeacon: async (beacon, request) => {
+  onBeacon: async (beacon, request, reply) => {
     const error = new Error(beacon.errorMessage || "Unknown client error");
 
     // Log structured data
@@ -362,7 +395,7 @@ app.register(fastifySPAGuard, {
   },
 
   // Handle unknown/invalid beacon formats
-  onUnknownBeacon: async (body, request) => {
+  onUnknownBeacon: async (body, request, reply) => {
     request.log.warn({ body }, "Received unknown beacon format");
   },
 });
@@ -375,6 +408,8 @@ interface BeaconSchema {
   errorMessage?: string; // Error message
   eventMessage?: string; // Event-specific message
   eventName?: string; // Event type (e.g., 'chunk_error_max_reloads', 'error', 'unhandledrejection')
+  retryAttempt?: number; // Current retry attempt at time of beacon
+  retryId?: string; // ID of the retry cycle
   serialized?: string; // Serialized error details (JSON string)
 }
 ```
@@ -467,7 +502,7 @@ This component renders nothing under normal conditions. It only throws when trig
 interface ErrorBoundaryProps {
   autoRetryChunkErrors?: boolean; // Auto-reload on chunk errors (default: true)
   sendBeaconOnError?: boolean; // Send error reports to server (default: true)
-  fallback?: React.ComponentType<FallbackProps>; // Custom fallback component
+  fallback?: ((props: FallbackProps) => React.ReactElement) | React.ComponentType<FallbackProps>; // Custom fallback component or render function
   fallbackRender?: (props: FallbackProps) => React.ReactElement; // Render prop alternative
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void; // Error callback
   resetKeys?: Array<unknown>; // Keys that trigger error reset when changed
@@ -480,7 +515,14 @@ interface ErrorBoundaryProps {
 ```tsx
 import { ErrorBoundary, type FallbackProps } from "@ovineko/spa-guard/react-error-boundary";
 
-const CustomFallback = ({ error, resetError, isChunkError, isRetrying }: FallbackProps) => (
+const CustomFallback = ({
+  error,
+  errorInfo,
+  resetError,
+  isChunkError,
+  isRetrying,
+  spaGuardState,
+}: FallbackProps) => (
   <div>
     <h1>{isChunkError ? "Failed to load" : "Something went wrong"}</h1>
     <p>{error.message}</p>
@@ -724,7 +766,7 @@ spaGuardVitePlugin({
   // version is auto-generated if not specified
   checkVersion: {
     mode: "html", // "html" (default) or "json"
-    interval: 60_000, // polling interval in ms (default: 60s)
+    interval: 300_000, // polling interval in ms (default: 5min)
     endpoint: "/api/version", // required for "json" mode
     onUpdate: "reload", // "reload" (default) or "event"
   },
@@ -939,24 +981,37 @@ export default defineConfig({
 
 ### Fastify Plugin
 
-#### `fastifySPAGuard(fastify, options: FastifySPAGuardOptions): Promise<void>`
+#### `fastifySPAGuard: FastifyPluginAsync<FastifySPAGuardOptions>`
 
-Registers a POST endpoint to receive beacon data from clients.
-
-**Parameters:**
-
-- `fastify` - Fastify instance
-- `options: FastifySPAGuardOptions` - Configuration object
+Fastify plugin that registers a POST endpoint to receive beacon data from clients. Use with `app.register()`.
 
 **FastifySPAGuardOptions:**
 
 ```typescript
 interface FastifySPAGuardOptions {
   path: string; // Route path (e.g., "/api/beacon")
-  onBeacon?: (beacon: BeaconSchema, request: any) => Promise<void> | void;
-  onUnknownBeacon?: (body: unknown, request: any) => Promise<void> | void;
+  onBeacon?: (
+    beacon: BeaconSchema,
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ) => BeaconHandlerResult | Promise<BeaconHandlerResult | void> | void;
+  onUnknownBeacon?: (
+    body: unknown,
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ) => BeaconHandlerResult | Promise<BeaconHandlerResult | void> | void;
 }
 ```
+
+**BeaconHandlerResult:**
+
+```typescript
+interface BeaconHandlerResult {
+  skipDefaultLog?: boolean; // If true, skips default logging behavior
+}
+```
+
+Return `{ skipDefaultLog: true }` from `onBeacon` or `onUnknownBeacon` to suppress the default Fastify request log entry (useful when you handle logging yourself).
 
 ### Types
 
@@ -973,7 +1028,7 @@ interface Options {
 
   checkVersion?: {
     mode?: "html" | "json"; // Detection mode (default: "html")
-    interval?: number; // Polling interval in ms (default: 60000)
+    interval?: number; // Polling interval in ms (default: 300000)
     endpoint?: string; // JSON endpoint URL (required for "json" mode)
     onUpdate?: "reload" | "event"; // Behavior on version change (default: "reload")
   };
@@ -1019,6 +1074,8 @@ interface BeaconSchema {
   errorMessage?: string;
   eventMessage?: string;
   eventName?: string;
+  retryAttempt?: number; // Current retry attempt at time of beacon
+  retryId?: string; // ID of the retry cycle
   serialized?: string; // JSON stringified error details
 }
 ```
@@ -1284,19 +1341,19 @@ interface Options {
 
 spa-guard provides 11 export entry points:
 
-| Export                   | Description                                                                                                                   | Peer Dependencies               |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `.`                      | Core functionality (events, listen, options, retry control)                                                                   | None                            |
-| `./schema`               | BeaconSchema type definitions                                                                                                 | `typebox@^1`                    |
-| `./schema/parse`         | Beacon parsing utilities                                                                                                      | `typebox@^1`                    |
-| `./runtime`              | Runtime state management and subscriptions                                                                                    | None                            |
-| `./react`                | React hooks and components (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry, DebugSyncErrorTrigger) | `react@^19`                     |
-| `./runtime/debug`        | Debug panel factory (`createDebugger`) - framework-agnostic vanilla JS                                                        | None                            |
-| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                                                        | `react@^19`, `react-router@^7`  |
-| `./fastify`              | Fastify server plugin                                                                                                         | `fastify@^4 \|\| ^5`            |
-| `./vite-plugin`          | Vite build plugin                                                                                                             | `vite@^7 \|\| ^8`               |
-| `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                | `react@^19`                     |
-| `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                | `eslint@^9 \|\| ^10` (optional) |
+| Export                   | Description                                                                                                                   | Peer Dependencies                                 |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `.`                      | Core functionality (events, listen, options, retry control)                                                                   | None                                              |
+| `./schema`               | BeaconSchema type definitions                                                                                                 | `typebox@^1`                                      |
+| `./schema/parse`         | Beacon parsing utilities                                                                                                      | `typebox@^1`                                      |
+| `./runtime`              | Runtime state management and subscriptions                                                                                    | None                                              |
+| `./react`                | React hooks and components (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry, DebugSyncErrorTrigger) | `react@^19`                                       |
+| `./runtime/debug`        | Debug panel factory (`createDebugger`) - framework-agnostic vanilla JS                                                        | None                                              |
+| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                                                        | `react@^19`, `react-router@^7`                    |
+| `./fastify`              | Fastify server plugin                                                                                                         | `fastify@^5 \|\| ^4`, `fastify-plugin@^5 \|\| ^4` |
+| `./vite-plugin`          | Vite build plugin                                                                                                             | `vite@^8 \|\| ^7`                                 |
+| `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                | `react@^19`                                       |
+| `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                | `eslint@^9 \|\| ^10` (optional)                   |
 
 **Import examples:**
 
@@ -1347,18 +1404,27 @@ import spaGuardEslint from "@ovineko/spa-guard/eslint";
 
 ## Advanced Usage
 
-### Disable Query Parameters (PII Concerns)
+### Disable Retry ID Query Parameter (PII Concerns)
 
-If query parameters are problematic for your use case:
+If the `spaGuardRetryId` query parameter is problematic for your use case (e.g., URL logging policies):
 
 ```typescript
 spaGuardVitePlugin({
-  useRetryId: false, // Disable query parameters
-  reloadDelays: [1000, 2000], // Still retries, but without cache busting
+  useRetryId: false, // Disable spaGuardRetryId in URL (default: true)
+  reloadDelays: [1000, 2000], // Still retries, but without cache-busting UUID
 });
 ```
 
-**Note:** Without `useRetryId`, retries use `globalThis.window.location.reload()` which may not bypass aggressive HTML cache.
+**Behavior with `useRetryId: false`:**
+
+- The `spaGuardRetryAttempt` param is still written to the URL to track retry progress across reloads
+- Only the `spaGuardRetryId` UUID param is omitted
+- Retries still work correctly (attempt counter persists in URL)
+- The attempt param is cleaned up from the URL after retry exhaustion
+- The "Error ID" line in the default fallback UI is automatically hidden (no retry ID to display)
+- `enableRetryReset` (smart retry cycle reset) has no effect — retry cycles cannot auto-reset without a persisted retry ID
+
+**Note:** Without `useRetryId`, the retry URL won't include a unique UUID, so aggressive HTML cache may not be bypassed. However, retry counting still works correctly.
 
 ### Custom Fallback UI
 

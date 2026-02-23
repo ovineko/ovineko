@@ -5,7 +5,7 @@ export { optionsWindowKey } from "./constants";
 
 const defaultOptions: Options = {
   checkVersion: {
-    interval: 60_000,
+    interval: 300_000,
     mode: "html",
     onUpdate: "reload",
   },
@@ -46,7 +46,7 @@ export interface Options {
     endpoint?: string;
     /**
      * Polling interval in milliseconds.
-     * @default 60000
+     * @default 300000
      */
     interval?: number;
     /**

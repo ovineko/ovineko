@@ -42,11 +42,19 @@ const rule: Rule.RuleModule = {
               const defaultSpec = otherSpecifiers.find((s) => s.type === "ImportDefaultSpecifier");
               const namedSpecs = otherSpecifiers.filter((s) => s.type === "ImportSpecifier");
 
+              const declIsTypeOnly =
+                (node as typeof node & { importKind?: string }).importKind === "type";
+
               const namedNames = namedSpecs.map((s) => {
-                const spec = s as Rule.Node & { imported: { name: string; type: string } };
+                const spec = s as Rule.Node & {
+                  imported: { name: string; type: string };
+                  importKind?: string;
+                };
+                const isTypeOnly = !declIsTypeOnly && spec.importKind === "type";
+                const typePrefix = isTypeOnly ? "type " : "";
                 return spec.imported.name === s.local.name
-                  ? s.local.name
-                  : `${spec.imported.name} as ${s.local.name}`;
+                  ? `${typePrefix}${s.local.name}`
+                  : `${typePrefix}${spec.imported.name} as ${s.local.name}`;
               });
 
               let reactLine: string;
@@ -54,6 +62,8 @@ const rule: Rule.RuleModule = {
                 reactLine = `import ${defaultSpec.local.name}, { ${namedNames.join(", ")} } from "react";`;
               } else if (defaultSpec) {
                 reactLine = `import ${defaultSpec.local.name} from "react";`;
+              } else if (declIsTypeOnly) {
+                reactLine = `import type { ${namedNames.join(", ")} } from "react";`;
               } else {
                 reactLine = `import { ${namedNames.join(", ")} } from "react";`;
               }

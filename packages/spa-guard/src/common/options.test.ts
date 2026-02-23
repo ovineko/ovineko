@@ -29,6 +29,11 @@ describe("getOptions", () => {
         content: defaultLoadingFallbackHtml,
       },
     });
+    expect(result.checkVersion).toEqual({
+      interval: 300_000,
+      mode: "html",
+      onUpdate: "reload",
+    });
     expect(result.reloadDelays).toEqual([1000, 2000, 5000]);
     expect(result.enableRetryReset).toBe(true);
   });

@@ -27,7 +27,11 @@ export const handleErrorWithSpaGuard = (error: unknown, options: HandleErrorOpti
     sendBeaconOnError = true,
   } = options;
 
-  onError?.(error);
+  try {
+    onError?.(error);
+  } catch {
+    // User callback must not break core retry/reporting flow
+  }
 
   const isChunk = isChunkError(error);
   const errorMessage = error instanceof Error ? error.message : String(error);
