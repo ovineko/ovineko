@@ -26,8 +26,11 @@ const fetchJsonVersion = async (): Promise<null | string> => {
     getLogger()?.versionCheckHttpError(response.status);
     return null;
   }
-  const data = await response.json();
-  return data.version ?? null;
+  const data: unknown = await response.json();
+  if (typeof data !== "object" || data === null) {
+    return null;
+  }
+  return "version" in data && typeof data.version === "string" ? data.version : null;
 };
 
 const fetchHtmlVersion = async (): Promise<null | string> => {

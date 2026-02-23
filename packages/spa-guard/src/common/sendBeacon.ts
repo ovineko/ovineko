@@ -21,7 +21,7 @@ export const sendBeacon = (beacon: BeaconSchema) => {
 
   // IMPORTANT: Do not simplify `globalThis.window.navigator` to just `navigator`!
   // This code can be executed in non-browser environments (e.g., SSR) where window is undefined.
-  const isSendBeaconAvailable = typeof globalThis.window?.navigator.sendBeacon === "function";
+  const isSendBeaconAvailable = typeof globalThis.window?.navigator?.sendBeacon === "function";
 
   const isSentBeacon =
     isSendBeaconAvailable &&

@@ -53,6 +53,11 @@ export function createDebugger(options?: {
     return activeInstance;
   }
 
+  if (!document.body) {
+    console.warn("[spa-guard] document.body is not available. Debug panel cannot be mounted.");
+    return () => {};
+  }
+
   let isOpen = options?.defaultOpen ?? true;
   const unsubscribers: (() => void)[] = [];
   const panel = el(
