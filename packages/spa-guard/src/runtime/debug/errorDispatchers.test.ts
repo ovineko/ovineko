@@ -282,6 +282,13 @@ describe("dispatchUnhandledRejection", () => {
     expect(error).not.toBeInstanceOf(ForceRetryError);
   });
 
+  it("dispatches an error with a descriptive message", async () => {
+    const capture = captureUnhandledRejection();
+    dispatchUnhandledRejection();
+    const error = await capture;
+    expect((error as Error).message).toContain("unhandled promise rejection");
+  });
+
   it("dispatches an error not recognized by isChunkError", async () => {
     const capture = captureUnhandledRejection();
     dispatchUnhandledRejection();

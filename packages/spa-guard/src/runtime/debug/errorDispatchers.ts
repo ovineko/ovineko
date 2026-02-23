@@ -7,6 +7,8 @@
  * spa-guard's listenInternal() picks them up.
  */
 
+/* eslint-disable sonarjs/void-use -- All dispatchers intentionally use void Promise.reject() to create unhandled rejections */
+
 import { debugSyncErrorEventType } from "../../common/constants";
 import { ForceRetryError } from "../../common/errors/ForceRetryError";
 
@@ -31,7 +33,6 @@ export function dispatchChunkLoadError(): void {
     "Failed to fetch dynamically imported module: /nonexistent-chunk-" + Date.now() + ".js",
   );
   error.name = "ChunkLoadError";
-  // eslint-disable-next-line sonarjs/void-use -- Intentional: creates unhandled rejection for spa-guard to catch
   void Promise.reject(error);
 }
 
@@ -41,7 +42,6 @@ export function dispatchChunkLoadError(): void {
  * a window "unhandledrejection" event.
  */
 export function dispatchFinallyError(): void {
-  // eslint-disable-next-line sonarjs/void-use -- Intentional: creates unhandled rejection for spa-guard to catch
   void Promise.resolve().finally(() => {
     throw new Error("Failed to fetch dynamically imported module: /finally-error-chunk.js");
   });
@@ -53,7 +53,6 @@ export function dispatchFinallyError(): void {
  * contains the FORCE_RETRY_MAGIC prefix, exercising the forceRetry path.
  */
 export function dispatchForceRetryError(): void {
-  // eslint-disable-next-line sonarjs/void-use -- Intentional: creates unhandled rejection for spa-guard to catch
   void Promise.reject(new ForceRetryError("Simulated force-retry from spa-guard debug panel"));
 }
 
@@ -63,7 +62,6 @@ export function dispatchForceRetryError(): void {
  */
 export function dispatchNetworkTimeout(delayMs = 3000): void {
   setTimeout(() => {
-    // eslint-disable-next-line sonarjs/void-use -- Intentional: creates unhandled rejection for spa-guard to catch
     void Promise.reject(new TypeError("NetworkError: request timed out"));
   }, delayMs);
 }
@@ -85,7 +83,6 @@ export function dispatchSyncRuntimeError(): void {
  * handleUnhandledRejections config path for generic rejections.
  */
 export function dispatchUnhandledRejection(): void {
-  // eslint-disable-next-line sonarjs/void-use -- Intentional: creates unhandled rejection for spa-guard to catch
   void Promise.reject(
     new Error("Simulated unhandled promise rejection from spa-guard debug panel"),
   );
