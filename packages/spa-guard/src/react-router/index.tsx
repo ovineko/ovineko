@@ -64,7 +64,7 @@ export const ErrorBoundaryReactRouter: React.FC<ErrorBoundaryReactRouterProps> =
       sendBeaconOnError: shouldSendBeacon,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [routeError]);
 
   const isChunk = isChunkError(routeError);
   const isRetrying = spaGuardState.isWaiting && spaGuardState.currentAttempt > 0;

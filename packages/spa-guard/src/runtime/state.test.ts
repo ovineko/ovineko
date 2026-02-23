@@ -28,6 +28,7 @@ describe("runtime/state", () => {
   describe("getState() - initial state", () => {
     it("returns default state when no URL params and no reset info", async () => {
       vi.doMock("../common/retryState", () => ({
+        getRetryAttemptFromUrl: vi.fn().mockReturnValue(null),
         getRetryStateFromUrl: vi.fn().mockReturnValue(null),
       }));
       vi.doMock("../common/lastReloadTime", () => ({
@@ -47,6 +48,7 @@ describe("runtime/state", () => {
 
     it("reads retry attempt from URL params on initial load", async () => {
       vi.doMock("../common/retryState", () => ({
+        getRetryAttemptFromUrl: vi.fn().mockReturnValue(null),
         getRetryStateFromUrl: vi.fn().mockReturnValue({
           retryAttempt: 2,
           retryId: "test-retry-id",
@@ -66,6 +68,7 @@ describe("runtime/state", () => {
 
     it("sets isFallbackShown=true when URL retry attempt is -1 (fallback state)", async () => {
       vi.doMock("../common/retryState", () => ({
+        getRetryAttemptFromUrl: vi.fn().mockReturnValue(null),
         getRetryStateFromUrl: vi.fn().mockReturnValue({
           retryAttempt: -1,
           retryId: "test-retry-id",
@@ -90,6 +93,7 @@ describe("runtime/state", () => {
       };
 
       vi.doMock("../common/retryState", () => ({
+        getRetryAttemptFromUrl: vi.fn().mockReturnValue(null),
         getRetryStateFromUrl: vi.fn().mockReturnValue(null),
       }));
       vi.doMock("../common/lastReloadTime", () => ({
@@ -110,6 +114,7 @@ describe("runtime/state", () => {
       };
 
       vi.doMock("../common/retryState", () => ({
+        getRetryAttemptFromUrl: vi.fn().mockReturnValue(null),
         getRetryStateFromUrl: vi.fn().mockReturnValue({
           retryAttempt: 1,
           retryId: "current-id",
@@ -126,11 +131,51 @@ describe("runtime/state", () => {
       expect(state.lastResetRetryId).toBe("previous-cycle-id");
       expect(state.lastRetryResetTime).toBe(1_700_000_000_000);
     });
+
+    it("reads retry attempt from attempt-only URL param when retryId is absent (useRetryId: false mode)", async () => {
+      vi.doMock("../common/retryState", () => ({
+        getRetryAttemptFromUrl: vi.fn().mockReturnValue(2),
+        getRetryStateFromUrl: vi.fn().mockReturnValue(null),
+      }));
+      vi.doMock("../common/lastReloadTime", () => ({
+        getLastRetryResetInfo: vi.fn().mockReturnValue(null),
+      }));
+
+      const { getState } = await import("./state");
+      const state = getState();
+
+      expect(state.currentAttempt).toBe(2);
+      expect(state.isFallbackShown).toBe(false);
+      expect(state.isWaiting).toBe(false);
+    });
+
+    it("includes reset info when using attempt-only URL param", async () => {
+      const resetInfo = {
+        previousRetryId: "prev-id",
+        timestamp: 1_700_000_000_000,
+      };
+
+      vi.doMock("../common/retryState", () => ({
+        getRetryAttemptFromUrl: vi.fn().mockReturnValue(1),
+        getRetryStateFromUrl: vi.fn().mockReturnValue(null),
+      }));
+      vi.doMock("../common/lastReloadTime", () => ({
+        getLastRetryResetInfo: vi.fn().mockReturnValue(resetInfo),
+      }));
+
+      const { getState } = await import("./state");
+      const state = getState();
+
+      expect(state.currentAttempt).toBe(1);
+      expect(state.lastResetRetryId).toBe("prev-id");
+      expect(state.lastRetryResetTime).toBe(1_700_000_000_000);
+    });
   });
 
   describe("subscribeToState() - subscription lifecycle", () => {
     beforeEach(() => {
       vi.doMock("../common/retryState", () => ({
+        getRetryAttemptFromUrl: vi.fn().mockReturnValue(null),
         getRetryStateFromUrl: vi.fn().mockReturnValue(null),
       }));
       vi.doMock("../common/lastReloadTime", () => ({
@@ -248,6 +293,7 @@ describe("runtime/state", () => {
   describe("event-driven state updates", () => {
     beforeEach(() => {
       vi.doMock("../common/retryState", () => ({
+        getRetryAttemptFromUrl: vi.fn().mockReturnValue(null),
         getRetryStateFromUrl: vi.fn().mockReturnValue(null),
       }));
       vi.doMock("../common/lastReloadTime", () => ({
@@ -364,6 +410,7 @@ describe("runtime/state", () => {
   describe("edge cases", () => {
     beforeEach(() => {
       vi.doMock("../common/retryState", () => ({
+        getRetryAttemptFromUrl: vi.fn().mockReturnValue(null),
         getRetryStateFromUrl: vi.fn().mockReturnValue(null),
       }));
       vi.doMock("../common/lastReloadTime", () => ({
@@ -483,6 +530,43 @@ describe("runtime/state", () => {
       const state = getState();
 
       expect(state.currentAttempt).toBe(3);
+      expect(state.isFallbackShown).toBe(false);
+
+      // Restore
+      Object.defineProperty(window, "location", {
+        configurable: true,
+        value: {
+          ...window.location,
+          href: "http://localhost/",
+          search: "",
+        },
+        writable: true,
+      });
+    });
+
+    it("uses real getRetryAttemptFromUrl when URL has only attempt param (useRetryId: false mode)", async () => {
+      // Explicitly clear any leftover mocks from other describe blocks
+      vi.doUnmock("../common/retryState");
+
+      // Set the URL with only attempt param (no retryId)
+      Object.defineProperty(window, "location", {
+        configurable: true,
+        value: {
+          ...window.location,
+          href: "http://localhost/?spaGuardRetryAttempt=2",
+          search: "?spaGuardRetryAttempt=2",
+        },
+        writable: true,
+      });
+
+      vi.doMock("../common/lastReloadTime", () => ({
+        getLastRetryResetInfo: vi.fn().mockReturnValue(null),
+      }));
+
+      const { getState } = await import("./state");
+      const state = getState();
+
+      expect(state.currentAttempt).toBe(2);
       expect(state.isFallbackShown).toBe(false);
 
       // Restore

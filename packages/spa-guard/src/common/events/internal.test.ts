@@ -497,148 +497,155 @@ describe("common/events/internal", () => {
     });
   });
 
-  const createMockLogger = (): Logger => ({
-    beaconSendFailed: vi.fn(),
-    capturedError: vi.fn(),
-    clearingRetryState: vi.fn(),
-    error: vi.fn(),
-    fallbackAlreadyShown: vi.fn(),
-    fallbackInjectFailed: vi.fn(),
-    fallbackTargetNotFound: vi.fn(),
-    log: vi.fn(),
-    logEvent: vi.fn(),
-    noBeaconEndpoint: vi.fn(),
-    noFallbackConfigured: vi.fn(),
-    retryLimitExceeded: vi.fn(),
-    updatedRetryAttempt: vi.fn(),
-    versionChanged: vi.fn(),
-    versionChangeDetected: vi.fn(),
-    versionCheckAlreadyRunning: vi.fn(),
-    versionCheckDisabled: vi.fn(),
-    versionCheckFailed: vi.fn(),
-    versionCheckHttpError: vi.fn(),
-    versionCheckParseError: vi.fn(),
-    versionCheckRequiresEndpoint: vi.fn(),
-    versionCheckStarted: vi.fn(),
-    versionCheckStopped: vi.fn(),
-    warn: vi.fn(),
-  });
-
-  describe("setLogger() / getLogger() - logger lifecycle", () => {
-    it("getLogger returns undefined when no logger is set", () => {
-      expect(getLogger()).toBeUndefined();
+  describe("logger", () => {
+    const createMockLogger = (): Logger => ({
+      beaconSendFailed: vi.fn(),
+      capturedError: vi.fn(),
+      clearingRetryState: vi.fn(),
+      error: vi.fn(),
+      fallbackAlreadyShown: vi.fn(),
+      fallbackInjectFailed: vi.fn(),
+      fallbackTargetNotFound: vi.fn(),
+      log: vi.fn(),
+      logEvent: vi.fn(),
+      noBeaconEndpoint: vi.fn(),
+      noFallbackConfigured: vi.fn(),
+      reloadAlreadyScheduled: vi.fn(),
+      retryCycleStarting: vi.fn(),
+      retryLimitExceeded: vi.fn(),
+      retrySchedulingReload: vi.fn(),
+      updatedRetryAttempt: vi.fn(),
+      versionChangeDetected: vi.fn(),
+      versionCheckAlreadyRunning: vi.fn(),
+      versionCheckDisabled: vi.fn(),
+      versionCheckFailed: vi.fn(),
+      versionCheckHttpError: vi.fn(),
+      versionCheckParseError: vi.fn(),
+      versionCheckPaused: vi.fn(),
+      versionCheckRequiresEndpoint: vi.fn(),
+      versionCheckResumed: vi.fn(),
+      versionCheckResumedImmediate: vi.fn(),
+      versionCheckStarted: vi.fn(),
+      versionCheckStopped: vi.fn(),
+      warn: vi.fn(),
     });
 
-    it("setLogger stores a logger retrievable by getLogger", () => {
-      const logger = createMockLogger();
-      setLogger(logger);
-
-      expect(getLogger()).toBe(logger);
-    });
-
-    it("setLogger with undefined clears the logger", () => {
-      const logger = createMockLogger();
-      setLogger(logger);
-      setLogger(undefined);
-
-      expect(getLogger()).toBeUndefined();
-    });
-
-    it("setLogger overwrites a previously set logger", () => {
-      const logger1 = createMockLogger();
-      const logger2 = createMockLogger();
-      setLogger(logger1);
-      setLogger(logger2);
-
-      expect(getLogger()).toBe(logger2);
-    });
-
-    it("logger is stored on window[loggerWindowKey]", async () => {
-      const { loggerWindowKey } = await import("../constants");
-      const logger = createMockLogger();
-      setLogger(logger);
-
-      expect((globalThis.window as any)[loggerWindowKey]).toBe(logger);
-    });
-  });
-
-  describe("emitEvent() - auto-logging via logger", () => {
-    it("calls logger.logEvent when a logger is set", () => {
-      const logger = createMockLogger();
-      setLogger(logger);
-
-      const event: SPAGuardEvent = { name: "fallback-ui-shown" };
-      emitEvent(event);
-
-      expect(logger.logEvent).toHaveBeenCalledTimes(1);
-      expect(logger.logEvent).toHaveBeenCalledWith(event);
-    });
-
-    it("does not call logEvent when no logger is set", () => {
-      const cb = vi.fn();
-      subscribe(cb);
-
-      emitEvent({ name: "fallback-ui-shown" });
-
-      expect(cb).toHaveBeenCalledTimes(1);
-      // No logger means no logEvent call - just verify no error thrown
-    });
-
-    it("silent flag suppresses logEvent but subscribers still receive the event", () => {
-      const logger = createMockLogger();
-      setLogger(logger);
-
-      const cb = vi.fn();
-      subscribe(cb);
-
-      const event: SPAGuardEvent = { name: "fallback-ui-shown" };
-      emitEvent(event, { silent: true });
-
-      expect(logger.logEvent).not.toHaveBeenCalled();
-      expect(cb).toHaveBeenCalledTimes(1);
-      expect(cb).toHaveBeenCalledWith(event);
-    });
-
-    it("silent=false does not suppress logEvent", () => {
-      const logger = createMockLogger();
-      setLogger(logger);
-
-      emitEvent({ name: "fallback-ui-shown" }, { silent: false });
-
-      expect(logger.logEvent).toHaveBeenCalledTimes(1);
-    });
-
-    it("no options (undefined) triggers logEvent", () => {
-      const logger = createMockLogger();
-      setLogger(logger);
-
-      emitEvent({ name: "fallback-ui-shown" });
-
-      expect(logger.logEvent).toHaveBeenCalledTimes(1);
-    });
-
-    it("empty options object triggers logEvent", () => {
-      const logger = createMockLogger();
-      setLogger(logger);
-
-      emitEvent({ name: "fallback-ui-shown" }, {});
-
-      expect(logger.logEvent).toHaveBeenCalledTimes(1);
-    });
-
-    it("logEvent is called before subscribers", () => {
-      const callOrder: string[] = [];
-      const logger = createMockLogger();
-      (logger.logEvent as ReturnType<typeof vi.fn>).mockImplementation(() => {
-        callOrder.push("logEvent");
+    describe("setLogger() / getLogger() - logger lifecycle", () => {
+      it("getLogger returns undefined when no logger is set", () => {
+        expect(getLogger()).toBeUndefined();
       });
-      setLogger(logger);
 
-      subscribe(() => callOrder.push("subscriber"));
+      it("setLogger stores a logger retrievable by getLogger", () => {
+        const logger = createMockLogger();
+        setLogger(logger);
 
-      emitEvent({ name: "fallback-ui-shown" });
+        expect(getLogger()).toBe(logger);
+      });
 
-      expect(callOrder).toEqual(["logEvent", "subscriber"]);
+      it("setLogger with undefined clears the logger", () => {
+        const logger = createMockLogger();
+        setLogger(logger);
+        setLogger(undefined);
+
+        expect(getLogger()).toBeUndefined();
+      });
+
+      it("setLogger overwrites a previously set logger", () => {
+        const logger1 = createMockLogger();
+        const logger2 = createMockLogger();
+        setLogger(logger1);
+        setLogger(logger2);
+
+        expect(getLogger()).toBe(logger2);
+      });
+
+      it("logger is stored on window[loggerWindowKey]", async () => {
+        const { loggerWindowKey } = await import("../constants");
+        const logger = createMockLogger();
+        setLogger(logger);
+
+        expect((globalThis.window as any)[loggerWindowKey]).toBe(logger);
+      });
+    });
+
+    describe("emitEvent() - auto-logging via logger", () => {
+      it("calls logger.logEvent when a logger is set", () => {
+        const logger = createMockLogger();
+        setLogger(logger);
+
+        const event: SPAGuardEvent = { name: "fallback-ui-shown" };
+        emitEvent(event);
+
+        expect(logger.logEvent).toHaveBeenCalledTimes(1);
+        expect(logger.logEvent).toHaveBeenCalledWith(event);
+      });
+
+      it("does not call logEvent when no logger is set", () => {
+        const cb = vi.fn();
+        subscribe(cb);
+
+        emitEvent({ name: "fallback-ui-shown" });
+
+        expect(cb).toHaveBeenCalledTimes(1);
+        // No logger means no logEvent call - just verify no error thrown
+      });
+
+      it("silent flag suppresses logEvent but subscribers still receive the event", () => {
+        const logger = createMockLogger();
+        setLogger(logger);
+
+        const cb = vi.fn();
+        subscribe(cb);
+
+        const event: SPAGuardEvent = { name: "fallback-ui-shown" };
+        emitEvent(event, { silent: true });
+
+        expect(logger.logEvent).not.toHaveBeenCalled();
+        expect(cb).toHaveBeenCalledTimes(1);
+        expect(cb).toHaveBeenCalledWith(event);
+      });
+
+      it("silent=false does not suppress logEvent", () => {
+        const logger = createMockLogger();
+        setLogger(logger);
+
+        emitEvent({ name: "fallback-ui-shown" }, { silent: false });
+
+        expect(logger.logEvent).toHaveBeenCalledTimes(1);
+      });
+
+      it("no options (undefined) triggers logEvent", () => {
+        const logger = createMockLogger();
+        setLogger(logger);
+
+        emitEvent({ name: "fallback-ui-shown" });
+
+        expect(logger.logEvent).toHaveBeenCalledTimes(1);
+      });
+
+      it("empty options object triggers logEvent", () => {
+        const logger = createMockLogger();
+        setLogger(logger);
+
+        emitEvent({ name: "fallback-ui-shown" }, {});
+
+        expect(logger.logEvent).toHaveBeenCalledTimes(1);
+      });
+
+      it("logEvent is called before subscribers", () => {
+        const callOrder: string[] = [];
+        const logger = createMockLogger();
+        (logger.logEvent as ReturnType<typeof vi.fn>).mockImplementation(() => {
+          callOrder.push("logEvent");
+        });
+        setLogger(logger);
+
+        subscribe(() => callOrder.push("subscriber"));
+
+        emitEvent({ name: "fallback-ui-shown" });
+
+        expect(callOrder).toEqual(["logEvent", "subscriber"]);
+      });
     });
   });
 });

@@ -112,6 +112,26 @@ describe("retryImport", () => {
     expect(onRetry).toHaveBeenNthCalledWith(3, 3, 300);
   });
 
+  describe("abort signal cleanup", () => {
+    it("removes abort listener after wait resolves normally", async () => {
+      vi.useFakeTimers();
+      const controller = new AbortController();
+      const removeListenerSpy = vi.spyOn(controller.signal, "removeEventListener");
+
+      const importFn = vi
+        .fn()
+        .mockRejectedValueOnce(new Error("fail"))
+        .mockResolvedValue({ default: "module" });
+
+      const promise = retryImport(importFn, [100], { signal: controller.signal });
+
+      await vi.runAllTimersAsync();
+      await promise;
+
+      expect(removeListenerSpy).toHaveBeenCalledWith("abort", expect.any(Function));
+    });
+  });
+
   describe("callReloadOnFailure", () => {
     it("calls attemptReload when all attempts fail with a chunk error and callReloadOnFailure is true", async () => {
       vi.useFakeTimers();

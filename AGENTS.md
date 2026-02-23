@@ -23,7 +23,6 @@ This follows the same philosophy as `@shibanet0/datamitsu-config` (opinionated c
 This monorepo contains the following packages:
 
 - **@ovineko/react-router**: Type-safe wrapper for React Router v7 with valibot schema validation, automatic error handling, and typed params
-- **@ovineko/react-error-boundary**: Error boundary utilities for React with optional Sentry integration
 - **@ovineko/spa-guard**: Production-ready chunk load error handling for SPAs — automatic retry with cache busting, `lazyWithRetry` for module-level retry before page reload, beacon error reporting, React error boundaries, debug test panel, Fastify plugin, and Vite plugin
 - **@ovineko/clean-pkg-json**: Zero-config tool to clean package.json before publishing and restore it after
 - **@ovineko/datamitsu-config**: Internal configuration package for datamitsu tooling (linting, formatting, etc.)
@@ -35,7 +34,6 @@ This monorepo contains the following packages:
 ovineko/
 ├── packages/                    # All publishable packages
 │   ├── react-router/           # Type-safe React Router v7 wrapper (valibot validation)
-│   ├── react-error-boundary/   # Error boundaries with Sentry integration
 │   ├── spa-guard/              # Chunk load error handling for SPAs (lazyWithRetry, beacons, debug panel, Vite plugin)
 │   ├── clean-pkg-json/         # Package.json cleanup tool for publishing
 │   ├── datamitsu-config/       # Shared config for datamitsu tooling
@@ -142,7 +140,7 @@ turbo build
 
 # Build a specific package
 cd packages/<package-name>
-pnpm build              # For packages with 'build' script (react-router, react-error-boundary)
+pnpm build              # For packages with 'build' script (react-router)
 pnpm build:lib          # For packages with 'build:lib' script (clean-pkg-json)
 
 # Build process:
@@ -190,14 +188,6 @@ Before publishing any package:
 > **CRITICAL:** Follow syncpack rules for version ranges
 
 - **Internal packages** (workspace): Always use `workspace:*`
-
-  ```json
-  {
-    "dependencies": {
-      "@ovineko/react-error-boundary": "workspace:*"
-    }
-  }
-  ```
 
 - **Peer dependencies**: Always use caret (`^`) for compatibility range
 
@@ -377,7 +367,6 @@ When modifying a package, always run its tests and ensure the build succeeds bef
 
 - Requires React Router v7 as peer dependency
 - URL params validated at runtime with valibot
-- Error boundaries require @ovineko/react-error-boundary
 
 ### @ovineko/spa-guard
 
@@ -391,6 +380,7 @@ When modifying a package, always run its tests and ensure the build succeeds bef
 - ESLint plugin name is dynamically computed as `${packageName}/eslint` (i.e., `@ovineko/spa-guard/eslint`) from `package.json` `name` field in `src/eslint/index.ts`; rule names follow as `@ovineko/spa-guard/eslint/no-direct-error-boundary` etc.
 - ESLint v10 is supported (`^9 || ^10`); `@types/eslint` was removed because ESLint v10 ships its own types; the plugin uses `satisfies ESLint.Plugin` for type checking
 - Injectable Logger via DI: all console output uses a `Logger` interface (`src/common/logger.ts`). `listenInternal(serializeError, logger?)` accepts an optional logger stored on `window[loggerWindowKey]` and retrieved via `getLogger()?.method()` (optional chaining for graceful degradation). `createLogger()` contains all human-readable message strings. The production inline entry (`src/inline/index.ts`) passes no logger so tree-shaking eliminates all log strings from the bundle. The trace entry (`src/inline-trace/index.ts`) passes `createLogger()` for full logging. `emitEvent()` auto-calls `getLogger()?.logEvent(event)` before notifying subscribers; the `EmitOptions.silent` flag suppresses this auto-logging (used by `shouldIgnoreMessages` filters)
+- **Inline script rebuild requirement**: After any change to `src/common/` (core) code that could affect the inline scripts, you MUST rebuild inline scripts by running `pnpm build` from `packages/spa-guard/`. The build command (`tsup --config tsup.inline.config.ts && tsup --config tsup.inline.trace.config.ts`) outputs the minified file sizes for `dist-inline/index.js` (production) and `dist-inline-trace/index.js` (trace). After rebuilding, check the reported sizes and update the "Build Sizes" section in `packages/spa-guard/README.md` to match the new values (e.g., `~5.9 KB` → `~6.1 KB`).
 
 ### @ovineko/clean-pkg-json
 

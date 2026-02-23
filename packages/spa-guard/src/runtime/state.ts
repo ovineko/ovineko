@@ -2,7 +2,7 @@ import type { UnsubscribeFn } from "../common/events/types";
 
 import { subscribe } from "../common/events/internal";
 import { getLastRetryResetInfo } from "../common/lastReloadTime";
-import { getRetryStateFromUrl } from "../common/retryState";
+import { getRetryAttemptFromUrl, getRetryStateFromUrl } from "../common/retryState";
 
 export interface SpaGuardState {
   currentAttempt: number;
@@ -37,6 +37,18 @@ const getInitialStateFromUrl = (): SpaGuardState => {
 
   const retryState = getRetryStateFromUrl();
   if (!retryState) {
+    // useRetryId: false mode only sets spaGuardRetryAttempt without spaGuardRetryId.
+    // Fall back to reading the attempt param alone so UI state is accurate after reload.
+    const attempt = getRetryAttemptFromUrl();
+    if (attempt !== null) {
+      return {
+        currentAttempt: attempt,
+        isFallbackShown: false,
+        isWaiting: false,
+        lastResetRetryId: resetInfo?.previousRetryId,
+        lastRetryResetTime: resetInfo?.timestamp,
+      };
+    }
     return {
       currentAttempt: 0,
       isFallbackShown: false,

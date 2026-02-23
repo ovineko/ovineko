@@ -260,6 +260,38 @@ describe("common/logger", () => {
 
       expect(errorSpy).toHaveBeenCalledWith("[spa-guard] Failed to inject fallback UI", err);
     });
+
+    it("reloadAlreadyScheduled logs at log level with error", () => {
+      const logger = createLogger();
+      const err = new Error("chunk error");
+
+      logger.reloadAlreadyScheduled(err);
+
+      expect(logSpy).toHaveBeenCalledWith(
+        "[spa-guard] Reload already scheduled, ignoring duplicate chunk error:",
+        err,
+      );
+    });
+
+    it("retryCycleStarting logs at log level with retryId and attempt", () => {
+      const logger = createLogger();
+
+      logger.retryCycleStarting("abc-123", 2);
+
+      expect(logSpy).toHaveBeenCalledWith(
+        "[spa-guard] Retry cycle starting: retryId=abc-123, fromAttempt=2",
+      );
+    });
+
+    it("retrySchedulingReload logs at log level with details", () => {
+      const logger = createLogger();
+
+      logger.retrySchedulingReload("abc-123", 2, 2000);
+
+      expect(logSpy).toHaveBeenCalledWith(
+        "[spa-guard] Scheduling reload: retryId=abc-123, attempt=2, delay=2000ms",
+      );
+    });
   });
 
   describe("specific methods - sendBeacon.ts", () => {
@@ -316,22 +348,6 @@ describe("common/logger", () => {
       );
     });
 
-    it("versionChanged logs at warn level with versions", () => {
-      const logger = createLogger();
-
-      logger.versionChanged("1.0.0", "2.0.0");
-
-      expect(warnSpy).toHaveBeenCalledWith("[spa-guard] Version changed: 1.0.0 → 2.0.0");
-    });
-
-    it("versionChanged handles null old version", () => {
-      const logger = createLogger();
-
-      logger.versionChanged(null, "1.0.0");
-
-      expect(warnSpy).toHaveBeenCalledWith("[spa-guard] Version changed: null → 1.0.0");
-    });
-
     it("versionCheckFailed logs at error level with error", () => {
       const logger = createLogger();
       const err = new Error("network error");
@@ -362,10 +378,10 @@ describe("common/logger", () => {
     it("versionCheckStarted logs at log level with details", () => {
       const logger = createLogger();
 
-      logger.versionCheckStarted("html", 60_000, "1.0.0");
+      logger.versionCheckStarted("html", 300_000, "1.0.0");
 
       expect(logSpy).toHaveBeenCalledWith(
-        "[spa-guard] Starting version check (mode: html, interval: 60000ms, current: 1.0.0)",
+        "[spa-guard] Starting version check (mode: html, interval: 300000ms, current: 1.0.0)",
       );
     });
 
@@ -375,6 +391,32 @@ describe("common/logger", () => {
       logger.versionCheckStopped();
 
       expect(logSpy).toHaveBeenCalledWith("[spa-guard] Version check stopped");
+    });
+
+    it("versionCheckPaused logs at log level", () => {
+      const logger = createLogger();
+
+      logger.versionCheckPaused();
+
+      expect(logSpy).toHaveBeenCalledWith("[spa-guard] Version check paused (tab hidden)");
+    });
+
+    it("versionCheckResumed logs at log level", () => {
+      const logger = createLogger();
+
+      logger.versionCheckResumed();
+
+      expect(logSpy).toHaveBeenCalledWith("[spa-guard] Version check resumed (tab visible)");
+    });
+
+    it("versionCheckResumedImmediate logs at log level", () => {
+      const logger = createLogger();
+
+      logger.versionCheckResumedImmediate();
+
+      expect(logSpy).toHaveBeenCalledWith(
+        "[spa-guard] Version check resumed with immediate check (tab visible, interval elapsed)",
+      );
     });
   });
 

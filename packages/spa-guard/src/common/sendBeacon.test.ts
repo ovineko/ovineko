@@ -41,16 +41,21 @@ const createMockLogger = () => ({
   logEvent: vi.fn(),
   noBeaconEndpoint: vi.fn(),
   noFallbackConfigured: vi.fn(),
+  reloadAlreadyScheduled: vi.fn(),
+  retryCycleStarting: vi.fn(),
   retryLimitExceeded: vi.fn(),
+  retrySchedulingReload: vi.fn(),
   updatedRetryAttempt: vi.fn(),
-  versionChanged: vi.fn(),
   versionChangeDetected: vi.fn(),
   versionCheckAlreadyRunning: vi.fn(),
   versionCheckDisabled: vi.fn(),
   versionCheckFailed: vi.fn(),
   versionCheckHttpError: vi.fn(),
   versionCheckParseError: vi.fn(),
+  versionCheckPaused: vi.fn(),
   versionCheckRequiresEndpoint: vi.fn(),
+  versionCheckResumed: vi.fn(),
+  versionCheckResumedImmediate: vi.fn(),
   versionCheckStarted: vi.fn(),
   versionCheckStopped: vi.fn(),
   warn: vi.fn(),
@@ -310,191 +315,193 @@ describe("sendBeacon", () => {
     });
   });
 
-  describe("fetch fallback when sendBeacon unavailable", () => {
-    let originalSendBeacon: typeof navigator.sendBeacon;
+  describe("transport fallback and edge cases", () => {
+    describe("fetch fallback when sendBeacon unavailable", () => {
+      let originalSendBeacon: typeof navigator.sendBeacon;
 
-    beforeEach(() => {
-      originalSendBeacon = navigator.sendBeacon;
-      Object.defineProperty(window.navigator, "sendBeacon", {
-        configurable: true,
-        value: undefined,
-        writable: true,
+      beforeEach(() => {
+        originalSendBeacon = navigator.sendBeacon;
+        Object.defineProperty(globalThis.navigator, "sendBeacon", {
+          configurable: true,
+          value: undefined,
+          writable: true,
+        });
+      });
+
+      afterEach(() => {
+        Object.defineProperty(globalThis.navigator, "sendBeacon", {
+          configurable: true,
+          value: originalSendBeacon,
+          writable: true,
+        });
+      });
+
+      it("calls fetch when navigator.sendBeacon is not a function", () => {
+        sendBeacon(makeBeacon());
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+      });
+
+      it("calls fetch with correct endpoint, body, method, and keepalive", () => {
+        const beacon = makeBeacon();
+
+        sendBeacon(beacon);
+
+        expect(fetchMock).toHaveBeenCalledWith(DEFAULT_ENDPOINT, {
+          body: JSON.stringify(beacon),
+          keepalive: true,
+          method: "POST",
+        });
+      });
+
+      it("calls fetch with the correct JSON body when sendBeacon unavailable", () => {
+        const beacon = makeBeacon({ retryAttempt: 3, retryId: "id-xyz" });
+
+        sendBeacon(beacon);
+
+        const fetchCall = fetchMock.mock.calls[0]?.[1];
+        expect(fetchCall?.body).toBe(JSON.stringify(beacon));
       });
     });
 
-    afterEach(() => {
-      Object.defineProperty(window.navigator, "sendBeacon", {
-        configurable: true,
-        value: originalSendBeacon,
-        writable: true,
+    describe("SSR / non-browser environment", () => {
+      let originalWindow: typeof globalThis.window;
+
+      beforeEach(() => {
+        originalWindow = globalThis.window;
+        Object.defineProperty(globalThis, "window", {
+          configurable: true,
+          value: undefined,
+          writable: true,
+        });
+      });
+
+      afterEach(() => {
+        Object.defineProperty(globalThis, "window", {
+          configurable: true,
+          value: originalWindow,
+          writable: true,
+        });
+      });
+
+      it("falls back to fetch when window is undefined", () => {
+        sendBeacon(makeBeacon());
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+      });
+
+      it("calls fetch with correct options when window is undefined", () => {
+        const beacon = makeBeacon();
+
+        sendBeacon(beacon);
+
+        expect(fetchMock).toHaveBeenCalledWith(DEFAULT_ENDPOINT, {
+          body: JSON.stringify(beacon),
+          keepalive: true,
+          method: "POST",
+        });
       });
     });
 
-    it("calls fetch when navigator.sendBeacon is not a function", () => {
-      sendBeacon(makeBeacon());
+    describe("error serialization integration", () => {
+      let sendBeaconSpy: ReturnType<typeof vi.spyOn>;
 
-      expect(fetchMock).toHaveBeenCalledTimes(1);
-    });
+      beforeEach(() => {
+        sendBeaconSpy = vi.spyOn(navigator, "sendBeacon").mockReturnValue(true);
+      });
 
-    it("calls fetch with correct endpoint, body, method, and keepalive", () => {
-      const beacon = makeBeacon();
+      it("sends the full beacon payload including serialized field", () => {
+        const beacon = makeBeacon({
+          serialized: '{"type":"Error","message":"Failed to fetch module"}',
+        });
 
-      sendBeacon(beacon);
+        sendBeacon(beacon);
 
-      expect(fetchMock).toHaveBeenCalledWith(DEFAULT_ENDPOINT, {
-        body: JSON.stringify(beacon),
-        keepalive: true,
-        method: "POST",
+        const sentBody = sendBeaconSpy.mock.calls[0]?.[1];
+        const parsed = JSON.parse(sentBody as string);
+        expect(parsed.serialized).toBe('{"type":"Error","message":"Failed to fetch module"}');
+      });
+
+      it("sends retryAttempt and retryId when present in beacon", () => {
+        const beacon = makeBeacon({ retryAttempt: 2, retryId: "retry-abc" });
+
+        sendBeacon(beacon);
+
+        const sentBody = sendBeaconSpy.mock.calls[0]?.[1];
+        const parsed = JSON.parse(sentBody as string);
+        expect(parsed.retryAttempt).toBe(2);
+        expect(parsed.retryId).toBe("retry-abc");
       });
     });
 
-    it("calls fetch with the correct JSON body when sendBeacon unavailable", () => {
-      const beacon = makeBeacon({ retryAttempt: 3, retryId: "id-xyz" });
+    describe("Logger method calls", () => {
+      it("calls noBeaconEndpoint when no endpoint is configured", () => {
+        mockGetOptions.mockReturnValue({});
 
-      sendBeacon(beacon);
+        sendBeacon(makeBeacon());
 
-      const fetchCall = fetchMock.mock.calls[0]?.[1];
-      expect(fetchCall?.body).toBe(JSON.stringify(beacon));
-    });
-  });
+        expect(mockLogger.noBeaconEndpoint).toHaveBeenCalledTimes(1);
+      });
 
-  describe("SSR / non-browser environment", () => {
-    let originalWindow: typeof globalThis.window;
+      it("calls beaconSendFailed with the error when fetch fails", async () => {
+        vi.spyOn(navigator, "sendBeacon").mockReturnValue(false);
+        const fetchError = new Error("network failure");
+        fetchMock.mockRejectedValue(fetchError);
 
-    beforeEach(() => {
-      originalWindow = globalThis.window;
-      Object.defineProperty(globalThis, "window", {
-        configurable: true,
-        value: undefined,
-        writable: true,
+        sendBeacon(makeBeacon());
+
+        await vi.waitFor(() => {
+          expect(mockLogger.beaconSendFailed).toHaveBeenCalledWith(fetchError);
+        });
+      });
+
+      it("does not call Logger methods when no logger is set", () => {
+        mockGetLogger.mockReturnValue();
+        mockGetOptions.mockReturnValue({});
+
+        sendBeacon(makeBeacon());
+
+        expect(mockLogger.noBeaconEndpoint).not.toHaveBeenCalled();
+      });
+
+      it("does not call noBeaconEndpoint when endpoint is configured", () => {
+        vi.spyOn(navigator, "sendBeacon").mockReturnValue(true);
+
+        sendBeacon(makeBeacon());
+
+        expect(mockLogger.noBeaconEndpoint).not.toHaveBeenCalled();
       });
     });
 
-    afterEach(() => {
-      Object.defineProperty(globalThis, "window", {
-        configurable: true,
-        value: originalWindow,
-        writable: true,
-      });
-    });
+    describe("edge cases", () => {
+      let sendBeaconSpy: ReturnType<typeof vi.spyOn>;
 
-    it("falls back to fetch when window is undefined", () => {
-      sendBeacon(makeBeacon());
-
-      expect(fetchMock).toHaveBeenCalledTimes(1);
-    });
-
-    it("calls fetch with correct options when window is undefined", () => {
-      const beacon = makeBeacon();
-
-      sendBeacon(beacon);
-
-      expect(fetchMock).toHaveBeenCalledWith(DEFAULT_ENDPOINT, {
-        body: JSON.stringify(beacon),
-        keepalive: true,
-        method: "POST",
-      });
-    });
-  });
-
-  describe("error serialization integration", () => {
-    let sendBeaconSpy: ReturnType<typeof vi.spyOn>;
-
-    beforeEach(() => {
-      sendBeaconSpy = vi.spyOn(navigator, "sendBeacon").mockReturnValue(true);
-    });
-
-    it("sends the full beacon payload including serialized field", () => {
-      const beacon = makeBeacon({
-        serialized: '{"type":"Error","message":"Failed to fetch module"}',
+      beforeEach(() => {
+        sendBeaconSpy = vi.spyOn(navigator, "sendBeacon").mockReturnValue(true);
       });
 
-      sendBeacon(beacon);
+      it("handles beacon with only eventMessage (no errorMessage)", () => {
+        const beacon = { eventMessage: "script error occurred" };
 
-      const sentBody = sendBeaconSpy.mock.calls[0]?.[1];
-      const parsed = JSON.parse(sentBody as string);
-      expect(parsed.serialized).toBe('{"type":"Error","message":"Failed to fetch module"}');
-    });
+        sendBeacon(beacon);
 
-    it("sends retryAttempt and retryId when present in beacon", () => {
-      const beacon = makeBeacon({ retryAttempt: 2, retryId: "retry-abc" });
-
-      sendBeacon(beacon);
-
-      const sentBody = sendBeaconSpy.mock.calls[0]?.[1];
-      const parsed = JSON.parse(sentBody as string);
-      expect(parsed.retryAttempt).toBe(2);
-      expect(parsed.retryId).toBe("retry-abc");
-    });
-  });
-
-  describe("Logger method calls", () => {
-    it("calls noBeaconEndpoint when no endpoint is configured", () => {
-      mockGetOptions.mockReturnValue({});
-
-      sendBeacon(makeBeacon());
-
-      expect(mockLogger.noBeaconEndpoint).toHaveBeenCalledTimes(1);
-    });
-
-    it("calls beaconSendFailed with the error when fetch fails", async () => {
-      vi.spyOn(navigator, "sendBeacon").mockReturnValue(false);
-      const fetchError = new Error("network failure");
-      fetchMock.mockRejectedValue(fetchError);
-
-      sendBeacon(makeBeacon());
-
-      await vi.waitFor(() => {
-        expect(mockLogger.beaconSendFailed).toHaveBeenCalledWith(fetchError);
+        expect(sendBeaconSpy).toHaveBeenCalledTimes(1);
+        const sentBody = sendBeaconSpy.mock.calls[0]?.[1];
+        const parsed = JSON.parse(sentBody as string);
+        expect(parsed.eventMessage).toBe("script error occurred");
       });
-    });
 
-    it("does not call Logger methods when no logger is set", () => {
-      mockGetLogger.mockReturnValue();
-      mockGetOptions.mockReturnValue({});
+      it("handles empty beacon object without throwing", () => {
+        expect(() => sendBeacon({})).not.toThrow();
+      });
 
-      sendBeacon(makeBeacon());
+      it("does not call sendBeacon when no endpoint is configured", () => {
+        mockGetOptions.mockReturnValue({ reportBeacon: {} });
 
-      expect(mockLogger.noBeaconEndpoint).not.toHaveBeenCalled();
-    });
+        sendBeacon(makeBeacon());
 
-    it("does not call noBeaconEndpoint when endpoint is configured", () => {
-      vi.spyOn(navigator, "sendBeacon").mockReturnValue(true);
-
-      sendBeacon(makeBeacon());
-
-      expect(mockLogger.noBeaconEndpoint).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("edge cases", () => {
-    let sendBeaconSpy: ReturnType<typeof vi.spyOn>;
-
-    beforeEach(() => {
-      sendBeaconSpy = vi.spyOn(navigator, "sendBeacon").mockReturnValue(true);
-    });
-
-    it("handles beacon with only eventMessage (no errorMessage)", () => {
-      const beacon = { eventMessage: "script error occurred" };
-
-      sendBeacon(beacon);
-
-      expect(sendBeaconSpy).toHaveBeenCalledTimes(1);
-      const sentBody = sendBeaconSpy.mock.calls[0]?.[1];
-      const parsed = JSON.parse(sentBody as string);
-      expect(parsed.eventMessage).toBe("script error occurred");
-    });
-
-    it("handles empty beacon object without throwing", () => {
-      expect(() => sendBeacon({})).not.toThrow();
-    });
-
-    it("does not call sendBeacon when no endpoint is configured", () => {
-      mockGetOptions.mockReturnValue({ reportBeacon: {} });
-
-      sendBeacon(makeBeacon());
-
-      expect(sendBeaconSpy).not.toHaveBeenCalled();
+        expect(sendBeaconSpy).not.toHaveBeenCalled();
+      });
     });
   });
 });
