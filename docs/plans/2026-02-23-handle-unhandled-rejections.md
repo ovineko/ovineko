@@ -41,17 +41,17 @@ Add a new `handleUnhandledRejections` configuration option to spa-guard that con
 - Modify: `packages/spa-guard/src/common/listen/internal.ts`
 - Modify: `packages/spa-guard/src/common/listen/internal.test.ts`
 
-- [ ] In the unhandledrejection handler (line 64), after the chunk error and forceRetry checks, read `handleUnhandledRejections` from the already-captured `options` variable (line 21 closure)
-- [ ] When `retry` is true AND `sendBeacon` is true: send beacon first, then call attemptReload (beacon must be sent before reload refreshes the page)
-- [ ] When `retry` is true AND `sendBeacon` is false: only call attemptReload
-- [ ] When `retry` is false AND `sendBeacon` is true: only send beacon (current behavior)
-- [ ] When `retry` is false AND `sendBeacon` is false: do nothing (only the earlier logger.capturedError call remains)
-- [ ] Call `event.preventDefault()` only when retry is enabled
-- [ ] Write/update tests for all 4 behavior matrix combinations
-- [ ] Update existing unhandledrejection tests that assert sendBeacon-only behavior (they now need to account for the retry:true default)
-- [ ] Add tests verifying chunk errors and ForceRetry errors bypass the config entirely
-- [ ] Add tests for partial config (e.g., only `retry` specified, `sendBeacon` uses default)
-- [ ] Run project test suite - must pass before task 3
+- [x] In the unhandledrejection handler (line 64), after the chunk error and forceRetry checks, read `handleUnhandledRejections` from the already-captured `options` variable (line 21 closure)
+- [x] When `retry` is true AND `sendBeacon` is true: send beacon first, then call attemptReload (beacon must be sent before reload refreshes the page)
+- [x] When `retry` is true AND `sendBeacon` is false: only call attemptReload
+- [x] When `retry` is false AND `sendBeacon` is true: only send beacon (current behavior)
+- [x] When `retry` is false AND `sendBeacon` is false: do nothing (only the earlier logger.capturedError call remains)
+- [x] Call `event.preventDefault()` only when retry is enabled
+- [x] Write/update tests for all 4 behavior matrix combinations
+- [x] Update existing unhandledrejection tests that assert sendBeacon-only behavior (they now need to account for the retry:true default)
+- [x] Add tests verifying chunk errors and ForceRetry errors bypass the config entirely
+- [x] Add tests for partial config (e.g., only `retry` specified, `sendBeacon` uses default)
+- [x] Run project test suite - must pass before task 3
 
 ### Task 3: Update documentation
 

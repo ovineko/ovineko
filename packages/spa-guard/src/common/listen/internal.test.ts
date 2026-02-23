@@ -59,6 +59,7 @@ const mockShouldForceRetry = vi.mocked(shouldForceRetry);
 const mockShouldIgnoreMessages = vi.mocked(shouldIgnoreMessages);
 
 const DEFAULT_OPTIONS = {
+  handleUnhandledRejections: { retry: true, sendBeacon: true },
   reloadDelays: [1000, 2000, 5000],
 };
 
@@ -1023,7 +1024,7 @@ describe("listenInternal", () => {
       expect(mockAttemptReload).not.toHaveBeenCalled();
     });
 
-    it("non-matching rejections still send beacons normally", () => {
+    it("non-matching rejections send beacons and attempt reload with default config", () => {
       mockIsChunkError.mockReturnValue(false);
       mockShouldForceRetry.mockReturnValue(false);
       const { handlers } = captureListeners();
@@ -1032,7 +1033,180 @@ describe("listenInternal", () => {
         reason: new Error("regular rejection"),
       });
       expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("handleUnhandledRejections config", () => {
+    it("retry:true + sendBeacon:true (default) sends beacon first, then attempts reload", () => {
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      const mockPreventDefault = vi.fn();
+      handlers.unhandledrejection!({
+        preventDefault: mockPreventDefault,
+        reason: new Error("test rejection"),
+      });
+      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockPreventDefault).toHaveBeenCalledTimes(1);
+      // Beacon is sent before attemptReload
+      const sendBeaconOrder = mockSendBeacon.mock.invocationCallOrder[0]!;
+      const attemptReloadOrder = mockAttemptReload.mock.invocationCallOrder[0]!;
+      expect(sendBeaconOrder).toBeLessThan(attemptReloadOrder);
+    });
+
+    it("retry:true + sendBeacon:false only attempts reload, no beacon", () => {
+      mockGetOptions.mockReturnValue({
+        ...DEFAULT_OPTIONS,
+        handleUnhandledRejections: { retry: true, sendBeacon: false },
+      });
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      const mockPreventDefault = vi.fn();
+      handlers.unhandledrejection!({
+        preventDefault: mockPreventDefault,
+        reason: new Error("test rejection"),
+      });
+      expect(mockSendBeacon).not.toHaveBeenCalled();
+      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockPreventDefault).toHaveBeenCalledTimes(1);
+    });
+
+    it("retry:false + sendBeacon:true only sends beacon, no reload", () => {
+      mockGetOptions.mockReturnValue({
+        ...DEFAULT_OPTIONS,
+        handleUnhandledRejections: { retry: false, sendBeacon: true },
+      });
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      const mockPreventDefault = vi.fn();
+      handlers.unhandledrejection!({
+        preventDefault: mockPreventDefault,
+        reason: new Error("test rejection"),
+      });
+      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
       expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockPreventDefault).not.toHaveBeenCalled();
+    });
+
+    it("retry:false + sendBeacon:false does nothing beyond logging", () => {
+      mockGetOptions.mockReturnValue({
+        ...DEFAULT_OPTIONS,
+        handleUnhandledRejections: { retry: false, sendBeacon: false },
+      });
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      const mockPreventDefault = vi.fn();
+      handlers.unhandledrejection!({
+        preventDefault: mockPreventDefault,
+        reason: new Error("test rejection"),
+      });
+      expect(mockSendBeacon).not.toHaveBeenCalled();
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockPreventDefault).not.toHaveBeenCalled();
+      // logger.capturedError is still called
+      expect(mockLogger.capturedError).toHaveBeenCalledWith(
+        "unhandledrejection",
+        expect.any(Object),
+      );
+    });
+
+    it("calls event.preventDefault() only when retry is enabled", () => {
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(false);
+
+      // With retry:true
+      const { handlers: handlers1 } = captureListeners();
+      const pd1 = vi.fn();
+      handlers1.unhandledrejection!({ preventDefault: pd1, reason: new Error("test") });
+      expect(pd1).toHaveBeenCalledTimes(1);
+
+      // With retry:false
+      vi.clearAllMocks();
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(false);
+      mockIsInitialized.mockReturnValue(false);
+      mockGetOptions.mockReturnValue({
+        ...DEFAULT_OPTIONS,
+        handleUnhandledRejections: { retry: false, sendBeacon: true },
+      });
+      mockGetRetryStateFromUrl.mockReturnValue(null);
+      mockGetRetryInfoForBeacon.mockReturnValue({});
+      mockGetLogger.mockReturnValue(mockLogger);
+      mockShouldIgnoreMessages.mockReturnValue(false);
+      const { handlers: handlers2 } = captureListeners();
+      const pd2 = vi.fn();
+      handlers2.unhandledrejection!({ preventDefault: pd2, reason: new Error("test") });
+      expect(pd2).not.toHaveBeenCalled();
+    });
+
+    it("chunk errors bypass handleUnhandledRejections config entirely", () => {
+      mockGetOptions.mockReturnValue({
+        ...DEFAULT_OPTIONS,
+        handleUnhandledRejections: { retry: false, sendBeacon: false },
+      });
+      mockIsChunkError.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      const mockPreventDefault = vi.fn();
+      const reason = new Error("ChunkLoadError");
+      handlers.unhandledrejection!({ preventDefault: mockPreventDefault, reason });
+      // Chunk errors always call attemptReload and preventDefault regardless of config
+      expect(mockAttemptReload).toHaveBeenCalledWith(reason);
+      expect(mockPreventDefault).toHaveBeenCalledTimes(1);
+    });
+
+    it("ForceRetry errors bypass handleUnhandledRejections config entirely", () => {
+      mockGetOptions.mockReturnValue({
+        ...DEFAULT_OPTIONS,
+        handleUnhandledRejections: { retry: false, sendBeacon: false },
+      });
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      const mockPreventDefault = vi.fn();
+      const reason = new Error("ForceRetryError");
+      handlers.unhandledrejection!({ preventDefault: mockPreventDefault, reason });
+      // ForceRetry errors always call attemptReload and preventDefault regardless of config
+      expect(mockAttemptReload).toHaveBeenCalledWith(reason);
+      expect(mockPreventDefault).toHaveBeenCalledTimes(1);
+    });
+
+    it("partial config: only retry specified, sendBeacon uses default (true)", () => {
+      mockGetOptions.mockReturnValue({
+        ...DEFAULT_OPTIONS,
+        handleUnhandledRejections: { retry: false },
+      });
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      handlers.unhandledrejection!({
+        preventDefault: vi.fn(),
+        reason: new Error("test"),
+      });
+      // sendBeacon defaults to true when not specified
+      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+    });
+
+    it("partial config: only sendBeacon specified, retry uses default (true)", () => {
+      mockGetOptions.mockReturnValue({
+        ...DEFAULT_OPTIONS,
+        handleUnhandledRejections: { sendBeacon: false },
+      });
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldForceRetry.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      handlers.unhandledrejection!({
+        preventDefault: vi.fn(),
+        reason: new Error("test"),
+      });
+      // retry defaults to true when not specified
+      expect(mockSendBeacon).not.toHaveBeenCalled();
+      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
     });
   });
 });

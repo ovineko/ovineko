@@ -81,13 +81,22 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
       return;
     }
 
-    const serialized = serializeError(event);
-    sendBeacon({
-      errorMessage,
-      eventName: "unhandledrejection",
-      serialized,
-      ...getRetryInfoForBeacon(),
-    });
+    const rejectionConfig = options.handleUnhandledRejections;
+
+    if (rejectionConfig?.sendBeacon !== false) {
+      const serialized = serializeError(event);
+      sendBeacon({
+        errorMessage,
+        eventName: "unhandledrejection",
+        serialized,
+        ...getRetryInfoForBeacon(),
+      });
+    }
+
+    if (rejectionConfig?.retry !== false) {
+      event.preventDefault();
+      attemptReload(event.reason);
+    }
   });
 
   wa("securitypolicyviolation", (event) => {
