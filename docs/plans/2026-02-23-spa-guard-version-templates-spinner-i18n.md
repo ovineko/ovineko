@@ -54,13 +54,13 @@ Four improvements to @ovineko/spa-guard in one plan:
 - Modify: `packages/spa-guard/scripts/generate-fallback.ts` (if needed)
 - Modify: `packages/spa-guard/src/common/DefaultErrorFallback.tsx`
 
-- [ ] Replace `fallback-error.html` with the styled version from `TODO/TODO-2/error-fallback.html` (SVG icon, system-ui + ui-monospace fonts, styled buttons, `:has()` CSS for error ID hiding)
-- [ ] Replace `fallback-loading.html` with new version from `TODO/TODO-2/loading-state.html` (`[data-spa-guard-spinner]` with default SVG spinner + `@keyframes`, `data-spa-guard-content="loading"`, retrying section with data attributes)
-- [ ] Run `generate-fallback.ts` to regenerate `fallbackHtml.generated.ts`
-- [ ] Refactor `DefaultErrorFallback.tsx`: replace brittle `.replace()` string manipulation with virtual container approach — create a div, set innerHTML, query by data attributes (`[data-spa-guard-content]`, `[data-spa-guard-action]`, `[data-spa-guard-section]`) to manipulate content and visibility, then assign to ref. This makes the component template-agnostic
-- [ ] Update existing tests that assert on specific HTML structure (e.g., test checking no `@keyframes` in loading template)
-- [ ] Write tests: templates contain expected data attributes; DefaultErrorFallback renders correctly with new templates; retry section visibility toggling works via data attributes
-- [ ] Run project test suite — must pass before task 3
+- [x] Replace `fallback-error.html` with the styled version from `TODO/TODO-2/error-fallback.html` (SVG icon, system-ui + ui-monospace fonts, styled buttons, `:has()` CSS for error ID hiding)
+- [x] Replace `fallback-loading.html` with new version from `TODO/TODO-2/loading-state.html` (`[data-spa-guard-spinner]` with default SVG spinner + `@keyframes`, `data-spa-guard-content="loading"`, retrying section with data attributes)
+- [x] Run `generate-fallback.ts` to regenerate `fallbackHtml.generated.ts`
+- [x] Refactor `DefaultErrorFallback.tsx`: replace brittle `.replace()` string manipulation with virtual container approach — create a div, set innerHTML, query by data attributes (`[data-spa-guard-content]`, `[data-spa-guard-action]`, `[data-spa-guard-section]`) to manipulate content and visibility, then assign to ref. This makes the component template-agnostic
+- [x] Update existing tests that assert on specific HTML structure (e.g., test checking no `@keyframes` in loading template)
+- [x] Write tests: templates contain expected data attributes; DefaultErrorFallback renders correctly with new templates; retry section visibility toggling works via data attributes
+- [x] Run project test suite — must pass before task 3
 
 ### Task 3: Spinner overlay
 

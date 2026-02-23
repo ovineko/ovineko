@@ -375,7 +375,8 @@ describe("ErrorBoundaryReactRouter", () => {
       render(<ErrorBoundaryReactRouter />);
 
       expect(screen.getByText("Loading...")).toBeInTheDocument();
-      expect(screen.getByText("Retry attempt 1")).toBeInTheDocument();
+      expect(screen.getByText("Retry attempt")).toBeInTheDocument();
+      expect(screen.getByText("1")).toBeInTheDocument();
     });
   });
 });

@@ -22,11 +22,57 @@ const escapeHtml = (str: string): string =>
 const reloadHandler = () => location.reload();
 
 /**
+ * Build final HTML by parsing the template in a virtual container
+ * and patching content via data attributes. This is robust against
+ * template changes (minification, styling, element order).
+ */
+function buildHtml(
+  template: string,
+  patches: {
+    actions?: Record<string, boolean>;
+    content?: Record<string, string>;
+    sections?: Record<string, boolean>;
+  },
+): string {
+  const container = document.createElement("div");
+  container.innerHTML = template;
+
+  if (patches.content) {
+    for (const [key, value] of Object.entries(patches.content)) {
+      const el = container.querySelector(`[data-spa-guard-content="${key}"]`);
+      if (el) {
+        el.innerHTML = value;
+      }
+    }
+  }
+
+  if (patches.sections) {
+    for (const [key, visible] of Object.entries(patches.sections)) {
+      const el = container.querySelector<HTMLElement>(`[data-spa-guard-section="${key}"]`);
+      if (el) {
+        el.style.display = visible ? "block" : "none";
+      }
+    }
+  }
+
+  if (patches.actions) {
+    for (const [key, visible] of Object.entries(patches.actions)) {
+      const el = container.querySelector<HTMLElement>(`[data-spa-guard-action="${key}"]`);
+      if (el) {
+        el.style.display = visible ? "inline-block" : "none";
+      }
+    }
+  }
+
+  return container.innerHTML;
+}
+
+/**
  * Default fallback UI component for error boundaries.
  *
  * Uses two separate HTML templates: one for loading/retrying state
  * and one for error state. Renders via dangerouslySetInnerHTML with
- * string replacements for dynamic content.
+ * virtual container + data attribute patching for dynamic content.
  */
 export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
   error,
@@ -37,33 +83,31 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  let html: string;
+  const html = useMemo(() => {
+    if (isRetrying) {
+      return buildHtml(defaultLoadingFallbackHtml, {
+        content: {
+          attempt: String(spaGuardState.currentAttempt),
+        },
+        sections: {
+          retrying: true,
+        },
+      });
+    }
 
-  if (isRetrying) {
-    html = defaultLoadingFallbackHtml
-      .replace(
-        'data-spa-guard-section="retrying" style="display:none"',
-        'data-spa-guard-section="retrying" style="display:block"',
-      )
-      .replace(
-        'Retry attempt <span data-spa-guard-content="attempt"></span>',
-        `Retry attempt ${spaGuardState.currentAttempt}`,
-      );
-  } else {
     const heading = isChunk ? "Failed to load module" : "Something went wrong";
     const message = error instanceof Error ? error.message : String(error);
 
-    html = defaultErrorFallbackHtml
-      .replace(">Something went wrong</h1>", `>${escapeHtml(heading)}</h1>`)
-      .replace(">Please refresh the page to continue.</p>", `>${escapeHtml(message)}</p>`);
-
-    if (onReset) {
-      html = html.replace(
-        'data-spa-guard-action="try-again" type="button" style="display:none"',
-        'data-spa-guard-action="try-again" type="button" style="display:inline-block"',
-      );
-    }
-  }
+    return buildHtml(defaultErrorFallbackHtml, {
+      actions: {
+        "try-again": Boolean(onReset),
+      },
+      content: {
+        heading: escapeHtml(heading),
+        message: escapeHtml(message),
+      },
+    });
+  }, [isRetrying, isChunk, error, onReset, spaGuardState.currentAttempt]);
 
   // eslint-disable-next-line fsecond/valid-event-listener -- Intentional: imperative DOM binding for dangerouslySetInnerHTML content; buttons are not React elements
   useLayoutEffect(() => {

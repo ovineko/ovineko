@@ -24,6 +24,12 @@ const retryingStateAttempt2: SpaGuardState = {
   isWaiting: true,
 };
 
+const retryingStateAttempt5: SpaGuardState = {
+  currentAttempt: 5,
+  isFallbackShown: false,
+  isWaiting: true,
+};
+
 describe("DefaultErrorFallback", () => {
   beforeEach(() => {
     vi.spyOn(console, "error").mockImplementation(() => {});
@@ -60,35 +66,17 @@ describe("DefaultErrorFallback", () => {
       );
 
       expect(container.querySelector('[data-spa-guard-section="retrying"]')).toBeInTheDocument();
-      expect(container.querySelector('[data-spa-guard-content="attempt"]')).not.toBeInTheDocument();
+      expect(container.querySelector('[data-spa-guard-content="loading"]')).toBeInTheDocument();
+      expect(container.querySelector("data-spa-guard-spinner")).not.toBeInTheDocument();
     });
 
-    it("error template has no spinner or animation keyframes", () => {
-      expect(defaultErrorFallbackHtml).not.toContain("@keyframes");
-      expect(defaultErrorFallbackHtml).not.toContain("animation");
+    it("error template has SVG icon", () => {
+      expect(defaultErrorFallbackHtml).toContain("<svg");
     });
 
-    it("loading template has no spinner or animation keyframes", () => {
-      expect(defaultLoadingFallbackHtml).not.toContain("@keyframes");
-      expect(defaultLoadingFallbackHtml).not.toContain("animation");
-    });
-
-    it("error template has no custom font-family", () => {
-      expect(defaultErrorFallbackHtml).not.toContain("font-family");
-    });
-
-    it("loading template has no custom font-family", () => {
-      expect(defaultLoadingFallbackHtml).not.toContain("font-family");
-    });
-
-    it("error template has no custom colors on heading", () => {
-      expect(defaultErrorFallbackHtml).not.toContain("color:#e74c3c");
-      expect(defaultErrorFallbackHtml).not.toContain("color: #e74c3c");
-    });
-
-    it("error template buttons have no background-color or border-radius styling", () => {
-      expect(defaultErrorFallbackHtml).not.toContain("background-color");
-      expect(defaultErrorFallbackHtml).not.toContain("border-radius");
+    it("loading template has spinner with animation", () => {
+      expect(defaultLoadingFallbackHtml).toContain("@keyframes spa-guard-spin");
+      expect(defaultLoadingFallbackHtml).toContain("data-spa-guard-spinner");
     });
   });
 
@@ -234,7 +222,7 @@ describe("DefaultErrorFallback", () => {
     });
 
     it("shows retry attempt number", () => {
-      render(
+      const { container } = render(
         <DefaultErrorFallback
           error={new Error("test")}
           isChunkError={false}
@@ -243,7 +231,8 @@ describe("DefaultErrorFallback", () => {
         />,
       );
 
-      expect(screen.getByText("Retry attempt 2")).toBeInTheDocument();
+      const attemptEl = container.querySelector('[data-spa-guard-content="attempt"]');
+      expect(attemptEl?.textContent).toBe("2");
     });
 
     it("shows retrying section when retrying", () => {
@@ -260,6 +249,20 @@ describe("DefaultErrorFallback", () => {
         '[data-spa-guard-section="retrying"]',
       ) as HTMLElement;
       expect(retryingSection.style.display).toBe("block");
+    });
+
+    it("contains retrying label text", () => {
+      const { container } = render(
+        <DefaultErrorFallback
+          error={new Error("test")}
+          isChunkError={false}
+          isRetrying={true}
+          spaGuardState={retryingStateAttempt1}
+        />,
+      );
+
+      const retryingLabel = container.querySelector('[data-spa-guard-content="retrying"]');
+      expect(retryingLabel?.textContent).toBe("Retry attempt");
     });
   });
 
@@ -311,6 +314,95 @@ describe("DefaultErrorFallback", () => {
       );
 
       expect(container.querySelector(".spa-guard-retry-id")).toBeInTheDocument();
+    });
+  });
+
+  describe("virtual container data attribute approach", () => {
+    it("patches heading via data-spa-guard-content attribute", () => {
+      const { container } = render(
+        <DefaultErrorFallback
+          error={new Error("test")}
+          isChunkError={true}
+          isRetrying={false}
+          spaGuardState={defaultState}
+        />,
+      );
+
+      const heading = container.querySelector('[data-spa-guard-content="heading"]');
+      expect(heading?.textContent).toBe("Failed to load module");
+    });
+
+    it("patches message via data-spa-guard-content attribute", () => {
+      const { container } = render(
+        <DefaultErrorFallback
+          error={new Error("Custom message")}
+          isChunkError={false}
+          isRetrying={false}
+          spaGuardState={defaultState}
+        />,
+      );
+
+      const message = container.querySelector('[data-spa-guard-content="message"]');
+      expect(message?.textContent).toBe("Custom message");
+    });
+
+    it("toggles try-again button visibility via data-spa-guard-action attribute", () => {
+      const { container: withReset } = render(
+        <DefaultErrorFallback
+          error={new Error("test")}
+          isChunkError={false}
+          isRetrying={false}
+          onReset={() => {}}
+          spaGuardState={defaultState}
+        />,
+      );
+
+      const tryAgainBtn = withReset.querySelector(
+        '[data-spa-guard-action="try-again"]',
+      ) as HTMLElement;
+      expect(tryAgainBtn.style.display).toBe("inline-block");
+    });
+
+    it("toggles retrying section visibility via data-spa-guard-section attribute", () => {
+      const { container: notRetrying } = render(
+        <DefaultErrorFallback
+          error={new Error("test")}
+          isChunkError={false}
+          isRetrying={false}
+          spaGuardState={defaultState}
+        />,
+      );
+
+      // Error template doesn't have the retrying section
+      expect(
+        notRetrying.querySelector('[data-spa-guard-section="retrying"]'),
+      ).not.toBeInTheDocument();
+
+      const { container: retrying } = render(
+        <DefaultErrorFallback
+          error={new Error("test")}
+          isChunkError={false}
+          isRetrying={true}
+          spaGuardState={retryingStateAttempt1}
+        />,
+      );
+
+      const section = retrying.querySelector('[data-spa-guard-section="retrying"]') as HTMLElement;
+      expect(section.style.display).toBe("block");
+    });
+
+    it("patches attempt number via data-spa-guard-content attribute", () => {
+      const { container } = render(
+        <DefaultErrorFallback
+          error={new Error("test")}
+          isChunkError={false}
+          isRetrying={true}
+          spaGuardState={retryingStateAttempt5}
+        />,
+      );
+
+      const attemptEl = container.querySelector('[data-spa-guard-content="attempt"]');
+      expect(attemptEl?.textContent).toBe("5");
     });
   });
 });

@@ -39,22 +39,30 @@ describe("fallbackHtml.generated", () => {
       expect(defaultErrorFallbackHtml).toContain("spa-guard-retry-id");
     });
 
-    it("has no custom font-family", () => {
-      expect(defaultErrorFallbackHtml).not.toContain("font-family");
+    it("contains SVG icon", () => {
+      expect(defaultErrorFallbackHtml).toContain("<svg");
+      expect(defaultErrorFallbackHtml).toContain("</svg>");
+    });
+
+    it("uses system-ui font-family", () => {
+      expect(defaultErrorFallbackHtml).toContain("font-family:system-ui");
+    });
+
+    it("uses ui-monospace for error ID", () => {
+      expect(defaultErrorFallbackHtml).toContain("ui-monospace");
+    });
+
+    it("has styled buttons with border-radius", () => {
+      expect(defaultErrorFallbackHtml).toContain("border-radius:6px");
+    });
+
+    it("has :has() CSS for error ID hiding", () => {
+      expect(defaultErrorFallbackHtml).toContain(":has(");
     });
 
     it("has no spinner or animation", () => {
       expect(defaultErrorFallbackHtml).not.toContain("@keyframes");
       expect(defaultErrorFallbackHtml).not.toContain("animation");
-    });
-
-    it("has no custom colors on heading", () => {
-      expect(defaultErrorFallbackHtml).not.toContain("#e74c3c");
-    });
-
-    it("has no background-color or border-radius on buttons", () => {
-      expect(defaultErrorFallbackHtml).not.toContain("background-color");
-      expect(defaultErrorFallbackHtml).not.toContain("border-radius");
     });
 
     it("is minified (no newlines)", () => {
@@ -81,13 +89,26 @@ describe("fallbackHtml.generated", () => {
       expect(defaultLoadingFallbackHtml).toContain("display:none");
     });
 
-    it("has no custom font-family", () => {
-      expect(defaultLoadingFallbackHtml).not.toContain("font-family");
+    it("contains loading content data attribute", () => {
+      expect(defaultLoadingFallbackHtml).toContain('data-spa-guard-content="loading"');
     });
 
-    it("has no spinner or animation", () => {
-      expect(defaultLoadingFallbackHtml).not.toContain("@keyframes");
-      expect(defaultLoadingFallbackHtml).not.toContain("animation");
+    it("contains retrying content data attribute", () => {
+      expect(defaultLoadingFallbackHtml).toContain('data-spa-guard-content="retrying"');
+    });
+
+    it("contains spinner placeholder with data attribute", () => {
+      expect(defaultLoadingFallbackHtml).toContain("data-spa-guard-spinner");
+    });
+
+    it("contains default SVG spinner with animation", () => {
+      expect(defaultLoadingFallbackHtml).toContain("@keyframes spa-guard-spin");
+      expect(defaultLoadingFallbackHtml).toContain("animation:");
+      expect(defaultLoadingFallbackHtml).toContain("<svg");
+    });
+
+    it("uses system-ui font-family", () => {
+      expect(defaultLoadingFallbackHtml).toContain("font-family:system-ui");
     });
 
     it("is minified (no newlines)", () => {
