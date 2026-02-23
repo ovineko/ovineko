@@ -46,8 +46,9 @@ const getInlineScript = async (options: VitePluginOptions) => {
   }
 
   const escapedJson = JSON.stringify(processedOptions).replaceAll("<", "\\u003c");
+  const safeVersion = JSON.stringify(processedOptions.version).replaceAll("<", "\\u003c");
 
-  return `window.__SPA_GUARD_VERSION__="${processedOptions.version}";window.${optionsWindowKey}=${escapedJson};${script}`;
+  return `window.__SPA_GUARD_VERSION__=${safeVersion};window.${optionsWindowKey}=${escapedJson};${script}`;
 };
 
 export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
