@@ -399,6 +399,45 @@ describe("common/checkVersion", () => {
       // Should not throw
       expect(() => mod.stopVersionCheck()).not.toThrow();
     });
+
+    it("prevents in-flight fetch from triggering version change after stop", async () => {
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json" },
+        version: "1.0.0",
+      });
+
+      let resolveFetch: ((value: any) => void) | undefined;
+      globalThis.fetch = vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveFetch = resolve;
+          }),
+      );
+
+      const dispatchEvent = vi.spyOn(globalThis, "dispatchEvent");
+
+      mod.startVersionCheck();
+
+      // First interval tick - starts a fetch
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+      // Stop while fetch is in-flight
+      mod.stopVersionCheck();
+
+      // Resolve the fetch with a new version
+      resolveFetch!({
+        json: async () => ({ version: "2.0.0" }),
+        ok: true,
+      });
+      await vi.advanceTimersByTimeAsync(0);
+
+      // Should NOT have dispatched version-change event or reloaded
+      expect(dispatchEvent).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: "spa-guard:version-change" }),
+      );
+      expect(mockLocationReload).not.toHaveBeenCalled();
+    });
   });
 
   describe("fetchRemoteVersion", () => {

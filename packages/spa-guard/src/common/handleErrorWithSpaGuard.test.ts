@@ -303,6 +303,33 @@ describe("handleErrorWithSpaGuard", () => {
 
       expect(onError.mock.calls[0]![0]).toBe(error);
     });
+
+    it("still calls sendBeacon when onError callback throws", () => {
+      mockIsChunkError.mockReturnValue(false);
+      const onError = vi.fn(() => {
+        throw new Error("callback exploded");
+      });
+      const error = new Error("original error");
+
+      handleErrorWithSpaGuard(error, { eventName: "test-event", onError });
+
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+    });
+
+    it("still calls attemptReload when onError callback throws on chunk error", () => {
+      mockIsChunkError.mockReturnValue(true);
+      const onError = vi.fn(() => {
+        throw new Error("callback exploded");
+      });
+      const error = new Error("Failed to fetch dynamically imported module");
+
+      handleErrorWithSpaGuard(error, { eventName: "test-event", onError });
+
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockAttemptReload).toHaveBeenCalledWith(error);
+    });
   });
 
   describe("edge cases", () => {
