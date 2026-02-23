@@ -84,9 +84,10 @@ export function patchHtmlI18n(options: PatchHtmlI18nOptions): string {
   }
 
   // Update <html lang="...">
-  result = result.replace(/<html([^>]*)lang="[^"]*"/, `<html$1lang="${resolvedLang}"`);
-  if (!result.includes(`lang="${resolvedLang}"`)) {
-    result = result.replace(/<html/, `<html lang="${resolvedLang}"`);
+  const safeLang = escapeAttr(resolvedLang);
+  result = result.replace(/<html([^>]*)lang="[^"]*"/, `<html$1lang="${safeLang}"`);
+  if (!result.includes(`lang="${safeLang}"`)) {
+    result = result.replace(/<html/, `<html lang="${safeLang}"`);
   }
 
   return result;

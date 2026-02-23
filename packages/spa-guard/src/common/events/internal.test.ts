@@ -22,7 +22,6 @@ describe("common/events/internal", () => {
     subscribers.clear();
     internalConfig.initialized = false;
     internalConfig.defaultRetryEnabled = true;
-    internalConfig.inlineScriptLoaded = false;
     setLogger(undefined);
   });
 

@@ -30,6 +30,7 @@ describe("spinner", () => {
   });
 
   afterEach(() => {
+    dismissSpinner();
     vi.clearAllMocks();
     document.body.innerHTML = "";
     document.body.style.overflow = "";
@@ -138,6 +139,14 @@ describe("spinner", () => {
       expect(document.body.style.overflow).toBe("hidden");
       cleanup();
       expect(document.body.style.overflow).toBe("");
+    });
+
+    it("restores previous overflow value instead of clearing to empty", () => {
+      document.body.style.overflow = "scroll";
+      const cleanup = showSpinner();
+      expect(document.body.style.overflow).toBe("hidden");
+      cleanup();
+      expect(document.body.style.overflow).toBe("scroll");
     });
 
     it("removes existing spinner before adding new one", () => {

@@ -10,12 +10,19 @@ export const defaultSpinnerSvg = [
   "<style>@keyframes spa-guard-spin{to{transform:rotate(360deg)}}</style>",
 ].join("");
 
+let savedOverflow: null | string = null;
+
 export function dismissSpinner(): void {
   const el = document.getElementById(SPINNER_ID);
   if (el) {
     el.remove();
   }
-  document.body.style.overflow = "";
+  if (savedOverflow === null) {
+    document.body.style.overflow = "";
+  } else {
+    document.body.style.overflow = savedOverflow;
+    savedOverflow = null;
+  }
 }
 
 export function getSpinnerHtml(backgroundOverride?: string): string {
@@ -50,6 +57,7 @@ export function showSpinner(options?: { background?: string }): () => void {
   wrapper.innerHTML = html;
   const overlay = wrapper.firstElementChild as HTMLElement;
 
+  savedOverflow = document.body.style.overflow;
   document.body.style.overflow = "hidden";
   document.body.append(overlay);
 

@@ -22,7 +22,6 @@ if (globalThis.window && !(globalThis.window as any)[internalConfigWindowKey]) {
   (globalThis.window as any)[internalConfigWindowKey] = {
     defaultRetryEnabled: true,
     initialized: false,
-    inlineScriptLoaded: false,
   } as InternalConfig;
 }
 
@@ -34,7 +33,6 @@ export const internalConfig: InternalConfig = (globalThis.window as any)?.[
 ] ?? {
   defaultRetryEnabled: true,
   initialized: false,
-  inlineScriptLoaded: false,
 };
 
 export const setLogger = (logger?: Logger): void => {

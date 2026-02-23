@@ -24,7 +24,7 @@ Peer dependencies vary by integration - see sections below for specific requirem
 - ✅ **Error filtering** - Filter out specific errors via `errors.ignore`, or force retry/reload via `errors.forceRetry`
 - ✅ **Deep error serialization** - Captures detailed error information for server-side analysis
 - ✅ **Smart beacon reporting** - Sends error reports only after retry exhaustion to prevent spam
-- ✅ **Dual build system** - Production minified (~8.3 KB) and trace minified (~13.3 KB) builds for different environments
+- ✅ **Dual build system** - Production minified (~12 KB) and trace minified (~17 KB) builds for different environments
 - ✅ **Global error listeners** - Captures `error`, `unhandledrejection`, and `securitypolicyviolation` events
 - ✅ **Vite plugin for inline script injection** - Runs before all chunks to catch early errors
 - ✅ **HTML minification** - Automatically minifies fallback HTML to reduce bundle size
@@ -123,7 +123,7 @@ DEBUG=true pnpm test
 pnpm test:debug
 
 # Watch mode with console logs
-pnpm test:debug:watch
+DEBUG=1 pnpm test:watch
 ```
 
 Other test commands:
@@ -1125,8 +1125,7 @@ Elements with `data-spa-guard-section="<name>"` control visibility:
 
 | Attribute Value | Purpose                                          |
 | --------------- | ------------------------------------------------ |
-| `retry`         | Retry information section (shown during retries) |
-| `error-id`      | Error ID display (hidden when no retry ID)       |
+| `retrying`      | Retry information section (shown during retries) |
 
 #### Spinner Attribute
 
@@ -1140,7 +1139,7 @@ Elements with `data-spa-guard-section="<name>"` control visibility:
   <p data-spa-guard-content="message">Please refresh the page.</p>
   <button data-spa-guard-action="try-again">Try again</button>
   <button data-spa-guard-action="reload" onclick="location.reload()">Reload page</button>
-  <div data-spa-guard-section="retry" style="display:none">
+  <div data-spa-guard-section="retrying" style="display:none">
     <span data-spa-guard-content="retrying">Retry attempt</span>
     <span data-spa-guard-content="attempt">0</span>
   </div>

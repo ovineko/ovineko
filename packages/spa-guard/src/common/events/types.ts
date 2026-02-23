@@ -5,7 +5,6 @@ export interface EmitOptions {
 export interface InternalConfig {
   defaultRetryEnabled: boolean;
   initialized: boolean;
-  inlineScriptLoaded: boolean;
 }
 
 export type SPAGuardEvent =
