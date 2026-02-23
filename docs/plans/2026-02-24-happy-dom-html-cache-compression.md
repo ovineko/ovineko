@@ -47,9 +47,9 @@ Replace fragile regex-based HTML parsing in patchHtmlI18n with proper DOM manipu
 - Modify: `packages/fastify-base/package.json`
 - Modify: `packages/react-router/package.json`
 
-- [ ] Update engines.node from ">=20" to ">=22" in all 5 package.json files listed above
-- [ ] Run full test suite from repo root to confirm nothing breaks
-- [ ] Commit as a standalone change: "chore: bump minimum Node.js to >= 22 LTS"
+- [x] Update engines.node from ">=20" to ">=22" in all 5 package.json files listed above
+- [x] Run full test suite from repo root to confirm nothing breaks
+- [x] Commit as a standalone change: "chore: bump minimum Node.js to >= 22 LTS"
 
 ### Task 3: Rewrite patchHtmlI18n with happy-dom DOM parsing
 
