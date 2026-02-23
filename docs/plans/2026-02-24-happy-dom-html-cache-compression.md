@@ -33,9 +33,9 @@ Replace fragile regex-based HTML parsing in patchHtmlI18n with proper DOM manipu
 - packages/spa-guard/src/common/reload.test.ts (staged)
 - revise.txt (delete)
 
-- [ ] Commit staged reload.ts and reload.test.ts (spinner disabled feature) as a separate commit
-- [ ] Unstage node/index.ts and node/index.test.ts (will be rewritten in task 3)
-- [ ] Delete revise.txt and commit
+- [x] Commit staged reload.ts and reload.test.ts (spinner disabled feature) as a separate commit
+- [x] Unstage node/index.ts and node/index.test.ts (will be rewritten in task 3)
+- [x] Delete revise.txt and commit
 
 ### Task 2: Bump Node.js engines to >= 22 across the entire repository
 
