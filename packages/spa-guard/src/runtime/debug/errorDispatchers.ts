@@ -8,6 +8,7 @@
  */
 
 import { debugSyncErrorEventType } from "../../common/constants";
+import { ForceRetryError } from "../../common/errors/ForceRetryError";
 
 /**
  * Dispatches an async runtime error via setTimeout.
@@ -47,6 +48,16 @@ export function dispatchFinallyError(): void {
 }
 
 /**
+ * Dispatches a ForceRetryError via void Promise.reject().
+ * Triggers window "unhandledrejection" with a ForceRetryError whose message
+ * contains the FORCE_RETRY_MAGIC prefix, exercising the forceRetry path.
+ */
+export function dispatchForceRetryError(): void {
+  // eslint-disable-next-line sonarjs/void-use -- Intentional: creates unhandled rejection for spa-guard to catch
+  void Promise.reject(new ForceRetryError("Simulated force-retry from spa-guard debug panel"));
+}
+
+/**
  * Dispatches an unhandled network timeout error after a delay.
  * Uses setTimeout + void Promise.reject() to trigger window "unhandledrejection".
  */
@@ -66,4 +77,16 @@ export function dispatchNetworkTimeout(delayMs = 3000): void {
 export function dispatchSyncRuntimeError(): void {
   const error = new Error("Simulated sync runtime error from spa-guard debug panel");
   globalThis.dispatchEvent(new CustomEvent(debugSyncErrorEventType, { detail: { error } }));
+}
+
+/**
+ * Dispatches a plain unhandled promise rejection via void Promise.reject().
+ * This is NOT a chunk error and NOT a ForceRetry — it exercises the
+ * handleUnhandledRejections config path for generic rejections.
+ */
+export function dispatchUnhandledRejection(): void {
+  // eslint-disable-next-line sonarjs/void-use -- Intentional: creates unhandled rejection for spa-guard to catch
+  void Promise.reject(
+    new Error("Simulated unhandled promise rejection from spa-guard debug panel"),
+  );
 }

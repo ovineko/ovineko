@@ -1,13 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { debugSyncErrorEventType } from "../../common/constants";
+import { FORCE_RETRY_MAGIC, ForceRetryError } from "../../common/errors/ForceRetryError";
 import { isChunkError } from "../../common/isChunkError";
+import { shouldForceRetry } from "../../common/shouldIgnore";
 import {
   dispatchAsyncRuntimeError,
   dispatchChunkLoadError,
   dispatchFinallyError,
+  dispatchForceRetryError,
   dispatchNetworkTimeout,
   dispatchSyncRuntimeError,
+  dispatchUnhandledRejection,
 } from "./errorDispatchers";
 
 /**
@@ -222,6 +226,74 @@ describe("dispatchSyncRuntimeError", () => {
     dispatchSyncRuntimeError();
 
     expect(isChunkError(receivedError)).toBe(false);
+  });
+});
+
+describe("dispatchForceRetryError", () => {
+  it("returns void (not a promise)", () => {
+    const capture = captureUnhandledRejection();
+    const result = dispatchForceRetryError();
+    expect(result).toBeUndefined();
+    return capture;
+  });
+
+  it("triggers an unhandled rejection with a ForceRetryError instance", async () => {
+    const capture = captureUnhandledRejection();
+    dispatchForceRetryError();
+    const error = await capture;
+    expect(error).toBeInstanceOf(ForceRetryError);
+  });
+
+  it("dispatches an error whose message contains FORCE_RETRY_MAGIC", async () => {
+    const capture = captureUnhandledRejection();
+    dispatchForceRetryError();
+    const error = await capture;
+    expect((error as Error).message).toContain(FORCE_RETRY_MAGIC);
+  });
+
+  it("shouldForceRetry returns true for its message", async () => {
+    const capture = captureUnhandledRejection();
+    dispatchForceRetryError();
+    const error = await capture;
+    expect(shouldForceRetry([(error as Error).message])).toBe(true);
+  });
+
+  it("dispatches an error not recognized as a chunk error", async () => {
+    const capture = captureUnhandledRejection();
+    dispatchForceRetryError();
+    const error = await capture;
+    expect(isChunkError(error)).toBe(false);
+  });
+});
+
+describe("dispatchUnhandledRejection", () => {
+  it("returns void (not a promise)", () => {
+    const capture = captureUnhandledRejection();
+    const result = dispatchUnhandledRejection();
+    expect(result).toBeUndefined();
+    return capture;
+  });
+
+  it("triggers an unhandled rejection with a plain Error instance", async () => {
+    const capture = captureUnhandledRejection();
+    dispatchUnhandledRejection();
+    const error = await capture;
+    expect(error).toBeInstanceOf(Error);
+    expect(error).not.toBeInstanceOf(ForceRetryError);
+  });
+
+  it("dispatches an error not recognized by isChunkError", async () => {
+    const capture = captureUnhandledRejection();
+    dispatchUnhandledRejection();
+    const error = await capture;
+    expect(isChunkError(error)).toBe(false);
+  });
+
+  it("shouldForceRetry returns false for its message", async () => {
+    const capture = captureUnhandledRejection();
+    dispatchUnhandledRejection();
+    const error = await capture;
+    expect(shouldForceRetry([(error as Error).message])).toBe(false);
   });
 });
 
