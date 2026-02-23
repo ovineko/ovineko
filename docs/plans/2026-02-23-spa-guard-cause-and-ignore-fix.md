@@ -73,10 +73,10 @@ Two changes:
 
 ### Task 4: Verify acceptance criteria
 
-- [ ] manual test: `new ForceRetryError("msg", { cause: new Error("orig") }).cause` returns the original error
-- [ ] run full test suite (pnpm test)
-- [ ] run linter (pnpm lint)
-- [ ] run type check (pnpm typecheck)
+- [x] manual test: `new ForceRetryError("msg", { cause: new Error("orig") }).cause` returns the original error
+- [x] run full test suite (pnpm test)
+- [x] run linter (pnpm lint)
+- [x] run type check (pnpm typecheck)
 
 ### Task 5: Update documentation
 
