@@ -109,7 +109,7 @@ function captureListeners(mockSerialize = vi.fn().mockReturnValue('{"serialized"
 } {
   const handlers: CapturedHandlers = {};
   const spy = vi
-    .spyOn(window, "addEventListener")
+    .spyOn(globalThis, "addEventListener")
     .mockImplementation((type: string, handler: any) => {
       handlers[type as keyof CapturedHandlers] = handler;
     });
@@ -182,7 +182,7 @@ describe("listenInternal", () => {
     });
 
     it("registers exactly 4 event listeners", () => {
-      const spy = vi.spyOn(window, "addEventListener").mockImplementation(() => {});
+      const spy = vi.spyOn(globalThis, "addEventListener").mockImplementation(() => {});
       listenInternal(vi.fn());
       expect(spy).toHaveBeenCalledTimes(4);
       spy.mockRestore();
@@ -190,7 +190,7 @@ describe("listenInternal", () => {
 
     it("registers listeners for error, unhandledrejection, securitypolicyviolation, vite:preloadError", () => {
       const registeredTypes: string[] = [];
-      const spy = vi.spyOn(window, "addEventListener").mockImplementation((type: string) => {
+      const spy = vi.spyOn(globalThis, "addEventListener").mockImplementation((type: string) => {
         registeredTypes.push(type);
       });
       listenInternal(vi.fn());
@@ -202,7 +202,7 @@ describe("listenInternal", () => {
     });
 
     it("registers error listener with capture phase (true as third arg)", () => {
-      const spy = vi.spyOn(window, "addEventListener").mockImplementation(() => {});
+      const spy = vi.spyOn(globalThis, "addEventListener").mockImplementation(() => {});
       listenInternal(vi.fn());
       const errorCall = spy.mock.calls.find(([type]) => type === "error");
       spy.mockRestore();
@@ -210,14 +210,14 @@ describe("listenInternal", () => {
     });
 
     it("returns undefined - no unlisten function is provided", () => {
-      const spy = vi.spyOn(window, "addEventListener").mockImplementation(() => {});
+      const spy = vi.spyOn(globalThis, "addEventListener").mockImplementation(() => {});
       const result = listenInternal(vi.fn());
       spy.mockRestore();
       expect(result).toBeUndefined();
     });
 
     it("calls setLogger with logger argument", () => {
-      const spy = vi.spyOn(window, "addEventListener").mockImplementation(() => {});
+      const spy = vi.spyOn(globalThis, "addEventListener").mockImplementation(() => {});
       const fakeLogger = { capturedError: vi.fn() } as any;
       listenInternal(vi.fn(), fakeLogger);
       spy.mockRestore();
@@ -225,7 +225,7 @@ describe("listenInternal", () => {
     });
 
     it("does not call setLogger when no logger is provided", () => {
-      const spy = vi.spyOn(window, "addEventListener").mockImplementation(() => {});
+      const spy = vi.spyOn(globalThis, "addEventListener").mockImplementation(() => {});
       listenInternal(vi.fn());
       spy.mockRestore();
       expect(mockSetLogger).not.toHaveBeenCalled();
@@ -808,7 +808,7 @@ describe("listenInternal", () => {
 
   describe("listener cleanup (no unlisten functionality)", () => {
     it("listenInternal returns undefined - no cleanup function is provided", () => {
-      const spy = vi.spyOn(window, "addEventListener").mockImplementation(() => {});
+      const spy = vi.spyOn(globalThis, "addEventListener").mockImplementation(() => {});
       const result = listenInternal(vi.fn());
       spy.mockRestore();
       expect(result).toBeUndefined();
@@ -816,7 +816,7 @@ describe("listenInternal", () => {
 
     it("calling listenInternal twice registers each listener type twice", () => {
       const registeredTypes: string[] = [];
-      const spy = vi.spyOn(window, "addEventListener").mockImplementation((type: string) => {
+      const spy = vi.spyOn(globalThis, "addEventListener").mockImplementation((type: string) => {
         registeredTypes.push(type);
       });
       listenInternal(vi.fn());

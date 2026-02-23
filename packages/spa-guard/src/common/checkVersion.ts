@@ -9,7 +9,7 @@ let visibilityHandler: (() => void) | null = null;
 let focusHandler: (() => void) | null = null;
 let blurHandler: (() => void) | null = null;
 let checkInProgress = false;
-let stopped = false;
+let runEpoch = 0;
 
 const fetchJsonVersion = async (): Promise<null | string> => {
   const endpoint = getOptions().checkVersion?.endpoint;
@@ -79,10 +79,11 @@ const checkVersionOnce = async (mode: "html" | "json"): Promise<void> => {
     return;
   }
   checkInProgress = true;
+  const epochAtStart = runEpoch;
   try {
     const remoteVersion = await fetchRemoteVersion(mode);
 
-    if (stopped) {
+    if (epochAtStart !== runEpoch) {
       return;
     }
 
@@ -94,7 +95,9 @@ const checkVersionOnce = async (mode: "html" | "json"): Promise<void> => {
   } catch (error) {
     getLogger()?.versionCheckFailed(error);
   } finally {
-    checkInProgress = false;
+    if (epochAtStart === runEpoch) {
+      checkInProgress = false;
+    }
   }
 };
 
@@ -165,7 +168,7 @@ export const startVersionCheck = (): void => {
     return;
   }
 
-  stopped = false;
+  runEpoch++;
   lastKnownVersion = options.version;
 
   const interval = options.checkVersion?.interval ?? 300_000;
@@ -207,7 +210,8 @@ export const startVersionCheck = (): void => {
 };
 
 export const stopVersionCheck = (): void => {
-  stopped = true;
+  runEpoch++;
+  checkInProgress = false;
 
   const wasRunning =
     versionCheckInterval !== null || versionCheckTimeout !== null || visibilityHandler !== null;
@@ -240,5 +244,5 @@ export const _resetForTesting = (): void => {
   lastKnownVersion = null;
   lastCheckTimestamp = null;
   checkInProgress = false;
-  stopped = false;
+  runEpoch = 0;
 };

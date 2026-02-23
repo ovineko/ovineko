@@ -129,7 +129,7 @@ const setupMockLocation = (url = "http://localhost/"): void => {
   mockLocationSearch = parsedUrl.search;
   mockLocationReload = vi.fn();
 
-  Object.defineProperty(window, "location", {
+  Object.defineProperty(globalThis, "location", {
     configurable: true,
     value: {
       get href() {

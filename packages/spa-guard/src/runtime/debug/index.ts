@@ -163,7 +163,7 @@ function createEventsSection(unsubscribers: (() => void)[]): HTMLDivElement {
   );
   section.append(eventList);
 
-  wireEventSubscription(countSpan, clearBtn, eventList, unsubscribers);
+  wireEventSubscription({ clearBtn, countSpan, eventList, unsubscribers });
   return section;
 }
 
@@ -277,12 +277,13 @@ function getButtonLabel(label: string, status: ButtonStatus): string {
   }
 }
 
-function wireEventSubscription(
-  countSpan: HTMLSpanElement,
-  clearBtn: HTMLButtonElement,
-  eventList: HTMLDivElement,
-  unsubscribers: (() => void)[],
-): void {
+function wireEventSubscription(params: {
+  clearBtn: HTMLButtonElement;
+  countSpan: HTMLSpanElement;
+  eventList: HTMLDivElement;
+  unsubscribers: (() => void)[];
+}): void {
+  const { clearBtn, countSpan, eventList, unsubscribers } = params;
   let history: { event: SPAGuardEvent; timestamp: number }[] = [];
 
   function render(): void {

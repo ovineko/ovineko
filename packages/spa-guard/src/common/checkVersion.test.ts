@@ -438,6 +438,142 @@ describe("common/checkVersion", () => {
       );
       expect(mockLocationReload).not.toHaveBeenCalled();
     });
+
+    it("prevents in-flight fetch from triggering version change after stop then restart", async () => {
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json" },
+        version: "1.0.0",
+      });
+
+      let resolveFetch: ((value: any) => void) | undefined;
+      globalThis.fetch = vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveFetch = resolve;
+          }),
+      );
+
+      const dispatchEvent = vi.spyOn(globalThis, "dispatchEvent");
+
+      mod.startVersionCheck();
+
+      // First interval tick - starts a fetch
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+      // Stop while fetch is in-flight, then immediately restart
+      mod.stopVersionCheck();
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json" },
+        version: "3.0.0",
+      });
+      mod.startVersionCheck();
+
+      // Resolve the OLD fetch with a different version
+      resolveFetch!({
+        json: async () => ({ version: "2.0.0" }),
+        ok: true,
+      });
+      await vi.advanceTimersByTimeAsync(0);
+
+      // The stale request should NOT trigger version change or reload
+      expect(dispatchEvent).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: "spa-guard:version-change" }),
+      );
+      expect(mockLocationReload).not.toHaveBeenCalled();
+    });
+
+    it("does not let stale finally block clobber checkInProgress lock after stop then restart", async () => {
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json" },
+        version: "1.0.0",
+      });
+
+      // First fetch: stays pending so we can control resolution
+      let resolveOldFetch: ((value: any) => void) | undefined;
+      globalThis.fetch = vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveOldFetch = resolve;
+          }),
+      );
+
+      mod.startVersionCheck();
+
+      // Tick - starts old fetch (epoch N)
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+      // Stop then restart (epoch N+2)
+      mod.stopVersionCheck();
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json" },
+        version: "1.0.0",
+      });
+      mod.startVersionCheck();
+
+      // New fetch: also stays pending
+      let resolveNewFetch: ((value: any) => void) | undefined;
+      globalThis.fetch = vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveNewFetch = resolve;
+          }),
+      );
+
+      // Tick - starts new fetch (epoch N+2)
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+      // Resolve the OLD fetch - its finally must NOT clear checkInProgress
+      resolveOldFetch!({
+        json: async () => ({ version: "1.0.0" }),
+        ok: true,
+      });
+      await vi.advanceTimersByTimeAsync(0);
+
+      // Next tick - should be skipped because new fetch is still in-flight
+      await vi.advanceTimersByTimeAsync(1000);
+      // fetch count should still be 1 (the new fetch), not 2
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+      // Resolve the new fetch to clean up
+      resolveNewFetch!({
+        json: async () => ({ version: "1.0.0" }),
+        ok: true,
+      });
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    it("allows new checks to proceed after stop clears checkInProgress from a hung request", async () => {
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json" },
+        version: "1.0.0",
+      });
+
+      // First fetch never resolves (simulating a hung request)
+      globalThis.fetch = vi.fn().mockImplementation(() => new Promise(() => {}));
+
+      mod.startVersionCheck();
+
+      // Tick - starts a fetch that hangs
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+      // Stop (this should reset checkInProgress)
+      mod.stopVersionCheck();
+
+      // Restart with a new fetch that resolves
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        json: async () => ({ version: "1.0.0" }),
+        ok: true,
+      });
+      mod.startVersionCheck();
+
+      // New check should not be blocked by the old hung request
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("fetchRemoteVersion", () => {

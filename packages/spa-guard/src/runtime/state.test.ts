@@ -8,8 +8,8 @@ import { eventSubscribersWindowKey } from "../common/constants";
  * load would persist and receive events meant for the current test.
  */
 const clearWindowSubscribers = (): void => {
-  if (typeof window !== "undefined") {
-    (window as any)[eventSubscribersWindowKey] = undefined;
+  if (typeof globalThis !== "undefined") {
+    (globalThis as any)[eventSubscribersWindowKey] = undefined;
   }
 };
 
@@ -512,10 +512,10 @@ describe("runtime/state", () => {
       vi.doUnmock("../common/retryState");
 
       // Set the URL with retry params before importing the module
-      Object.defineProperty(window, "location", {
+      Object.defineProperty(globalThis, "location", {
         configurable: true,
         value: {
-          ...window.location,
+          ...globalThis.location,
           href: "http://localhost/?spaGuardRetryId=url-test-id&spaGuardRetryAttempt=3",
           search: "?spaGuardRetryId=url-test-id&spaGuardRetryAttempt=3",
         },
@@ -533,10 +533,10 @@ describe("runtime/state", () => {
       expect(state.isFallbackShown).toBe(false);
 
       // Restore
-      Object.defineProperty(window, "location", {
+      Object.defineProperty(globalThis, "location", {
         configurable: true,
         value: {
-          ...window.location,
+          ...globalThis.location,
           href: "http://localhost/",
           search: "",
         },
@@ -549,10 +549,10 @@ describe("runtime/state", () => {
       vi.doUnmock("../common/retryState");
 
       // Set the URL with only attempt param (no retryId)
-      Object.defineProperty(window, "location", {
+      Object.defineProperty(globalThis, "location", {
         configurable: true,
         value: {
-          ...window.location,
+          ...globalThis.location,
           href: "http://localhost/?spaGuardRetryAttempt=2",
           search: "?spaGuardRetryAttempt=2",
         },
@@ -570,10 +570,10 @@ describe("runtime/state", () => {
       expect(state.isFallbackShown).toBe(false);
 
       // Restore
-      Object.defineProperty(window, "location", {
+      Object.defineProperty(globalThis, "location", {
         configurable: true,
         value: {
-          ...window.location,
+          ...globalThis.location,
           href: "http://localhost/",
           search: "",
         },

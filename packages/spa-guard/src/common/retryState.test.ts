@@ -21,7 +21,7 @@ const setupMockLocation = (url = "http://localhost/"): void => {
   mockLocationSearch = parsedUrl.search;
   mockHistoryReplaceState = vi.fn();
 
-  Object.defineProperty(window, "location", {
+  Object.defineProperty(globalThis, "location", {
     configurable: true,
     value: {
       get href() {
@@ -37,7 +37,7 @@ const setupMockLocation = (url = "http://localhost/"): void => {
     writable: true,
   });
 
-  Object.defineProperty(window, "history", {
+  Object.defineProperty(globalThis, "history", {
     configurable: true,
     value: {
       replaceState: mockHistoryReplaceState,
@@ -128,7 +128,7 @@ describe("getRetryStateFromUrl", () => {
   });
 
   it("returns null when window.location throws", () => {
-    Object.defineProperty(window, "location", {
+    Object.defineProperty(globalThis, "location", {
       configurable: true,
       get() {
         throw new Error("location unavailable");
@@ -284,7 +284,7 @@ describe("getRetryAttemptFromUrl", () => {
   });
 
   it("returns null when window.location throws", () => {
-    Object.defineProperty(window, "location", {
+    Object.defineProperty(globalThis, "location", {
       configurable: true,
       get() {
         throw new Error("location unavailable");
