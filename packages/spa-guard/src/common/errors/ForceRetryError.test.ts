@@ -44,6 +44,31 @@ describe("ForceRetryError", () => {
     expect(error.message).toBe(`${FORCE_RETRY_MAGIC}${original}`);
     expect(error.message.slice(FORCE_RETRY_MAGIC.length)).toBe(original);
   });
+
+  it("has undefined cause when not provided", () => {
+    const error = new ForceRetryError("test");
+    expect(error.cause).toBeUndefined();
+  });
+
+  it("sets cause when { cause: originalError } is passed", () => {
+    const originalError = new Error("original");
+    const error = new ForceRetryError("wrapped", { cause: originalError });
+    expect(error.cause).toBe(originalError);
+  });
+
+  it("sets cause together with a message", () => {
+    const cause = new TypeError("type mismatch");
+    const error = new ForceRetryError("Failed to init auth", { cause });
+    expect(error.message).toBe(`${FORCE_RETRY_MAGIC}Failed to init auth`);
+    expect(error.cause).toBe(cause);
+  });
+
+  it("sets cause when message is omitted", () => {
+    const cause = new Error("underlying");
+    const error = new ForceRetryError(undefined, { cause });
+    expect(error.message).toBe(FORCE_RETRY_MAGIC);
+    expect(error.cause).toBe(cause);
+  });
 });
 
 describe("FORCE_RETRY_MAGIC", () => {
