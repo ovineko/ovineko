@@ -76,7 +76,7 @@ export default defineConfig({
         endpoint: "/api/beacon",
       },
       errors: {
-        ignore: [], // Filter out specific error messages from reporting
+        ignore: [], // Error substrings to fully skip (no log, no beacon, no reload)
         forceRetry: [], // Custom error messages that trigger retry/reload (like chunk errors)
       },
       useRetryId: true, // Use query parameters for cache busting (default: true)
@@ -274,7 +274,7 @@ spaGuardVitePlugin({
 
   // Error filtering and retry
   errors: {
-    ignore: [], // Array of error message substrings to ignore
+    ignore: [], // Array of error message substrings to fully skip (no log, no beacon, no reload)
     forceRetry: [], // Array of error message substrings that trigger retry/reload
   },
 
@@ -322,7 +322,7 @@ interface Options {
   };
 
   errors?: {
-    ignore?: string[]; // Error message substrings to filter out (default: [])
+    ignore?: string[]; // Error message substrings to fully skip (no log, no beacon, no reload) (default: [])
     forceRetry?: string[]; // Error message substrings that trigger retry/reload (default: [])
   };
 
@@ -1138,7 +1138,7 @@ interface Options {
   };
 
   errors?: {
-    ignore?: string[]; // Error message substrings to filter out (default: [])
+    ignore?: string[]; // Error message substrings to fully skip (no log, no beacon, no reload) (default: [])
     forceRetry?: string[]; // Error message substrings that trigger retry/reload (default: [])
   };
 
@@ -1646,7 +1646,7 @@ spaGuardVitePlugin({
 });
 ```
 
-**`errors.ignore`** - Errors containing any of these substrings will not be logged to console and beacons will not be sent. Case-sensitive substring matching.
+**`errors.ignore`** - Errors containing any of these substrings are fully ignored: no console log, no beacon, no reload, and no further processing. The error handler returns immediately after the ignore check. Case-sensitive substring matching.
 
 **`errors.forceRetry`** - Errors containing any of these substrings will trigger the same retry/reload process as chunk load errors (calls `attemptReload()`). Useful for custom error patterns that indicate a stale deployment. Case-sensitive substring matching.
 
@@ -1709,6 +1709,16 @@ throw new ForceRetryError("stale module detected");
 
 // Works with no message too
 throw new ForceRetryError();
+
+// Wrap an original error with { cause } (ES2022 ErrorOptions)
+try {
+  await initializeAuth();
+} catch (error) {
+  throw new ForceRetryError("Failed to init auth", { cause: error });
+}
+
+// cause-only (no custom message)
+throw new ForceRetryError(undefined, { cause: originalError });
 ```
 
 **Use cases:**
@@ -1729,6 +1739,11 @@ err.name; // "ForceRetryError"
 err.message; // "__SPA_GUARD_FORCE_RETRY__version mismatch"
 err instanceof ForceRetryError; // true
 err instanceof Error; // true
+
+// With cause
+const original = new TypeError("network timeout");
+const err2 = new ForceRetryError("version mismatch", { cause: original });
+err2.cause; // TypeError: network timeout
 ```
 
 ### Custom Retry Strategy

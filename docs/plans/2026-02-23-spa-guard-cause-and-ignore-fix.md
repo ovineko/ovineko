@@ -66,10 +66,10 @@ Two changes:
 
 - Modify: `packages/spa-guard/README.md`
 
-- [ ] Add `{ cause }` example to the ForceRetryError section
-- [ ] Show wrapping a caught error: `throw new ForceRetryError("Failed to init auth", { cause: error })`
-- [ ] Update the property example block to show `err.cause`
-- [ ] Document that `errors.ignore` patterns fully skip all processing (no reload, no beacon)
+- [x] Add `{ cause }` example to the ForceRetryError section
+- [x] Show wrapping a caught error: `throw new ForceRetryError("Failed to init auth", { cause: error })`
+- [x] Update the property example block to show `err.cause`
+- [x] Document that `errors.ignore` patterns fully skip all processing (no reload, no beacon)
 
 ### Task 4: Verify acceptance criteria
 
