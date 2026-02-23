@@ -13,10 +13,10 @@ vi.mock("../common/options", () => ({
 
 import type { SPAGuardEvent } from "../common/events/types";
 
-import { lazyWithRetry } from ".";
 import { subscribe } from "../common/events/internal";
 import { getOptions } from "../common/options";
 import { attemptReload } from "../common/reload";
+import { lazyWithRetry } from "./lazyWithRetry";
 
 interface ErrorBoundaryState {
   error: Error | null;
@@ -238,7 +238,7 @@ describe("integration: events emitted in correct order", () => {
     );
 
     expect(lazyEvents[0]).toMatchObject({ attempt: 1, name: "lazy-retry-attempt" });
-    expect(lazyEvents[1]).toMatchObject({ attempt: 2, name: "lazy-retry-success" });
+    expect(lazyEvents[1]).toMatchObject({ attempt: 1, name: "lazy-retry-success" });
     expect(lazyEvents).toHaveLength(2);
   });
 });

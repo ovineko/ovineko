@@ -127,9 +127,11 @@ pnpm test                # Run tests once
 pnpm test:watch          # Run tests in watch mode
 pnpm test:coverage       # Run tests with coverage report
 pnpm test:ui             # Open Vitest UI
+pnpm test:debug          # Run tests with console output visible (DEBUG=1)
 
 # The test suite uses vitest with happy-dom environment
 # Tests are located alongside source files (*.test.ts, *.test.tsx)
+# Console output (log/warn/error) is suppressed by default; use test:debug to see it
 ```
 
 ### Building
@@ -286,7 +288,7 @@ const route = createRouteWithParams("/users/:id", {
 - **Vitest + Testing Library**: Component tests use @testing-library/react
 - **happy-dom**: Lightweight DOM environment for tests
 - **Co-located tests**: Test files live alongside source files (_.test.tsx, _.test.ts)
-- **Setup files**: Vitest setup at `test/setup.ts` configures testing-library/jest-dom matchers
+- **Setup files**: Vitest setup at `test/setup.ts` configures testing-library/jest-dom matchers and globally suppresses `console.log`, `console.warn`, and `console.error` during test runs (restored after each test). Set `DEBUG=1` (or run `pnpm test:debug`) to disable suppression when diagnosing failures.
 
 ### Testing Safety Rules
 
@@ -382,9 +384,10 @@ When modifying a package, always run its tests and ensure the build succeeds bef
 - Dual build system: tsup builds the library (`dist/`); a separate Terser pipeline builds the inline script (`dist-inline/` for production, `dist-inline-trace/` for trace/debug mode)
 - Configuration flows from `spaGuardVitePlugin()` → injected as `window.__SPA_GUARD_OPTIONS__` at build time; all runtime code reads options exclusively from this global via `getOptions()`
 - Two-level retry strategy: `lazyWithRetry` retries the individual module import first (`lazyRetry.retryDelays`), then falls back to full page reload via `attemptReload()` (`reloadDelays`)
-- `src/common/retryImport.ts` is framework-agnostic retry logic; `src/react-lazy/index.tsx` wraps it for `React.lazy` compatibility
+- `src/common/retryImport.ts` is framework-agnostic retry logic; `src/react/lazyWithRetry.tsx` wraps it for `React.lazy` compatibility
 - Event system uses `name` field as the discriminant (not `type`) in both internal `emitEvent()` calls and the public `events.subscribe()` API
-- Peer dependency for `./react-lazy` export is `react@^19` only
+- Peer dependency for `./react` export is `react@^19` only
+- Test setup (`test/setup.ts`) globally suppresses `console.log/warn/error` to keep test output clean; run `pnpm test:debug` (sets `DEBUG=1`) to pass console output through when diagnosing test failures
 
 ### @ovineko/clean-pkg-json
 

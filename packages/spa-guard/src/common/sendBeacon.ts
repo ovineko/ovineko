@@ -23,7 +23,8 @@ export const sendBeacon = (beacon: BeaconSchema) => {
   const isSendBeaconAvailable = typeof globalThis.window?.navigator.sendBeacon === "function";
 
   const isSentBeacon =
-    isSendBeaconAvailable && navigator.sendBeacon(options.reportBeacon.endpoint, body);
+    isSendBeaconAvailable &&
+    globalThis.window.navigator.sendBeacon(options.reportBeacon.endpoint, body);
 
   if (!isSentBeacon) {
     fetch(options.reportBeacon.endpoint, { body, keepalive: true, method: "POST" }).catch(

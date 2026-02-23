@@ -67,10 +67,6 @@
     "./react-error-boundary": {
       "types": "./dist/react-error-boundary/index.d.ts",
       "default": "./dist/react-error-boundary/index.js"
-    },
-    "./react-lazy": {
-      "types": "./dist/react-lazy/index.d.ts",
-      "default": "./dist/react-lazy/index.js"
     }
   },
   "files": [
@@ -89,6 +85,7 @@
     "prepublishOnly": "pnpm build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:debug": "DEBUG=1 vitest run",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
@@ -133,6 +130,9 @@
       "optional": true
     },
     "react-router": {
+      "optional": true
+    },
+    "typebox": {
       "optional": true
     },
     "vite": {

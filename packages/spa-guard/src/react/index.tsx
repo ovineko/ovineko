@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { getState, subscribeToState } from "../runtime";
 
 export type { SpaGuardState } from "../runtime";
+export { lazyWithRetry } from "./lazyWithRetry";
+export type { LazyRetryOptions } from "./types";
 
 export const useSpaGuardState = () => {
   const [state, setState] = useState(() => {
