@@ -429,7 +429,7 @@ describe("common/checkVersion", () => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         text: async () =>
-          'window.__SPA_GUARD_OPTIONS__={"checkVersion":{"interval":60000,"mode":"html"},"version":"2.5.0"};/* script */',
+          'window.__SPA_GUARD_OPTIONS__={"checkVersion":{"interval":300000,"mode":"html"},"version":"2.5.0"};/* script */',
       });
 
       const result = await mod.fetchRemoteVersion("html");

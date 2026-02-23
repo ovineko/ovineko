@@ -162,7 +162,7 @@ export const startVersionCheck = (): void => {
 
   lastKnownVersion = options.version;
 
-  const interval = options.checkVersion?.interval ?? 60_000;
+  const interval = options.checkVersion?.interval ?? 300_000;
   const mode = options.checkVersion?.mode ?? "html";
 
   getLogger()?.versionCheckStarted(mode, interval, lastKnownVersion);

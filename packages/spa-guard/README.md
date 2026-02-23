@@ -97,6 +97,39 @@ export default defineConfig({
 });
 ```
 
+### Testing
+
+Console logs are suppressed by default during tests to keep the output clean and readable. This makes it easier to identify which tests passed or failed.
+
+To run tests with console output visible (useful for debugging):
+
+```bash
+# Run tests with console logs enabled
+DEBUG=true pnpm test
+
+# Or use the convenience script
+pnpm test:debug
+
+# Watch mode with console logs
+pnpm test:debug:watch
+```
+
+Other test commands:
+
+```bash
+# Run tests (clean output, no console logs)
+pnpm test
+
+# Watch mode (clean output)
+pnpm test:watch
+
+# Coverage report
+pnpm test:coverage
+
+# Interactive UI
+pnpm test:ui
+```
+
 ### Fastify Server
 
 ```typescript
@@ -268,7 +301,7 @@ interface Options {
 
   checkVersion?: {
     mode?: "html" | "json"; // Detection mode (default: "html")
-    interval?: number; // Polling interval in ms (default: 60000)
+    interval?: number; // Polling interval in ms (default: 300000)
     endpoint?: string; // JSON endpoint URL (required for "json" mode)
     onUpdate?: "reload" | "event"; // Behavior on version change (default: "reload")
   };
@@ -313,7 +346,7 @@ interface VitePluginOptions extends Options {
   minTimeBetweenResets: 5000,
   checkVersion: {
     mode: "html",
-    interval: 60_000,
+    interval: 300_000,
     onUpdate: "reload",
   },
   errors: {
@@ -733,7 +766,7 @@ spaGuardVitePlugin({
   // version is auto-generated if not specified
   checkVersion: {
     mode: "html", // "html" (default) or "json"
-    interval: 60_000, // polling interval in ms (default: 60s)
+    interval: 300_000, // polling interval in ms (default: 5min)
     endpoint: "/api/version", // required for "json" mode
     onUpdate: "reload", // "reload" (default) or "event"
   },
@@ -995,7 +1028,7 @@ interface Options {
 
   checkVersion?: {
     mode?: "html" | "json"; // Detection mode (default: "html")
-    interval?: number; // Polling interval in ms (default: 60000)
+    interval?: number; // Polling interval in ms (default: 300000)
     endpoint?: string; // JSON endpoint URL (required for "json" mode)
     onUpdate?: "reload" | "event"; // Behavior on version change (default: "reload")
   };
