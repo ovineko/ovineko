@@ -22,6 +22,7 @@ vi.mock("./serializeError", () => ({
 
 vi.mock("./shouldIgnore", () => ({
   shouldForceRetry: vi.fn(),
+  shouldIgnoreMessages: vi.fn(),
 }));
 
 import { handleErrorWithSpaGuard } from "./handleErrorWithSpaGuard";
@@ -30,7 +31,7 @@ import { attemptReload } from "./reload";
 import { getRetryInfoForBeacon } from "./retryState";
 import { sendBeacon } from "./sendBeacon";
 import { serializeError } from "./serializeError";
-import { shouldForceRetry } from "./shouldIgnore";
+import { shouldForceRetry, shouldIgnoreMessages } from "./shouldIgnore";
 
 const mockIsChunkError = vi.mocked(isChunkError);
 const mockAttemptReload = vi.mocked(attemptReload);
@@ -38,11 +39,13 @@ const mockGetRetryInfoForBeacon = vi.mocked(getRetryInfoForBeacon);
 const mockSendBeacon = vi.mocked(sendBeacon);
 const mockSerializeError = vi.mocked(serializeError);
 const mockShouldForceRetry = vi.mocked(shouldForceRetry);
+const mockShouldIgnoreMessages = vi.mocked(shouldIgnoreMessages);
 
 describe("handleErrorWithSpaGuard", () => {
   beforeEach(() => {
     mockIsChunkError.mockReturnValue(false);
     mockShouldForceRetry.mockReturnValue(false);
+    mockShouldIgnoreMessages.mockReturnValue(false);
     mockAttemptReload.mockReset();
     mockGetRetryInfoForBeacon.mockReturnValue({});
     mockSendBeacon.mockReset();
@@ -206,6 +209,62 @@ describe("handleErrorWithSpaGuard", () => {
 
       expect(mockAttemptReload).toHaveBeenCalledTimes(1);
       expect(mockSendBeacon).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("shouldIgnoreMessages → early return (errors.ignore integration)", () => {
+    it("does not call attemptReload when shouldIgnoreMessages returns true for chunk error", () => {
+      mockIsChunkError.mockReturnValue(true);
+      mockShouldIgnoreMessages.mockReturnValue(true);
+      const error = new Error("Failed to fetch dynamically imported module");
+
+      handleErrorWithSpaGuard(error, { eventName: "test-event" });
+
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+    });
+
+    it("does not call sendBeacon when shouldIgnoreMessages returns true", () => {
+      mockShouldIgnoreMessages.mockReturnValue(true);
+      const error = new Error("ignored error");
+
+      handleErrorWithSpaGuard(error, { eventName: "test-event" });
+
+      expect(mockSendBeacon).not.toHaveBeenCalled();
+      expect(mockSerializeError).not.toHaveBeenCalled();
+    });
+
+    it("does not call isChunkError or shouldForceRetry when ignored", () => {
+      mockShouldIgnoreMessages.mockReturnValue(true);
+      const error = new Error("ignored error");
+
+      handleErrorWithSpaGuard(error, { eventName: "test-event" });
+
+      expect(mockIsChunkError).not.toHaveBeenCalled();
+      expect(mockShouldForceRetry).not.toHaveBeenCalled();
+    });
+
+    it("still calls onError callback even when error is ignored", () => {
+      mockShouldIgnoreMessages.mockReturnValue(true);
+      const onError = vi.fn();
+      const error = new Error("ignored but callback fires");
+
+      handleErrorWithSpaGuard(error, { eventName: "test-event", onError });
+
+      expect(onError).toHaveBeenCalledWith(error);
+    });
+
+    it("checks shouldIgnoreMessages with error.message for Error instances", () => {
+      const error = new Error("specific message");
+
+      handleErrorWithSpaGuard(error, { eventName: "test-event" });
+
+      expect(mockShouldIgnoreMessages).toHaveBeenCalledWith(["specific message"]);
+    });
+
+    it("checks shouldIgnoreMessages with String(error) for non-Error values", () => {
+      handleErrorWithSpaGuard("string error", { eventName: "test-event" });
+
+      expect(mockShouldIgnoreMessages).toHaveBeenCalledWith(["string error"]);
     });
   });
 
