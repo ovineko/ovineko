@@ -18,14 +18,13 @@ This follows the same philosophy as `@shibanet0/datamitsu-config` (opinionated c
 
 ## Packages
 
-| Package                                                          | Description                                                                                                                             | Status            |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| [@ovineko/react-router](./packages/react-router)                 | Type-safe wrapper for React Router v7 with valibot schema validation                                                                    | ✅ Published      |
-| [@ovineko/react-error-boundary](./packages/react-error-boundary) | Error boundary utilities for React with optional Sentry integration                                                                     | 🚧 In Development |
-| [@ovineko/spa-guard](./packages/spa-guard)                       | Chunk load error handling for SPAs with automatic retry, lazyWithRetry for module-level import retry, beacon reporting, and Vite plugin | ✅ Published      |
-| [@ovineko/clean-pkg-json](./packages/clean-pkg-json)             | Zero-config tool to clean package.json before publishing                                                                                | ✅ Published      |
-| [@ovineko/fastify-base](./packages/fastify-base)                 | Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck                                                       | 🚧 In Development |
-| [@ovineko/datamitsu-config](./packages/datamitsu-config)         | Internal configuration package for datamitsu tooling                                                                                    | 🔒 Private        |
+| Package                                                  | Description                                                                                                                             | Status            |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| [@ovineko/react-router](./packages/react-router)         | Type-safe wrapper for React Router v7 with valibot schema validation                                                                    | ✅ Published      |
+| [@ovineko/spa-guard](./packages/spa-guard)               | Chunk load error handling for SPAs with automatic retry, lazyWithRetry for module-level import retry, beacon reporting, and Vite plugin | ✅ Published      |
+| [@ovineko/clean-pkg-json](./packages/clean-pkg-json)     | Zero-config tool to clean package.json before publishing                                                                                | ✅ Published      |
+| [@ovineko/fastify-base](./packages/fastify-base)         | Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck                                                       | 🚧 In Development |
+| [@ovineko/datamitsu-config](./packages/datamitsu-config) | Internal configuration package for datamitsu tooling                                                                                    | 🔒 Private        |
 
 ## Installation
 
@@ -137,7 +136,6 @@ Only pnpm is allowed as the package manager (enforced via `only-allow`).
 ovineko/
 ├── packages/                    # All publishable packages
 │   ├── react-router/           # Type-safe React Router v7 wrapper
-│   ├── react-error-boundary/   # Error boundaries with Sentry integration
 │   ├── spa-guard/              # Chunk load error handling for SPAs
 │   ├── clean-pkg-json/         # Package.json cleanup tool
 │   ├── datamitsu-config/       # Shared config for datamitsu tooling

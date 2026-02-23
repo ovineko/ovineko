@@ -1,4 +1,8 @@
+import { useLayoutEffect, useMemo, useRef } from "react";
+
 import type { SpaGuardState } from "../runtime";
+
+import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./fallbackHtml.generated";
 
 interface DefaultErrorFallbackProps {
   error: unknown;
@@ -8,62 +12,19 @@ interface DefaultErrorFallbackProps {
   spaGuardState: SpaGuardState;
 }
 
-const containerStyle: React.CSSProperties = {
-  alignItems: "center",
-  display: "flex",
-  flexDirection: "column",
-  fontFamily: "system-ui, sans-serif",
-  gap: "1rem",
-  justifyContent: "center",
-  minHeight: "100vh",
-  padding: "2rem",
-};
-
-const errorContainerStyle: React.CSSProperties = {
-  ...containerStyle,
-  textAlign: "center",
-};
-
-const spinnerStyle: React.CSSProperties = {
-  animation: "spin 1s linear infinite",
-  border: "4px solid #f3f3f3",
-  borderRadius: "50%",
-  borderTop: "4px solid #3498db",
-  height: "40px",
-  width: "40px",
-};
-
-const headingStyle: React.CSSProperties = { margin: 0 };
-const errorHeadingStyle: React.CSSProperties = { color: "#e74c3c", margin: 0 };
-
-const textStyle: React.CSSProperties = { color: "#666", margin: 0 };
-const messageStyle: React.CSSProperties = { color: "#666", maxWidth: "600px" };
-
-const buttonContainerStyle: React.CSSProperties = { display: "flex", gap: "0.5rem" };
-
-const baseButtonStyle: React.CSSProperties = {
-  border: "none",
-  borderRadius: "4px",
-  color: "white",
-  cursor: "pointer",
-  fontSize: "16px",
-  padding: "0.75rem 1.5rem",
-};
-
-const primaryButtonStyle: React.CSSProperties = {
-  ...baseButtonStyle,
-  backgroundColor: "#3498db",
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  ...baseButtonStyle,
-  backgroundColor: "#95a5a6",
-};
+const escapeHtml = (str: string): string =>
+  str
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 
 /**
  * Default fallback UI component for error boundaries.
  *
- * Shows retry progress or error message with action buttons.
+ * Uses two separate HTML templates: one for loading/retrying state
+ * and one for error state. Renders via dangerouslySetInnerHTML with
+ * string replacements for dynamic content.
  */
 export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
   error,
@@ -72,46 +33,53 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
   onReset,
   spaGuardState,
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  let html: string;
+
   if (isRetrying) {
-    return (
-      <div style={containerStyle}>
-        <div style={spinnerStyle} />
-        <h2 style={headingStyle}>Loading...</h2>
-        <p style={textStyle}>Retry attempt {spaGuardState.currentAttempt}</p>
-        <style>
-          {`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}
-        </style>
-      </div>
-    );
+    html = defaultLoadingFallbackHtml
+      .replace(
+        'data-spa-guard-section="retrying" style="display:none"',
+        'data-spa-guard-section="retrying" style="display:block"',
+      )
+      .replace(
+        'Retry attempt <span data-spa-guard-content="attempt"></span>',
+        `Retry attempt ${spaGuardState.currentAttempt}`,
+      );
+  } else {
+    const heading = isChunk ? "Failed to load module" : "Something went wrong";
+    const message = error instanceof Error ? error.message : String(error);
+
+    html = defaultErrorFallbackHtml
+      .replace(">Something went wrong</h1>", `>${escapeHtml(heading)}</h1>`)
+      .replace(">Please refresh the page to continue.</p>", `>${escapeHtml(message)}</p>`);
+
+    if (onReset) {
+      html = html.replace(
+        'data-spa-guard-action="try-again" type="button" style="display:none"',
+        'data-spa-guard-action="try-again" type="button" style="display:inline-block"',
+      );
+    }
   }
 
-  const message = error instanceof Error ? error.message : String(error);
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) {
+      return;
+    }
 
-  return (
-    <div style={errorContainerStyle}>
-      <h1 style={errorHeadingStyle}>
-        {isChunk ? "Failed to load module" : "Something went wrong"}
-      </h1>
-      <p style={messageStyle}>{message}</p>
-      <div style={buttonContainerStyle}>
-        {onReset && (
-          <button onClick={onReset} style={primaryButtonStyle} type="button">
-            Try again
-          </button>
-        )}
-        <button
-          onClick={() => globalThis.window?.location.reload()}
-          style={onReset ? secondaryButtonStyle : primaryButtonStyle}
-          type="button"
-        >
-          Reload page
-        </button>
-      </div>
-    </div>
-  );
+    if (onReset) {
+      const tryAgainBtn = el.querySelector('[data-spa-guard-action="try-again"]');
+      if (tryAgainBtn) {
+        const handler = () => onReset();
+        tryAgainBtn.addEventListener("click", handler);
+        return () => tryAgainBtn.removeEventListener("click", handler);
+      }
+    }
+  }, [onReset, html]);
+
+  const innerHtml = useMemo(() => ({ __html: html }), [html]);
+
+  return <div dangerouslySetInnerHTML={innerHtml} ref={containerRef} />;
 };

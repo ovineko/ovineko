@@ -12,3 +12,5 @@ export const loggerWindowKey = Symbol.for(`${name}:logger`);
 
 export const RETRY_ID_PARAM = "spaGuardRetryId";
 export const RETRY_ATTEMPT_PARAM = "spaGuardRetryAttempt";
+
+export const debugSyncErrorEventType = "spa-guard:debug-sync-error";

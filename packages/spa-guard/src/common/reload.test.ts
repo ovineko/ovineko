@@ -20,8 +20,10 @@ vi.mock("./options", () => ({
 }));
 
 vi.mock("./retryState", () => ({
+  clearRetryAttemptFromUrl: vi.fn(),
   clearRetryStateFromUrl: vi.fn(),
   generateRetryId: vi.fn(),
+  getRetryAttemptFromUrl: vi.fn(),
   getRetryStateFromUrl: vi.fn(),
   updateRetryStateInUrl: vi.fn(),
 }));
@@ -43,10 +45,12 @@ import {
   shouldResetRetryCycle,
 } from "./lastReloadTime";
 import { getOptions } from "./options";
-import { attemptReload } from "./reload";
+import { attemptReload, resetReloadScheduled } from "./reload";
 import {
+  clearRetryAttemptFromUrl,
   clearRetryStateFromUrl,
   generateRetryId,
+  getRetryAttemptFromUrl,
   getRetryStateFromUrl,
   updateRetryStateInUrl,
 } from "./retryState";
@@ -61,8 +65,10 @@ const mockSetLastReloadTime = vi.mocked(setLastReloadTime);
 const mockSetLastRetryResetInfo = vi.mocked(setLastRetryResetInfo);
 const mockShouldResetRetryCycle = vi.mocked(shouldResetRetryCycle);
 const mockGetOptions = vi.mocked(getOptions);
+const mockClearRetryAttemptFromUrl = vi.mocked(clearRetryAttemptFromUrl);
 const mockClearRetryStateFromUrl = vi.mocked(clearRetryStateFromUrl);
 const mockGenerateRetryId = vi.mocked(generateRetryId);
+const mockGetRetryAttemptFromUrl = vi.mocked(getRetryAttemptFromUrl);
 const mockGetRetryStateFromUrl = vi.mocked(getRetryStateFromUrl);
 const mockUpdateRetryStateInUrl = vi.mocked(updateRetryStateInUrl);
 const mockSendBeacon = vi.mocked(sendBeacon);
@@ -80,16 +86,21 @@ const createMockLogger = () => ({
   logEvent: vi.fn(),
   noBeaconEndpoint: vi.fn(),
   noFallbackConfigured: vi.fn(),
+  reloadAlreadyScheduled: vi.fn(),
+  retryCycleStarting: vi.fn(),
   retryLimitExceeded: vi.fn(),
+  retrySchedulingReload: vi.fn(),
   updatedRetryAttempt: vi.fn(),
-  versionChanged: vi.fn(),
   versionChangeDetected: vi.fn(),
   versionCheckAlreadyRunning: vi.fn(),
   versionCheckDisabled: vi.fn(),
   versionCheckFailed: vi.fn(),
   versionCheckHttpError: vi.fn(),
   versionCheckParseError: vi.fn(),
+  versionCheckPaused: vi.fn(),
   versionCheckRequiresEndpoint: vi.fn(),
+  versionCheckResumed: vi.fn(),
+  versionCheckResumedImmediate: vi.fn(),
   versionCheckStarted: vi.fn(),
   versionCheckStopped: vi.fn(),
   warn: vi.fn(),
@@ -97,9 +108,11 @@ const createMockLogger = () => ({
 
 const defaultOptions = {
   enableRetryReset: true,
-  fallback: {
-    html: "<div>Fallback UI</div>",
-    selector: "body",
+  html: {
+    fallback: {
+      content: "<div>Fallback UI</div>",
+      selector: "body",
+    },
   },
   minTimeBetweenResets: 5000,
   reloadDelays: [1000, 2000, 5000],
@@ -138,10 +151,12 @@ describe("attemptReload", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     setupMockLocation();
+    resetReloadScheduled();
     mockLogger = createMockLogger();
     mockGetLogger.mockReturnValue(mockLogger);
     mockGetOptions.mockReturnValue(defaultOptions);
     mockGetRetryStateFromUrl.mockReturnValue(null);
+    mockGetRetryAttemptFromUrl.mockReturnValue(null);
     mockGenerateRetryId.mockReturnValue("generated-retry-id");
     mockShouldResetRetryCycle.mockReturnValue(false);
     mockGetLastReloadTime.mockReturnValue(null);
@@ -151,6 +166,7 @@ describe("attemptReload", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.clearAllMocks();
+    resetReloadScheduled();
   });
 
   describe("basic reload cycle - attempt 0", () => {
@@ -291,8 +307,8 @@ describe("attemptReload", () => {
     });
   });
 
-  describe("useRetryId=false - calls window.location.reload()", () => {
-    it("calls window.location.reload() instead of setting href when useRetryId=false", () => {
+  describe("useRetryId=false - uses attempt-only URL params", () => {
+    it("sets location.href with spaGuardRetryAttempt param when useRetryId=false", () => {
       mockGetOptions.mockReturnValue({ ...defaultOptions, useRetryId: false });
       const error = new Error("chunk error");
 
@@ -300,8 +316,8 @@ describe("attemptReload", () => {
 
       vi.advanceTimersByTime(1000);
 
-      expect(mockLocationReload).toHaveBeenCalledTimes(1);
-      expect(mockLocationHref).toBe("http://localhost/");
+      expect(mockLocationHref).toContain("spaGuardRetryAttempt=1");
+      expect(mockLocationHref).not.toContain("spaGuardRetryId");
     });
 
     it("does not call setLastReloadTime when useRetryId=false", () => {
@@ -315,13 +331,120 @@ describe("attemptReload", () => {
       expect(mockSetLastReloadTime).not.toHaveBeenCalled();
     });
 
-    it("does not read retry state from URL when useRetryId=false", () => {
+    it("does not read full retry state from URL when useRetryId=false", () => {
       mockGetOptions.mockReturnValue({ ...defaultOptions, useRetryId: false });
       const error = new Error("chunk error");
 
       attemptReload(error);
 
       expect(mockGetRetryStateFromUrl).not.toHaveBeenCalled();
+    });
+
+    it("reads attempt from URL via getRetryAttemptFromUrl when useRetryId=false", () => {
+      mockGetOptions.mockReturnValue({ ...defaultOptions, useRetryId: false });
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      expect(mockGetRetryAttemptFromUrl).toHaveBeenCalledTimes(1);
+    });
+
+    it("increments attempt from URL when useRetryId=false and attempt exists", () => {
+      mockGetOptions.mockReturnValue({ ...defaultOptions, useRetryId: false });
+      mockGetRetryAttemptFromUrl.mockReturnValue(1);
+
+      attemptReload(new Error("chunk error"));
+
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ attempt: 2, name: "retry-attempt" }),
+        { silent: false },
+      );
+
+      vi.advanceTimersByTime(2000);
+
+      expect(mockLocationHref).toContain("spaGuardRetryAttempt=2");
+      expect(mockLocationHref).not.toContain("spaGuardRetryId");
+    });
+
+    it("successive reloads with useRetryId=false increment attempt via URL param and reach exhaustion", () => {
+      mockGetOptions.mockReturnValue({ ...defaultOptions, useRetryId: false });
+
+      // First reload - no attempt in URL
+      mockGetRetryAttemptFromUrl.mockReturnValue(null);
+      attemptReload(new Error("chunk error"));
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ attempt: 1, name: "retry-attempt" }),
+        { silent: false },
+      );
+      vi.advanceTimersByTime(1000);
+      expect(mockLocationHref).toContain("spaGuardRetryAttempt=1");
+
+      // Second reload - attempt=1 in URL
+      resetReloadScheduled();
+      mockEmitEvent.mockClear();
+      mockGetRetryAttemptFromUrl.mockReturnValue(1);
+      attemptReload(new Error("chunk error"));
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ attempt: 2, name: "retry-attempt" }),
+        { silent: false },
+      );
+      vi.advanceTimersByTime(2000);
+      expect(mockLocationHref).toContain("spaGuardRetryAttempt=2");
+
+      // Third reload - attempt=2 in URL
+      resetReloadScheduled();
+      mockEmitEvent.mockClear();
+      mockGetRetryAttemptFromUrl.mockReturnValue(2);
+      attemptReload(new Error("chunk error"));
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ attempt: 3, name: "retry-attempt" }),
+        { silent: false },
+      );
+      vi.advanceTimersByTime(5000);
+      expect(mockLocationHref).toContain("spaGuardRetryAttempt=3");
+
+      // Fourth reload - attempt=3 in URL, should be exhausted (reloadDelays has 3 entries)
+      resetReloadScheduled();
+      mockEmitEvent.mockClear();
+      mockGetRetryAttemptFromUrl.mockReturnValue(3);
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
+        [] as unknown as HTMLCollectionOf<Element>,
+      );
+
+      attemptReload(new Error("chunk error"));
+
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ finalAttempt: 3, name: "retry-exhausted" }),
+        { silent: false },
+      );
+    });
+
+    it("clears attempt param from URL on exhaustion when useRetryId=false", () => {
+      mockGetOptions.mockReturnValue({ ...defaultOptions, useRetryId: false });
+      mockGetRetryAttemptFromUrl.mockReturnValue(3);
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
+        [] as unknown as HTMLCollectionOf<Element>,
+      );
+
+      attemptReload(new Error("chunk error"));
+
+      // Called in both the exhaustion path and showFallbackUI (idempotent)
+      expect(mockClearRetryAttemptFromUrl).toHaveBeenCalled();
+    });
+
+    it("does not put spaGuardRetryId in URL when useRetryId=false", () => {
+      mockGetOptions.mockReturnValue({ ...defaultOptions, useRetryId: false });
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      vi.advanceTimersByTime(1000);
+
+      expect(mockLocationHref).not.toContain("spaGuardRetryId");
     });
   });
 
@@ -406,6 +529,20 @@ describe("attemptReload", () => {
       attemptReload(error);
 
       expect(mockEl.innerHTML).toBe("<div>Fallback UI</div>");
+    });
+
+    it("emits chunk-error with isRetrying=false when attempt=-1", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ isRetrying: false, name: "chunk-error" }),
+      );
     });
 
     it("does not emit retry-attempt or retry-exhausted when attempt=-1", () => {
@@ -596,7 +733,7 @@ describe("attemptReload", () => {
     it("uses custom selector from fallback options", () => {
       mockGetOptions.mockReturnValue({
         ...defaultOptions,
-        fallback: { html: "<div>Custom</div>", selector: "#app" },
+        html: { fallback: { content: "<div>Custom</div>", selector: "#app" } },
       });
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
       const mockEl = { innerHTML: "" };
@@ -625,7 +762,7 @@ describe("attemptReload", () => {
     it("does not inject fallback HTML or emit event when no fallback html configured", () => {
       mockGetOptions.mockReturnValue({
         ...defaultOptions,
-        fallback: { selector: "body" },
+        html: { fallback: { selector: "body" } },
       });
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
       vi.spyOn(document, "querySelector");
@@ -648,7 +785,7 @@ describe("attemptReload", () => {
       expect(mockEmitEvent).not.toHaveBeenCalledWith({ name: "fallback-ui-shown" });
     });
 
-    it("updates retry state in URL when fallback is shown with existing retry state", () => {
+    it("does not increment retry state in URL when fallback is shown with exhausted retries", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
       const mockEl = { innerHTML: "" };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
@@ -660,7 +797,7 @@ describe("attemptReload", () => {
 
       attemptReload(error);
 
-      expect(mockUpdateRetryStateInUrl).toHaveBeenCalledWith("r1", 4);
+      expect(mockUpdateRetryStateInUrl).not.toHaveBeenCalled();
     });
 
     it("clears retry state from URL when fallback is shown with attempt=-1 state", () => {
@@ -930,7 +1067,7 @@ describe("attemptReload", () => {
     it("calls noFallbackConfigured when no fallback HTML is set", () => {
       mockGetOptions.mockReturnValue({
         ...defaultOptions,
-        fallback: { selector: "body" },
+        html: { fallback: { selector: "body" } },
       });
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
 
@@ -961,7 +1098,7 @@ describe("attemptReload", () => {
       expect(mockLogger.clearingRetryState).toHaveBeenCalledTimes(1);
     });
 
-    it("calls updatedRetryAttempt when showing fallback with existing retry state", () => {
+    it("does not call updatedRetryAttempt when showing fallback with exhausted retries", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
       const mockEl = { innerHTML: "" };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
@@ -971,7 +1108,7 @@ describe("attemptReload", () => {
 
       attemptReload(new Error("chunk error"));
 
-      expect(mockLogger.updatedRetryAttempt).toHaveBeenCalledWith(4);
+      expect(mockLogger.updatedRetryAttempt).not.toHaveBeenCalled();
     });
 
     it("calls fallbackInjectFailed when querySelector throws", () => {
@@ -996,6 +1133,102 @@ describe("attemptReload", () => {
       );
 
       expect(() => attemptReload(new Error("chunk error"))).not.toThrow();
+    });
+
+    it("calls retryCycleStarting with retryId and current attempt", () => {
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      expect(mockLogger.retryCycleStarting).toHaveBeenCalledWith("generated-retry-id", 0);
+    });
+
+    it("calls retrySchedulingReload before scheduling the reload timeout", () => {
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      expect(mockLogger.retrySchedulingReload).toHaveBeenCalledWith("generated-retry-id", 1, 1000);
+    });
+  });
+
+  describe("reload deduplication guard", () => {
+    it("ignores second attemptReload call while a reload is already scheduled", () => {
+      const error1 = new Error("first chunk error");
+      const error2 = new Error("second chunk error");
+
+      attemptReload(error1);
+
+      // First call emits chunk-error + retry-attempt = 2 events
+      expect(mockEmitEvent).toHaveBeenCalledTimes(2);
+
+      attemptReload(error2);
+
+      // Second call should be a no-op, no additional events emitted
+      expect(mockEmitEvent).toHaveBeenCalledTimes(2);
+    });
+
+    it("calls reloadAlreadyScheduled logger method on duplicate call", () => {
+      const error1 = new Error("first chunk error");
+      const error2 = new Error("second chunk error");
+
+      attemptReload(error1);
+      attemptReload(error2);
+
+      expect(mockLogger.reloadAlreadyScheduled).toHaveBeenCalledWith(error2);
+    });
+
+    it("allows new attemptReload after resetReloadScheduled is called", () => {
+      const error1 = new Error("first chunk error");
+      const error2 = new Error("second chunk error");
+
+      attemptReload(error1);
+      expect(mockEmitEvent).toHaveBeenCalledTimes(2);
+
+      resetReloadScheduled();
+
+      attemptReload(error2);
+      // Should emit 2 more events (chunk-error + retry-attempt)
+      expect(mockEmitEvent).toHaveBeenCalledTimes(4);
+    });
+
+    it("does not set reloadScheduled flag when fallback is shown (attempt=-1)", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
+        [] as unknown as HTMLCollectionOf<Element>,
+      );
+
+      attemptReload(new Error("first error"));
+
+      // Should still allow subsequent calls since no reload was scheduled
+      mockEmitEvent.mockClear();
+      mockGetRetryStateFromUrl.mockReturnValue(null);
+
+      attemptReload(new Error("second error"));
+
+      // Should emit events for the second call
+      expect(mockEmitEvent).toHaveBeenCalled();
+    });
+
+    it("does not set reloadScheduled flag when retries are exhausted", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
+        [] as unknown as HTMLCollectionOf<Element>,
+      );
+
+      attemptReload(new Error("first error"));
+
+      // Should still allow subsequent calls since no reload was scheduled
+      mockEmitEvent.mockClear();
+      mockGetRetryStateFromUrl.mockReturnValue(null);
+
+      attemptReload(new Error("second error"));
+
+      expect(mockEmitEvent).toHaveBeenCalled();
     });
   });
 });

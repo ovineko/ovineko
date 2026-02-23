@@ -11,6 +11,7 @@ export default tsup.defineConfig({
     "src/react-error-boundary/index.tsx",
     "src/react/index.tsx",
     "src/runtime/index.ts",
+    "src/runtime/debug/index.ts",
     "src/schema/index.ts",
     "src/schema/parse.ts",
     "src/fastify/index.ts",
