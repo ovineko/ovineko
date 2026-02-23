@@ -41,6 +41,9 @@ Peer dependencies vary by integration - see sections below for specific requirem
 - ✅ **appName option** - Beacon source identification for monorepo setups
 - ✅ **BeaconError** - Utility class for error tracking service integration (Sentry, Datadog, etc.)
 - ✅ **Configurable unhandled rejection handling** - Control retry and beacon behavior for non-chunk unhandled promise rejections
+- ✅ **Spinner overlay** - Full-page loading spinner with Vite injection, runtime API (`showSpinner`/`dismissSpinner`), and React component
+- ✅ **i18n support** - Server-side HTML patching with `patchHtmlI18n`, built-in translations (en, ko, ja, zh, ar, he), meta tag approach for client-side patching
+- ✅ **Data attribute templating** - Fallback and loading HTML templates use `data-spa-guard-*` attributes for robust content manipulation
 
 ## Quick Start
 
@@ -80,6 +83,10 @@ export default defineConfig({
         forceRetry: [], // Custom error messages that trigger retry/reload (like chunk errors)
       },
       useRetryId: true, // Use query parameters for cache busting (default: true)
+      spinner: {
+        // background: "#fff", // Overlay background (default: "#fff")
+        // disabled: false,    // Set true to disable spinner entirely
+      },
     }),
     react(),
   ],
@@ -297,10 +304,11 @@ spaGuardVitePlugin({
 **How it works:**
 
 1. Reads minified inline script from `dist-inline/index.js` (or `dist-inline-trace/index.js` if trace mode)
-2. Injects `window.__SPA_GUARD_OPTIONS__` configuration object
+2. Injects `window.__SPA_GUARD_VERSION__` (for fast version detection) and `window.__SPA_GUARD_OPTIONS__` configuration object
 3. Prepends inline script to HTML `<head>` (before all other scripts)
-4. Script registers error listeners immediately on page load
-5. Captures errors even if main application bundle fails
+4. If spinner is enabled, injects spinner overlay into `<body>` at build time
+5. Script registers error listeners immediately on page load
+6. Captures errors even if main application bundle fails
 
 ### Options Interface
 
@@ -349,6 +357,12 @@ interface Options {
     retryDelays?: number[]; // Delays in ms for module-level retries (default: [1000, 2000])
     callReloadOnFailure?: boolean; // Trigger page reload after all retries fail (default: true)
   };
+
+  spinner?: {
+    content?: string; // Custom spinner HTML element (default: SVG circle animation)
+    disabled?: boolean; // Disable spinner entirely (default: false)
+    background?: string; // Overlay background color (default: "#fff")
+  };
 }
 
 interface VitePluginOptions extends Options {
@@ -385,6 +399,10 @@ interface VitePluginOptions extends Options {
     loading: {
       content: defaultLoadingFallbackHtml, // minimal loading screen (auto-generated)
     },
+  },
+  spinner: {
+    background: "#fff",
+    disabled: false,
   },
 }
 ```
@@ -644,12 +662,12 @@ function App() {
 
 **Default Fallback Component:**
 
-Both error boundaries use `DefaultErrorFallback` by default, which uses two minimal HTML templates:
+Both error boundaries use `DefaultErrorFallback` by default, which uses two styled HTML templates:
 
-- **Error state:** Heading, message paragraph, "Try again" button (non-chunk errors), "Reload page" button, error ID. No colors, no custom fonts, no animations - plain default browser styling.
-- **Loading/retrying state:** Centered "Loading..." text with retry attempt counter. No spinner, no animation.
+- **Error state:** SVG alert icon, heading, message paragraph, "Try again" button (non-chunk errors), "Reload page" button, error ID. Uses `system-ui` and `ui-monospace` fonts with styled buttons.
+- **Loading/retrying state:** Centered spinner animation, "Loading..." heading, retry attempt counter with spinner. Uses `@keyframes` animation.
 
-These templates are auto-generated as TypeScript string constants (`defaultErrorFallbackHtml` and `defaultLoadingFallbackHtml`) and can be imported for use in custom integrations.
+These templates are auto-generated as TypeScript string constants (`defaultErrorFallbackHtml` and `defaultLoadingFallbackHtml`) and can be imported for use in custom integrations. Both templates use `data-spa-guard-*` attributes for content manipulation (see [Data Attribute Contract](#data-attribute-contract)).
 
 **Error flow:**
 
@@ -878,7 +896,7 @@ spaGuardVitePlugin({
 
 **Two modes:**
 
-- **HTML mode** (default): Re-fetches the current page and parses the version from the injected `__SPA_GUARD_OPTIONS__`. No extra server endpoint needed.
+- **HTML mode** (default): Re-fetches the current page and parses the version from the injected `__SPA_GUARD_VERSION__` variable (falls back to `__SPA_GUARD_OPTIONS__` for backward compatibility). No extra server endpoint needed.
 - **JSON mode**: Fetches a dedicated JSON endpoint that returns `{ "version": "1.2.3" }`. Lower bandwidth, but requires a server endpoint.
 
 **Auto-reload on version change:**
@@ -909,6 +927,225 @@ Version polling automatically pauses when the browser tab is hidden (Page Visibi
 Additionally, if the tab is hidden or the window is unfocused when `startVersionCheck()` is called, polling is deferred until the tab/window becomes active. Concurrent version checks are deduplicated - overlapping visibility and focus events won't trigger multiple fetches.
 
 This is handled transparently - no configuration needed.
+
+### Spinner Overlay
+
+spa-guard injects a full-page loading spinner at build time that covers the page until your app initializes. The spinner is automatically dismissed by `recommendedSetup()`.
+
+#### Configuration
+
+```typescript
+spaGuardVitePlugin({
+  spinner: {
+    // All options are optional
+    background: "#fff", // Overlay background color (default: "#fff")
+    disabled: false, // Disable spinner entirely (default: false)
+    content: '<div class="my-spinner"></div>', // Custom spinner HTML (default: SVG circle animation)
+  },
+});
+```
+
+When `disabled: true`, no spinner HTML is injected into the page, `showSpinner()` is a no-op, and the React `Spinner` component returns `null`.
+
+#### Runtime API
+
+The spinner can be controlled programmatically at runtime:
+
+```typescript
+import { showSpinner, dismissSpinner, getSpinnerHtml } from "@ovineko/spa-guard/runtime";
+
+// Show spinner overlay (returns a cleanup function)
+const cleanup = showSpinner();
+// or with custom background:
+const cleanup = showSpinner({ background: "#000" });
+
+// Dismiss spinner
+dismissSpinner();
+
+// Get spinner HTML string (for custom rendering)
+const html = getSpinnerHtml();
+```
+
+The background color can be customized via CSS variable:
+
+```css
+:root {
+  --spa-guard-spinner-bg: #1a1a1a;
+}
+```
+
+#### React Component
+
+```tsx
+import { Spinner } from "@ovineko/spa-guard/react";
+
+function LoadingScreen() {
+  return (
+    <div>
+      <Spinner className="my-spinner" />
+      <p>Loading application...</p>
+    </div>
+  );
+}
+```
+
+The `Spinner` component accepts all standard `div` props (except `children` and `dangerouslySetInnerHTML`). Returns `null` if spinner is disabled.
+
+### i18n (Internationalization)
+
+spa-guard supports localized error and loading messages through a meta tag approach. Translations are applied server-side via HTML patching, and the inline script + React components automatically pick them up at runtime.
+
+#### Built-in Languages
+
+Six languages are included: English (en), Korean (ko), Japanese (ja), Chinese (zh), Arabic (ar, RTL), and Hebrew (he, RTL).
+
+#### Server-Side Setup
+
+Use `patchHtmlI18n` in your server middleware to inject translations based on the user's language:
+
+```typescript
+import { patchHtmlI18n, matchLang } from "@ovineko/spa-guard/server";
+
+// In your server middleware (Express, Fastify, etc.)
+app.get("*", (req, res) => {
+  let html = readIndexHtml();
+
+  // Automatic language detection from Accept-Language header
+  html = patchHtmlI18n({
+    html,
+    acceptLanguage: req.headers["accept-language"],
+  });
+
+  res.send(html);
+});
+```
+
+Or with an explicit language:
+
+```typescript
+html = patchHtmlI18n({
+  html,
+  lang: "ko", // Explicit language code
+});
+```
+
+#### Custom Translations
+
+Override or extend built-in translations:
+
+```typescript
+html = patchHtmlI18n({
+  html,
+  acceptLanguage: req.headers["accept-language"],
+  translations: {
+    // Override specific English strings
+    en: {
+      heading: "Oops! Something broke",
+      reload: "Refresh now",
+    },
+    // Add a new language
+    fr: {
+      heading: "Une erreur est survenue",
+      message: "Veuillez actualiser la page.",
+      reload: "Recharger",
+      tryAgain: "Réessayer",
+      loading: "Chargement...",
+      retrying: "Nouvelle tentative",
+    },
+  },
+});
+```
+
+#### Translation Keys
+
+```typescript
+interface SpaGuardTranslations {
+  heading: string; // Error heading (e.g., "Something went wrong")
+  message: string; // Error description
+  reload: string; // Reload button text
+  tryAgain: string; // Try again button text
+  loading: string; // Loading heading text
+  retrying: string; // Retry attempt label
+  rtl?: boolean; // Enable RTL direction
+}
+```
+
+#### Language Matching
+
+`matchLang` resolves language codes with fallback logic:
+
+```typescript
+import { matchLang } from "@ovineko/spa-guard/server";
+
+matchLang("ko"); // "ko" (exact match)
+matchLang("zh-CN"); // "zh" (prefix match)
+matchLang("fr"); // "en" (fallback)
+matchLang(undefined); // "en" (default)
+
+// Accept-Language header parsing with q-values
+matchLang("ko-KR,ko;q=0.9,en-US;q=0.8"); // "ko"
+```
+
+#### How It Works
+
+1. Server calls `patchHtmlI18n()` → injects `<meta name="spa-guard-i18n" content="...">` into `<head>` and updates `<html lang="...">`
+2. Client-side inline script reads the meta tag via `getI18n()`
+3. Translations are applied to elements using `data-spa-guard-content` and `data-spa-guard-action` attributes
+4. RTL languages automatically set `direction: rtl` on the container
+5. English without custom translations is a no-op (returns HTML unchanged)
+
+### Data Attribute Contract
+
+Custom HTML templates for error and loading states use `data-spa-guard-*` attributes for content manipulation. This makes templates robust against structural changes — spa-guard finds elements by data attributes rather than relying on specific HTML structure.
+
+#### Content Attributes
+
+Elements with `data-spa-guard-content="<key>"` have their `textContent` replaced with the corresponding translation:
+
+| Attribute Value | Translation Key          | Default Text                         |
+| --------------- | ------------------------ | ------------------------------------ |
+| `heading`       | `heading`                | Something went wrong                 |
+| `message`       | `message`                | Please refresh the page to continue. |
+| `loading`       | `loading`                | Loading...                           |
+| `retrying`      | `retrying`               | Retry attempt                        |
+| `attempt`       | _(set programmatically)_ | Attempt number                       |
+
+#### Action Attributes
+
+Elements with `data-spa-guard-action="<action>"` are interactive buttons:
+
+| Attribute Value | Translation Key | Default Text |
+| --------------- | --------------- | ------------ |
+| `try-again`     | `tryAgain`      | Try again    |
+| `reload`        | `reload`        | Reload page  |
+
+#### Section Attributes
+
+Elements with `data-spa-guard-section="<name>"` control visibility:
+
+| Attribute Value | Purpose                                          |
+| --------------- | ------------------------------------------------ |
+| `retry`         | Retry information section (shown during retries) |
+| `error-id`      | Error ID display (hidden when no retry ID)       |
+
+#### Spinner Attribute
+
+`[data-spa-guard-spinner]` — Container where the spinner SVG/HTML is injected in the loading template.
+
+#### Custom Template Example
+
+```html
+<div>
+  <h1 data-spa-guard-content="heading">Something went wrong</h1>
+  <p data-spa-guard-content="message">Please refresh the page.</p>
+  <button data-spa-guard-action="try-again">Try again</button>
+  <button data-spa-guard-action="reload" onclick="location.reload()">Reload page</button>
+  <div data-spa-guard-section="retry" style="display:none">
+    <span data-spa-guard-content="retrying">Retry attempt</span>
+    <span data-spa-guard-content="attempt">0</span>
+  </div>
+</div>
+```
 
 ### Retry Control
 
@@ -1165,6 +1402,12 @@ interface Options {
     retryDelays?: number[]; // Delays in ms for lazy import retries (default: [1000, 2000])
     callReloadOnFailure?: boolean; // Trigger page reload after all retries fail (default: true)
   };
+
+  spinner?: {
+    content?: string; // Custom spinner HTML element (default: SVG circle animation)
+    disabled?: boolean; // Disable spinner entirely (default: false)
+    background?: string; // Overlay background color (default: "#fff")
+  };
 }
 ```
 
@@ -1225,6 +1468,9 @@ From `@ovineko/spa-guard/runtime`:
 - `subscribeToState(callback)` - Subscribe to state changes, returns unsubscribe function
 - `startVersionCheck()` - Start periodic version polling
 - `stopVersionCheck()` - Stop version polling
+- `showSpinner(options?)` - Show spinner overlay, returns cleanup function
+- `dismissSpinner()` - Remove spinner overlay
+- `getSpinnerHtml(backgroundOverride?)` - Get spinner HTML string
 - `ForceRetryError` - Error class that triggers automatic retry when thrown
 - `SpaGuardState` - TypeScript type for state object
 - `RecommendedSetupOptions` - TypeScript type for recommendedSetup overrides
@@ -1452,21 +1698,23 @@ interface Options {
 
 ## Module Exports
 
-spa-guard provides 11 export entry points:
+spa-guard provides 13 export entry points:
 
-| Export                   | Description                                                                                                                   | Peer Dependencies                                 |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `.`                      | Core functionality (events, listen, options, retry control, ForceRetryError, BeaconError)                                     | None                                              |
-| `./schema`               | BeaconSchema type definitions                                                                                                 | `typebox@^1`                                      |
-| `./schema/parse`         | Beacon parsing utilities                                                                                                      | `typebox@^1`                                      |
-| `./runtime`              | Runtime state management, subscriptions, and ForceRetryError                                                                  | None                                              |
-| `./react`                | React hooks and components (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry, DebugSyncErrorTrigger) | `react@^19`                                       |
-| `./runtime/debug`        | Debug panel factory (`createDebugger`) - framework-agnostic vanilla JS                                                        | None                                              |
-| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                                                        | `react@^19`, `react-router@^7`                    |
-| `./fastify`              | Fastify server plugin and BeaconError                                                                                         | `fastify@^5 \|\| ^4`, `fastify-plugin@^5 \|\| ^4` |
-| `./vite-plugin`          | Vite build plugin                                                                                                             | `vite@^8 \|\| ^7`                                 |
-| `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                | `react@^19`                                       |
-| `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                | `eslint@^9 \|\| ^10` (optional)                   |
+| Export                   | Description                                                                                                                            | Peer Dependencies                                 |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `.`                      | Core functionality (events, listen, options, retry control, ForceRetryError, BeaconError)                                              | None                                              |
+| `./schema`               | BeaconSchema type definitions                                                                                                          | `typebox@^1`                                      |
+| `./schema/parse`         | Beacon parsing utilities                                                                                                               | `typebox@^1`                                      |
+| `./runtime`              | Runtime state management, subscriptions, spinner API, and ForceRetryError                                                              | None                                              |
+| `./react`                | React hooks and components (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry, DebugSyncErrorTrigger, Spinner) | `react@^19`                                       |
+| `./runtime/debug`        | Debug panel factory (`createDebugger`) - framework-agnostic vanilla JS                                                                 | None                                              |
+| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                                                                 | `react@^19`, `react-router@^7`                    |
+| `./fastify`              | Fastify server plugin and BeaconError                                                                                                  | `fastify@^5 \|\| ^4`, `fastify-plugin@^5 \|\| ^4` |
+| `./vite-plugin`          | Vite build plugin                                                                                                                      | `vite@^8 \|\| ^7`                                 |
+| `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                         | `react@^19`                                       |
+| `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                         | `eslint@^9 \|\| ^10` (optional)                   |
+| `./i18n`                 | Translation types and utilities (SpaGuardTranslations, translations, matchLang)                                                        | None                                              |
+| `./server`               | Server-side utilities (patchHtmlI18n, escapeAttr, matchLang, translations)                                                             | None                                              |
 
 **Import examples:**
 
@@ -1517,12 +1765,19 @@ import { fastifySPAGuard, BeaconError } from "@ovineko/spa-guard/fastify";
 
 // ESLint plugin
 import spaGuardEslint from "@ovineko/spa-guard/eslint";
+
+// i18n (translations and language matching)
+import type { SpaGuardTranslations } from "@ovineko/spa-guard/i18n";
+import { translations, matchLang } from "@ovineko/spa-guard/i18n";
+
+// Server utilities (i18n HTML patching)
+import { patchHtmlI18n, escapeAttr, translations, matchLang } from "@ovineko/spa-guard/server";
 ```
 
 ## Build Sizes
 
-- **Production:** `dist-inline/index.js` ~8.9 KB minified (Terser)
-- **Trace:** `dist-inline-trace/index.js` ~13.8 KB minified (Terser)
+- **Production:** `dist-inline/index.js` ~12 KB minified (Terser)
+- **Trace:** `dist-inline-trace/index.js` ~17 KB minified (Terser)
 - **Main library:** `dist/` varies by export
 
 ## Advanced Usage

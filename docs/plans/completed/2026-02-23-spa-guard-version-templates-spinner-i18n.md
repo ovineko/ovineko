@@ -126,6 +126,6 @@ Four improvements to @ovineko/spa-guard in one plan:
 
 ### Task 6: Update documentation
 
-- [ ] Update README.md: spinner option docs, i18n usage examples (patchHtmlI18n, matchLang, runtime language update), data attribute contract for custom HTML, new entry points
-- [ ] Update CLAUDE.md if internal patterns changed
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Update README.md: spinner option docs, i18n usage examples (patchHtmlI18n, matchLang, runtime language update), data attribute contract for custom HTML, new entry points
+- [x] Update CLAUDE.md if internal patterns changed
+- [x] Move this plan to `docs/plans/completed/`
