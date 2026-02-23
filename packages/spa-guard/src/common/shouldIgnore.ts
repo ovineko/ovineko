@@ -8,7 +8,7 @@ import { getOptions } from "./options";
  */
 export const shouldIgnoreMessages = (messages: (string | undefined)[]): boolean => {
   const options = getOptions();
-  const ignorePatterns = options.errors?.ignore ?? [];
+  const ignorePatterns = (options.errors?.ignore ?? []).filter((p) => p !== "");
 
   if (ignorePatterns.length === 0) {
     return false;
@@ -26,7 +26,9 @@ export const shouldIgnoreMessages = (messages: (string | undefined)[]): boolean 
  */
 export const shouldForceRetry = (messages: (string | undefined)[]): boolean => {
   const options = getOptions();
-  const forceRetryPatterns = [...(options.errors?.forceRetry ?? []), FORCE_RETRY_MAGIC];
+  const forceRetryPatterns = [...(options.errors?.forceRetry ?? []), FORCE_RETRY_MAGIC].filter(
+    (p) => p !== "",
+  );
 
   const validMessages = messages.filter((msg): msg is string => typeof msg === "string");
 

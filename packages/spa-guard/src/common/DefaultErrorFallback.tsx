@@ -19,6 +19,8 @@ const escapeHtml = (str: string): string =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 
+const reloadHandler = () => location.reload();
+
 /**
  * Default fallback UI component for error boundaries.
  *
@@ -63,20 +65,28 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
     }
   }
 
+  // eslint-disable-next-line fsecond/valid-event-listener -- Intentional: imperative DOM binding for dangerouslySetInnerHTML content; buttons are not React elements
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) {
       return;
     }
 
-    if (onReset) {
-      const tryAgainBtn = el.querySelector('[data-spa-guard-action="try-again"]');
-      if (tryAgainBtn) {
-        const handler = () => onReset();
-        tryAgainBtn.addEventListener("click", handler);
-        return () => tryAgainBtn.removeEventListener("click", handler);
-      }
+    const reloadBtn = el.querySelector('[data-spa-guard-action="reload"]');
+    reloadBtn?.addEventListener("click", reloadHandler);
+
+    const tryAgainHandler = onReset ? () => onReset() : null;
+    const tryAgainBtn = onReset ? el.querySelector('[data-spa-guard-action="try-again"]') : null;
+    if (tryAgainHandler && tryAgainBtn) {
+      tryAgainBtn.addEventListener("click", tryAgainHandler);
     }
+
+    return () => {
+      reloadBtn?.removeEventListener("click", reloadHandler);
+      if (tryAgainHandler && tryAgainBtn) {
+        tryAgainBtn.removeEventListener("click", tryAgainHandler);
+      }
+    };
   }, [onReset, html]);
 
   const innerHtml = useMemo(() => ({ __html: html }), [html]);

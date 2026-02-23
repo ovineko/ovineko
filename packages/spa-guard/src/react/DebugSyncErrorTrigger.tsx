@@ -32,9 +32,7 @@ export function DebugSyncErrorTrigger(): null {
   }, []);
 
   if (error) {
-    const err = error;
-    setError(null);
-    throw err;
+    throw error;
   }
 
   return null;

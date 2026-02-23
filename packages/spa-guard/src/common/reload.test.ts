@@ -407,7 +407,7 @@ describe("attemptReload", () => {
       resetReloadScheduled();
       mockEmitEvent.mockClear();
       mockGetRetryAttemptFromUrl.mockReturnValue(3);
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,
@@ -424,7 +424,7 @@ describe("attemptReload", () => {
     it("clears attempt param from URL on exhaustion when useRetryId=false", () => {
       mockGetOptions.mockReturnValue({ ...defaultOptions, useRetryId: false });
       mockGetRetryAttemptFromUrl.mockReturnValue(3);
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,
@@ -491,7 +491,7 @@ describe("attemptReload", () => {
       const error = new Error("chunk error");
 
       // Mock document.querySelector to avoid DOM errors in fallback UI
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
 
       attemptReload(error);
@@ -506,7 +506,7 @@ describe("attemptReload", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
       const error = new Error("chunk error");
 
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
 
       attemptReload(error);
@@ -521,7 +521,7 @@ describe("attemptReload", () => {
   describe("fallback already shown (attempt=-1)", () => {
     it("calls showFallbackUI (injects HTML) and returns when attempt=-1", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
 
       const error = new Error("chunk error");
@@ -533,7 +533,7 @@ describe("attemptReload", () => {
 
     it("emits chunk-error with isRetrying=false when attempt=-1", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
 
       const error = new Error("chunk error");
@@ -547,7 +547,7 @@ describe("attemptReload", () => {
 
     it("does not emit retry-attempt or retry-exhausted when attempt=-1", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
 
       const error = new Error("chunk error");
@@ -561,7 +561,7 @@ describe("attemptReload", () => {
 
     it("does not navigate when attempt=-1", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
 
       const error = new Error("chunk error");
@@ -719,7 +719,7 @@ describe("attemptReload", () => {
   describe("fallback HTML injection (showFallbackUI)", () => {
     it("injects fallbackHtml into the target element matching selector", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
 
       const error = new Error("chunk error");
@@ -736,7 +736,7 @@ describe("attemptReload", () => {
         html: { fallback: { content: "<div>Custom</div>", selector: "#app" } },
       });
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
 
       const error = new Error("chunk error");
@@ -749,7 +749,7 @@ describe("attemptReload", () => {
 
     it("emits fallback-ui-shown event after injecting fallback HTML", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
 
       const error = new Error("chunk error");
@@ -787,7 +787,7 @@ describe("attemptReload", () => {
 
     it("does not increment retry state in URL when fallback is shown with exhausted retries", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,
@@ -802,7 +802,7 @@ describe("attemptReload", () => {
 
     it("clears retry state from URL when fallback is shown with attempt=-1 state", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,
@@ -851,7 +851,7 @@ describe("attemptReload", () => {
 
     it("emits retry-exhausted before fallback-ui-shown when max attempts exceeded", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,
@@ -873,7 +873,7 @@ describe("attemptReload", () => {
     it("handles empty reloadDelays array by showing fallback immediately", () => {
       mockGetOptions.mockReturnValue({ ...defaultOptions, reloadDelays: [] });
       mockGetRetryStateFromUrl.mockReturnValue(null);
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,
@@ -951,7 +951,7 @@ describe("attemptReload", () => {
     it("sendBeacon payload for retry-exhausted includes serialized error info", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
       const error = new Error("some chunk load error");
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
 
       attemptReload(error);
@@ -997,7 +997,7 @@ describe("attemptReload", () => {
     it("passes silent: true to retry-exhausted emitEvent when shouldIgnoreMessages returns true", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
       mockShouldIgnoreMessages.mockReturnValue(true);
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,
@@ -1037,7 +1037,7 @@ describe("attemptReload", () => {
   describe("Logger method calls", () => {
     it("calls fallbackAlreadyShown when attempt is -1 and not ignored", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,
@@ -1053,7 +1053,7 @@ describe("attemptReload", () => {
     it("does not call fallbackAlreadyShown when error is ignored", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
       mockShouldIgnoreMessages.mockReturnValue(true);
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,
@@ -1087,7 +1087,7 @@ describe("attemptReload", () => {
 
     it("calls clearingRetryState when showing fallback with attempt=-1", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,
@@ -1100,7 +1100,7 @@ describe("attemptReload", () => {
 
     it("does not call updatedRetryAttempt when showing fallback with exhausted retries", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,
@@ -1126,7 +1126,7 @@ describe("attemptReload", () => {
     it("does not call Logger methods when no logger is set", () => {
       mockGetLogger.mockReturnValue();
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,
@@ -1194,7 +1194,7 @@ describe("attemptReload", () => {
 
     it("does not set reloadScheduled flag when fallback is shown (attempt=-1)", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,
@@ -1214,7 +1214,7 @@ describe("attemptReload", () => {
 
     it("does not set reloadScheduled flag when retries are exhausted", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
-      const mockEl = { innerHTML: "" };
+      const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
         [] as unknown as HTMLCollectionOf<Element>,

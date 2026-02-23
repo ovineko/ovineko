@@ -203,6 +203,11 @@ const showFallbackUI = (): void => {
       clearRetryAttemptFromUrl();
     }
 
+    const reloadBtn = targetElement.querySelector('[data-spa-guard-action="reload"]');
+    if (reloadBtn) {
+      reloadBtn.addEventListener("click", () => location.reload());
+    }
+
     if (retryState) {
       const retryIdElements = document.getElementsByClassName("spa-guard-retry-id");
       for (const element of retryIdElements) {

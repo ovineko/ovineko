@@ -102,6 +102,28 @@ describe("shouldIgnoreMessages", () => {
     });
   });
 
+  describe("empty string patterns are filtered out", () => {
+    it("returns false when errors.ignore contains only empty strings", () => {
+      mockGetOptions.mockReturnValue({ errors: { ignore: [""] } });
+      expect(shouldIgnoreMessages(["any error message"])).toBe(false);
+    });
+
+    it("returns false when errors.ignore contains multiple empty strings", () => {
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["", ""] } });
+      expect(shouldIgnoreMessages(["any error message"])).toBe(false);
+    });
+
+    it("still matches non-empty patterns when mixed with empty strings", () => {
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["", "chunk", ""] } });
+      expect(shouldIgnoreMessages(["Failed to load chunk 123"])).toBe(true);
+    });
+
+    it("returns false for non-matching messages when mixed with empty strings", () => {
+      mockGetOptions.mockReturnValue({ errors: { ignore: ["", "chunk", ""] } });
+      expect(shouldIgnoreMessages(["unrelated error"])).toBe(false);
+    });
+  });
+
   describe("case-sensitive matching", () => {
     beforeEach(() => {
       mockGetOptions.mockReturnValue({ errors: { ignore: ["ChunkLoadError"] } });
@@ -217,6 +239,18 @@ describe("shouldForceRetry", () => {
 
     it("returns false when no pattern matches", () => {
       expect(shouldForceRetry(["unrelated error"])).toBe(false);
+    });
+  });
+
+  describe("empty string patterns are filtered out", () => {
+    it("returns false when forceRetry contains only empty strings (and no ForceRetryError magic)", () => {
+      mockGetOptions.mockReturnValue({ errors: { forceRetry: [""] } });
+      expect(shouldForceRetry(["any error message"])).toBe(false);
+    });
+
+    it("still matches non-empty patterns when mixed with empty strings", () => {
+      mockGetOptions.mockReturnValue({ errors: { forceRetry: ["", "StaleModule", ""] } });
+      expect(shouldForceRetry(["StaleModule detected"])).toBe(true);
     });
   });
 

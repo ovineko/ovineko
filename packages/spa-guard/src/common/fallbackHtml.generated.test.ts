@@ -30,9 +30,9 @@ describe("fallbackHtml.generated", () => {
       expect(defaultErrorFallbackHtml).toContain("display:none");
     });
 
-    it("contains reload button with onclick", () => {
+    it("contains reload button without inline onclick (CSP-safe)", () => {
       expect(defaultErrorFallbackHtml).toContain('data-spa-guard-action="reload"');
-      expect(defaultErrorFallbackHtml).toContain("location.reload()");
+      expect(defaultErrorFallbackHtml).not.toContain("onclick");
     });
 
     it("contains Error ID span", () => {

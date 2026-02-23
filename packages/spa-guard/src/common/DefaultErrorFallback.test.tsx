@@ -285,7 +285,7 @@ describe("DefaultErrorFallback", () => {
       }
     });
 
-    it("renders the reload button with onclick attribute", () => {
+    it("renders the reload button without inline onclick (CSP-safe)", () => {
       const { container } = render(
         <DefaultErrorFallback
           error={new Error("test")}
@@ -296,7 +296,8 @@ describe("DefaultErrorFallback", () => {
       );
 
       const reloadBtn = container.querySelector('[data-spa-guard-action="reload"]');
-      expect(reloadBtn).toHaveAttribute("onclick", "location.reload()");
+      expect(reloadBtn).toBeInTheDocument();
+      expect(reloadBtn).not.toHaveAttribute("onclick");
     });
 
     it("includes Error ID span with spa-guard-retry-id class", () => {
