@@ -4,7 +4,7 @@ import { escapeAttr, matchLang, patchHtmlI18n, translations } from "./index";
 
 const sampleHtml = `<!DOCTYPE html><html lang="en"><head><title>App</title></head><body><div id="app"></div></body></html>`;
 
-describe("server", () => {
+describe("node", () => {
   describe("escapeAttr", () => {
     it("escapes & character", () => {
       expect(escapeAttr("a&b")).toBe("a&amp;b");

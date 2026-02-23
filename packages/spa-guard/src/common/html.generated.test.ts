@@ -152,7 +152,7 @@ describe("html.generated", () => {
     });
   });
 
-  describe("both templates", () => {
+  describe("all templates", () => {
     it("error template is larger than loading template", () => {
       expect(defaultErrorFallbackHtml.length).toBeGreaterThan(defaultLoadingFallbackHtml.length);
     });
