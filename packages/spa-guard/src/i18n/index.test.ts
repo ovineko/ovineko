@@ -6,10 +6,49 @@ import { matchLang, translations } from "./index";
 
 describe("i18n", () => {
   describe("translations", () => {
-    it("includes en, ko, ja, zh, ar, he", () => {
-      expect(Object.keys(translations)).toEqual(
-        expect.arrayContaining(["ar", "en", "he", "ja", "ko", "zh"]),
-      );
+    it("includes all 38 supported languages", () => {
+      const expected = [
+        "ar",
+        "az",
+        "ca",
+        "cs",
+        "da",
+        "de",
+        "el",
+        "en",
+        "es",
+        "eu",
+        "fa",
+        "fi",
+        "fr",
+        "he",
+        "hr",
+        "hu",
+        "id",
+        "it",
+        "ja",
+        "ka",
+        "kk",
+        "ko",
+        "ky",
+        "lt",
+        "lv",
+        "nl",
+        "no",
+        "pl",
+        "pt",
+        "ro",
+        "ru",
+        "sk",
+        "sl",
+        "sv",
+        "th",
+        "tr",
+        "uk",
+        "zh",
+      ];
+      expect(Object.keys(translations).sort()).toEqual(expected);
+      expect(Object.keys(translations)).toHaveLength(38);
     });
 
     it("all translations have required fields", () => {
@@ -23,13 +62,31 @@ describe("i18n", () => {
       }
     });
 
-    it("ar and he have rtl flag", () => {
+    it("ar, he, and fa have rtl flag", () => {
       expect(translations.ar.rtl).toBe(true);
       expect(translations.he.rtl).toBe(true);
+      expect(translations.fa.rtl).toBe(true);
     });
 
-    it("en does not have rtl flag", () => {
-      expect(translations.en.rtl).toBeUndefined();
+    it("non-RTL languages do not have rtl flag", () => {
+      const nonRtlLangs = ["en", "de", "fr", "es", "ru", "ja", "ko", "zh"];
+      for (const lang of nonRtlLangs) {
+        expect(translations[lang as keyof typeof translations].rtl).toBeUndefined();
+      }
+    });
+
+    it("all languages have exactly 6 required string keys", () => {
+      const requiredKeys = ["heading", "loading", "message", "reload", "retrying", "tryAgain"];
+      for (const [, t] of Object.entries(translations)) {
+        const keys = Object.keys(t).filter((k) => k !== "rtl");
+        expect(keys.sort()).toEqual(requiredKeys.sort());
+
+        // Ensure all values are non-empty strings
+        for (const key of requiredKeys) {
+          expect(typeof t[key as keyof typeof t]).toBe("string");
+          expect((t[key as keyof typeof t] as string).length).toBeGreaterThan(0);
+        }
+      }
     });
   });
 

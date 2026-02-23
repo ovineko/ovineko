@@ -42,10 +42,57 @@ Peer dependencies vary by integration - see sections below for specific requirem
 - ✅ **BeaconError** - Utility class for error tracking service integration (Sentry, Datadog, etc.)
 - ✅ **Configurable unhandled rejection handling** - Control retry and beacon behavior for non-chunk unhandled promise rejections
 - ✅ **Spinner overlay** - Full-page loading spinner with Vite injection, runtime API (`showSpinner`/`dismissSpinner`), and React component
-- ✅ **i18n support** - Server-side HTML patching with `patchHtmlI18n`, built-in translations (en, ko, ja, zh, ar, he), meta tag approach for client-side patching
+- ✅ **i18n support** - Server-side HTML patching with `patchHtmlI18n`, built-in translations for 38 languages (ar, az, ca, cs, da, de, el, en, es, eu, fa, fi, fr, he, hr, hu, id, it, ja, ka, kk, ko, ky, lt, lv, nl, no, pl, pt, ro, ru, sk, sl, sv, th, tr, uk, zh), meta tag approach for client-side patching, RTL support for ar, he, fa
 - ✅ **Data attribute templating** - Fallback and loading HTML templates use `data-spa-guard-*` attributes for robust content manipulation
 
 ## Quick Start
+
+## Supported Languages (38)
+
+spa-guard includes built-in translations for 38 languages:
+
+| Code | Language             | RTL |
+| ---- | -------------------- | --- |
+| ar   | Arabic               | ✓   |
+| az   | Azerbaijani          |     |
+| ca   | Catalan              |     |
+| cs   | Czech                |     |
+| da   | Danish               |     |
+| de   | German               |     |
+| el   | Greek                |     |
+| en   | English              |     |
+| es   | Spanish              |     |
+| eu   | Basque               |     |
+| fa   | Persian (Farsi)      | ✓   |
+| fi   | Finnish              |     |
+| fr   | French               |     |
+| he   | Hebrew               | ✓   |
+| hr   | Croatian             |     |
+| hu   | Hungarian            |     |
+| id   | Indonesian           |     |
+| it   | Italian              |     |
+| ja   | Japanese             |     |
+| ka   | Georgian             |     |
+| kk   | Kazakh               |     |
+| ko   | Korean               |     |
+| ky   | Kyrgyz               |     |
+| lt   | Lithuanian           |     |
+| lv   | Latvian              |     |
+| nl   | Dutch                |     |
+| no   | Norwegian            |     |
+| pl   | Polish               |     |
+| pt   | Portuguese           |     |
+| ro   | Romanian             |     |
+| ru   | Russian              |     |
+| sk   | Slovak               |     |
+| sl   | Slovenian            |     |
+| sv   | Swedish              |     |
+| th   | Thai                 |     |
+| tr   | Turkish              |     |
+| uk   | Ukrainian            |     |
+| zh   | Chinese (Simplified) |     |
+
+RTL (Right-to-Left) languages are fully supported with automatic text direction.
 
 ### Vite + React Router Setup
 
