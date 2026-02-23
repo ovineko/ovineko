@@ -67,6 +67,10 @@
     "./react-error-boundary": {
       "types": "./dist/react-error-boundary/index.d.ts",
       "default": "./dist/react-error-boundary/index.js"
+    },
+    "./eslint": {
+      "types": "./dist/eslint/index.d.ts",
+      "default": "./dist/eslint/index.js"
     }
   },
   "files": [
@@ -112,6 +116,7 @@
     "vitest": "4.0.18"
   },
   "peerDependencies": {
+    "eslint": "^9 || ^10",
     "fastify": "^5 || ^4",
     "fastify-plugin": "^5 || ^4",
     "react": "^19",
@@ -120,6 +125,9 @@
     "vite": "^8 || ^7"
   },
   "peerDependenciesMeta": {
+    "eslint": {
+      "optional": true
+    },
     "fastify": {
       "optional": true
     },

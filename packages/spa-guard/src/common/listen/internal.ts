@@ -1,22 +1,29 @@
+import type { Logger } from "../logger";
+
+import { getLogger, isInitialized, markInitialized, setLogger } from "../events/internal";
 import { isChunkError } from "../isChunkError";
-import { logMessage } from "../log";
 import { getOptions } from "../options";
 import { attemptReload } from "../reload";
 import { getRetryInfoForBeacon, getRetryStateFromUrl, updateRetryStateInUrl } from "../retryState";
 import { sendBeacon } from "../sendBeacon";
 import { shouldIgnoreMessages } from "../shouldIgnore";
 
-export const listenInternal = (serializeError: (error: unknown) => string) => {
+export const listenInternal = (serializeError: (error: unknown) => string, logger?: Logger) => {
+  if (logger) {
+    setLogger(logger);
+  }
+
+  if (isInitialized()) {
+    return;
+  }
+  markInitialized();
+
   const options = getOptions();
   const reloadDelays = options.reloadDelays ?? [];
   const retryState = getRetryStateFromUrl();
 
   if (retryState && retryState.retryAttempt >= reloadDelays.length) {
-    console.log(
-      logMessage(
-        `Retry limit exceeded (${retryState.retryAttempt}/${reloadDelays.length}), marking as fallback shown`,
-      ),
-    );
+    getLogger()?.retryLimitExceeded(retryState.retryAttempt, reloadDelays.length);
     updateRetryStateInUrl(retryState.retryId, -1);
   }
 
@@ -28,7 +35,7 @@ export const listenInternal = (serializeError: (error: unknown) => string) => {
       const shouldIgnore = shouldIgnoreMessages([event.message]);
 
       if (!shouldIgnore) {
-        console.error(logMessage("error:capture:"), event);
+        getLogger()?.capturedError("error", event);
       }
 
       if (isChunkError(event)) {
@@ -53,7 +60,7 @@ export const listenInternal = (serializeError: (error: unknown) => string) => {
     const shouldIgnore = shouldIgnoreMessages([errorMessage]);
 
     if (!shouldIgnore) {
-      console.error(logMessage("unhandledrejection:"), event);
+      getLogger()?.capturedError("unhandledrejection", event);
     }
 
     if (isChunkError(event.reason)) {
@@ -76,7 +83,7 @@ export const listenInternal = (serializeError: (error: unknown) => string) => {
     const shouldIgnore = shouldIgnoreMessages([eventMessage]);
 
     if (!shouldIgnore) {
-      console.error(logMessage("CSP violation:"), event.blockedURI, event.violatedDirective);
+      getLogger()?.capturedError("csp", event.blockedURI, event.violatedDirective);
     }
 
     const serialized = serializeError(event);
@@ -93,10 +100,10 @@ export const listenInternal = (serializeError: (error: unknown) => string) => {
     const shouldIgnore = shouldIgnoreMessages([errorMsg]);
 
     if (!shouldIgnore) {
-      console.error(logMessage("vite:preloadError:"), event);
+      getLogger()?.capturedError("vite:preloadError", event);
     }
 
     event.preventDefault();
-    attemptReload(event);
+    attemptReload((event as any)?.payload ?? event);
   });
 };

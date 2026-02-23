@@ -1,12 +1,29 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { Logger } from "../logger";
 import type { SPAGuardEvent } from "./types";
 
-import { emitEvent, subscribe, subscribers } from "./internal";
+import {
+  disableDefaultRetry,
+  emitEvent,
+  enableDefaultRetry,
+  getLogger,
+  internalConfig,
+  isDefaultRetryEnabled,
+  isInitialized,
+  markInitialized,
+  setLogger,
+  subscribe,
+  subscribers,
+} from "./internal";
 
 describe("common/events/internal", () => {
   beforeEach(() => {
     subscribers.clear();
+    internalConfig.initialized = false;
+    internalConfig.defaultRetryEnabled = true;
+    internalConfig.inlineScriptLoaded = false;
+    setLogger(undefined);
   });
 
   afterEach(() => {
@@ -353,6 +370,275 @@ describe("common/events/internal", () => {
       const windowSet = (globalThis.window as any)?.[eventSubscribersWindowKey];
 
       expect(windowSet).toBe(subscribers);
+    });
+  });
+
+  describe("chunk-error event propagation", () => {
+    it("passes chunk-error event fields correctly to subscribers", () => {
+      const cb = vi.fn();
+      subscribe(cb);
+
+      const error = new Error("Failed to fetch dynamically imported module");
+      const event: SPAGuardEvent = {
+        error,
+        isRetrying: true,
+        name: "chunk-error",
+      };
+      emitEvent(event);
+
+      expect(cb).toHaveBeenCalledWith({
+        error,
+        isRetrying: true,
+        name: "chunk-error",
+      });
+    });
+
+    it("passes chunk-error with isRetrying=false when retry is disabled", () => {
+      const cb = vi.fn();
+      subscribe(cb);
+
+      const event: SPAGuardEvent = {
+        error: new Error("chunk error"),
+        isRetrying: false,
+        name: "chunk-error",
+      };
+      emitEvent(event);
+
+      expect(cb).toHaveBeenCalledWith(
+        expect.objectContaining({ isRetrying: false, name: "chunk-error" }),
+      );
+    });
+  });
+
+  describe("disableDefaultRetry() / enableDefaultRetry() / isDefaultRetryEnabled()", () => {
+    it("default retry is enabled by default", () => {
+      expect(isDefaultRetryEnabled()).toBe(true);
+    });
+
+    it("disableDefaultRetry sets defaultRetryEnabled to false", () => {
+      disableDefaultRetry();
+
+      expect(isDefaultRetryEnabled()).toBe(false);
+    });
+
+    it("enableDefaultRetry re-enables after disable", () => {
+      disableDefaultRetry();
+      expect(isDefaultRetryEnabled()).toBe(false);
+
+      enableDefaultRetry();
+      expect(isDefaultRetryEnabled()).toBe(true);
+    });
+
+    it("multiple disableDefaultRetry calls are idempotent", () => {
+      disableDefaultRetry();
+      disableDefaultRetry();
+      disableDefaultRetry();
+
+      expect(isDefaultRetryEnabled()).toBe(false);
+    });
+
+    it("multiple enableDefaultRetry calls are idempotent", () => {
+      enableDefaultRetry();
+      enableDefaultRetry();
+
+      expect(isDefaultRetryEnabled()).toBe(true);
+    });
+
+    it("disableDefaultRetry updates internalConfig directly", () => {
+      disableDefaultRetry();
+
+      expect(internalConfig.defaultRetryEnabled).toBe(false);
+    });
+  });
+
+  describe("isInitialized() / markInitialized() - double-init prevention", () => {
+    it("isInitialized returns false before markInitialized is called", () => {
+      expect(isInitialized()).toBe(false);
+    });
+
+    it("isInitialized returns true after markInitialized is called", () => {
+      markInitialized();
+
+      expect(isInitialized()).toBe(true);
+    });
+
+    it("markInitialized sets initialized on internalConfig", () => {
+      expect(internalConfig.initialized).toBe(false);
+
+      markInitialized();
+
+      expect(internalConfig.initialized).toBe(true);
+    });
+
+    it("markInitialized also sets window[initializedKey] when window exists", async () => {
+      const { initializedKey } = await import("../constants");
+
+      markInitialized();
+
+      expect((globalThis.window as any)[initializedKey]).toBe(true);
+    });
+
+    it("calling markInitialized twice does not throw", () => {
+      expect(() => {
+        markInitialized();
+        markInitialized();
+      }).not.toThrow();
+
+      expect(isInitialized()).toBe(true);
+    });
+  });
+
+  describe("internalConfig shared state", () => {
+    it("internalConfig is backed by window[internalConfigWindowKey] when window exists", async () => {
+      const { internalConfigWindowKey } = await import("../constants");
+      const windowConfig = (globalThis.window as any)?.[internalConfigWindowKey];
+
+      expect(windowConfig).toBe(internalConfig);
+    });
+  });
+
+  const createMockLogger = (): Logger => ({
+    beaconSendFailed: vi.fn(),
+    capturedError: vi.fn(),
+    clearingRetryState: vi.fn(),
+    error: vi.fn(),
+    fallbackAlreadyShown: vi.fn(),
+    fallbackInjectFailed: vi.fn(),
+    fallbackTargetNotFound: vi.fn(),
+    log: vi.fn(),
+    logEvent: vi.fn(),
+    noBeaconEndpoint: vi.fn(),
+    noFallbackConfigured: vi.fn(),
+    retryLimitExceeded: vi.fn(),
+    updatedRetryAttempt: vi.fn(),
+    versionChanged: vi.fn(),
+    versionChangeDetected: vi.fn(),
+    versionCheckAlreadyRunning: vi.fn(),
+    versionCheckDisabled: vi.fn(),
+    versionCheckFailed: vi.fn(),
+    versionCheckHttpError: vi.fn(),
+    versionCheckParseError: vi.fn(),
+    versionCheckRequiresEndpoint: vi.fn(),
+    versionCheckStarted: vi.fn(),
+    versionCheckStopped: vi.fn(),
+    warn: vi.fn(),
+  });
+
+  describe("setLogger() / getLogger() - logger lifecycle", () => {
+    it("getLogger returns undefined when no logger is set", () => {
+      expect(getLogger()).toBeUndefined();
+    });
+
+    it("setLogger stores a logger retrievable by getLogger", () => {
+      const logger = createMockLogger();
+      setLogger(logger);
+
+      expect(getLogger()).toBe(logger);
+    });
+
+    it("setLogger with undefined clears the logger", () => {
+      const logger = createMockLogger();
+      setLogger(logger);
+      setLogger(undefined);
+
+      expect(getLogger()).toBeUndefined();
+    });
+
+    it("setLogger overwrites a previously set logger", () => {
+      const logger1 = createMockLogger();
+      const logger2 = createMockLogger();
+      setLogger(logger1);
+      setLogger(logger2);
+
+      expect(getLogger()).toBe(logger2);
+    });
+
+    it("logger is stored on window[loggerWindowKey]", async () => {
+      const { loggerWindowKey } = await import("../constants");
+      const logger = createMockLogger();
+      setLogger(logger);
+
+      expect((globalThis.window as any)[loggerWindowKey]).toBe(logger);
+    });
+  });
+
+  describe("emitEvent() - auto-logging via logger", () => {
+    it("calls logger.logEvent when a logger is set", () => {
+      const logger = createMockLogger();
+      setLogger(logger);
+
+      const event: SPAGuardEvent = { name: "fallback-ui-shown" };
+      emitEvent(event);
+
+      expect(logger.logEvent).toHaveBeenCalledTimes(1);
+      expect(logger.logEvent).toHaveBeenCalledWith(event);
+    });
+
+    it("does not call logEvent when no logger is set", () => {
+      const cb = vi.fn();
+      subscribe(cb);
+
+      emitEvent({ name: "fallback-ui-shown" });
+
+      expect(cb).toHaveBeenCalledTimes(1);
+      // No logger means no logEvent call - just verify no error thrown
+    });
+
+    it("silent flag suppresses logEvent but subscribers still receive the event", () => {
+      const logger = createMockLogger();
+      setLogger(logger);
+
+      const cb = vi.fn();
+      subscribe(cb);
+
+      const event: SPAGuardEvent = { name: "fallback-ui-shown" };
+      emitEvent(event, { silent: true });
+
+      expect(logger.logEvent).not.toHaveBeenCalled();
+      expect(cb).toHaveBeenCalledTimes(1);
+      expect(cb).toHaveBeenCalledWith(event);
+    });
+
+    it("silent=false does not suppress logEvent", () => {
+      const logger = createMockLogger();
+      setLogger(logger);
+
+      emitEvent({ name: "fallback-ui-shown" }, { silent: false });
+
+      expect(logger.logEvent).toHaveBeenCalledTimes(1);
+    });
+
+    it("no options (undefined) triggers logEvent", () => {
+      const logger = createMockLogger();
+      setLogger(logger);
+
+      emitEvent({ name: "fallback-ui-shown" });
+
+      expect(logger.logEvent).toHaveBeenCalledTimes(1);
+    });
+
+    it("empty options object triggers logEvent", () => {
+      const logger = createMockLogger();
+      setLogger(logger);
+
+      emitEvent({ name: "fallback-ui-shown" }, {});
+
+      expect(logger.logEvent).toHaveBeenCalledTimes(1);
+    });
+
+    it("logEvent is called before subscribers", () => {
+      const callOrder: string[] = [];
+      const logger = createMockLogger();
+      (logger.logEvent as ReturnType<typeof vi.fn>).mockImplementation(() => {
+        callOrder.push("logEvent");
+      });
+      setLogger(logger);
+
+      subscribe(() => callOrder.push("subscriber"));
+
+      emitEvent({ name: "fallback-ui-shown" });
+
+      expect(callOrder).toEqual(["logEvent", "subscriber"]);
     });
   });
 });

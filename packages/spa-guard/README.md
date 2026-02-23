@@ -10,30 +10,7 @@ pnpm add @ovineko/spa-guard
 
 Peer dependencies vary by integration - see sections below for specific requirements.
 
-## Breaking Changes
-
-### v\* - `react-lazy` consolidated into `react`
-
-The `@ovineko/spa-guard/react-lazy` export has been removed. All React functionality is now available from a single `@ovineko/spa-guard/react` entry point.
-
-**Migration:**
-
-```typescript
-// OLD (no longer works)
-import { lazyWithRetry } from "@ovineko/spa-guard/react-lazy";
-import type { LazyRetryOptions } from "@ovineko/spa-guard/react-lazy";
-
-// NEW
-import { lazyWithRetry } from "@ovineko/spa-guard/react";
-import type { LazyRetryOptions } from "@ovineko/spa-guard/react";
-```
-
-Both `useSpaGuardState` and `lazyWithRetry` are now exported from the same `@ovineko/spa-guard/react` path:
-
-```typescript
-import { useSpaGuardState, lazyWithRetry } from "@ovineko/spa-guard/react";
-import type { LazyRetryOptions } from "@ovineko/spa-guard/react";
-```
+> **Alpha software:** This package is in active development (`0.0.1-alpha`). The public API may change between versions without migration guides. This README always reflects the current state.
 
 ## Features
 
@@ -56,6 +33,10 @@ import type { LazyRetryOptions } from "@ovineko/spa-guard/react";
 - ✅ **TypeScript support** - Full type definitions with all exports
 - ✅ **Framework-agnostic core** - Works with or without React
 - ✅ **lazyWithRetry** - Drop-in React.lazy replacement with automatic module-level retry before page reload
+- ✅ **Version checker** - Proactive new-deployment detection via HTML or JSON polling
+- ✅ **Event hooks** - React hooks for subscribing to spa-guard events (`useSPAGuardEvents`, `useSPAGuardChunkError`)
+- ✅ **Retry control** - Programmatic control over default retry behavior (`disableDefaultRetry`, `enableDefaultRetry`)
+- ✅ **ESLint plugin** - Enforces usage of spa-guard wrappers instead of direct React imports
 
 ## Quick Start
 
@@ -273,6 +254,14 @@ interface Options {
   enableRetryReset?: boolean; // Auto-reset retry cycle when enough time passes (default: true)
   minTimeBetweenResets?: number; // Min time between retry resets to prevent loops (default: 5000)
 
+  version?: string; // App version (auto-injected by Vite plugin from package.json)
+
+  checkVersion?: {
+    mode?: "html" | "json"; // Detection mode (default: "html")
+    interval?: number; // Polling interval in ms (default: 60000)
+    endpoint?: string; // JSON endpoint URL (required for "json" mode)
+  };
+
   fallback?: {
     html?: string; // Custom error UI HTML (default: basic error screen)
     selector?: string; // CSS selector for injection target (default: "body")
@@ -303,6 +292,10 @@ interface VitePluginOptions extends Options {
   useRetryId: true,
   enableRetryReset: true,
   minTimeBetweenResets: 5000,
+  checkVersion: {
+    mode: "html",
+    interval: 60_000,
+  },
   fallback: {
     html: `
       <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
@@ -536,12 +529,139 @@ function App() {
 }
 ```
 
+#### useSPAGuardEvents(callback)
+
+Subscribe to all spa-guard events (chunk errors, retries, fallback UI, etc.):
+
+```tsx
+import { useSPAGuardEvents } from "@ovineko/spa-guard/react";
+
+function EventLogger() {
+  useSPAGuardEvents((event) => {
+    if (event.name === "chunk-error") {
+      console.log("Chunk error:", event.error, "retrying:", event.isRetrying);
+    }
+    if (event.name === "retry-attempt") {
+      console.log(`Retry ${event.attempt} (delay: ${event.delay}ms)`);
+    }
+  });
+
+  return null;
+}
+```
+
+The callback ref is kept up-to-date without resubscribing, so you can safely reference component state or props inside the callback.
+
+#### useSPAGuardChunkError()
+
+Convenience hook that tracks the latest chunk error event:
+
+```tsx
+import { useSPAGuardChunkError } from "@ovineko/spa-guard/react";
+
+function ChunkErrorBanner() {
+  const chunkError = useSPAGuardChunkError();
+
+  if (!chunkError) return null;
+
+  return (
+    <div className="error-banner">
+      A chunk error occurred. {chunkError.isRetrying ? "Retrying..." : "Please reload the page."}
+    </div>
+  );
+}
+```
+
+### Version Checker
+
+spa-guard can proactively detect new deployments by periodically polling for version changes. This helps notify users before chunk errors occur.
+
+The version is automatically injected by the Vite plugin from your project's `package.json`.
+
+#### Setup
+
+```tsx
+import { useEffect } from "react";
+import { startVersionCheck } from "@ovineko/spa-guard";
+
+function App() {
+  useEffect(() => {
+    startVersionCheck();
+  }, []);
+
+  useEffect(() => {
+    const handleVersionChange = (event: CustomEvent) => {
+      const { oldVersion, latestVersion } = event.detail;
+      console.log(`New version detected: ${oldVersion} → ${latestVersion}`);
+      // Show a toast, banner, etc.
+    };
+
+    window.addEventListener("spa-guard:version-change", handleVersionChange as EventListener);
+    return () => {
+      window.removeEventListener("spa-guard:version-change", handleVersionChange as EventListener);
+    };
+  }, []);
+
+  return <YourApp />;
+}
+```
+
+#### Configuration
+
+Configure version checking via the Vite plugin options:
+
+```typescript
+spaGuardVitePlugin({
+  // version is auto-detected from package.json
+  checkVersion: {
+    mode: "html", // "html" (default) or "json"
+    interval: 60_000, // polling interval in ms (default: 60s)
+    endpoint: "/api/version", // required for "json" mode
+  },
+});
+```
+
+**Two modes:**
+
+- **HTML mode** (default): Re-fetches the current page and parses the version from the injected `__SPA_GUARD_OPTIONS__`. No extra server endpoint needed.
+- **JSON mode**: Fetches a dedicated JSON endpoint that returns `{ "version": "1.2.3" }`. Lower bandwidth, but requires a server endpoint.
+
+#### API
+
+- `startVersionCheck()` - Start periodic version polling. No-op if no version is configured or already running.
+- `stopVersionCheck()` - Stop version polling and clear the interval.
+
+### Retry Control
+
+spa-guard allows your SPA to take over error handling from the inline script by disabling the default retry behavior:
+
+```typescript
+import { disableDefaultRetry, enableDefaultRetry, isDefaultRetryEnabled } from "@ovineko/spa-guard";
+
+// Disable the inline script's automatic page reload on chunk errors
+disableDefaultRetry();
+
+// Check current state
+console.log(isDefaultRetryEnabled()); // false
+
+// Re-enable if needed
+enableDefaultRetry();
+```
+
+When default retry is disabled, chunk errors will still emit events (via `subscribe` or `useSPAGuardEvents`), but the inline script will not trigger automatic page reloads. Your SPA can then implement custom error UI and retry logic.
+
 ### Core API (Framework-agnostic)
 
 The core module provides low-level APIs for custom integrations:
 
 ```typescript
-import { events, listen, options } from "@ovineko/spa-guard";
+import {
+  events,
+  listen,
+  options,
+  startVersionCheck,
+  disableDefaultRetry,
+} from "@ovineko/spa-guard";
 
 // Subscribe to spa-guard events
 events.subscribe((event) => {
@@ -549,7 +669,7 @@ events.subscribe((event) => {
 });
 
 // Emit custom event
-events.emit({ type: "custom", data: "..." });
+events.emitEvent({ name: "chunk-error", error: new Error("test"), isRetrying: false });
 
 // Initialize error listeners (automatically called by inline script)
 listen();
@@ -557,12 +677,18 @@ listen();
 // Get merged options
 const opts = options.getOptions();
 console.log("Reload delays:", opts.reloadDelays);
+
+// Start version checking
+startVersionCheck();
+
+// Take over retry behavior
+disableDefaultRetry();
 ```
 
 **Event system:**
 
 - `events.subscribe(listener)` - Subscribe to all spa-guard events
-- `events.emit(event)` - Emit event to all subscribers
+- `events.emitEvent(event)` - Emit event to all subscribers
 - Uses Symbol-based storage for isolation
 - Safe for server-side rendering (checks for `globalThis.window` availability)
 
@@ -714,6 +840,14 @@ interface Options {
   enableRetryReset?: boolean; // Auto-reset retry cycle when enough time passes (default: true)
   minTimeBetweenResets?: number; // Min time between retry resets in ms (default: 5000)
 
+  version?: string; // App version (auto-injected by Vite plugin)
+
+  checkVersion?: {
+    mode?: "html" | "json"; // Detection mode (default: "html")
+    interval?: number; // Polling interval in ms (default: 60000)
+    endpoint?: string; // JSON endpoint URL (required for "json" mode)
+  };
+
   fallback?: {
     html?: string; // Custom error UI HTML
     selector?: string; // CSS selector for injection target (default: "body")
@@ -756,10 +890,15 @@ interface BeaconSchema {
 From `@ovineko/spa-guard`:
 
 - `events.subscribe(listener)` - Subscribe to spa-guard events
-- `events.emit(event)` - Emit event to subscribers
+- `events.emitEvent(event)` - Emit event to subscribers
 - `listen()` - Initialize error listeners
 - `options.getOptions()` - Get merged options from globalThis.window
 - `options.optionsWindowKey` - Window storage key constant
+- `startVersionCheck()` - Start periodic version polling
+- `stopVersionCheck()` - Stop version polling
+- `disableDefaultRetry()` - Disable inline script's automatic retry
+- `enableDefaultRetry()` - Re-enable automatic retry
+- `isDefaultRetryEnabled()` - Check if default retry is enabled
 
 ### Schema Exports
 
@@ -1003,31 +1142,36 @@ interface Options {
 
 ## Module Exports
 
-spa-guard provides 9 export entry points:
+spa-guard provides 10 export entry points:
 
-| Export                   | Description                                                    | Peer Dependencies              |
-| ------------------------ | -------------------------------------------------------------- | ------------------------------ |
-| `.`                      | Core functionality (events, listen, options)                   | None                           |
-| `./schema`               | BeaconSchema type definitions                                  | `typebox@^1`                   |
-| `./schema/parse`         | Beacon parsing utilities                                       | `typebox@^1`                   |
-| `./runtime`              | Runtime state management and subscriptions                     | None                           |
-| `./react`                | React hooks and lazy loading (useSpaGuardState, lazyWithRetry) | `react@^19`                    |
-| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)         | `react@^19`, `react-router@^7` |
-| `./fastify`              | Fastify server plugin                                          | `fastify@^4 \|\| ^5`           |
-| `./vite-plugin`          | Vite build plugin                                              | `vite@^7 \|\| ^8`              |
-| `./react-error-boundary` | React error boundary component (ErrorBoundary)                 | `react@^19`                    |
+| Export                   | Description                                                                                    | Peer Dependencies               |
+| ------------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------- |
+| `.`                      | Core functionality (events, listen, options, version checker, retry control)                   | None                            |
+| `./schema`               | BeaconSchema type definitions                                                                  | `typebox@^1`                    |
+| `./schema/parse`         | Beacon parsing utilities                                                                       | `typebox@^1`                    |
+| `./runtime`              | Runtime state management and subscriptions                                                     | None                            |
+| `./react`                | React hooks (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry)        | `react@^19`                     |
+| `./react-router`         | React Router error boundary (ErrorBoundaryReactRouter)                                         | `react@^19`, `react-router@^7`  |
+| `./fastify`              | Fastify server plugin                                                                          | `fastify@^4 \|\| ^5`            |
+| `./vite-plugin`          | Vite build plugin                                                                              | `vite@^7 \|\| ^8`               |
+| `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                 | `react@^19`                     |
+| `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`) | `eslint@^9 \|\| ^10` (optional) |
 
 **Import examples:**
 
 ```typescript
 // Core
-import { events, listen } from "@ovineko/spa-guard";
+import { events, listen, startVersionCheck, disableDefaultRetry } from "@ovineko/spa-guard";
 
 // Runtime state
 import { getState, subscribeToState } from "@ovineko/spa-guard/runtime";
 
 // React hooks
-import { useSpaGuardState } from "@ovineko/spa-guard/react";
+import {
+  useSpaGuardState,
+  useSPAGuardEvents,
+  useSPAGuardChunkError,
+} from "@ovineko/spa-guard/react";
 
 // Lazy imports with retry
 import { lazyWithRetry } from "@ovineko/spa-guard/react";
@@ -1045,6 +1189,9 @@ import { spaGuardVitePlugin } from "@ovineko/spa-guard/vite-plugin";
 
 // Fastify
 import { fastifySPAGuard } from "@ovineko/spa-guard/fastify";
+
+// ESLint plugin
+import spaGuardEslint from "@ovineko/spa-guard/eslint";
 ```
 
 ## Build Sizes
@@ -1209,14 +1356,51 @@ const handleBeacon = (beacon: BeaconSchema) => {
 - Fastify plugin types for type-safe integration
 - Options interface with optional fields
 
-## Future Enhancements
+## ESLint Plugin
 
-Detailed specifications for planned features are documented in [TODO.md](TODO.md):
+spa-guard includes an ESLint plugin (`@ovineko/spa-guard/eslint`) that enforces usage of spa-guard wrappers instead of direct React imports. This ensures all error boundaries and lazy loading are properly integrated with spa-guard's retry logic.
 
-- **Version Checker Module** - Detect new deployments via HTML or JSON polling
-- **Enhanced Event Emitter Architecture** - Rich event system for SPA integration with React hooks
+### Setup
 
-These features are designed to extend spa-guard's capabilities while maintaining the minimal inline script footprint.
+```javascript
+// eslint.config.js (flat config)
+import spaGuardEslint from "@ovineko/spa-guard/eslint";
+
+export default [spaGuardEslint.configs.recommended];
+```
+
+### Rules
+
+#### `no-direct-error-boundary`
+
+Disallows importing `ErrorBoundary` from `react-error-boundary`. Auto-fixes to import from `@ovineko/spa-guard/react-error-boundary` instead.
+
+```typescript
+// Bad
+import { ErrorBoundary } from "react-error-boundary";
+
+// Good (auto-fixed)
+import { ErrorBoundary } from "@ovineko/spa-guard/react-error-boundary";
+```
+
+#### `no-direct-lazy`
+
+Disallows importing `lazy` from `react`. Auto-fixes to import `lazyWithRetry` from `@ovineko/spa-guard/react` instead. Handles split-import cases where other specifiers (e.g., `Suspense`) remain on the original `react` import.
+
+```typescript
+// Bad
+import { lazy } from "react";
+
+// Good (auto-fixed)
+import { lazyWithRetry } from "@ovineko/spa-guard/react";
+
+// Bad (split import)
+import { lazy, Suspense } from "react";
+
+// Good (auto-fixed)
+import { Suspense } from "react";
+import { lazyWithRetry } from "@ovineko/spa-guard/react";
+```
 
 ## License
 

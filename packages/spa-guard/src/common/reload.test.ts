@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("./events/internal", () => ({
   emitEvent: vi.fn(),
+  getLogger: vi.fn(),
+  isDefaultRetryEnabled: vi.fn().mockReturnValue(true),
 }));
 
 vi.mock("./lastReloadTime", () => ({
@@ -32,7 +34,7 @@ vi.mock("./shouldIgnore", () => ({
   shouldIgnoreMessages: vi.fn(),
 }));
 
-import { emitEvent } from "./events/internal";
+import { emitEvent, getLogger } from "./events/internal";
 import {
   clearLastReloadTime,
   getLastReloadTime,
@@ -52,6 +54,7 @@ import { sendBeacon } from "./sendBeacon";
 import { shouldIgnoreMessages } from "./shouldIgnore";
 
 const mockEmitEvent = vi.mocked(emitEvent);
+const mockGetLogger = vi.mocked(getLogger);
 const mockClearLastReloadTime = vi.mocked(clearLastReloadTime);
 const mockGetLastReloadTime = vi.mocked(getLastReloadTime);
 const mockSetLastReloadTime = vi.mocked(setLastReloadTime);
@@ -64,6 +67,33 @@ const mockGetRetryStateFromUrl = vi.mocked(getRetryStateFromUrl);
 const mockUpdateRetryStateInUrl = vi.mocked(updateRetryStateInUrl);
 const mockSendBeacon = vi.mocked(sendBeacon);
 const mockShouldIgnoreMessages = vi.mocked(shouldIgnoreMessages);
+
+const createMockLogger = () => ({
+  beaconSendFailed: vi.fn(),
+  capturedError: vi.fn(),
+  clearingRetryState: vi.fn(),
+  error: vi.fn(),
+  fallbackAlreadyShown: vi.fn(),
+  fallbackInjectFailed: vi.fn(),
+  fallbackTargetNotFound: vi.fn(),
+  log: vi.fn(),
+  logEvent: vi.fn(),
+  noBeaconEndpoint: vi.fn(),
+  noFallbackConfigured: vi.fn(),
+  retryLimitExceeded: vi.fn(),
+  updatedRetryAttempt: vi.fn(),
+  versionChanged: vi.fn(),
+  versionChangeDetected: vi.fn(),
+  versionCheckAlreadyRunning: vi.fn(),
+  versionCheckDisabled: vi.fn(),
+  versionCheckFailed: vi.fn(),
+  versionCheckHttpError: vi.fn(),
+  versionCheckParseError: vi.fn(),
+  versionCheckRequiresEndpoint: vi.fn(),
+  versionCheckStarted: vi.fn(),
+  versionCheckStopped: vi.fn(),
+  warn: vi.fn(),
+});
 
 const defaultOptions = {
   enableRetryReset: true,
@@ -103,9 +133,13 @@ const setupMockLocation = (url = "http://localhost/"): void => {
 };
 
 describe("attemptReload", () => {
+  let mockLogger: ReturnType<typeof createMockLogger>;
+
   beforeEach(() => {
     vi.useFakeTimers();
     setupMockLocation();
+    mockLogger = createMockLogger();
+    mockGetLogger.mockReturnValue(mockLogger);
     mockGetOptions.mockReturnValue(defaultOptions);
     mockGetRetryStateFromUrl.mockReturnValue(null);
     mockGenerateRetryId.mockReturnValue("generated-retry-id");
@@ -125,12 +159,15 @@ describe("attemptReload", () => {
 
       attemptReload(error);
 
-      expect(mockEmitEvent).toHaveBeenCalledWith({
-        attempt: 1,
-        delay: 1000,
-        name: "retry-attempt",
-        retryId: "generated-retry-id",
-      });
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        {
+          attempt: 1,
+          delay: 1000,
+          name: "retry-attempt",
+          retryId: "generated-retry-id",
+        },
+        { silent: false },
+      );
     });
 
     it("generates a new retryId when no retry state in URL", () => {
@@ -142,6 +179,7 @@ describe("attemptReload", () => {
       expect(mockGenerateRetryId).toHaveBeenCalledTimes(1);
       expect(mockEmitEvent).toHaveBeenCalledWith(
         expect.objectContaining({ retryId: "generated-retry-id" }),
+        { silent: false },
       );
     });
 
@@ -175,7 +213,9 @@ describe("attemptReload", () => {
 
       attemptReload(error);
 
-      expect(mockEmitEvent).toHaveBeenCalledWith(expect.objectContaining({ delay: 500 }));
+      expect(mockEmitEvent).toHaveBeenCalledWith(expect.objectContaining({ delay: 500 }), {
+        silent: false,
+      });
 
       expect(mockLocationHref).toBe("http://localhost/");
       vi.advanceTimersByTime(500);
@@ -203,6 +243,7 @@ describe("attemptReload", () => {
 
       expect(mockEmitEvent).toHaveBeenCalledWith(
         expect.objectContaining({ attempt: 2, name: "retry-attempt", retryId: "existing-id" }),
+        { silent: false },
       );
     });
 
@@ -233,7 +274,9 @@ describe("attemptReload", () => {
 
       attemptReload(error);
 
-      expect(mockEmitEvent).toHaveBeenCalledWith(expect.objectContaining({ delay: 2000 }));
+      expect(mockEmitEvent).toHaveBeenCalledWith(expect.objectContaining({ delay: 2000 }), {
+        silent: false,
+      });
     });
 
     it("uses third delay for third attempt", () => {
@@ -242,7 +285,9 @@ describe("attemptReload", () => {
 
       attemptReload(error);
 
-      expect(mockEmitEvent).toHaveBeenCalledWith(expect.objectContaining({ delay: 5000 }));
+      expect(mockEmitEvent).toHaveBeenCalledWith(expect.objectContaining({ delay: 5000 }), {
+        silent: false,
+      });
     });
   });
 
@@ -289,6 +334,7 @@ describe("attemptReload", () => {
 
       expect(mockEmitEvent).toHaveBeenCalledWith(
         expect.objectContaining({ finalAttempt: 3, name: "retry-exhausted", retryId: "r1" }),
+        { silent: false },
       );
     });
 
@@ -413,10 +459,12 @@ describe("attemptReload", () => {
           previousAttempt: 2,
           previousRetryId: "old-id",
         }),
+        { silent: false },
       );
 
       expect(mockEmitEvent).toHaveBeenCalledWith(
         expect.objectContaining({ attempt: 1, name: "retry-attempt", retryId: "new-retry-id" }),
+        { silent: false },
       );
     });
 
@@ -511,6 +559,7 @@ describe("attemptReload", () => {
 
       expect(mockEmitEvent).toHaveBeenCalledWith(
         expect.objectContaining({ name: "retry-reset", timeSinceReload: 7000 }),
+        { silent: false },
       );
     });
 
@@ -525,6 +574,7 @@ describe("attemptReload", () => {
 
       expect(mockEmitEvent).toHaveBeenCalledWith(
         expect.objectContaining({ name: "retry-reset", timeSinceReload: 0 }),
+        { silent: false },
       );
     });
   });
@@ -631,18 +681,18 @@ describe("attemptReload", () => {
   });
 
   describe("event emissions", () => {
-    it("emits exactly one event on a normal retry attempt", () => {
+    it("emits chunk-error then retry-attempt on a normal retry attempt", () => {
       const error = new Error("chunk error");
 
       attemptReload(error);
 
-      expect(mockEmitEvent).toHaveBeenCalledTimes(1);
-      expect(mockEmitEvent).toHaveBeenCalledWith(
-        expect.objectContaining({ name: "retry-attempt" }),
-      );
+      expect(mockEmitEvent).toHaveBeenCalledTimes(2);
+      const eventNames = mockEmitEvent.mock.calls.map((call) => call[0]?.name);
+      expect(eventNames[0]).toBe("chunk-error");
+      expect(eventNames[1]).toBe("retry-attempt");
     });
 
-    it("emits retry-reset then retry-attempt when reset occurs", () => {
+    it("emits chunk-error then retry-reset then retry-attempt when reset occurs", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 2, retryId: "old-id" });
       mockShouldResetRetryCycle.mockReturnValue(true);
       mockGetLastReloadTime.mockReturnValue({
@@ -657,8 +707,9 @@ describe("attemptReload", () => {
       attemptReload(error);
 
       const eventNames = mockEmitEvent.mock.calls.map((call) => call[0]?.name);
-      expect(eventNames[0]).toBe("retry-reset");
-      expect(eventNames[1]).toBe("retry-attempt");
+      expect(eventNames[0]).toBe("chunk-error");
+      expect(eventNames[1]).toBe("retry-reset");
+      expect(eventNames[2]).toBe("retry-attempt");
     });
 
     it("emits retry-exhausted before fallback-ui-shown when max attempts exceeded", () => {
@@ -697,6 +748,7 @@ describe("attemptReload", () => {
 
       expect(mockEmitEvent).toHaveBeenCalledWith(
         expect.objectContaining({ name: "retry-exhausted" }),
+        { silent: false },
       );
     });
 
@@ -724,7 +776,9 @@ describe("attemptReload", () => {
 
       attemptReload(error);
 
-      expect(mockEmitEvent).toHaveBeenCalledWith(expect.objectContaining({ delay: 1000 }));
+      expect(mockEmitEvent).toHaveBeenCalledWith(expect.objectContaining({ delay: 1000 }), {
+        silent: false,
+      });
     });
 
     it("does not call setLastReloadTime when useRetryId=true but enableRetryReset=false", () => {
@@ -782,6 +836,166 @@ describe("attemptReload", () => {
       const error = new Error("chunk error");
 
       expect(() => attemptReload(error)).not.toThrow();
+    });
+  });
+
+  describe("shouldIgnore suppresses event logging via silent flag", () => {
+    it("passes silent: true to retry-reset emitEvent when shouldIgnoreMessages returns true", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 2, retryId: "old-id" });
+      mockShouldResetRetryCycle.mockReturnValue(true);
+      mockGetLastReloadTime.mockReturnValue({
+        attemptNumber: 2,
+        retryId: "old-id",
+        timestamp: Date.now() - 6000,
+      });
+      mockShouldIgnoreMessages.mockReturnValue(true);
+
+      attemptReload(new Error("ignored error"));
+
+      expect(mockEmitEvent).toHaveBeenCalledWith(expect.objectContaining({ name: "retry-reset" }), {
+        silent: true,
+      });
+    });
+
+    it("passes silent: true to retry-exhausted emitEvent when shouldIgnoreMessages returns true", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
+      mockShouldIgnoreMessages.mockReturnValue(true);
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
+        [] as unknown as HTMLCollectionOf<Element>,
+      );
+
+      attemptReload(new Error("ignored error"));
+
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "retry-exhausted" }),
+        { silent: true },
+      );
+    });
+
+    it("passes silent: true to retry-attempt emitEvent when shouldIgnoreMessages returns true", () => {
+      mockShouldIgnoreMessages.mockReturnValue(true);
+
+      attemptReload(new Error("ignored error"));
+
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "retry-attempt" }),
+        { silent: true },
+      );
+    });
+
+    it("passes silent: false to emitEvent when shouldIgnoreMessages returns false", () => {
+      mockShouldIgnoreMessages.mockReturnValue(false);
+
+      attemptReload(new Error("normal error"));
+
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "retry-attempt" }),
+        { silent: false },
+      );
+    });
+  });
+
+  describe("Logger method calls", () => {
+    it("calls fallbackAlreadyShown when attempt is -1 and not ignored", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
+        [] as unknown as HTMLCollectionOf<Element>,
+      );
+
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      expect(mockLogger.fallbackAlreadyShown).toHaveBeenCalledWith(error);
+    });
+
+    it("does not call fallbackAlreadyShown when error is ignored", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
+      mockShouldIgnoreMessages.mockReturnValue(true);
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
+        [] as unknown as HTMLCollectionOf<Element>,
+      );
+
+      attemptReload(new Error("ignored"));
+
+      expect(mockLogger.fallbackAlreadyShown).not.toHaveBeenCalled();
+    });
+
+    it("calls noFallbackConfigured when no fallback HTML is set", () => {
+      mockGetOptions.mockReturnValue({
+        ...defaultOptions,
+        fallback: { selector: "body" },
+      });
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
+
+      attemptReload(new Error("chunk error"));
+
+      expect(mockLogger.noFallbackConfigured).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls fallbackTargetNotFound when target element is not found", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
+      vi.spyOn(document, "querySelector").mockReturnValue(null);
+
+      attemptReload(new Error("chunk error"));
+
+      expect(mockLogger.fallbackTargetNotFound).toHaveBeenCalledWith("body");
+    });
+
+    it("calls clearingRetryState when showing fallback with attempt=-1", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
+        [] as unknown as HTMLCollectionOf<Element>,
+      );
+
+      attemptReload(new Error("chunk error"));
+
+      expect(mockLogger.clearingRetryState).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls updatedRetryAttempt when showing fallback with existing retry state", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
+        [] as unknown as HTMLCollectionOf<Element>,
+      );
+
+      attemptReload(new Error("chunk error"));
+
+      expect(mockLogger.updatedRetryAttempt).toHaveBeenCalledWith(4);
+    });
+
+    it("calls fallbackInjectFailed when querySelector throws", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
+      const querySelectorError = new Error("querySelector failed");
+      vi.spyOn(document, "querySelector").mockImplementation(() => {
+        throw querySelectorError;
+      });
+
+      attemptReload(new Error("chunk error"));
+
+      expect(mockLogger.fallbackInjectFailed).toHaveBeenCalledWith(querySelectorError);
+    });
+
+    it("does not call Logger methods when no logger is set", () => {
+      mockGetLogger.mockReturnValue();
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
+      const mockEl = { innerHTML: "" };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
+        [] as unknown as HTMLCollectionOf<Element>,
+      );
+
+      expect(() => attemptReload(new Error("chunk error"))).not.toThrow();
     });
   });
 });

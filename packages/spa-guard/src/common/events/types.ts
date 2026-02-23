@@ -1,4 +1,15 @@
+export interface EmitOptions {
+  silent?: boolean;
+}
+
+export interface InternalConfig {
+  defaultRetryEnabled: boolean;
+  initialized: boolean;
+  inlineScriptLoaded: boolean;
+}
+
 export type SPAGuardEvent =
+  | (SPAGuardEventChunkError & { name: "chunk-error" })
   | (SPAGuardEventFallbackUIShown & { name: "fallback-ui-shown" })
   | (SPAGuardEventLazyRetryAttempt & { name: "lazy-retry-attempt" })
   | (SPAGuardEventLazyRetryExhausted & { name: "lazy-retry-exhausted" })
@@ -6,6 +17,12 @@ export type SPAGuardEvent =
   | (SPAGuardEventRetryAttempt & { name: "retry-attempt" })
   | (SPAGuardEventRetryExhausted & { name: "retry-exhausted" })
   | (SPAGuardEventRetryReset & { name: "retry-reset" });
+
+export interface SPAGuardEventChunkError {
+  error: unknown;
+  isRetrying: boolean;
+  name: "chunk-error";
+}
 
 export interface SPAGuardEventFallbackUIShown {
   name: "fallback-ui-shown";

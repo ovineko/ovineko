@@ -388,6 +388,9 @@ When modifying a package, always run its tests and ensure the build succeeds bef
 - Event system uses `name` field as the discriminant (not `type`) in both internal `emitEvent()` calls and the public `events.subscribe()` API
 - Peer dependency for `./react` export is `react@^19` only
 - Test setup (`test/setup.ts`) globally suppresses `console.log/warn/error` to keep test output clean; run `pnpm test:debug` (sets `DEBUG=1`) to pass console output through when diagnosing test failures
+- ESLint plugin name is dynamically computed as `${packageName}/eslint` (i.e., `@ovineko/spa-guard/eslint`) from `package.json` `name` field in `src/eslint/index.ts`; rule names follow as `@ovineko/spa-guard/eslint/no-direct-error-boundary` etc.
+- ESLint v10 is supported (`^9 || ^10`); `@types/eslint` was removed because ESLint v10 ships its own types; the plugin uses `satisfies ESLint.Plugin` for type checking
+- Injectable Logger via DI: all console output uses a `Logger` interface (`src/common/logger.ts`). `listenInternal(serializeError, logger?)` accepts an optional logger stored on `window[loggerWindowKey]` and retrieved via `getLogger()?.method()` (optional chaining for graceful degradation). `createLogger()` contains all human-readable message strings. The production inline entry (`src/inline/index.ts`) passes no logger so tree-shaking eliminates all log strings from the bundle. The trace entry (`src/inline-trace/index.ts`) passes `createLogger()` for full logging. `emitEvent()` auto-calls `getLogger()?.logEvent(event)` before notifying subscribers; the `EmitOptions.silent` flag suppresses this auto-logging (used by `shouldIgnoreMessages` filters)
 
 ### @ovineko/clean-pkg-json
 

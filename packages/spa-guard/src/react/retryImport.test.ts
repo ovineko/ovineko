@@ -6,6 +6,7 @@ vi.mock("../common/reload", () => ({
 
 vi.mock("../common/events/internal", () => ({
   emitEvent: vi.fn(),
+  isDefaultRetryEnabled: vi.fn().mockReturnValue(true),
 }));
 
 import { emitEvent } from "../common/events/internal";

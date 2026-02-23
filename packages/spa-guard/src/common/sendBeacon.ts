@@ -1,6 +1,6 @@
 import type { BeaconSchema } from "../schema";
 
-import { logMessage } from "./log";
+import { getLogger } from "./events/internal";
 import { getOptions } from "./options";
 import { shouldIgnoreBeacon } from "./shouldIgnore";
 
@@ -12,7 +12,7 @@ export const sendBeacon = (beacon: BeaconSchema) => {
   const options = getOptions();
 
   if (!options.reportBeacon?.endpoint) {
-    console.warn(logMessage("Report endpoint is not configured"));
+    getLogger()?.noBeaconEndpoint();
     return;
   }
 
@@ -29,7 +29,7 @@ export const sendBeacon = (beacon: BeaconSchema) => {
   if (!isSentBeacon) {
     fetch(options.reportBeacon.endpoint, { body, keepalive: true, method: "POST" }).catch(
       (error) => {
-        console.error(logMessage("Failed to send beacon:"), error);
+        getLogger()?.beaconSendFailed(error);
       },
     );
   }

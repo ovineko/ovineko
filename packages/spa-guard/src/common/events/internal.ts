@@ -1,15 +1,57 @@
-import type { SPAGuardEvent, SubscribeFn, UnsubscribeFn } from "./types";
+import type { Logger } from "../logger";
+import type {
+  EmitOptions,
+  InternalConfig,
+  SPAGuardEvent,
+  SubscribeFn,
+  UnsubscribeFn,
+} from "./types";
 
-import { eventSubscribersWindowKey } from "../constants";
+import {
+  eventSubscribersWindowKey,
+  initializedKey,
+  internalConfigWindowKey,
+  loggerWindowKey,
+} from "../constants";
 
 if (globalThis.window && !(globalThis.window as any)[eventSubscribersWindowKey]) {
   (globalThis.window as any)[eventSubscribersWindowKey] = new Set<SubscribeFn>();
 }
 
+if (globalThis.window && !(globalThis.window as any)[internalConfigWindowKey]) {
+  (globalThis.window as any)[internalConfigWindowKey] = {
+    defaultRetryEnabled: true,
+    initialized: false,
+    inlineScriptLoaded: false,
+  } as InternalConfig;
+}
+
 export const subscribers: Set<SubscribeFn> =
   (globalThis.window as any)?.[eventSubscribersWindowKey] ?? new Set<SubscribeFn>();
 
-export const emitEvent = (event: SPAGuardEvent) => {
+export const internalConfig: InternalConfig = (globalThis.window as any)?.[
+  internalConfigWindowKey
+] ?? {
+  defaultRetryEnabled: true,
+  initialized: false,
+  inlineScriptLoaded: false,
+};
+
+export const setLogger = (logger?: Logger): void => {
+  if (globalThis.window !== undefined) {
+    (globalThis.window as any)[loggerWindowKey] = logger;
+  }
+};
+
+export const getLogger = (): Logger | undefined => {
+  return (globalThis.window as any)?.[loggerWindowKey] as Logger | undefined;
+};
+
+export const emitEvent = (event: SPAGuardEvent, options?: EmitOptions) => {
+  if (!options?.silent) {
+    getLogger()?.logEvent(event);
+  }
+
   subscribers.forEach((cb) => {
     try {
       cb(event);
@@ -22,4 +64,27 @@ export const emitEvent = (event: SPAGuardEvent) => {
 export const subscribe = (cb: SubscribeFn): UnsubscribeFn => {
   subscribers.add(cb);
   return () => subscribers.delete(cb);
+};
+
+export const isInitialized = (): boolean => {
+  return internalConfig.initialized;
+};
+
+export const markInitialized = (): void => {
+  internalConfig.initialized = true;
+  if (globalThis.window !== undefined) {
+    (globalThis.window as any)[initializedKey] = true;
+  }
+};
+
+export const disableDefaultRetry = (): void => {
+  internalConfig.defaultRetryEnabled = false;
+};
+
+export const enableDefaultRetry = (): void => {
+  internalConfig.defaultRetryEnabled = true;
+};
+
+export const isDefaultRetryEnabled = (): boolean => {
+  return internalConfig.defaultRetryEnabled;
 };

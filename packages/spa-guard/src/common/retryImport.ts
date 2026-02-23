@@ -1,4 +1,4 @@
-import { emitEvent } from "./events/internal";
+import { emitEvent, isDefaultRetryEnabled } from "./events/internal";
 import { isChunkError } from "./isChunkError";
 import { attemptReload } from "./reload";
 
@@ -104,7 +104,8 @@ export const retryImport = async <T>(
     }
   }
 
-  const willReload = callReloadOnFailure === true && isChunkError(lastError);
+  const willReload =
+    callReloadOnFailure === true && isChunkError(lastError) && isDefaultRetryEnabled();
   emitEvent({ name: "lazy-retry-exhausted", totalAttempts, willReload });
 
   if (willReload) {
