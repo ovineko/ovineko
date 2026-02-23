@@ -4,6 +4,7 @@ vi.mock("./options", () => ({
   getOptions: vi.fn(),
 }));
 
+import { ForceRetryError } from "./errors/ForceRetryError";
 import { getOptions } from "./options";
 import { shouldForceRetry, shouldIgnoreBeacon, shouldIgnoreMessages } from "./shouldIgnore";
 
@@ -234,6 +235,38 @@ describe("shouldForceRetry", () => {
 
     it("is case-sensitive", () => {
       expect(shouldForceRetry(["RETRY-THIS"])).toBe(false);
+    });
+  });
+
+  describe("ForceRetryError integration (no forceRetry config needed)", () => {
+    beforeEach(() => {
+      mockGetOptions.mockReturnValue({});
+    });
+
+    it("returns true when message contains ForceRetryError magic substring", () => {
+      const error = new ForceRetryError("stale module");
+      expect(shouldForceRetry([error.message])).toBe(true);
+    });
+
+    it("returns true for ForceRetryError with empty message", () => {
+      const error = new ForceRetryError();
+      expect(shouldForceRetry([error.message])).toBe(true);
+    });
+
+    it("returns true even when errors.forceRetry is an empty array", () => {
+      mockGetOptions.mockReturnValue({ errors: { forceRetry: [] } });
+      const error = new ForceRetryError("deployment error");
+      expect(shouldForceRetry([error.message])).toBe(true);
+    });
+
+    it("returns true when ForceRetryError message is among other messages", () => {
+      const error = new ForceRetryError("version mismatch");
+      expect(shouldForceRetry(["unrelated error", error.message])).toBe(true);
+    });
+
+    it("returns false for a regular error that does not contain magic substring", () => {
+      mockGetOptions.mockReturnValue({ errors: { forceRetry: [] } });
+      expect(shouldForceRetry(["just a normal error"])).toBe(false);
     });
   });
 });

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { getState, subscribeToState } from "../runtime";
 
+export { ForceRetryError } from "../common/errors/ForceRetryError";
 export type { SpaGuardState } from "../runtime";
 export { DebugSyncErrorTrigger } from "./DebugSyncErrorTrigger";
 export { lazyWithRetry } from "./lazyWithRetry";

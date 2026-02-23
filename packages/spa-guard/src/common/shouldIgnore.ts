@@ -1,5 +1,6 @@
 import type { BeaconSchema } from "../schema";
 
+import { FORCE_RETRY_MAGIC } from "./errors/ForceRetryError";
 import { getOptions } from "./options";
 
 /**
@@ -25,11 +26,7 @@ export const shouldIgnoreMessages = (messages: (string | undefined)[]): boolean 
  */
 export const shouldForceRetry = (messages: (string | undefined)[]): boolean => {
   const options = getOptions();
-  const forceRetryPatterns = options.errors?.forceRetry ?? [];
-
-  if (forceRetryPatterns.length === 0) {
-    return false;
-  }
+  const forceRetryPatterns = [...(options.errors?.forceRetry ?? []), FORCE_RETRY_MAGIC];
 
   const validMessages = messages.filter((msg): msg is string => typeof msg === "string");
 
