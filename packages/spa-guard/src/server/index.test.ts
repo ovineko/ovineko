@@ -165,5 +165,20 @@ describe("server", () => {
       const result = patchHtmlI18n({ html: htmlNoLang, lang: "ko" });
       expect(result).toContain('lang="ko"');
     });
+
+    it("adds lang to html tag even when another element has the same lang", () => {
+      const htmlWithLangElsewhere = `<!DOCTYPE html><html><head></head><body><div lang="ko">Content</div></body></html>`;
+      const result = patchHtmlI18n({ html: htmlWithLangElsewhere, lang: "ko" });
+      expect(result).toMatch(/<html\s+lang="ko"/);
+    });
+
+    it("does not confuse data-lang with lang attribute on html element", () => {
+      const htmlWithDataLang = `<!DOCTYPE html><html data-lang="en"><head></head><body></body></html>`;
+      const result = patchHtmlI18n({ html: htmlWithDataLang, lang: "ko" });
+      // Should add a real lang attribute, not just rewrite data-lang
+      expect(result).toMatch(/<html\s+lang="ko"/);
+      // data-lang should remain unchanged
+      expect(result).toContain('data-lang="en"');
+    });
   });
 });

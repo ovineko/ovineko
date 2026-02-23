@@ -34,9 +34,13 @@ export function applyI18n(container: HTMLElement, t: SpaGuardTranslations): void
     }
   }
 
-  // Apply RTL direction
-  if (t.rtl && container.firstElementChild) {
-    (container.firstElementChild as HTMLElement).style.direction = "rtl";
+  // Apply RTL direction (skip <style> elements which have no visual effect)
+  if (t.rtl) {
+    for (const child of container.children) {
+      if (child instanceof HTMLElement && child.tagName !== "STYLE") {
+        child.style.direction = "rtl";
+      }
+    }
   }
 }
 

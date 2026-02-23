@@ -83,10 +83,11 @@ export function patchHtmlI18n(options: PatchHtmlI18nOptions): string {
     result = result.slice(0, insertPos) + metaTag + result.slice(insertPos);
   }
 
-  // Update <html lang="...">
+  // Update <html lang="..."> (use \s before lang to avoid matching data-lang etc.)
   const safeLang = escapeAttr(resolvedLang);
-  result = result.replace(/<html([^>]*)lang="[^"]*"/, `<html$1lang="${safeLang}"`);
-  if (!result.includes(`lang="${safeLang}"`)) {
+  result = result.replace(/<html([^>]*\s)lang="[^"]*"/, `<html$1lang="${safeLang}"`);
+  const htmlTag = result.match(/<html[^>]*>/)?.[0] ?? "";
+  if (!/\slang=/.test(htmlTag)) {
     result = result.replace(/<html/, `<html lang="${safeLang}"`);
   }
 

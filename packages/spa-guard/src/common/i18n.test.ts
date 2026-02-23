@@ -124,6 +124,18 @@ describe("common/i18n", () => {
       expect(firstChild.style.direction).toBe("rtl");
     });
 
+    it("applies RTL to content div, not style element, when style comes first", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `<style>.test{}</style><div><h1 data-spa-guard-content="heading">Heading</h1></div>`;
+
+      applyI18n(container, arTranslations);
+
+      const styleEl = container.querySelector("style") as HTMLElement;
+      const divEl = container.querySelector("div") as HTMLElement;
+      expect(styleEl.style.direction).toBe("");
+      expect(divEl.style.direction).toBe("rtl");
+    });
+
     it("does not apply direction when rtl is not set", () => {
       const container = document.createElement("div");
       container.innerHTML = `<div><h1 data-spa-guard-content="heading">Heading</h1></div>`;

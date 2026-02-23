@@ -13,15 +13,20 @@ export const defaultSpinnerSvg = [
 let savedOverflow: null | string = null;
 
 export function dismissSpinner(): void {
+  if (typeof document === "undefined") {
+    return;
+  }
   const el = document.getElementById(SPINNER_ID);
   if (el) {
     el.remove();
   }
-  if (savedOverflow === null) {
-    document.body.style.overflow = "";
-  } else {
+  if (savedOverflow !== null) {
     document.body.style.overflow = savedOverflow;
     savedOverflow = null;
+  } else if (el) {
+    // Only reset to "" if we actually removed a spinner element
+    // (e.g. vite-injected spinner where showSpinner was never called)
+    document.body.style.overflow = "";
   }
 }
 

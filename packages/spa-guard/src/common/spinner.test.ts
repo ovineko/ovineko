@@ -209,9 +209,20 @@ describe("spinner", () => {
       expect(() => dismissSpinner()).not.toThrow();
     });
 
-    it("restores body overflow even when no spinner element exists", () => {
+    it("does not touch body overflow when no spinner element exists", () => {
       document.body.style.overflow = "hidden";
       dismissSpinner();
+      expect(document.body.style.overflow).toBe("hidden");
+    });
+
+    it("restores overflow for vite-injected spinner (element exists, no savedOverflow)", () => {
+      // Simulate vite-injected spinner: element in DOM but showSpinner() was never called
+      const el = document.createElement("div");
+      el.id = SPINNER_ID;
+      document.body.append(el);
+      document.body.style.overflow = "hidden";
+      dismissSpinner();
+      expect(document.getElementById(SPINNER_ID)).toBeNull();
       expect(document.body.style.overflow).toBe("");
     });
   });
