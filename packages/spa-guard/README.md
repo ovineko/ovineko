@@ -437,6 +437,8 @@ interface BeaconSchema {
 
 ```typescript
 import { BeaconError, fastifySPAGuard } from "@ovineko/spa-guard/fastify";
+// BeaconError is also available from the root entry point:
+// import { BeaconError } from "@ovineko/spa-guard";
 
 app.register(fastifySPAGuard, {
   path: "/api/beacon",
@@ -1632,6 +1634,8 @@ spaGuardVitePlugin({
 `ForceRetryError` is a typed error class that automatically triggers spa-guard's retry mechanism when thrown, without requiring any `errors.forceRetry` configuration. It works by prepending a magic substring to the error message that spa-guard always recognizes.
 
 ```typescript
+import { ForceRetryError } from "@ovineko/spa-guard";
+// or
 import { ForceRetryError } from "@ovineko/spa-guard/react";
 // or
 import { ForceRetryError } from "@ovineko/spa-guard/runtime";
