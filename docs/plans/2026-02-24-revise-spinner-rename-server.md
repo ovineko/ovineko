@@ -77,10 +77,10 @@ Three refactoring tasks from revise.txt:
 
 ### Task 4: Cleanup and verify
 
-- [ ] Delete revise.txt
-- [ ] Run full test suite
-- [ ] Run linter
-- [ ] Verify build succeeds (pnpm build in packages/spa-guard)
+- [x] Delete revise.txt
+- [x] Run full test suite
+- [x] Run linter
+- [x] Verify build succeeds (pnpm build in packages/spa-guard)
 
 ### Task 5: Update documentation
 
