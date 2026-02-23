@@ -40,6 +40,7 @@ Peer dependencies vary by integration - see sections below for specific requirem
 - ✅ **ForceRetryError** - Typed error class that triggers automatic retry without `forceRetry` config
 - ✅ **appName option** - Beacon source identification for monorepo setups
 - ✅ **BeaconError** - Utility class for error tracking service integration (Sentry, Datadog, etc.)
+- ✅ **Configurable unhandled rejection handling** - Control retry and beacon behavior for non-chunk unhandled promise rejections
 
 ## Quick Start
 
@@ -277,6 +278,12 @@ spaGuardVitePlugin({
     forceRetry: [], // Array of error message substrings that trigger retry/reload
   },
 
+  // Unhandled rejection behavior
+  handleUnhandledRejections: {
+    retry: true, // Attempt page reload on unhandled rejections (default: true)
+    sendBeacon: true, // Send beacon report on unhandled rejections (default: true)
+  },
+
   // Beacon reporting
   reportBeacon: {
     endpoint: "/api/beacon", // Server endpoint for error reports
@@ -317,6 +324,11 @@ interface Options {
   errors?: {
     ignore?: string[]; // Error message substrings to filter out (default: [])
     forceRetry?: string[]; // Error message substrings that trigger retry/reload (default: [])
+  };
+
+  handleUnhandledRejections?: {
+    retry?: boolean; // Attempt page reload on unhandled rejections (default: true)
+    sendBeacon?: boolean; // Send beacon report on unhandled rejections (default: true)
   };
 
   html?: {
@@ -360,6 +372,10 @@ interface VitePluginOptions extends Options {
   errors: {
     ignore: [],
     forceRetry: [],
+  },
+  handleUnhandledRejections: {
+    retry: true,
+    sendBeacon: true,
   },
   html: {
     fallback: {
@@ -1126,6 +1142,11 @@ interface Options {
     forceRetry?: string[]; // Error message substrings that trigger retry/reload (default: [])
   };
 
+  handleUnhandledRejections?: {
+    retry?: boolean; // Attempt page reload on unhandled rejections (default: true)
+    sendBeacon?: boolean; // Send beacon report on unhandled rejections (default: true)
+  };
+
   html?: {
     fallback?: {
       content?: string; // Custom error UI HTML
@@ -1628,6 +1649,49 @@ spaGuardVitePlugin({
 **`errors.ignore`** - Errors containing any of these substrings will not be logged to console and beacons will not be sent. Case-sensitive substring matching.
 
 **`errors.forceRetry`** - Errors containing any of these substrings will trigger the same retry/reload process as chunk load errors (calls `attemptReload()`). Useful for custom error patterns that indicate a stale deployment. Case-sensitive substring matching.
+
+### Configuring Unhandled Rejection Handling
+
+By default, spa-guard retries **and** sends a beacon for regular unhandled promise rejections (those that are not chunk errors or ForceRetry errors). You can control this behavior with the `handleUnhandledRejections` option:
+
+```typescript
+spaGuardVitePlugin({
+  handleUnhandledRejections: {
+    retry: true, // Attempt page reload (default: true)
+    sendBeacon: true, // Send error report to server (default: true)
+  },
+});
+```
+
+**Behavior matrix:**
+
+| `retry` | `sendBeacon` | Behavior                                         |
+| ------- | ------------ | ------------------------------------------------ |
+| `true`  | `true`       | Send beacon first, then attempt reload (default) |
+| `true`  | `false`      | Attempt reload only                              |
+| `false` | `true`       | Send beacon only (pre-v0.0.1-alpha behavior)     |
+| `false` | `false`      | Do nothing (only the captured error log remains) |
+
+**Examples:**
+
+```typescript
+// Restore pre-default behavior: beacon only, no retry
+spaGuardVitePlugin({
+  handleUnhandledRejections: {
+    retry: false,
+  },
+});
+
+// Silent mode: only log, no retry or beacon
+spaGuardVitePlugin({
+  handleUnhandledRejections: {
+    retry: false,
+    sendBeacon: false,
+  },
+});
+```
+
+**Note:** Chunk load errors and `ForceRetryError` always bypass this configuration and use their own dedicated handling paths regardless of these settings.
 
 ### ForceRetryError
 

@@ -59,10 +59,10 @@ Add a new `handleUnhandledRejections` configuration option to spa-guard that con
 
 - Modify: `packages/spa-guard/README.md`
 
-- [ ] Add feature line to Features list: configurable unhandled rejection handling
-- [ ] Add a "Configuring Unhandled Rejection Handling" section documenting the behavior matrix and config examples
-- [ ] Add `handleUnhandledRejections` to the configuration reference section
-- [ ] Run project test suite - must pass before task 4
+- [x] Add feature line to Features list: configurable unhandled rejection handling
+- [x] Add a "Configuring Unhandled Rejection Handling" section documenting the behavior matrix and config examples
+- [x] Add `handleUnhandledRejections` to the configuration reference section
+- [x] Run project test suite - must pass before task 4
 
 ### Task 4: Verify acceptance criteria
 
