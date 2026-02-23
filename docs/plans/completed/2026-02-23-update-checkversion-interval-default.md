@@ -101,5 +101,5 @@ Problems:
 
 ### Task 4: Update documentation
 
-- [ ] Delete TODO.md (it contains inaccurate recommendations that could mislead future contributors)
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Delete TODO.md (it contains inaccurate recommendations that could mislead future contributors)
+- [x] Move this plan to `docs/plans/completed/`
