@@ -208,8 +208,12 @@ const showLoadingUI = (attempt: number): void => {
     container.innerHTML = loadingHtml;
 
     const spinnerEl = container.querySelector("[data-spa-guard-spinner]");
-    if (spinnerEl && options.spinner?.content) {
-      spinnerEl.innerHTML = options.spinner.content;
+    if (spinnerEl) {
+      if (options.spinner?.disabled) {
+        spinnerEl.remove();
+      } else if (options.spinner?.content) {
+        spinnerEl.innerHTML = options.spinner.content;
+      }
     }
 
     const retryingSection = container.querySelector<HTMLElement>(

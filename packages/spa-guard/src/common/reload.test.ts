@@ -1314,6 +1314,19 @@ describe("attemptReload", () => {
       expect(mockEl.innerHTML).toContain("Custom Spin");
     });
 
+    it("removes spinner element when spinner.disabled is true", () => {
+      mockGetOptions.mockReturnValue({
+        ...defaultOptions,
+        spinner: { disabled: true },
+      });
+      const mockEl = { innerHTML: "", querySelector: vi.fn(() => null) };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+
+      attemptReload(new Error("chunk error"));
+
+      expect(mockEl.innerHTML).not.toContain("data-spa-guard-spinner");
+    });
+
     it("does not render loading UI when no loading html configured", () => {
       mockGetOptions.mockReturnValue({
         ...defaultOptions,
