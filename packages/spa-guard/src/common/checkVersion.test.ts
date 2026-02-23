@@ -599,7 +599,7 @@ describe("common/checkVersion", () => {
       expect(mockLogger.versionCheckParseError).toHaveBeenCalledTimes(1);
     });
 
-    it("parses version from HTML with typical serialized options format", async () => {
+    it("parses version from HTML with typical serialized options format (legacy)", async () => {
       setWindowOptions({});
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -610,6 +610,84 @@ describe("common/checkVersion", () => {
       const result = await mod.fetchRemoteVersion("html");
 
       expect(result).toBe("2.5.0");
+    });
+
+    it("parses version from new __SPA_GUARD_VERSION__ format", async () => {
+      setWindowOptions({});
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        text: async () =>
+          'window.__SPA_GUARD_VERSION__="3.0.0";window.__SPA_GUARD_OPTIONS__={"version":"3.0.0"};/* script */',
+      });
+
+      const result = await mod.fetchRemoteVersion("html");
+
+      expect(result).toBe("3.0.0");
+    });
+
+    it("prefers __SPA_GUARD_VERSION__ over __SPA_GUARD_OPTIONS__ when both are present", async () => {
+      setWindowOptions({});
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        text: async () =>
+          'window.__SPA_GUARD_VERSION__="2.0.0";window.__SPA_GUARD_OPTIONS__={"version":"1.0.0"};/* script */',
+      });
+
+      const result = await mod.fetchRemoteVersion("html");
+
+      expect(result).toBe("2.0.0");
+    });
+
+    it("falls back to __SPA_GUARD_OPTIONS__ when __SPA_GUARD_VERSION__ is absent (old deployment)", async () => {
+      setWindowOptions({});
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        text: async () =>
+          'window.__SPA_GUARD_OPTIONS__={"version":"1.5.0","reloadDelays":[1000]};/* script */',
+      });
+
+      const result = await mod.fetchRemoteVersion("html");
+
+      expect(result).toBe("1.5.0");
+    });
+
+    it("handles HTML with newlines from formatters (e.g. Prettier)", async () => {
+      setWindowOptions({});
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        text: async () =>
+          '<html>\n<head>\n<script>\nwindow.__SPA_GUARD_VERSION__="4.0.0";\nwindow.__SPA_GUARD_OPTIONS__={\n"version":"4.0.0"\n};\n</script>\n</head>\n</html>',
+      });
+
+      const result = await mod.fetchRemoteVersion("html");
+
+      expect(result).toBe("4.0.0");
+    });
+
+    it("handles old format HTML with newlines from formatters", async () => {
+      setWindowOptions({});
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        text: async () =>
+          '<html>\n<head>\n<script>\nwindow.__SPA_GUARD_OPTIONS__={\n"version":"4.0.0"\n};\n</script>\n</head>\n</html>',
+      });
+
+      const result = await mod.fetchRemoteVersion("html");
+
+      expect(result).toBe("4.0.0");
+    });
+
+    it("works with unquoted keys (JSDOM behavior)", async () => {
+      setWindowOptions({});
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        text: async () =>
+          'window.__SPA_GUARD_OPTIONS__={version:"5.0.0",reloadDelays:[1000]};/* script */',
+      });
+
+      const result = await mod.fetchRemoteVersion("html");
+
+      expect(result).toBe("5.0.0");
     });
 
     it("returns version from JSON endpoint response", async () => {

@@ -34,9 +34,10 @@ const invokeTransform = async (options: VitePluginOptions = {}) => {
 };
 
 const parseOptionsFromScript = (script: string) => {
-  const jsonStart = script.indexOf("{");
+  const prefix = `window.${optionsWindowKey}=`;
+  const optionsStart = script.indexOf(prefix) + prefix.length;
   const jsonEnd = script.indexOf(";/* inline-script-content */");
-  return JSON.parse(script.slice(jsonStart, jsonEnd));
+  return JSON.parse(script.slice(optionsStart, jsonEnd));
 };
 
 describe("vite-plugin/spaGuardVitePlugin", () => {
@@ -99,11 +100,20 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
       expect(result.tags[0].children).toContain("/* inline-script-content */");
     });
 
-    it("starts with options assignment followed by script", async () => {
-      const result = await invokeTransform();
+    it("starts with __SPA_GUARD_VERSION__ assignment followed by options and script", async () => {
+      const result = await invokeTransform({ version: "1.0.0" });
       const script = result.tags[0].children as string;
 
-      expect(script).toMatch(/^window\.__SPA_GUARD_OPTIONS__=\{/);
+      expect(script).toMatch(
+        /^window\.__SPA_GUARD_VERSION__="[^"]+";window\.__SPA_GUARD_OPTIONS__=\{/,
+      );
+    });
+
+    it("contains __SPA_GUARD_VERSION__ with the correct version value", async () => {
+      const result = await invokeTransform({ version: "2.5.0" });
+      const script = result.tags[0].children as string;
+
+      expect(script).toContain('window.__SPA_GUARD_VERSION__="2.5.0"');
     });
   });
 

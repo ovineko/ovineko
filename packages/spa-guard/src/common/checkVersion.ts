@@ -47,14 +47,26 @@ const fetchHtmlVersion = async (): Promise<null | string> => {
   }
   const html = await response.text();
 
-  // Parse: window.__SPA_GUARD_OPTIONS__={...,"version":"1.2.3",...}
-  const match = html.match(/__SPA_GUARD_OPTIONS__\s*=\s*\{[\s\S]*?"version"\s*:\s*"([^"]+)"/);
-  if (!match) {
+  // Collapse newlines so formatters (e.g. Prettier) don't break single-line regex matching
+  const collapsed = html.replaceAll(/[\r\n]+/g, "");
+
+  // Try new format first: window.__SPA_GUARD_VERSION__="1.2.3"
+  const versionMatch = collapsed.match(/__SPA_GUARD_VERSION__\s*=\s*"([^"]+)"/);
+  if (versionMatch?.[1]) {
+    return versionMatch[1];
+  }
+
+  // Fall back to old format: window.__SPA_GUARD_OPTIONS__={...,"version":"1.2.3",...}
+  // Handles both quoted ("version") and unquoted (version) keys for JSDOM compatibility
+  const optionsMatch = collapsed.match(
+    /__SPA_GUARD_OPTIONS__\s*=\s*\{.*?"?version"?\s*:\s*"([^"]+)"/,
+  );
+  if (!optionsMatch) {
     getLogger()?.versionCheckParseError();
     return null;
   }
 
-  return match[1] ?? null;
+  return optionsMatch[1] ?? null;
 };
 
 export const fetchRemoteVersion = async (mode: "html" | "json"): Promise<null | string> => {
