@@ -94,10 +94,10 @@ Problems:
 
 ### Task 3: Verify acceptance criteria
 
-- [ ] Run full test suite: `cd packages/spa-guard && pnpm test`
-- [ ] Run linter: `pnpm lint` (or project-specific command)
-- [ ] Verify test coverage meets 80%+
-- [ ] Grep codebase for remaining `60_000` or `60000` references to ensure consistency
+- [x] Run full test suite: `cd packages/spa-guard && pnpm test`
+- [x] Run linter: `pnpm lint` (or project-specific command)
+- [x] Verify test coverage meets 80%+
+- [x] Grep codebase for remaining `60_000` or `60000` references to ensure consistency
 
 ### Task 4: Update documentation
 
