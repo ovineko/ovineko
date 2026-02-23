@@ -38,6 +38,10 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
         getLogger()?.capturedError("error", event);
       }
 
+      if (shouldIgnore) {
+        return;
+      }
+
       if (isChunkError(event)) {
         event.preventDefault();
         attemptReload(event.error ?? event);
@@ -67,6 +71,10 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
 
     if (!shouldIgnore) {
       getLogger()?.capturedError("unhandledrejection", event);
+    }
+
+    if (shouldIgnore) {
+      return;
     }
 
     if (isChunkError(event.reason)) {
@@ -107,6 +115,10 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
       getLogger()?.capturedError("csp", event.blockedURI, event.violatedDirective);
     }
 
+    if (shouldIgnore) {
+      return;
+    }
+
     const serialized = serializeError(event);
     sendBeacon({
       eventMessage,
@@ -122,6 +134,10 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
 
     if (!shouldIgnore) {
       getLogger()?.capturedError("vite:preloadError", event);
+    }
+
+    if (shouldIgnore) {
+      return;
     }
 
     event.preventDefault();

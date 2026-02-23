@@ -370,13 +370,29 @@ describe("listenInternal", () => {
       expect(mockLogger.capturedError).toHaveBeenCalledWith("error", event);
     });
 
-    it("still calls sendBeacon when shouldIgnoreMessages returns true (shouldIgnore only affects logging)", () => {
+    it("does not call sendBeacon when shouldIgnoreMessages returns true", () => {
       mockIsChunkError.mockReturnValue(false);
       mockShouldIgnoreMessages.mockReturnValue(true);
       const { handlers } = captureListeners();
       handlers.error!({ message: "ignored error", preventDefault: vi.fn() });
-      // sendBeacon is still invoked from listenInternal; filtering happens inside sendBeacon itself
-      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+      expect(mockSendBeacon).not.toHaveBeenCalled();
+    });
+
+    it("does not call attemptReload when shouldIgnoreMessages returns true", () => {
+      mockIsChunkError.mockReturnValue(true);
+      mockShouldIgnoreMessages.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      handlers.error!({ message: "ignored chunk error", preventDefault: vi.fn() });
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+    });
+
+    it("does not call preventDefault when shouldIgnoreMessages returns true", () => {
+      mockIsChunkError.mockReturnValue(true);
+      mockShouldIgnoreMessages.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      const mockPreventDefault = vi.fn();
+      handlers.error!({ message: "ignored chunk error", preventDefault: mockPreventDefault });
+      expect(mockPreventDefault).not.toHaveBeenCalled();
     });
 
     it("checks shouldIgnoreMessages with event.message", () => {
@@ -475,12 +491,32 @@ describe("listenInternal", () => {
       expect(mockLogger.capturedError).toHaveBeenCalledWith("unhandledrejection", event);
     });
 
-    it("still calls sendBeacon when shouldIgnoreMessages returns true (shouldIgnore only affects logging)", () => {
+    it("does not call sendBeacon when shouldIgnoreMessages returns true", () => {
       mockIsChunkError.mockReturnValue(false);
       mockShouldIgnoreMessages.mockReturnValue(true);
       const { handlers } = captureListeners();
       handlers.unhandledrejection!({ preventDefault: vi.fn(), reason: new Error("ignored") });
-      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+      expect(mockSendBeacon).not.toHaveBeenCalled();
+    });
+
+    it("does not call attemptReload when shouldIgnoreMessages returns true", () => {
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldIgnoreMessages.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      handlers.unhandledrejection!({ preventDefault: vi.fn(), reason: new Error("ignored") });
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+    });
+
+    it("does not call preventDefault when shouldIgnoreMessages returns true", () => {
+      mockIsChunkError.mockReturnValue(false);
+      mockShouldIgnoreMessages.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      const mockPreventDefault = vi.fn();
+      handlers.unhandledrejection!({
+        preventDefault: mockPreventDefault,
+        reason: new Error("ignored"),
+      });
+      expect(mockPreventDefault).not.toHaveBeenCalled();
     });
 
     it("handles string rejection reasons", () => {
@@ -618,7 +654,7 @@ describe("listenInternal", () => {
       );
     });
 
-    it("still calls sendBeacon when shouldIgnoreMessages returns true (shouldIgnore only affects logging)", () => {
+    it("does not call sendBeacon when shouldIgnoreMessages returns true", () => {
       mockShouldIgnoreMessages.mockReturnValue(true);
       const { handlers } = captureListeners();
       handlers.securitypolicyviolation!({
@@ -626,7 +662,7 @@ describe("listenInternal", () => {
         preventDefault: vi.fn(),
         violatedDirective: "script-src",
       });
-      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+      expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
     it("does not call attemptReload for CSP violations", () => {
@@ -719,14 +755,25 @@ describe("listenInternal", () => {
       expect(mockLogger.capturedError).not.toHaveBeenCalled();
     });
 
-    it("still calls attemptReload when shouldIgnoreMessages returns true (shouldIgnore only affects logging)", () => {
+    it("does not call attemptReload when shouldIgnoreMessages returns true", () => {
       mockShouldIgnoreMessages.mockReturnValue(true);
       const { handlers } = captureListeners();
       handlers["vite:preloadError"]!({
         payload: { message: "ignored chunk error" },
         preventDefault: vi.fn(),
       });
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+    });
+
+    it("does not call preventDefault when shouldIgnoreMessages returns true", () => {
+      mockShouldIgnoreMessages.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      const mockPreventDefault = vi.fn();
+      handlers["vite:preloadError"]!({
+        payload: { message: "ignored chunk error" },
+        preventDefault: mockPreventDefault,
+      });
+      expect(mockPreventDefault).not.toHaveBeenCalled();
     });
 
     it("calls logger.capturedError with type and event when error is not ignored", () => {

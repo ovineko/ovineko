@@ -49,16 +49,16 @@ Two changes:
 - Modify: `packages/spa-guard/src/common/listen/internal.ts`
 - Modify: `packages/spa-guard/src/common/listen/internal.test.ts`
 
-- [ ] In `error` handler: add `if (shouldIgnore) return;` after the logging check (before isChunkError/shouldForceRetry/sendBeacon)
-- [ ] In `unhandledrejection` handler: add `if (shouldIgnore) return;` after the logging check (before isChunkError/shouldForceRetry/handleUnhandledRejections)
-- [ ] In `securitypolicyviolation` handler: add `if (shouldIgnore) return;` after the logging check (before sendBeacon)
-- [ ] In `vite:preloadError` handler: add `if (shouldIgnore) return;` after the logging check (before preventDefault/attemptReload)
-- [ ] Update tests: change "still calls sendBeacon when shouldIgnoreMessages returns true" tests to assert sendBeacon is NOT called
-- [ ] Update tests: change "still calls attemptReload when shouldIgnoreMessages returns true" test to assert attemptReload is NOT called
-- [ ] Add tests: ignored errors do not call attemptReload in error handler
-- [ ] Add tests: ignored errors do not call attemptReload in unhandledrejection handler
-- [ ] Add tests: ignored errors do not call preventDefault in any handler
-- [ ] run project test suite - must pass before task 3
+- [x] In `error` handler: add `if (shouldIgnore) return;` after the logging check (before isChunkError/shouldForceRetry/sendBeacon)
+- [x] In `unhandledrejection` handler: add `if (shouldIgnore) return;` after the logging check (before isChunkError/shouldForceRetry/handleUnhandledRejections)
+- [x] In `securitypolicyviolation` handler: add `if (shouldIgnore) return;` after the logging check (before sendBeacon)
+- [x] In `vite:preloadError` handler: add `if (shouldIgnore) return;` after the logging check (before preventDefault/attemptReload)
+- [x] Update tests: change "still calls sendBeacon when shouldIgnoreMessages returns true" tests to assert sendBeacon is NOT called
+- [x] Update tests: change "still calls attemptReload when shouldIgnoreMessages returns true" test to assert attemptReload is NOT called
+- [x] Add tests: ignored errors do not call attemptReload in error handler
+- [x] Add tests: ignored errors do not call attemptReload in unhandledrejection handler
+- [x] Add tests: ignored errors do not call preventDefault in any handler
+- [x] run project test suite - must pass before task 3
 
 ### Task 3: Update README documentation
 
