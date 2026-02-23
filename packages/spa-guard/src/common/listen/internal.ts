@@ -32,15 +32,11 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
   wa(
     "error",
     (event) => {
-      const shouldIgnore = shouldIgnoreMessages([event.message]);
-
-      if (!shouldIgnore) {
-        getLogger()?.capturedError("error", event);
-      }
-
-      if (shouldIgnore) {
+      if (shouldIgnoreMessages([event.message])) {
         return;
       }
+
+      getLogger()?.capturedError("error", event);
 
       if (isChunkError(event)) {
         event.preventDefault();
@@ -67,15 +63,12 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
 
   wa("unhandledrejection", (event) => {
     const errorMessage = String(event.reason);
-    const shouldIgnore = shouldIgnoreMessages([errorMessage]);
 
-    if (!shouldIgnore) {
-      getLogger()?.capturedError("unhandledrejection", event);
-    }
-
-    if (shouldIgnore) {
+    if (shouldIgnoreMessages([errorMessage])) {
       return;
     }
+
+    getLogger()?.capturedError("unhandledrejection", event);
 
     if (isChunkError(event.reason)) {
       event.preventDefault();
@@ -109,15 +102,12 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
 
   wa("securitypolicyviolation", (event) => {
     const eventMessage = `${event.violatedDirective}: ${event.blockedURI}`;
-    const shouldIgnore = shouldIgnoreMessages([eventMessage]);
 
-    if (!shouldIgnore) {
-      getLogger()?.capturedError("csp", event.blockedURI, event.violatedDirective);
-    }
-
-    if (shouldIgnore) {
+    if (shouldIgnoreMessages([eventMessage])) {
       return;
     }
+
+    getLogger()?.capturedError("csp", event.blockedURI, event.violatedDirective);
 
     const serialized = serializeError(event);
     sendBeacon({
@@ -130,15 +120,12 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
 
   wa("vite:preloadError", (event) => {
     const errorMsg = (event as any)?.payload?.message || (event as any)?.message;
-    const shouldIgnore = shouldIgnoreMessages([errorMsg]);
 
-    if (!shouldIgnore) {
-      getLogger()?.capturedError("vite:preloadError", event);
-    }
-
-    if (shouldIgnore) {
+    if (shouldIgnoreMessages([errorMsg])) {
       return;
     }
+
+    getLogger()?.capturedError("vite:preloadError", event);
 
     event.preventDefault();
     attemptReload((event as any)?.payload ?? event);

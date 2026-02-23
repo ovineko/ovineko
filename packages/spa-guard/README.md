@@ -1521,8 +1521,8 @@ import spaGuardEslint from "@ovineko/spa-guard/eslint";
 
 ## Build Sizes
 
-- **Production:** `dist-inline/index.js` ~8.3 KB minified (Terser)
-- **Trace:** `dist-inline-trace/index.js` ~13.3 KB minified (Terser)
+- **Production:** `dist-inline/index.js` ~8.9 KB minified (Terser)
+- **Trace:** `dist-inline-trace/index.js` ~13.8 KB minified (Terser)
 - **Main library:** `dist/` varies by export
 
 ## Advanced Usage

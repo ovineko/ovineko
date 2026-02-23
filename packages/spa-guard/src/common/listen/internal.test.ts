@@ -373,9 +373,10 @@ describe("listenInternal", () => {
     it("does not call sendBeacon when shouldIgnoreMessages returns true", () => {
       mockIsChunkError.mockReturnValue(false);
       mockShouldIgnoreMessages.mockReturnValue(true);
-      const { handlers } = captureListeners();
+      const { handlers, mockSerialize } = captureListeners();
       handlers.error!({ message: "ignored error", preventDefault: vi.fn() });
       expect(mockSendBeacon).not.toHaveBeenCalled();
+      expect(mockSerialize).not.toHaveBeenCalled();
     });
 
     it("does not call attemptReload when shouldIgnoreMessages returns true", () => {
@@ -393,6 +394,18 @@ describe("listenInternal", () => {
       const mockPreventDefault = vi.fn();
       handlers.error!({ message: "ignored chunk error", preventDefault: mockPreventDefault });
       expect(mockPreventDefault).not.toHaveBeenCalled();
+    });
+
+    it("shouldIgnore takes priority over isChunkError and shouldForceRetry", () => {
+      mockIsChunkError.mockReturnValue(true);
+      mockShouldForceRetry.mockReturnValue(true);
+      mockShouldIgnoreMessages.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      handlers.error!({ message: "ignored", preventDefault: vi.fn() });
+      expect(mockIsChunkError).not.toHaveBeenCalled();
+      expect(mockShouldForceRetry).not.toHaveBeenCalled();
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
     it("checks shouldIgnoreMessages with event.message", () => {
@@ -494,9 +507,10 @@ describe("listenInternal", () => {
     it("does not call sendBeacon when shouldIgnoreMessages returns true", () => {
       mockIsChunkError.mockReturnValue(false);
       mockShouldIgnoreMessages.mockReturnValue(true);
-      const { handlers } = captureListeners();
+      const { handlers, mockSerialize } = captureListeners();
       handlers.unhandledrejection!({ preventDefault: vi.fn(), reason: new Error("ignored") });
       expect(mockSendBeacon).not.toHaveBeenCalled();
+      expect(mockSerialize).not.toHaveBeenCalled();
     });
 
     it("does not call attemptReload when shouldIgnoreMessages returns true", () => {
@@ -517,6 +531,18 @@ describe("listenInternal", () => {
         reason: new Error("ignored"),
       });
       expect(mockPreventDefault).not.toHaveBeenCalled();
+    });
+
+    it("shouldIgnore takes priority over isChunkError and shouldForceRetry", () => {
+      mockIsChunkError.mockReturnValue(true);
+      mockShouldForceRetry.mockReturnValue(true);
+      mockShouldIgnoreMessages.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      handlers.unhandledrejection!({ preventDefault: vi.fn(), reason: new Error("ignored") });
+      expect(mockIsChunkError).not.toHaveBeenCalled();
+      expect(mockShouldForceRetry).not.toHaveBeenCalled();
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
     it("handles string rejection reasons", () => {
@@ -656,13 +682,14 @@ describe("listenInternal", () => {
 
     it("does not call sendBeacon when shouldIgnoreMessages returns true", () => {
       mockShouldIgnoreMessages.mockReturnValue(true);
-      const { handlers } = captureListeners();
+      const { handlers, mockSerialize } = captureListeners();
       handlers.securitypolicyviolation!({
         blockedURI: "https://evil.com",
         preventDefault: vi.fn(),
         violatedDirective: "script-src",
       });
       expect(mockSendBeacon).not.toHaveBeenCalled();
+      expect(mockSerialize).not.toHaveBeenCalled();
     });
 
     it("does not call attemptReload for CSP violations", () => {
