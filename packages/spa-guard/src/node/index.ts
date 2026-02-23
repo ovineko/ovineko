@@ -1,6 +1,8 @@
 export type { SpaGuardTranslations } from "../i18n";
 export { matchLang, translations } from "../i18n";
 
+import { Window } from "happy-dom";
+
 import type { SpaGuardTranslations } from "../i18n";
 
 import { matchLang, translations } from "../i18n";
@@ -62,34 +64,29 @@ export function patchHtmlI18n(options: PatchHtmlI18nOptions): string {
     return html;
   }
 
-  const jsonStr = JSON.stringify(t);
-  const metaTag = `<meta name="spa-guard-i18n" content="${escapeAttr(jsonStr)}">`;
+  // Parse HTML with happy-dom
+  const window = new Window();
+  const document = window.document;
+  document.write(html);
 
-  let result = html;
+  // Set <html lang>
+  document.documentElement.setAttribute("lang", resolvedLang);
 
-  // Inject meta tag into <head>
-  const headIdx = result.indexOf("<head>");
-  if (headIdx === -1) {
-    const headAltIdx = result.indexOf("<head ");
-    if (headAltIdx !== -1) {
-      const closeIdx = result.indexOf(">", headAltIdx);
-      if (closeIdx !== -1) {
-        const insertPos = closeIdx + 1;
-        result = result.slice(0, insertPos) + metaTag + result.slice(insertPos);
-      }
-    }
-  } else {
-    const insertPos = headIdx + "<head>".length;
-    result = result.slice(0, insertPos) + metaTag + result.slice(insertPos);
+  // Create and inject <meta name="spa-guard-i18n"> into <head>
+  const meta = document.createElement("meta");
+  meta.setAttribute("name", "spa-guard-i18n");
+  meta.setAttribute("content", JSON.stringify(t));
+
+  if (document.head) {
+    document.head.prepend(meta);
   }
 
-  // Update <html lang="..."> (use \s before lang to avoid matching data-lang etc.)
-  const safeLang = escapeAttr(resolvedLang);
-  result = result.replace(/<html([^>]*\s)lang="[^"]*"/, `<html$1lang="${safeLang}"`);
-  const htmlTag = result.match(/<html[^>]*>/)?.[0] ?? "";
-  if (!/\slang=/.test(htmlTag)) {
-    result = result.replace(/<html/, `<html lang="${safeLang}"`);
-  }
+  // Reconstruct full HTML with original DOCTYPE
+  const doctypeMatch = html.match(/^(<!doctype[^>]*>)/i);
+  const doctype = doctypeMatch ? doctypeMatch[1] : "";
+  const result = doctype + document.documentElement.outerHTML;
+
+  window.close();
 
   return result;
 }

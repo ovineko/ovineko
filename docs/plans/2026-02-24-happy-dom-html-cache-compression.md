@@ -59,12 +59,12 @@ Replace fragile regex-based HTML parsing in patchHtmlI18n with proper DOM manipu
 - Modify: `packages/spa-guard/src/node/index.ts`
 - Modify: `packages/spa-guard/src/node/index.test.ts`
 
-- [ ] Add happy-dom to peerDependencies ("^20") and peerDependenciesMeta (optional: true) in package.json; keep it in devDependencies for tests
-- [ ] Add @fastify/accept-negotiator to dependencies in package.json; run pnpm install
-- [ ] Rewrite patchHtmlI18n internals: parse HTML with happy-dom Window/Document, set `<html lang>` via DOM setAttribute, inject `<meta name="spa-guard-i18n">` via DOM createElement+prepend into `<head>`, serialize back with document.documentElement.outerHTML
-- [ ] Keep the PatchHtmlI18nOptions interface and function signature unchanged
-- [ ] Keep all existing edge-case tests (single-quoted lang, unquoted lang, lang inside attribute value, `>` inside attributes, xml:lang, dotted attributes, case-insensitive head, etc.) - adapt assertions if DOM serialization differs slightly
-- [ ] Run project test suite - must pass before task 4
+- [x] Add happy-dom to peerDependencies ("^20") and peerDependenciesMeta (optional: true) in package.json; keep it in devDependencies for tests
+- [x] Add @fastify/accept-negotiator to dependencies in package.json; run pnpm install
+- [x] Rewrite patchHtmlI18n internals: parse HTML with happy-dom Window/Document, set `<html lang>` via DOM setAttribute, inject `<meta name="spa-guard-i18n">` via DOM createElement+prepend into `<head>`, serialize back with document.documentElement.outerHTML
+- [x] Keep the PatchHtmlI18nOptions interface and function signature unchanged
+- [x] Keep all existing edge-case tests (single-quoted lang, unquoted lang, lang inside attribute value, `>` inside attributes, xml:lang, dotted attributes, case-insensitive head, etc.) - adapt assertions if DOM serialization differs slightly
+- [x] Run project test suite - must pass before task 4
 
 ### Task 4: Extract version parsing into shared helper and add createHtmlCache
 
