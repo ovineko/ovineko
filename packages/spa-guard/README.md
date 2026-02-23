@@ -800,7 +800,7 @@ function createDebugger(options?: {
 
 - Framework-agnostic vanilla JS (no React dependency)
 - Fixed-position overlay panel with toggle open/close
-- Error scenario buttons: ChunkLoadError, Network Timeout, Sync Runtime Error, Async Runtime Error, Finally Error
+- Error scenario buttons: ChunkLoadError, Network Timeout, Sync Runtime Error, Async Runtime Error, Finally Error, ForceRetry Error, Unhandled Rejection
 - Button visual states (default, loading, triggered)
 - Live spa-guard state display (attempt, isWaiting, isFallbackShown)
 - Scrollable event history with timestamps
