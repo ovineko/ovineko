@@ -117,12 +117,12 @@ Four improvements to @ovineko/spa-guard in one plan:
 
 ### Task 5: Verify acceptance criteria
 
-- [ ] Run full test suite: `pnpm --filter @ovineko/spa-guard test`
-- [ ] Run linter: `pnpm --filter @ovineko/spa-guard lint`
-- [ ] Run build: `pnpm --filter @ovineko/spa-guard build` — verify no errors
-- [ ] Verify test coverage meets 80%+
-- [ ] Verify dist-inline bundle size increase is reasonable (i18n + spinner additions under ~500 bytes minified)
-- [ ] Verify new entry points resolve correctly (`@ovineko/spa-guard/i18n`, `@ovineko/spa-guard/server`)
+- [x] Run full test suite: `pnpm --filter @ovineko/spa-guard test`
+- [x] Run linter: `pnpm --filter @ovineko/spa-guard lint`
+- [x] Run build: `pnpm --filter @ovineko/spa-guard build` — verify no errors
+- [x] Verify test coverage meets 80%+
+- [x] Verify dist-inline bundle size increase is reasonable (i18n + spinner additions under ~500 bytes minified)
+- [x] Verify new entry points resolve correctly (`@ovineko/spa-guard/i18n`, `@ovineko/spa-guard/server`)
 
 ### Task 6: Update documentation
 
