@@ -14,6 +14,10 @@ const defaultOptions: Options = {
     forceRetry: [],
     ignore: [],
   },
+  handleUnhandledRejections: {
+    retry: true,
+    sendBeacon: true,
+  },
   html: {
     fallback: {
       content: defaultErrorFallbackHtml,
@@ -97,6 +101,24 @@ export interface Options {
     ignore?: string[];
   };
 
+  /**
+   * Controls behavior for regular unhandled promise rejections
+   * (those that are not chunk errors or ForceRetry errors).
+   * @default { retry: true, sendBeacon: true }
+   */
+  handleUnhandledRejections?: {
+    /**
+     * Whether to attempt a page reload on unhandled rejections.
+     * @default true
+     */
+    retry?: boolean;
+    /**
+     * Whether to send a beacon report on unhandled rejections.
+     * @default true
+     */
+    sendBeacon?: boolean;
+  };
+
   html?: {
     fallback?: {
       /** Custom HTML to display when all reload attempts are exhausted */
@@ -171,6 +193,10 @@ export const getOptions = (): Options => {
     errors: {
       ...defaultOptions.errors,
       ...windowOptions?.errors,
+    },
+    handleUnhandledRejections: {
+      ...defaultOptions.handleUnhandledRejections,
+      ...windowOptions?.handleUnhandledRejections,
     },
     html: {
       fallback: {
