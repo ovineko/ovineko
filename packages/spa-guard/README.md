@@ -1004,7 +1004,7 @@ Six languages are included: English (en), Korean (ko), Japanese (ja), Chinese (z
 Use `patchHtmlI18n` in your server middleware to inject translations based on the user's language:
 
 ```typescript
-import { patchHtmlI18n, matchLang } from "@ovineko/spa-guard/server";
+import { patchHtmlI18n, matchLang } from "@ovineko/spa-guard/node";
 
 // In your server middleware (Express, Fastify, etc.)
 app.get("*", (req, res) => {
@@ -1075,7 +1075,7 @@ interface SpaGuardTranslations {
 `matchLang` resolves language codes with fallback logic:
 
 ```typescript
-import { matchLang } from "@ovineko/spa-guard/server";
+import { matchLang } from "@ovineko/spa-guard/node";
 
 matchLang("ko"); // "ko" (exact match)
 matchLang("zh-CN"); // "zh" (prefix match)
@@ -1713,7 +1713,7 @@ spa-guard provides 13 export entry points:
 | `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                         | `react@^19`                                       |
 | `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                         | `eslint@^9 \|\| ^10` (optional)                   |
 | `./i18n`                 | Translation types and utilities (SpaGuardTranslations, translations, matchLang)                                                        | None                                              |
-| `./server`               | Server-side utilities (patchHtmlI18n, escapeAttr, matchLang, translations)                                                             | None                                              |
+| `./node`                 | Server-side utilities (patchHtmlI18n, escapeAttr, matchLang, translations)                                                             | None                                              |
 
 **Import examples:**
 
@@ -1770,7 +1770,7 @@ import type { SpaGuardTranslations } from "@ovineko/spa-guard/i18n";
 import { translations, matchLang } from "@ovineko/spa-guard/i18n";
 
 // Server utilities (i18n HTML patching)
-import { patchHtmlI18n, escapeAttr, translations, matchLang } from "@ovineko/spa-guard/server";
+import { patchHtmlI18n, escapeAttr, translations, matchLang } from "@ovineko/spa-guard/node";
 ```
 
 ## Build Sizes

@@ -19,7 +19,7 @@ export default tsup.defineConfig({
     "src/vite-plugin/index.ts",
     "src/eslint/index.ts",
     "src/i18n/index.ts",
-    "src/server/index.ts",
+    "src/node/index.ts",
   ],
   format: "esm",
   async onSuccess() {

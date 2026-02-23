@@ -69,11 +69,11 @@ Three refactoring tasks from revise.txt:
 - Modify: `tsup.config.ts` - update entry point path
 - Modify: `README.md` - update all references (import paths, table entry)
 
-- [ ] Rename src/server/ directory to src/node/
-- [ ] Update package.json exports: change `./server` key to `./node`, update dist paths from `dist/server/` to `dist/node/`
-- [ ] Update tsup.config.ts entry from `src/server/index.ts` to `src/node/index.ts`
-- [ ] Update README.md: all import examples and the entry points table (4 occurrences)
-- [ ] Run project test suite - must pass
+- [x] Rename src/server/ directory to src/node/
+- [x] Update package.json exports: change `./server` key to `./node`, update dist paths from `dist/server/` to `dist/node/`
+- [x] Update tsup.config.ts entry from `src/server/index.ts` to `src/node/index.ts`
+- [x] Update README.md: all import examples and the entry points table (4 occurrences)
+- [x] Run project test suite - must pass
 
 ### Task 4: Cleanup and verify
 

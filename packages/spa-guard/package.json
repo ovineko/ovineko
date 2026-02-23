@@ -80,9 +80,9 @@
       "types": "./dist/i18n/index.d.ts",
       "default": "./dist/i18n/index.js"
     },
-    "./server": {
-      "types": "./dist/server/index.d.ts",
-      "default": "./dist/server/index.js"
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "default": "./dist/node/index.js"
     }
   },
   "files": [
