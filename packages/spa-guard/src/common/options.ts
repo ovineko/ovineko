@@ -34,6 +34,12 @@ const defaultOptions: Options = {
 
 export interface Options {
   /**
+   * Application name for beacon source identification.
+   * Useful in monorepo setups to identify which app sent the beacon.
+   */
+  appName?: string;
+
+  /**
    * Configuration for proactive version checking to detect new deployments.
    * When configured with a `version`, periodically polls to detect version changes
    * and dispatches a `spa-guard:version-change` CustomEvent on the window.

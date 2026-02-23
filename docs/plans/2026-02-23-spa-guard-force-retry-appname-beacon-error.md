@@ -55,12 +55,12 @@ Add three features to @ovineko/spa-guard based on TODO.md analysis (verified aga
 - Modify: `packages/spa-guard/src/common/sendBeacon.test.ts` (test appName inclusion/exclusion)
 - Modify: `packages/spa-guard/src/fastify/index.ts` (log appName in default beacon handler)
 
-- [ ] Add `appName?: string` to Options interface in options.ts
-- [ ] Add `appName: Type.Optional(Type.String())` to beaconSchema in schema/index.ts
-- [ ] Update sendBeacon.ts to enrich beacon payload with appName from getOptions()
-- [ ] Update fastify plugin default logging to include appName
-- [ ] Write tests for sendBeacon with and without appName configured
-- [ ] Run test suite - must pass before task 3
+- [x] Add `appName?: string` to Options interface in options.ts
+- [x] Add `appName: Type.Optional(Type.String())` to beaconSchema in schema/index.ts
+- [x] Update sendBeacon.ts to enrich beacon payload with appName from getOptions()
+- [x] Update fastify plugin default logging to include appName
+- [x] Write tests for sendBeacon with and without appName configured
+- [x] Run test suite - must pass before task 3
 
 ### Task 3: BeaconError utility class
 

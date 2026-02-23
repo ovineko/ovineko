@@ -392,6 +392,56 @@ describe("fastifySPAGuard", () => {
     });
   });
 
+  describe("appName in beacon payload", () => {
+    it("passes appName to onBeacon when present in beacon data", async () => {
+      const onBeacon = vi.fn();
+      const app = await buildApp({ onBeacon, path: "/api/beacon" });
+
+      const beaconData = {
+        appName: "my-dashboard",
+        errorMessage: "chunk load failed",
+        eventName: "chunk-load-error",
+      };
+
+      await app.inject({
+        headers: { "content-type": "text/plain" },
+        method: "POST",
+        payload: makeBeaconBody(beaconData),
+        url: "/api/beacon",
+      });
+
+      expect(onBeacon).toHaveBeenCalledWith(
+        expect.objectContaining({
+          appName: "my-dashboard",
+          errorMessage: "chunk load failed",
+          eventName: "chunk-load-error",
+        }),
+        expect.anything(),
+        expect.anything(),
+      );
+      await app.close();
+    });
+
+    it("parses beacon without appName (field is optional)", async () => {
+      const onBeacon = vi.fn();
+      const app = await buildApp({ onBeacon, path: "/api/beacon" });
+
+      await app.inject({
+        headers: { "content-type": "text/plain" },
+        method: "POST",
+        payload: makeBeaconBody({ errorMessage: "test" }),
+        url: "/api/beacon",
+      });
+
+      expect(onBeacon).toHaveBeenCalledWith(
+        expect.not.objectContaining({ appName: expect.anything() }),
+        expect.anything(),
+        expect.anything(),
+      );
+      await app.close();
+    });
+  });
+
   describe("edge cases", () => {
     it("handles missing onBeacon callback (no callback configured)", async () => {
       const app = await buildApp({ path: "/api/beacon" });

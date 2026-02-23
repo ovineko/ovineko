@@ -16,7 +16,8 @@ export const sendBeacon = (beacon: BeaconSchema) => {
     return;
   }
 
-  const body = JSON.stringify(beacon);
+  const enrichedBeacon = options.appName ? { ...beacon, appName: options.appName } : beacon;
+  const body = JSON.stringify(enrichedBeacon);
 
   // IMPORTANT: Do not simplify `globalThis.window.navigator` to just `navigator`!
   // This code can be executed in non-browser environments (e.g., SSR) where window is undefined.

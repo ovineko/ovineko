@@ -503,5 +503,105 @@ describe("sendBeacon", () => {
         expect(sendBeaconSpy).not.toHaveBeenCalled();
       });
     });
+
+    describe("appName enrichment", () => {
+      let sendBeaconSpy: ReturnType<typeof vi.spyOn>;
+
+      beforeEach(() => {
+        sendBeaconSpy = vi.spyOn(navigator, "sendBeacon").mockReturnValue(true);
+      });
+
+      it("includes appName in beacon payload when configured in options", () => {
+        mockGetOptions.mockReturnValue({
+          appName: "my-app",
+          reportBeacon: { endpoint: DEFAULT_ENDPOINT },
+        });
+
+        sendBeacon(makeBeacon());
+
+        const sentBody = sendBeaconSpy.mock.calls[0]?.[1];
+        const parsed = JSON.parse(sentBody as string);
+        expect(parsed.appName).toBe("my-app");
+      });
+
+      it("does not include appName in beacon payload when not configured", () => {
+        mockGetOptions.mockReturnValue({
+          reportBeacon: { endpoint: DEFAULT_ENDPOINT },
+        });
+
+        sendBeacon(makeBeacon());
+
+        const sentBody = sendBeaconSpy.mock.calls[0]?.[1];
+        const parsed = JSON.parse(sentBody as string);
+        expect(parsed.appName).toBeUndefined();
+      });
+
+      it("does not include appName when it is an empty string", () => {
+        mockGetOptions.mockReturnValue({
+          appName: "",
+          reportBeacon: { endpoint: DEFAULT_ENDPOINT },
+        });
+
+        sendBeacon(makeBeacon());
+
+        const sentBody = sendBeaconSpy.mock.calls[0]?.[1];
+        const parsed = JSON.parse(sentBody as string);
+        expect(parsed.appName).toBeUndefined();
+      });
+
+      it("preserves all original beacon fields when appName is added", () => {
+        mockGetOptions.mockReturnValue({
+          appName: "dashboard",
+          reportBeacon: { endpoint: DEFAULT_ENDPOINT },
+        });
+
+        const beacon = makeBeacon({
+          retryAttempt: 1,
+          retryId: "retry-123",
+        });
+
+        sendBeacon(beacon);
+
+        const sentBody = sendBeaconSpy.mock.calls[0]?.[1];
+        const parsed = JSON.parse(sentBody as string);
+        expect(parsed).toEqual({
+          appName: "dashboard",
+          errorMessage: "test error",
+          eventName: "test-event",
+          retryAttempt: 1,
+          retryId: "retry-123",
+        });
+      });
+
+      it("uses appName from options even when beacon already has no appName field", () => {
+        mockGetOptions.mockReturnValue({
+          appName: "admin-panel",
+          reportBeacon: { endpoint: DEFAULT_ENDPOINT },
+        });
+
+        sendBeacon({ eventName: "minimal" });
+
+        const sentBody = sendBeaconSpy.mock.calls[0]?.[1];
+        const parsed = JSON.parse(sentBody as string);
+        expect(parsed.appName).toBe("admin-panel");
+        expect(parsed.eventName).toBe("minimal");
+      });
+
+      it("includes appName in fetch fallback payload when navigator.sendBeacon fails", () => {
+        sendBeaconSpy.mockReturnValue(false);
+        mockGetOptions.mockReturnValue({
+          appName: "my-app",
+          reportBeacon: { endpoint: DEFAULT_ENDPOINT },
+        });
+
+        const beacon = makeBeacon();
+
+        sendBeacon(beacon);
+
+        const fetchCall = fetchMock.mock.calls[0];
+        const parsed = JSON.parse(fetchCall?.[1]?.body);
+        expect(parsed.appName).toBe("my-app");
+      });
+    });
   });
 });

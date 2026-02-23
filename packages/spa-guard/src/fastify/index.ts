@@ -81,30 +81,22 @@ const handleBeaconRequest = async (params: {
     return;
   }
 
+  const logPayload = {
+    ...(beacon.appName && { appName: beacon.appName }),
+    errorMessage: beacon.errorMessage,
+    eventMessage: beacon.eventMessage,
+    eventName: beacon.eventName,
+    serialized: beacon.serialized,
+  };
+
   if (options.onBeacon) {
     const result = await options.onBeacon(beacon, request, reply);
 
     if (!result?.skipDefaultLog) {
-      request.log.info(
-        {
-          errorMessage: beacon.errorMessage,
-          eventMessage: beacon.eventMessage,
-          eventName: beacon.eventName,
-          serialized: beacon.serialized,
-        },
-        logMessage("Beacon received"),
-      );
+      request.log.info(logPayload, logMessage("Beacon received"));
     }
   } else {
-    request.log.info(
-      {
-        errorMessage: beacon.errorMessage,
-        eventMessage: beacon.eventMessage,
-        eventName: beacon.eventName,
-        serialized: beacon.serialized,
-      },
-      logMessage("Beacon received"),
-    );
+    request.log.info(logPayload, logMessage("Beacon received"));
   }
 };
 
