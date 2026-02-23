@@ -119,6 +119,17 @@ describe("getOptions", () => {
       expect(result.errors?.ignore).toEqual([]);
     });
 
+    it("merges handleUnhandledRejections overrides while retaining defaults", () => {
+      setWindowOptions({
+        handleUnhandledRejections: { retry: false },
+      });
+
+      const result = getOptions();
+
+      expect(result.handleUnhandledRejections?.retry).toBe(false);
+      expect(result.handleUnhandledRejections?.sendBeacon).toBe(true);
+    });
+
     it("merges top-level scalar overrides", () => {
       setWindowOptions({
         enableRetryReset: false,

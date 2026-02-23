@@ -1043,12 +1043,16 @@ describe("listenInternal", () => {
       mockShouldForceRetry.mockReturnValue(false);
       const { handlers } = captureListeners();
       const mockPreventDefault = vi.fn();
+      const reason = new Error("test rejection");
       handlers.unhandledrejection!({
         preventDefault: mockPreventDefault,
-        reason: new Error("test rejection"),
+        reason,
       });
       expect(mockSendBeacon).toHaveBeenCalledTimes(1);
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockSendBeacon).toHaveBeenCalledWith(
+        expect.objectContaining({ errorMessage: String(reason), eventName: "unhandledrejection" }),
+      );
+      expect(mockAttemptReload).toHaveBeenCalledWith(reason);
       expect(mockPreventDefault).toHaveBeenCalledTimes(1);
       // Beacon is sent before attemptReload
       const sendBeaconOrder = mockSendBeacon.mock.invocationCallOrder[0]!;
@@ -1065,12 +1069,13 @@ describe("listenInternal", () => {
       mockShouldForceRetry.mockReturnValue(false);
       const { handlers } = captureListeners();
       const mockPreventDefault = vi.fn();
+      const reason = new Error("test rejection");
       handlers.unhandledrejection!({
         preventDefault: mockPreventDefault,
-        reason: new Error("test rejection"),
+        reason,
       });
       expect(mockSendBeacon).not.toHaveBeenCalled();
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockAttemptReload).toHaveBeenCalledWith(reason);
       expect(mockPreventDefault).toHaveBeenCalledTimes(1);
     });
 
@@ -1083,11 +1088,15 @@ describe("listenInternal", () => {
       mockShouldForceRetry.mockReturnValue(false);
       const { handlers } = captureListeners();
       const mockPreventDefault = vi.fn();
+      const reason = new Error("test rejection");
       handlers.unhandledrejection!({
         preventDefault: mockPreventDefault,
-        reason: new Error("test rejection"),
+        reason,
       });
       expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+      expect(mockSendBeacon).toHaveBeenCalledWith(
+        expect.objectContaining({ errorMessage: String(reason), eventName: "unhandledrejection" }),
+      );
       expect(mockAttemptReload).not.toHaveBeenCalled();
       expect(mockPreventDefault).not.toHaveBeenCalled();
     });
@@ -1157,6 +1166,7 @@ describe("listenInternal", () => {
       // Chunk errors always call attemptReload and preventDefault regardless of config
       expect(mockAttemptReload).toHaveBeenCalledWith(reason);
       expect(mockPreventDefault).toHaveBeenCalledTimes(1);
+      expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
     it("ForceRetry errors bypass handleUnhandledRejections config entirely", () => {
@@ -1173,6 +1183,7 @@ describe("listenInternal", () => {
       // ForceRetry errors always call attemptReload and preventDefault regardless of config
       expect(mockAttemptReload).toHaveBeenCalledWith(reason);
       expect(mockPreventDefault).toHaveBeenCalledTimes(1);
+      expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
     it("partial config: only retry specified, sendBeacon uses default (true)", () => {
