@@ -66,11 +66,11 @@ Add a new `handleUnhandledRejections` configuration option to spa-guard that con
 
 ### Task 4: Verify acceptance criteria
 
-- [ ] Run full test suite (pnpm test)
-- [ ] Run linter (pnpm lint)
-- [ ] Run type check (pnpm typecheck)
-- [ ] Verify test coverage meets 80%+
-- [ ] Manual review: default behavior now triggers attemptReload for regular unhandled rejections
+- [x] Run full test suite (pnpm test)
+- [x] Run linter (pnpm lint)
+- [x] Run type check (pnpm typecheck)
+- [x] Verify test coverage meets 80%+
+- [x] Manual review: default behavior now triggers attemptReload for regular unhandled rejections
 
 ### Task 5: Update documentation
 
