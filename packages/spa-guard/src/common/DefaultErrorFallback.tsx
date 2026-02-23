@@ -3,6 +3,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import type { SpaGuardState } from "../runtime";
 
 import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./fallbackHtml.generated";
+import { applyI18n, getI18n } from "./i18n";
 import { getOptions } from "./options";
 
 interface DefaultErrorFallbackProps {
@@ -71,6 +72,11 @@ function buildHtml(
         el.style.display = visible ? "inline-block" : "none";
       }
     }
+  }
+
+  const t = getI18n();
+  if (t) {
+    applyI18n(container, t);
   }
 
   return container.innerHTML;

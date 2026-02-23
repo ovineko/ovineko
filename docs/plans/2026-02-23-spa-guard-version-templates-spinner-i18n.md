@@ -100,20 +100,20 @@ Four improvements to @ovineko/spa-guard in one plan:
 - Modify: `packages/spa-guard/package.json`
 - Modify: `packages/spa-guard/tsup.config.ts`
 
-- [ ] Create `SpaGuardTranslations` interface: `heading`, `message`, `reload`, `tryAgain`, `loading`, `retrying`, `rtl?`
-- [ ] Create `translations` Record with built-ins: en, ko, ja, zh, ar (rtl), he (rtl) — using strings from TODO-2
-- [ ] Implement `matchLang(input, available)`: detect Accept-Language header vs simple code; parse q-values; exact then prefix matching; fallback `"en"`
-- [ ] Implement `escapeAttr(str)`: escape `&`, `"`, `<`, `>` for HTML attribute safety
-- [ ] Implement `patchHtmlI18n({ html, acceptLanguage?, lang?, translations? })`: merge custom translations with built-in (per-language deep merge), resolve language via `matchLang`, English without custom translations is no-op, inject `<meta name="spa-guard-i18n" content="...">` into `<head>`, update `<html lang="...">`
-- [ ] Add `getI18n()` helper (shared by inline + React): read `<meta name="spa-guard-i18n">`, return parsed JSON or null
-- [ ] In `reload.ts` `showFallbackUI` and `showLoadingUI`: after building virtual container, call `getI18n()`, iterate `[data-spa-guard-content]` and `[data-spa-guard-action]` patching textContent, handle `rtl` flag
-- [ ] In `DefaultErrorFallback.tsx`: add i18n patching pass in virtual container using same `getI18n()` + data attribute logic
-- [ ] Add `./i18n` and `./server` exports to `package.json` (types + import, matching existing pattern)
-- [ ] Add `src/i18n/index.ts` and `src/server/index.ts` to tsup.config.ts entry points
-- [ ] Re-export `translations`, `matchLang`, `SpaGuardTranslations` from `server/index.ts`
-- [ ] Write tests: `matchLang` — direct code, prefix match, Accept-Language parsing, undefined; `patchHtmlI18n` — English no-op, Korean meta tag injection, custom partial override, RTL; `escapeAttr` — special chars; `getI18n` — present/absent/malformed; inline i18n patching for both fallback and loading HTML
-- [ ] Rebuild dist-inline and verify end-to-end
-- [ ] Run project test suite — must pass before task 5
+- [x] Create `SpaGuardTranslations` interface: `heading`, `message`, `reload`, `tryAgain`, `loading`, `retrying`, `rtl?`
+- [x] Create `translations` Record with built-ins: en, ko, ja, zh, ar (rtl), he (rtl) — using strings from TODO-2
+- [x] Implement `matchLang(input, available)`: detect Accept-Language header vs simple code; parse q-values; exact then prefix matching; fallback `"en"`
+- [x] Implement `escapeAttr(str)`: escape `&`, `"`, `<`, `>` for HTML attribute safety
+- [x] Implement `patchHtmlI18n({ html, acceptLanguage?, lang?, translations? })`: merge custom translations with built-in (per-language deep merge), resolve language via `matchLang`, English without custom translations is no-op, inject `<meta name="spa-guard-i18n" content="...">` into `<head>`, update `<html lang="...">`
+- [x] Add `getI18n()` helper (shared by inline + React): read `<meta name="spa-guard-i18n">`, return parsed JSON or null
+- [x] In `reload.ts` `showFallbackUI` and `showLoadingUI`: after building virtual container, call `getI18n()`, iterate `[data-spa-guard-content]` and `[data-spa-guard-action]` patching textContent, handle `rtl` flag
+- [x] In `DefaultErrorFallback.tsx`: add i18n patching pass in virtual container using same `getI18n()` + data attribute logic
+- [x] Add `./i18n` and `./server` exports to `package.json` (types + import, matching existing pattern)
+- [x] Add `src/i18n/index.ts` and `src/server/index.ts` to tsup.config.ts entry points
+- [x] Re-export `translations`, `matchLang`, `SpaGuardTranslations` from `server/index.ts`
+- [x] Write tests: `matchLang` — direct code, prefix match, Accept-Language parsing, undefined; `patchHtmlI18n` — English no-op, Korean meta tag injection, custom partial override, RTL; `escapeAttr` — special chars; `getI18n` — present/absent/malformed; inline i18n patching for both fallback and loading HTML
+- [x] Rebuild dist-inline and verify end-to-end
+- [x] Run project test suite — must pass before task 5
 
 ### Task 5: Verify acceptance criteria
 

@@ -18,6 +18,8 @@ export default tsup.defineConfig({
     "src/react-router/index.tsx",
     "src/vite-plugin/index.ts",
     "src/eslint/index.ts",
+    "src/i18n/index.ts",
+    "src/server/index.ts",
   ],
   format: "esm",
   async onSuccess() {

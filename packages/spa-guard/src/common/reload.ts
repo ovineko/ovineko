@@ -1,5 +1,6 @@
 import { RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
 import { emitEvent, getLogger, isDefaultRetryEnabled } from "./events/internal";
+import { applyI18n, getI18n } from "./i18n";
 import {
   clearLastReloadTime,
   getLastReloadTime,
@@ -223,6 +224,11 @@ const showLoadingUI = (attempt: number): void => {
       attemptEl.textContent = String(attempt);
     }
 
+    const t = getI18n();
+    if (t) {
+      applyI18n(container, t);
+    }
+
     targetElement.innerHTML = container.innerHTML;
   } catch {
     // Silently fail — loading UI is best-effort
@@ -245,7 +251,15 @@ const showFallbackUI = (): void => {
       getLogger()?.fallbackTargetNotFound(selector);
       return;
     }
-    targetElement.innerHTML = fallbackHtml;
+    const container = document.createElement("div");
+    container.innerHTML = fallbackHtml;
+
+    const t = getI18n();
+    if (t) {
+      applyI18n(container, t);
+    }
+
+    targetElement.innerHTML = container.innerHTML;
 
     const useRetryId = options.useRetryId ?? true;
     const retryState = getRetryStateFromUrl();

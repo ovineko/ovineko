@@ -75,6 +75,14 @@
     "./eslint": {
       "types": "./dist/eslint/index.d.ts",
       "default": "./dist/eslint/index.js"
+    },
+    "./i18n": {
+      "types": "./dist/i18n/index.d.ts",
+      "default": "./dist/i18n/index.js"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "default": "./dist/server/index.js"
     }
   },
   "files": [
