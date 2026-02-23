@@ -78,12 +78,12 @@ Add three features to @ovineko/spa-guard based on TODO.md analysis (verified aga
 
 ### Task 4: Verify acceptance criteria
 
-- [ ] Run full test suite: `npm test` in packages/spa-guard
-- [ ] Run type checking: `npm run typecheck` in packages/spa-guard
-- [ ] Run build: `npm run build` in packages/spa-guard
-- [ ] Verify ForceRetryError is exported from common, runtime, and react entry points
-- [ ] Verify BeaconError is exported from common and fastify entry points
-- [ ] Verify test coverage meets 80%+
+- [x] Run full test suite: `npm test` in packages/spa-guard
+- [x] Run type checking: `npm run typecheck` in packages/spa-guard
+- [x] Run build: `npm run build` in packages/spa-guard
+- [x] Verify ForceRetryError is exported from common, runtime, and react entry points
+- [x] Verify BeaconError is exported from common and fastify entry points
+- [x] Verify test coverage meets 80%+
 
 ### Task 5: Update documentation
 
