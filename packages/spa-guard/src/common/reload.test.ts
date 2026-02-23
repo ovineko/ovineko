@@ -113,6 +113,10 @@ const defaultOptions = {
       content: "<div>Fallback UI</div>",
       selector: "body",
     },
+    loading: {
+      content:
+        '<div><div data-spa-guard-spinner></div><h2 data-spa-guard-content="loading">Loading...</h2><p data-spa-guard-section="retrying" style="display:none"><span data-spa-guard-content="retrying">Retry attempt</span> <span data-spa-guard-content="attempt"></span></p></div>',
+    },
   },
   minTimeBetweenResets: 5000,
   reloadDelays: [1000, 2000, 5000],
@@ -1272,6 +1276,60 @@ describe("attemptReload", () => {
       attemptReload(new Error("second error"));
 
       expect(mockEmitEvent).toHaveBeenCalled();
+    });
+  });
+
+  describe("showLoadingUI during retry delays", () => {
+    it("renders loading template to the fallback selector during retry", () => {
+      const mockEl = { innerHTML: "", querySelector: vi.fn(() => null) };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      expect(mockEl.innerHTML).toContain("Loading...");
+    });
+
+    it("shows retrying section with attempt number", () => {
+      const mockEl = { innerHTML: "", querySelector: vi.fn(() => null) };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      // First retry attempt = 1
+      expect(mockEl.innerHTML).toContain("Retry attempt");
+    });
+
+    it("injects spinner content from options into data-spa-guard-spinner", () => {
+      mockGetOptions.mockReturnValue({
+        ...defaultOptions,
+        spinner: { content: "<div>Custom Spin</div>", disabled: false },
+      });
+      const mockEl = { innerHTML: "", querySelector: vi.fn(() => null) };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+
+      attemptReload(new Error("chunk error"));
+
+      expect(mockEl.innerHTML).toContain("Custom Spin");
+    });
+
+    it("does not render loading UI when no loading html configured", () => {
+      mockGetOptions.mockReturnValue({
+        ...defaultOptions,
+        html: { fallback: defaultOptions.html.fallback },
+      });
+      const error = new Error("chunk error");
+
+      // Should not throw even when loading HTML is missing
+      expect(() => attemptReload(error)).not.toThrow();
+    });
+
+    it("does not render loading UI when target element not found", () => {
+      vi.spyOn(document, "querySelector").mockReturnValue(null);
+      const error = new Error("chunk error");
+
+      expect(() => attemptReload(error)).not.toThrow();
     });
   });
 });

@@ -143,4 +143,48 @@ describe("getOptions", () => {
       expect(result.html?.fallback?.content).toBe(defaultErrorFallbackHtml);
     });
   });
+
+  describe("spinner namespace merge", () => {
+    it("returns spinner defaults when no window options are set", () => {
+      const result = getOptions();
+      expect(result.spinner).toEqual({
+        background: "#fff",
+        disabled: false,
+      });
+    });
+
+    it("merges spinner background override while retaining defaults", () => {
+      setWindowOptions({
+        spinner: { background: "#000" },
+      });
+
+      const result = getOptions();
+
+      expect(result.spinner?.background).toBe("#000");
+      expect(result.spinner?.disabled).toBe(false);
+    });
+
+    it("merges spinner disabled override while retaining defaults", () => {
+      setWindowOptions({
+        spinner: { disabled: true },
+      });
+
+      const result = getOptions();
+
+      expect(result.spinner?.disabled).toBe(true);
+      expect(result.spinner?.background).toBe("#fff");
+    });
+
+    it("merges spinner content override", () => {
+      setWindowOptions({
+        spinner: { content: "<div>Custom</div>" },
+      });
+
+      const result = getOptions();
+
+      expect(result.spinner?.content).toBe("<div>Custom</div>");
+      expect(result.spinner?.background).toBe("#fff");
+      expect(result.spinner?.disabled).toBe(false);
+    });
+  });
 });

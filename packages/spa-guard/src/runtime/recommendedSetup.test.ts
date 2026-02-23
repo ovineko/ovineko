@@ -5,7 +5,12 @@ vi.mock("../common/checkVersion", () => ({
   stopVersionCheck: vi.fn(),
 }));
 
+vi.mock("../common/spinner", () => ({
+  dismissSpinner: vi.fn(),
+}));
+
 import { startVersionCheck, stopVersionCheck } from "../common/checkVersion";
+import { dismissSpinner } from "../common/spinner";
 import { recommendedSetup } from "./recommendedSetup";
 
 describe("recommendedSetup", () => {
@@ -53,5 +58,24 @@ describe("recommendedSetup", () => {
   it("accepts undefined overrides", () => {
     recommendedSetup();
     expect(startVersionCheck).toHaveBeenCalledOnce();
+  });
+
+  it("calls dismissSpinner at the start", () => {
+    recommendedSetup();
+    expect(dismissSpinner).toHaveBeenCalledOnce();
+  });
+
+  it("calls dismissSpinner before startVersionCheck", () => {
+    const callOrder: string[] = [];
+    vi.mocked(dismissSpinner).mockImplementation(() => {
+      callOrder.push("dismissSpinner");
+    });
+    vi.mocked(startVersionCheck).mockImplementation(() => {
+      callOrder.push("startVersionCheck");
+    });
+
+    recommendedSetup();
+
+    expect(callOrder).toEqual(["dismissSpinner", "startVersionCheck"]);
   });
 });

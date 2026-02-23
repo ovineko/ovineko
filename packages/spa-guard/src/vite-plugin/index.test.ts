@@ -63,14 +63,13 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
   });
 
   describe("HTML injection", () => {
-    it("injects a script tag into head-prepend", async () => {
+    it("injects a script tag into head-prepend as the first tag", async () => {
       const spaGuardVitePlugin = await importPlugin();
       const plugin = spaGuardVitePlugin();
       const handler = getTransformHandler(plugin);
 
       const result = await handler("<html><head></head><body></body></html>");
 
-      expect(result.tags).toHaveLength(1);
       expect(result.tags[0].tag).toBe("script");
       expect(result.tags[0].injectTo).toBe("head-prepend");
     });
@@ -241,6 +240,110 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
         expect.stringContaining("dist-inline-trace/index.js"),
         "utf8",
       );
+    });
+  });
+
+  describe("spinner body injection", () => {
+    it("injects spinner div into body-prepend by default", async () => {
+      const result = await invokeTransform();
+      const spinnerTag = result.tags.find(
+        (t: { attrs?: { id?: string }; tag: string }) =>
+          t.tag === "div" && t.attrs?.id === "__spa-guard-spinner",
+      );
+      expect(spinnerTag).toBeDefined();
+      expect(spinnerTag.injectTo).toBe("body-prepend");
+    });
+
+    it("injects overflow hidden script into body-prepend", async () => {
+      const result = await invokeTransform();
+      const overflowScript = result.tags.find(
+        (t: { children?: string; tag: string }) =>
+          t.tag === "script" && t.children === "document.body.style.overflow='hidden'",
+      );
+      expect(overflowScript).toBeDefined();
+      expect(overflowScript.injectTo).toBe("body-prepend");
+    });
+
+    it("spinner div contains default SVG spinner", async () => {
+      const result = await invokeTransform();
+      const spinnerTag = result.tags.find(
+        (t: { attrs?: { id?: string }; tag: string }) =>
+          t.tag === "div" && t.attrs?.id === "__spa-guard-spinner",
+      );
+      expect(spinnerTag.children).toContain("<svg");
+      expect(spinnerTag.children).toContain("spa-guard-spin");
+    });
+
+    it("spinner div uses default #fff background", async () => {
+      const result = await invokeTransform();
+      const spinnerTag = result.tags.find(
+        (t: { attrs?: { id?: string }; tag: string }) =>
+          t.tag === "div" && t.attrs?.id === "__spa-guard-spinner",
+      );
+      expect(spinnerTag.attrs.style).toContain("var(--spa-guard-spinner-bg,#fff)");
+    });
+
+    it("does not inject :root style for default #fff background", async () => {
+      const result = await invokeTransform();
+      const rootStyle = result.tags.find(
+        (t: { children?: string; tag: string }) =>
+          t.tag === "style" && typeof t.children === "string" && t.children.includes(":root"),
+      );
+      expect(rootStyle).toBeUndefined();
+    });
+
+    it("injects :root CSS variable when background differs from #fff", async () => {
+      const result = await invokeTransform({ spinner: { background: "#000" } });
+      const rootStyle = result.tags.find(
+        (t: { children?: string; tag: string }) =>
+          t.tag === "style" && typeof t.children === "string" && t.children.includes(":root"),
+      );
+      expect(rootStyle).toBeDefined();
+      expect(rootStyle.children).toContain("--spa-guard-spinner-bg:#000");
+      expect(rootStyle.injectTo).toBe("head");
+    });
+
+    it("uses custom spinner content from options", async () => {
+      const result = await invokeTransform({
+        spinner: { content: "<div>My Spinner</div>" },
+      });
+      const spinnerTag = result.tags.find(
+        (t: { attrs?: { id?: string }; tag: string }) =>
+          t.tag === "div" && t.attrs?.id === "__spa-guard-spinner",
+      );
+      expect(spinnerTag.children).toBe("<div>My Spinner</div>");
+    });
+
+    it("does not inject spinner when spinner.disabled is true", async () => {
+      const result = await invokeTransform({ spinner: { disabled: true } });
+      const spinnerTag = result.tags.find(
+        (t: { attrs?: { id?: string }; tag: string }) =>
+          t.tag === "div" && t.attrs?.id === "__spa-guard-spinner",
+      );
+      expect(spinnerTag).toBeUndefined();
+    });
+
+    it("does not inject overflow script when spinner.disabled is true", async () => {
+      const result = await invokeTransform({ spinner: { disabled: true } });
+      const overflowScript = result.tags.find(
+        (t: { children?: string; tag: string }) =>
+          t.tag === "script" && t.children === "document.body.style.overflow='hidden'",
+      );
+      expect(overflowScript).toBeUndefined();
+    });
+
+    it("only injects the inline script tag when spinner.disabled", async () => {
+      const result = await invokeTransform({ spinner: { disabled: true } });
+      expect(result.tags).toHaveLength(1);
+      expect(result.tags[0].tag).toBe("script");
+      expect(result.tags[0].injectTo).toBe("head-prepend");
+    });
+
+    it("stores resolved spinner content and background in serialized options", async () => {
+      const result = await invokeTransform({ spinner: { background: "#eee" } });
+      const parsed = parseOptionsFromScript(result.tags[0].children as string);
+      expect(parsed.spinner.background).toBe("#eee");
+      expect(parsed.spinner.content).toContain("<svg");
     });
   });
 });

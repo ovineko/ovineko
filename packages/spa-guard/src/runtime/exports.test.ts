@@ -30,4 +30,22 @@ describe("runtime/index exports", () => {
     expect(mod.recommendedSetup).toBeDefined();
     expect(typeof mod.recommendedSetup).toBe("function");
   });
+
+  it("exports showSpinner function", async () => {
+    const mod = await import("./index");
+    expect(mod.showSpinner).toBeDefined();
+    expect(typeof mod.showSpinner).toBe("function");
+  });
+
+  it("exports dismissSpinner function", async () => {
+    const mod = await import("./index");
+    expect(mod.dismissSpinner).toBeDefined();
+    expect(typeof mod.dismissSpinner).toBe("function");
+  });
+
+  it("exports getSpinnerHtml function", async () => {
+    const mod = await import("./index");
+    expect(mod.getSpinnerHtml).toBeDefined();
+    expect(typeof mod.getSpinnerHtml).toBe("function");
+  });
 });

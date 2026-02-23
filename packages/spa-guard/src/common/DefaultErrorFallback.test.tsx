@@ -1,10 +1,16 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("./options", () => ({
+  getOptions: vi.fn().mockReturnValue({}),
+  optionsWindowKey: "__SPA_GUARD_OPTIONS__",
+}));
+
 import type { SpaGuardState } from "../runtime";
 
 import { DefaultErrorFallback } from "./DefaultErrorFallback";
 import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./fallbackHtml.generated";
+import { getOptions } from "./options";
 
 const defaultState: SpaGuardState = {
   currentAttempt: 0,
@@ -403,6 +409,64 @@ describe("DefaultErrorFallback", () => {
 
       const attemptEl = container.querySelector('[data-spa-guard-content="attempt"]');
       expect(attemptEl?.textContent).toBe("5");
+    });
+  });
+
+  describe("spinner injection in loading template", () => {
+    it("injects custom spinner content into data-spa-guard-spinner element", () => {
+      vi.mocked(getOptions).mockReturnValue({
+        spinner: { content: "<div>Custom Spinner</div>", disabled: false },
+      });
+
+      const { container } = render(
+        <DefaultErrorFallback
+          error={new Error("test")}
+          isChunkError={false}
+          isRetrying={true}
+          spaGuardState={retryingStateAttempt1}
+        />,
+      );
+
+      const spinnerEl = container.querySelector("[data-spa-guard-spinner]");
+      expect(spinnerEl).toBeInTheDocument();
+      expect(spinnerEl?.innerHTML).toContain("Custom Spinner");
+    });
+
+    it("keeps default spinner when no custom content in options", () => {
+      vi.mocked(getOptions).mockReturnValue({});
+
+      const { container } = render(
+        <DefaultErrorFallback
+          error={new Error("test")}
+          isChunkError={false}
+          isRetrying={true}
+          spaGuardState={retryingStateAttempt1}
+        />,
+      );
+
+      const spinnerEl = container.querySelector("[data-spa-guard-spinner]");
+      expect(spinnerEl).toBeInTheDocument();
+      // Default SVG from template should remain
+      expect(spinnerEl?.querySelector("svg")).toBeInTheDocument();
+    });
+
+    it("does not inject spinner when spinner is disabled", () => {
+      vi.mocked(getOptions).mockReturnValue({
+        spinner: { disabled: true },
+      });
+
+      const { container } = render(
+        <DefaultErrorFallback
+          error={new Error("test")}
+          isChunkError={false}
+          isRetrying={true}
+          spaGuardState={retryingStateAttempt1}
+        />,
+      );
+
+      // Default template spinner should remain (disabled only affects content injection)
+      const spinnerEl = container.querySelector("[data-spa-guard-spinner]");
+      expect(spinnerEl).toBeInTheDocument();
     });
   });
 });

@@ -169,6 +169,8 @@ export const attemptReload = (error: unknown): void => {
 
     getLogger()?.retrySchedulingReload(retryId, nextAttempt, delay);
 
+    showLoadingUI(nextAttempt);
+
     setTimeout(() => {
       if (useRetryId && enableRetryReset) {
         setLastReloadTime(retryId, nextAttempt);
@@ -183,6 +185,47 @@ export const attemptReload = (error: unknown): void => {
     }, delay);
   } catch {
     reloadScheduled = false;
+  }
+};
+
+const showLoadingUI = (attempt: number): void => {
+  const options = getOptions();
+  const loadingHtml = options.html?.loading?.content;
+  const selector = options.html?.fallback?.selector ?? "body";
+
+  if (!loadingHtml) {
+    return;
+  }
+
+  try {
+    const targetElement = document.querySelector(selector);
+    if (!targetElement) {
+      return;
+    }
+
+    const container = document.createElement("div");
+    container.innerHTML = loadingHtml;
+
+    const spinnerEl = container.querySelector("[data-spa-guard-spinner]");
+    if (spinnerEl && options.spinner?.content) {
+      spinnerEl.innerHTML = options.spinner.content;
+    }
+
+    const retryingSection = container.querySelector<HTMLElement>(
+      '[data-spa-guard-section="retrying"]',
+    );
+    if (retryingSection) {
+      retryingSection.style.display = "block";
+    }
+
+    const attemptEl = container.querySelector('[data-spa-guard-content="attempt"]');
+    if (attemptEl) {
+      attemptEl.textContent = String(attempt);
+    }
+
+    targetElement.innerHTML = container.innerHTML;
+  } catch {
+    // Silently fail — loading UI is best-effort
   }
 };
 

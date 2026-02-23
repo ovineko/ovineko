@@ -1,4 +1,5 @@
 import { startVersionCheck, stopVersionCheck } from "../common/checkVersion";
+import { dismissSpinner } from "../common/spinner";
 
 export interface RecommendedSetupOptions {
   /**
@@ -13,6 +14,8 @@ export interface RecommendedSetupOptions {
  * Returns a cleanup function that tears down all started features.
  */
 export const recommendedSetup = (overrides?: RecommendedSetupOptions): (() => void) => {
+  dismissSpinner();
+
   const options = { versionCheck: true, ...overrides };
 
   if (options.versionCheck) {

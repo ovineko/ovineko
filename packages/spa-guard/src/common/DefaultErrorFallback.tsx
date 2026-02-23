@@ -3,6 +3,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import type { SpaGuardState } from "../runtime";
 
 import { defaultErrorFallbackHtml, defaultLoadingFallbackHtml } from "./fallbackHtml.generated";
+import { getOptions } from "./options";
 
 interface DefaultErrorFallbackProps {
   error: unknown;
@@ -32,10 +33,18 @@ function buildHtml(
     actions?: Record<string, boolean>;
     content?: Record<string, string>;
     sections?: Record<string, boolean>;
+    spinnerHtml?: string;
   },
 ): string {
   const container = document.createElement("div");
   container.innerHTML = template;
+
+  if (patches.spinnerHtml) {
+    const spinnerEl = container.querySelector("[data-spa-guard-spinner]");
+    if (spinnerEl) {
+      spinnerEl.innerHTML = patches.spinnerHtml;
+    }
+  }
 
   if (patches.content) {
     for (const [key, value] of Object.entries(patches.content)) {
@@ -85,6 +94,7 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
 
   const html = useMemo(() => {
     if (isRetrying) {
+      const opts = getOptions();
       return buildHtml(defaultLoadingFallbackHtml, {
         content: {
           attempt: String(spaGuardState.currentAttempt),
@@ -92,6 +102,7 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
         sections: {
           retrying: true,
         },
+        spinnerHtml: opts.spinner?.content,
       });
     }
 

@@ -1,4 +1,4 @@
-import type { Plugin } from "vite";
+import type { HtmlTagDescriptor, Plugin } from "vite";
 
 import { minify } from "html-minifier-terser";
 import crypto from "node:crypto";
@@ -7,6 +7,7 @@ import path from "node:path";
 
 import { name } from "../../package.json";
 import { type Options, optionsWindowKey } from "../common/options";
+import { defaultSpinnerSvg, SPINNER_ID } from "../common/spinner";
 
 export interface VitePluginOptions extends Options {
   trace?: boolean;
@@ -61,18 +62,54 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
           version: options.version ?? autoVersion,
         };
 
+        const spinnerOpts = finalOptions.spinner;
+        if (spinnerOpts?.disabled !== true) {
+          const spinnerContent = spinnerOpts?.content ?? defaultSpinnerSvg;
+          const bg = spinnerOpts?.background ?? "#fff";
+
+          finalOptions.spinner = { ...spinnerOpts, background: bg, content: spinnerContent };
+        }
+
         const inlineScript = await getInlineScript(finalOptions);
 
-        return {
-          html,
-          tags: [
-            {
-              children: inlineScript,
-              injectTo: "head-prepend",
-              tag: "script",
+        const tags: HtmlTagDescriptor[] = [
+          {
+            children: inlineScript,
+            injectTo: "head-prepend",
+            tag: "script",
+          },
+        ];
+
+        if (spinnerOpts?.disabled !== true) {
+          const bg = finalOptions.spinner?.background ?? "#fff";
+          const spinnerContent = finalOptions.spinner?.content ?? defaultSpinnerSvg;
+
+          tags.push({
+            attrs: {
+              id: SPINNER_ID,
+              style: `position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:var(--spa-guard-spinner-bg,${bg})`,
             },
-          ],
-        };
+            children: spinnerContent,
+            injectTo: "body-prepend",
+            tag: "div",
+          });
+
+          tags.push({
+            children: "document.body.style.overflow='hidden'",
+            injectTo: "body-prepend",
+            tag: "script",
+          });
+
+          if (bg !== "#fff") {
+            tags.push({
+              children: `:root{--spa-guard-spinner-bg:${bg}}`,
+              injectTo: "head",
+              tag: "style",
+            });
+          }
+        }
+
+        return { html, tags };
       },
       order: "post",
     },

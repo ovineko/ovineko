@@ -76,18 +76,18 @@ Four improvements to @ovineko/spa-guard in one plan:
 - Modify: `packages/spa-guard/src/react/index.tsx`
 - Modify: `packages/spa-guard/src/common/DefaultErrorFallback.tsx`
 
-- [ ] Add `spinner?: { content?: string; disabled?: boolean; background?: string }` to `Options` interface; add defaults to `defaultOptions`
-- [ ] Create `spinner.ts`: `SPINNER_ID` constant, `defaultSpinnerSvg` (SVG circle animation), `getSpinnerHtml(backgroundOverride?)`, `showSpinner(options?)` returning cleanup fn, `dismissSpinner()`
-- [ ] `showSpinner`: remove existing spinner if any, create overlay with `position:fixed;inset:0;z-index:2147483647` and CSS variable `background: var(--spa-guard-spinner-bg, <bg>)`, set `body.style.overflow="hidden"`, return `dismissSpinner`
-- [ ] `dismissSpinner`: remove element by ID, restore `body.style.overflow`
-- [ ] Vite plugin `transformIndexHtml`: if `spinner.disabled !== true`, push `HtmlTagDescriptor`s for spinner div (`body-prepend`), `body.style.overflow='hidden'` script (`body-prepend`), and if bg differs from `#fff` — `:root` CSS variable style (`head`)
-- [ ] In `recommendedSetup`, call `dismissSpinner()` at the start
-- [ ] Export `showSpinner`, `dismissSpinner`, `getSpinnerHtml` from `runtime/index.ts`
-- [ ] Create React `Spinner` component: reads options, returns null if disabled, otherwise renders div with `dangerouslySetInnerHTML`. Export from `react/index.tsx`
-- [ ] In `DefaultErrorFallback.tsx`: when building loading virtual container, inject spinner content from options into `[data-spa-guard-spinner]`
-- [ ] In `reload.ts`: add `showLoadingUI()` that renders loading template to fallback selector during retry delays — inject spinner content into `[data-spa-guard-spinner]`, show retry section, set attempt number; call before scheduling page reload in `attemptReload`
-- [ ] Write tests: `showSpinner`/`dismissSpinner` lifecycle; `spinner.disabled` makes everything no-op; `getSpinnerHtml` with custom background; Vite plugin body injection; React Spinner component; loading template spinner injection; `showLoadingUI` renders during retry delays
-- [ ] Run project test suite — must pass before task 4
+- [x] Add `spinner?: { content?: string; disabled?: boolean; background?: string }` to `Options` interface; add defaults to `defaultOptions`
+- [x] Create `spinner.ts`: `SPINNER_ID` constant, `defaultSpinnerSvg` (SVG circle animation), `getSpinnerHtml(backgroundOverride?)`, `showSpinner(options?)` returning cleanup fn, `dismissSpinner()`
+- [x] `showSpinner`: remove existing spinner if any, create overlay with `position:fixed;inset:0;z-index:2147483647` and CSS variable `background: var(--spa-guard-spinner-bg, <bg>)`, set `body.style.overflow="hidden"`, return `dismissSpinner`
+- [x] `dismissSpinner`: remove element by ID, restore `body.style.overflow`
+- [x] Vite plugin `transformIndexHtml`: if `spinner.disabled !== true`, push `HtmlTagDescriptor`s for spinner div (`body-prepend`), `body.style.overflow='hidden'` script (`body-prepend`), and if bg differs from `#fff` — `:root` CSS variable style (`head`)
+- [x] In `recommendedSetup`, call `dismissSpinner()` at the start
+- [x] Export `showSpinner`, `dismissSpinner`, `getSpinnerHtml` from `runtime/index.ts`
+- [x] Create React `Spinner` component: reads options, returns null if disabled, otherwise renders div with `dangerouslySetInnerHTML`. Export from `react/index.tsx`
+- [x] In `DefaultErrorFallback.tsx`: when building loading virtual container, inject spinner content from options into `[data-spa-guard-spinner]`
+- [x] In `reload.ts`: add `showLoadingUI()` that renders loading template to fallback selector during retry delays — inject spinner content into `[data-spa-guard-spinner]`, show retry section, set attempt number; call before scheduling page reload in `attemptReload`
+- [x] Write tests: `showSpinner`/`dismissSpinner` lifecycle; `spinner.disabled` makes everything no-op; `getSpinnerHtml` with custom background; Vite plugin body injection; React Spinner component; loading template spinner injection; `showLoadingUI` renders during retry delays
+- [x] Run project test suite — must pass before task 4
 
 ### Task 4: i18n support
 

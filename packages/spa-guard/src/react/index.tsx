@@ -7,6 +7,7 @@ export { ForceRetryError } from "../common/errors/ForceRetryError";
 export type { SpaGuardState } from "../runtime";
 export { DebugSyncErrorTrigger } from "./DebugSyncErrorTrigger";
 export { lazyWithRetry } from "./lazyWithRetry";
+export { Spinner } from "./Spinner";
 export type { LazyRetryOptions } from "./types";
 export { useSPAGuardChunkError } from "./useSPAGuardChunkError";
 export { useSPAGuardEvents } from "./useSPAGuardEvents";

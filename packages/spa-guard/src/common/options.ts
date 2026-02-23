@@ -33,6 +33,10 @@ const defaultOptions: Options = {
   },
   minTimeBetweenResets: 5000,
   reloadDelays: [1000, 2000, 5000],
+  spinner: {
+    background: "#fff",
+    disabled: false,
+  },
   useRetryId: true,
 };
 
@@ -170,6 +174,31 @@ export interface Options {
     endpoint?: string;
   };
 
+  /**
+   * Spinner overlay configuration.
+   * Controls the full-page loading spinner injected by the Vite plugin
+   * and available via `showSpinner()`/`dismissSpinner()` at runtime.
+   */
+  spinner?: {
+    /**
+     * Overlay background color.
+     * Used as CSS variable fallback: var(--spa-guard-spinner-bg, <this value>).
+     * @default '#fff'
+     */
+    background?: string;
+    /**
+     * Custom spinner HTML (the spinner element only, no container/overlay).
+     * If not provided, uses the default SVG spinner.
+     */
+    content?: string;
+    /**
+     * Disable spinner entirely.
+     * No injection into body, showSpinner() is a no-op, Spinner returns null.
+     * @default false
+     */
+    disabled?: boolean;
+  };
+
   /** @default true */
   useRetryId?: boolean;
 
@@ -215,6 +244,10 @@ export const getOptions = (): Options => {
     reportBeacon: {
       ...defaultOptions.reportBeacon,
       ...windowOptions?.reportBeacon,
+    },
+    spinner: {
+      ...defaultOptions.spinner,
+      ...windowOptions?.spinner,
     },
   };
 };
