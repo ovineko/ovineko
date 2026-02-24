@@ -24,14 +24,23 @@ ruleTester.run("no-direct-error-boundary", rule, {
       output: `import { ErrorBoundary } from "${spaGuardErrorBoundary}";`,
     },
     {
+      // withErrorBoundary is not exported by spa-guard; no autofix to avoid uncompilable code
       code: 'import { ErrorBoundary, withErrorBoundary } from "react-error-boundary";',
       errors: [{ messageId: "noDirectErrorBoundary" }],
-      output: `import { ErrorBoundary, withErrorBoundary } from "${spaGuardErrorBoundary}";`,
+      output: null,
     },
     {
+      // Default imports are not supported by spa-guard error-boundary; no autofix
       code: 'import ErrorBoundary from "react-error-boundary";',
       errors: [{ messageId: "noDirectErrorBoundary" }],
-      output: `import ErrorBoundary from "${spaGuardErrorBoundary}";`,
+      output: null,
+    },
+    {
+      // Namespace imports are not safe to autofix; members like withErrorBoundary
+      // would become undefined after source rewrite
+      code: 'import * as reb from "react-error-boundary";',
+      errors: [{ messageId: "noDirectErrorBoundary" }],
+      output: null,
     },
   ],
   valid: [
