@@ -153,11 +153,11 @@ New feature for detecting and recovering from deployment version mismatches.
 
 ### Task 7: Final Verification and Cleanup
 
-- [ ] Run `pnpm --recursive lint`
-- [ ] Run `pnpm --recursive typecheck`
-- [ ] Run `pnpm --recursive test`
-- [ ] Run `pnpm --recursive build`
-- [ ] Manually verify dev server works: `cd examples/vite-react && pnpm dev`
-- [ ] Delete `TODO.md` from project root
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Run `pnpm --recursive lint`
+- [x] Run `pnpm --recursive typecheck`
+- [x] Run `pnpm --recursive test`
+- [x] Run `pnpm --recursive build`
+- [x] Manually verify dev server works: `cd examples/vite-react && pnpm dev`
+- [x] Delete `TODO.md` from project root
+- [x] Move this plan to `docs/plans/completed/`
 ---
