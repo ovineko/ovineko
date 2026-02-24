@@ -26,8 +26,8 @@ This monorepo contains the following packages:
 - **@ovineko/spa-guard-react**: React hooks, components (`lazyWithRetry`, `Spinner`), and error boundaries (`DefaultErrorFallback`, `ErrorBoundary`)
 - **@ovineko/spa-guard-react-router**: React Router v7 error boundary integration for spa-guard
 - **@ovineko/spa-guard-vite**: Vite plugin and inline scripts for spa-guard
-- **@ovineko/spa-guard-node**: Server-side HTML patching and i18n for spa-guard (uses parse5 for DOM parsing)
-- **@ovineko/spa-guard-fastify**: Fastify plugin for spa-guard beacon endpoint
+- **@ovineko/spa-guard-node**: Server-side HTML cache with ETag/304, pre-compression (gzip/brotli/zstd), and i18n for spa-guard (uses parse5 for DOM parsing)
+- **@ovineko/spa-guard-fastify**: Fastify plugin for spa-guard beacon endpoint and HTML cache handler with ETag/304 support
 - **@ovineko/spa-guard-eslint**: ESLint rules for spa-guard (no-direct-lazy, no-direct-error-boundary)
 - **@ovineko/react-router**: Type-safe wrapper for React Router v7 with valibot schema validation, automatic error handling, and typed params
 - **@ovineko/clean-pkg-json**: Zero-config tool to clean package.json before publishing and restore it after
@@ -43,8 +43,8 @@ ovineko/
 │   ├── react/                  # React hooks, components, error boundaries
 │   ├── react-router/           # React Router v7 error boundary integration
 │   ├── vite/                   # Vite plugin and inline scripts
-│   ├── node/                   # Server-side HTML patching (parse5)
-│   ├── fastify/                # Fastify beacon endpoint plugin
+│   ├── node/                   # Server-side HTML cache, ETag/304, i18n (parse5)
+│   ├── fastify/                # Fastify beacon endpoint plugin and HTML cache handler
 │   └── eslint/                 # ESLint rules
 ├── packages/                    # Other publishable packages
 │   ├── react-router/           # Type-safe React Router v7 wrapper (valibot validation)
@@ -389,8 +389,8 @@ The spa-guard functionality is split into 7 separate packages under `spa-guard/`
 - **@ovineko/spa-guard-react**: React hooks, components, error boundaries — peer: react@^19
 - **@ovineko/spa-guard-react-router**: React Router v7 error boundary — peer: react@^19, react-router@^7
 - **@ovineko/spa-guard-vite**: Vite plugin and inline scripts — peer: vite@^8||^7
-- **@ovineko/spa-guard-node**: Server-side HTML patching using parse5 — peer: parse5@^8
-- **@ovineko/spa-guard-fastify**: Fastify beacon endpoint plugin — peer: fastify@^5||^4, fastify-plugin@^5||^4
+- **@ovineko/spa-guard-node**: Server-side HTML cache with ETag/304, pre-compression, and i18n (parse5) — peer: parse5@^8
+- **@ovineko/spa-guard-fastify**: Fastify beacon endpoint plugin and HTML cache handler — peer: fastify@^5||^4, fastify-plugin@^5||^4, @ovineko/spa-guard-node
 - **@ovineko/spa-guard-eslint**: ESLint rules — peer: eslint@^9||^10
 
 Key architecture notes:

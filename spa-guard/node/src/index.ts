@@ -124,13 +124,10 @@ export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<
     }),
   );
 
-  // Use the original languages array for stable, explicit ordering
-  const available = languages;
-
   return {
     get({ acceptEncoding, acceptLanguage, ifNoneMatch, lang: langOverride }) {
-      const resolvedLang = matchLang(langOverride ?? acceptLanguage, available);
-      const entry = entries.get(resolvedLang) ?? entries.get(available[0]!)!;
+      const resolvedLang = matchLang(langOverride ?? acceptLanguage, languages);
+      const entry = entries.get(resolvedLang) ?? entries.get(languages[0]!)!;
 
       const headers: Record<string, string> = {
         "Content-Language": entry.lang,

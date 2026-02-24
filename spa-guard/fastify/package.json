@@ -1,12 +1,15 @@
 {
   "name": "@ovineko/spa-guard-fastify",
   "version": "0.0.1-alpha-24",
-  "description": "Fastify plugin for spa-guard beacon endpoint",
+  "description": "Fastify plugin for spa-guard beacon endpoint and HTML cache handler with ETag/304",
   "keywords": [
     "spa",
     "fastify",
     "beacon",
-    "monitoring"
+    "monitoring",
+    "etag",
+    "cache",
+    "html"
   ],
   "homepage": "https://github.com/ovineko/ovineko/tree/main/spa-guard/fastify",
   "bugs": {

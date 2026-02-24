@@ -186,13 +186,17 @@ export async function spaGuardFastifyHandler(
   reply: FastifyReply,
   options: SpaGuardHandlerOptions,
 ): Promise<FastifyReply> {
-  const { cache: providedCache, getHtml } = options;
+  const { getHtml } = options;
 
-  if (!providedCache && !getHtml) {
+  if (!options.cache && !getHtml) {
     throw new Error("spaGuardFastifyHandler requires either 'cache' or 'getHtml' option");
   }
 
-  const cache = providedCache ?? (await createHtmlCache(await getHtml!()));
+  if (!options.cache && getHtml) {
+    options.cache = await createHtmlCache(await getHtml());
+  }
+
+  const cache = options.cache!;
 
   const acceptEncoding = request.headers["accept-encoding"] as string | undefined;
   const acceptLanguage = request.headers["accept-language"] as string | undefined;
