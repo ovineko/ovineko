@@ -52,7 +52,7 @@ const cleanup = recommendedSetup({ versionCheck: false });
 
 ### `@ovineko/spa-guard/schema`
 
-Zod schemas for spa-guard configuration.
+Schemas for spa-guard configuration.
 
 ### `@ovineko/spa-guard/i18n`
 
