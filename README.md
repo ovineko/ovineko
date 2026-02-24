@@ -18,19 +18,19 @@ This follows the same philosophy as `@shibanet0/datamitsu-config` (opinionated c
 
 ## Packages
 
-| Package                                                     | Description                                                              | Status            |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------ | ----------------- |
-| [@ovineko/spa-guard](./spa-guard/spa-guard)                 | Core runtime, error handling, schema, i18n for SPAs                      | ✅ Published      |
-| [@ovineko/spa-guard-react](./spa-guard/react)               | React hooks, components, and error boundaries for spa-guard              | ✅ Published      |
-| [@ovineko/spa-guard-react-router](./spa-guard/react-router) | React Router v7 error boundary integration for spa-guard                 | ✅ Published      |
-| [@ovineko/spa-guard-vite](./spa-guard/vite)                 | Vite plugin and inline scripts for spa-guard                             | ✅ Published      |
-| [@ovineko/spa-guard-node](./spa-guard/node)                 | Server-side HTML cache with ETag/304, pre-compression, and i18n (parse5) | ✅ Published      |
-| [@ovineko/spa-guard-fastify](./spa-guard/fastify)           | Fastify plugin for spa-guard beacon endpoint and HTML cache handler      | ✅ Published      |
-| [@ovineko/spa-guard-eslint](./spa-guard/eslint)             | ESLint rules for spa-guard (no-direct-lazy, no-direct-error-boundary)    | ✅ Published      |
-| [@ovineko/react-router](./packages/react-router)            | Type-safe wrapper for React Router v7 with valibot schema validation     | ✅ Published      |
-| [@ovineko/clean-pkg-json](./packages/clean-pkg-json)        | Zero-config tool to clean package.json before publishing                 | ✅ Published      |
-| [@ovineko/fastify-base](./packages/fastify-base)            | Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry     | 🚧 In Development |
-| [@ovineko/datamitsu-config](./packages/datamitsu-config)    | Internal configuration package for datamitsu tooling                     | 🔒 Private        |
+| Package                                                               | Description                                                              | Status            |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------ | ----------------- |
+| [@ovineko/spa-guard](./spa-guard/spa-guard/README.md)                 | Core runtime, error handling, schema, i18n for SPAs                      | ✅ Published      |
+| [@ovineko/spa-guard-react](./spa-guard/react/README.md)               | React hooks, components, and error boundaries for spa-guard              | ✅ Published      |
+| [@ovineko/spa-guard-react-router](./spa-guard/react-router/README.md) | React Router v7 error boundary integration for spa-guard                 | ✅ Published      |
+| [@ovineko/spa-guard-vite](./spa-guard/vite/README.md)                 | Vite plugin and inline scripts for spa-guard                             | ✅ Published      |
+| [@ovineko/spa-guard-node](./spa-guard/node/README.md)                 | Server-side HTML cache with ETag/304, pre-compression, and i18n (parse5) | ✅ Published      |
+| [@ovineko/spa-guard-fastify](./spa-guard/fastify/README.md)           | Fastify plugin for spa-guard beacon endpoint and HTML cache handler      | ✅ Published      |
+| [@ovineko/spa-guard-eslint](./spa-guard/eslint/README.md)             | ESLint rules for spa-guard (no-direct-lazy, no-direct-error-boundary)    | ✅ Published      |
+| [@ovineko/react-router](./packages/react-router)                      | Type-safe wrapper for React Router v7 with valibot schema validation     | ✅ Published      |
+| [@ovineko/clean-pkg-json](./packages/clean-pkg-json)                  | Zero-config tool to clean package.json before publishing                 | ✅ Published      |
+| [@ovineko/fastify-base](./packages/fastify-base)                      | Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry     | 🚧 In Development |
+| [@ovineko/datamitsu-config](./packages/datamitsu-config)              | Internal configuration package for datamitsu tooling                     | 🔒 Private        |
 
 ## Installation
 
