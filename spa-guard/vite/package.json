@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard-vite",
-  "version": "0.0.1-alpha-20",
+  "version": "0.0.1-alpha-21",
   "description": "Vite plugin and inline scripts for spa-guard",
   "keywords": [
     "spa",
@@ -23,8 +23,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/vite-plugin/index.d.ts",
-      "default": "./dist/vite-plugin/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "files": [

@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard-fastify",
-  "version": "0.0.1-alpha-20",
+  "version": "0.0.1-alpha-21",
   "description": "Fastify plugin for spa-guard beacon endpoint",
   "keywords": [
     "spa",

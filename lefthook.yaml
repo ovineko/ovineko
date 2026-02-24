@@ -18,4 +18,7 @@ pre-commit:
     datamitsu-lint:
       priority: 2
       run: pnpm datamitsu lint --file-scoped
+    test:
+      priority: 3
+      run: pnpm turbo run test
   parallel: false

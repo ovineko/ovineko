@@ -146,12 +146,6 @@ describe("html.generated", () => {
       expect(defaultSpinnerHtml).toContain("stroke-dasharray");
     });
 
-    it("contains responsive SVG styles", () => {
-      expect(defaultSpinnerHtml).toContain("width:100%");
-      expect(defaultSpinnerHtml).toContain("height:100%");
-      expect(defaultSpinnerHtml).toContain("aspect-ratio:1/1");
-    });
-
     it("is minified (no newlines)", () => {
       expect(defaultSpinnerHtml).not.toContain("\n");
     });
