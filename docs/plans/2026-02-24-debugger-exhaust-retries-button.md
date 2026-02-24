@@ -52,10 +52,10 @@ Add a button to the spa-guard debug panel that simulates the state when all retr
 
 ### Task 3: Verify acceptance criteria
 
-- [ ] Manual test: create debugger, click "Exhaust Retries" button, verify fallback HTML appears and state shows isFallbackShown=true
-- [ ] Run full test suite (vitest in spa-guard/spa-guard)
-- [ ] Run linter
-- [ ] Verify test coverage meets 80%+
+- [x] Manual test: create debugger, click "Exhaust Retries" button, verify fallback HTML appears and state shows isFallbackShown=true
+- [x] Run full test suite (vitest in spa-guard/spa-guard)
+- [x] Run linter
+- [x] Verify test coverage meets 80%+
 
 ### Task 4: Update documentation
 
