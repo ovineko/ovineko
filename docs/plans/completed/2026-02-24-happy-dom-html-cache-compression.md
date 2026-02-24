@@ -98,6 +98,6 @@ Replace fragile regex-based HTML parsing in patchHtmlI18n with proper DOM manipu
 
 ### Task 6: Update documentation
 
-- [ ] Update README.md with createHtmlCache API usage example (server-side caching + compression pattern, showing how to spread returned headers into the response)
-- [ ] Update CLAUDE.md if internal patterns changed
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Update README.md with createHtmlCache API usage example (server-side caching + compression pattern, showing how to spread returned headers into the response)
+- [x] Update CLAUDE.md if internal patterns changed
+- [x] Move this plan to `docs/plans/completed/`

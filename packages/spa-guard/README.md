@@ -43,6 +43,7 @@ Peer dependencies vary by integration - see sections below for specific requirem
 - ✅ **Configurable unhandled rejection handling** - Control retry and beacon behavior for non-chunk unhandled promise rejections
 - ✅ **Spinner overlay** - Full-page loading spinner with Vite injection, runtime API (`showSpinner`/`dismissSpinner`), and React component
 - ✅ **i18n support** - Server-side HTML patching with `patchHtmlI18n`, built-in translations for 38 languages (ar, az, ca, cs, da, de, el, en, es, eu, fa, fi, fr, he, hr, hu, id, it, ja, ka, kk, ko, ky, lt, lv, nl, no, pl, pt, ro, ru, sk, sl, sv, th, tr, uk, zh), meta tag approach for client-side patching, RTL support for ar, he, fa
+- ✅ **HTML cache with compression** - `createHtmlCache` pre-generates all language variants at startup with gzip, brotli, and zstd compression, ETag support, and encoding negotiation
 - ✅ **Data attribute templating** - Fallback and loading HTML templates use `data-spa-guard-*` attributes for robust content manipulation
 
 ## Quick Start
@@ -1133,6 +1134,48 @@ matchLang(undefined); // "en" (default)
 matchLang("ko-KR,ko;q=0.9,en-US;q=0.8"); // "ko"
 ```
 
+#### Server-Side Caching with Compression
+
+Use `createHtmlCache` to pre-generate all language variants at startup with pre-compressed payloads (gzip, brotli, zstd). The cache's `get()` returns a ready-to-use response object with body and headers.
+
+```typescript
+import { createHtmlCache } from "@ovineko/spa-guard/node";
+
+// At server startup - pre-generates all language variants with compression
+const cache = await createHtmlCache({
+  html: readIndexHtml(),
+  // Optional: restrict to specific languages (defaults to all 38 built-in)
+  // languages: ["en", "ko", "ja"],
+  // Optional: custom translations
+  // translations: { fr: { heading: "Une erreur est survenue" } },
+});
+
+// In your request handler (Express, Fastify, Hono, etc.)
+app.get("*", (req, res) => {
+  const { body, headers } = cache.get({
+    acceptLanguage: req.headers["accept-language"],
+    acceptEncoding: req.headers["accept-encoding"],
+  });
+
+  // Spread the returned headers into the response
+  for (const [key, value] of Object.entries(headers)) {
+    res.setHeader(key, value);
+  }
+  res.end(body);
+});
+```
+
+The returned headers include `Content-Type`, `Content-Language`, `Content-Encoding` (when compressed), `ETag`, and `Vary`. ETag is derived from `__SPA_GUARD_VERSION__` in the HTML (falls back to sha256 prefix when not found).
+
+You can also override language explicitly:
+
+```typescript
+const { body, headers } = cache.get({
+  lang: "ko", // Explicit language (takes priority over acceptLanguage)
+  acceptEncoding: req.headers["accept-encoding"],
+});
+```
+
 #### How It Works
 
 1. Server calls `patchHtmlI18n()` → injects `<meta name="spa-guard-i18n" content="...">` into `<head>` and updates `<html lang="...">`
@@ -1760,7 +1803,7 @@ spa-guard provides 13 export entry points:
 | `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                         | `react@^19`                                       |
 | `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                         | `eslint@^9 \|\| ^10` (optional)                   |
 | `./i18n`                 | Translation types and utilities (SpaGuardTranslations, translations, matchLang)                                                        | None                                              |
-| `./node`                 | Server-side utilities (patchHtmlI18n, escapeAttr, matchLang, translations)                                                             | None                                              |
+| `./node`                 | Server-side utilities (patchHtmlI18n, createHtmlCache, escapeAttr, matchLang, translations)                                            | None                                              |
 
 **Import examples:**
 
@@ -1816,8 +1859,14 @@ import spaGuardEslint from "@ovineko/spa-guard/eslint";
 import type { SpaGuardTranslations } from "@ovineko/spa-guard/i18n";
 import { translations, matchLang } from "@ovineko/spa-guard/i18n";
 
-// Server utilities (i18n HTML patching)
-import { patchHtmlI18n, escapeAttr, translations, matchLang } from "@ovineko/spa-guard/node";
+// Server utilities (i18n HTML patching + caching)
+import {
+  patchHtmlI18n,
+  createHtmlCache,
+  escapeAttr,
+  translations,
+  matchLang,
+} from "@ovineko/spa-guard/node";
 ```
 
 ## Build Sizes
