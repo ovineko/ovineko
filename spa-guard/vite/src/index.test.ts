@@ -11,7 +11,9 @@ vi.mock("html-minifier-terser", () => ({
 
 vi.mock("node:fs/promises", () => ({
   default: {
+    mkdir: vi.fn(() => Promise.resolve()),
     readFile: vi.fn(() => Promise.resolve("/* inline-script-content */\n")),
+    writeFile: vi.fn(() => Promise.resolve()),
   },
 }));
 
@@ -130,6 +132,20 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
 
       expect(parsed.trace).toBeUndefined();
       expect(parsed.reloadDelays).toEqual([100]);
+    });
+
+    it("removes mode from the serialized options", async () => {
+      const result = await invokeTransform({ mode: "inline", version: "1.0.0" });
+      const parsed = parseOptionsFromScript(result.tags[0].children as string);
+
+      expect(parsed.mode).toBeUndefined();
+    });
+
+    it("removes publicPath from the serialized options", async () => {
+      const result = await invokeTransform({ publicPath: "/assets", version: "1.0.0" });
+      const parsed = parseOptionsFromScript(result.tags[0].children as string);
+
+      expect(parsed.publicPath).toBeUndefined();
     });
 
     it("escapes < characters to prevent HTML injection", async () => {
@@ -343,6 +359,199 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
       const parsed = parseOptionsFromScript(result.tags[0].children as string);
       expect(parsed.spinner.background).toBe("#eee");
       expect(parsed.spinner.content).toContain("<svg");
+    });
+  });
+
+  describe("external mode", () => {
+    const invokeExternalTransform = async (
+      options: Omit<VitePluginOptions, "mode"> = {},
+    ): Promise<{ plugin: Plugin; result: Awaited<ReturnType<typeof invokeTransform>> }> => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ ...options, mode: "external" });
+      const handler = getTransformHandler(plugin);
+      const result = await handler("<html></html>");
+      return { plugin, result };
+    };
+
+    it("injects a script src tag instead of inline children", async () => {
+      const { result } = await invokeExternalTransform({ version: "1.0.0" });
+      expect(result.tags[0].tag).toBe("script");
+      expect(result.tags[0].injectTo).toBe("head-prepend");
+      expect(result.tags[0].attrs?.src).toBeDefined();
+      expect(result.tags[0].children).toBeUndefined();
+    });
+
+    it("src URL contains a 16-char hex hash in the filename", async () => {
+      const { result } = await invokeExternalTransform({ version: "1.0.0" });
+      expect(result.tags[0].attrs?.src).toMatch(/^\/spa-guard\.[a-f0-9]{16}\.js$/);
+    });
+
+    it("src hash is consistent for same version across calls on same plugin instance", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+      const handler = getTransformHandler(plugin);
+
+      const result1 = await handler("<html></html>");
+      const result2 = await handler("<html></html>");
+
+      expect(result1.tags[0].attrs?.src).toBe(result2.tags[0].attrs?.src);
+    });
+
+    it("src hash is consistent for same version across different plugin instances", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin1 = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+      const plugin2 = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+
+      const result1 = await getTransformHandler(plugin1)("<html></html>");
+      const result2 = await getTransformHandler(plugin2)("<html></html>");
+
+      expect(result1.tags[0].attrs?.src).toBe(result2.tags[0].attrs?.src);
+    });
+
+    it("src hash differs for different versions", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin1 = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+      const plugin2 = spaGuardVitePlugin({ mode: "external", version: "2.0.0" });
+
+      const result1 = await getTransformHandler(plugin1)("<html></html>");
+      const result2 = await getTransformHandler(plugin2)("<html></html>");
+
+      expect(result1.tags[0].attrs?.src).not.toBe(result2.tags[0].attrs?.src);
+    });
+
+    it("uses default / publicPath when not specified", async () => {
+      const { result } = await invokeExternalTransform({ version: "1.0.0" });
+      expect(result.tags[0].attrs?.src).toMatch(/^\/spa-guard\./);
+    });
+
+    it("respects custom publicPath option", async () => {
+      const { result } = await invokeExternalTransform({
+        publicPath: "/assets",
+        version: "1.0.0",
+      });
+      expect(result.tags[0].attrs?.src).toMatch(/^\/assets\/spa-guard\.[a-f0-9]{16}\.js$/);
+    });
+
+    it("respects custom publicPath with trailing slash", async () => {
+      const { result } = await invokeExternalTransform({
+        publicPath: "/assets/",
+        version: "1.0.0",
+      });
+      expect(result.tags[0].attrs?.src).toMatch(/^\/assets\/spa-guard\.[a-f0-9]{16}\.js$/);
+    });
+
+    it("still injects spinner div by default", async () => {
+      const { result } = await invokeExternalTransform({ version: "1.0.0" });
+      const spinnerTag = result.tags.find(
+        (t: { attrs?: { id?: string }; tag: string }) =>
+          t.tag === "div" && t.attrs?.id === "__spa-guard-spinner",
+      );
+      expect(spinnerTag).toBeDefined();
+      expect(spinnerTag.injectTo).toBe("body-prepend");
+    });
+
+    it("does not inject spinner when spinner.disabled is true", async () => {
+      const { result } = await invokeExternalTransform({
+        spinner: { disabled: true },
+        version: "1.0.0",
+      });
+      expect(result.tags).toHaveLength(1);
+      expect(result.tags[0].tag).toBe("script");
+      expect(result.tags[0].attrs?.src).toBeDefined();
+    });
+
+    it("writeBundle writes script file to outDir from configResolved", async () => {
+      const fsMod = await import("node:fs/promises");
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+
+      // Set outDir via configResolved
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configResolved as (config: any) => void)({ build: { outDir: "/project/dist" } });
+
+      // Populate cache via transformIndexHtml
+      const handler = getTransformHandler(plugin);
+      await handler("<html></html>");
+
+      // Trigger writeBundle
+      await (plugin.writeBundle as () => Promise<void>).call({});
+
+      expect(fsMod.default.mkdir).toHaveBeenCalledWith("/project/dist", { recursive: true });
+      expect(fsMod.default.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining("spa-guard."),
+        expect.any(String),
+        "utf8",
+      );
+    });
+
+    it("writeBundle writes script file to externalScriptDir when specified", async () => {
+      const fsMod = await import("node:fs/promises");
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({
+        externalScriptDir: "/custom/dir",
+        mode: "external",
+        version: "1.0.0",
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configResolved as (config: any) => void)({ build: { outDir: "/project/dist" } });
+
+      const handler = getTransformHandler(plugin);
+      await handler("<html></html>");
+
+      await (plugin.writeBundle as () => Promise<void>).call({});
+
+      expect(fsMod.default.mkdir).toHaveBeenCalledWith("/custom/dir", { recursive: true });
+    });
+
+    it("filename in writeBundle matches the hash in the src URL", async () => {
+      const fsMod = await import("node:fs/promises");
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configResolved as (config: any) => void)({ build: { outDir: "/project/dist" } });
+
+      const handler = getTransformHandler(plugin);
+      const result = await handler("<html></html>");
+      const srcUrl = result.tags[0].attrs?.src as string;
+      const fileName = srcUrl.split("/").pop()!;
+
+      await (plugin.writeBundle as () => Promise<void>).call({});
+
+      expect(fsMod.default.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining(fileName),
+        expect.any(String),
+        "utf8",
+      );
+    });
+
+    it("does not call mkdir or writeFile when writeBundle runs without prior transformIndexHtml", async () => {
+      const fsMod = await import("node:fs/promises");
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configResolved as (config: any) => void)({ build: { outDir: "/project/dist" } });
+
+      // Do NOT call transformIndexHtml - cache is empty
+      await (plugin.writeBundle as () => Promise<void>).call({});
+
+      expect(fsMod.default.mkdir).not.toHaveBeenCalled();
+      expect(fsMod.default.writeFile).not.toHaveBeenCalled();
+    });
+
+    it("reads from dist-inline-trace when trace option is true", async () => {
+      const fsMod = await import("node:fs/promises");
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ mode: "external", trace: true, version: "1.0.0" });
+      const handler = getTransformHandler(plugin);
+      await handler("<html></html>");
+
+      expect(fsMod.default.readFile).toHaveBeenCalledWith(
+        expect.stringContaining("dist-inline-trace/index.js"),
+        "utf8",
+      );
     });
   });
 });

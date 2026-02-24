@@ -10,6 +10,12 @@ import path from "node:path";
 import { name } from "../package.json";
 
 export interface VitePluginOptions extends Options {
+  /** Directory to write the external script file (defaults to vite's build.outDir). */
+  externalScriptDir?: string;
+  /** Script injection mode. 'inline' (default) embeds the script; 'external' writes a content-hashed file. */
+  mode?: "external" | "inline";
+  /** Public URL prefix for the external script (defaults to '/'). */
+  publicPath?: string;
   trace?: boolean;
 }
 
@@ -33,7 +39,13 @@ const getInlineScript = async (options: VitePluginOptions) => {
     .readFile(path.join(import.meta.dirname, `../${buildDir}/index.js`), "utf8")
     .then((r) => r.trim());
 
-  const processedOptions = { ...options, trace: undefined };
+  const processedOptions = {
+    ...options,
+    externalScriptDir: undefined,
+    mode: undefined,
+    publicPath: undefined,
+    trace: undefined,
+  };
 
   if (processedOptions.html?.fallback?.content) {
     processedOptions.html = {
@@ -53,9 +65,21 @@ const getInlineScript = async (options: VitePluginOptions) => {
 
 export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
   const autoVersion = crypto.randomUUID();
+  const { mode = "inline" } = options;
+
+  let resolvedOutDir: null | string = null;
+  let cachedExternalContent: null | string = null;
+  let cachedExternalHash: null | string = null;
 
   return {
+    configResolved(config) {
+      if (mode === "external") {
+        resolvedOutDir = options.externalScriptDir ?? config.build.outDir;
+      }
+    },
+
     name: `${name}/vite-plugin`,
+
     transformIndexHtml: {
       handler: async (html) => {
         const finalOptions: VitePluginOptions = {
@@ -71,15 +95,36 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
           finalOptions.spinner = { ...spinnerOpts, background: bg, content: spinnerContent };
         }
 
-        const inlineScript = await getInlineScript(finalOptions);
+        let mainTag: HtmlTagDescriptor;
 
-        const tags: HtmlTagDescriptor[] = [
-          {
+        if (mode === "external") {
+          if (!cachedExternalContent) {
+            const rawScript = await getInlineScript(finalOptions);
+            const hash = crypto.createHash("sha256").update(rawScript).digest("hex").slice(0, 16);
+            cachedExternalContent = rawScript;
+            cachedExternalHash = hash;
+          }
+
+          const publicPath = options.publicPath ?? "/";
+          const normalizedPath = publicPath.endsWith("/") ? publicPath : `${publicPath}/`;
+          const publicUrl = `${normalizedPath}spa-guard.${cachedExternalHash}.js`;
+
+          mainTag = {
+            attrs: { src: publicUrl },
+            injectTo: "head-prepend",
+            tag: "script",
+          };
+        } else {
+          const inlineScript = await getInlineScript(finalOptions);
+
+          mainTag = {
             children: inlineScript,
             injectTo: "head-prepend",
             tag: "script",
-          },
-        ];
+          };
+        }
+
+        const tags: HtmlTagDescriptor[] = [mainTag];
 
         if (spinnerOpts?.disabled !== true) {
           const bg = finalOptions.spinner?.background ?? "#fff";
@@ -113,6 +158,18 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
         return { html, tags };
       },
       order: "post",
+    },
+
+    async writeBundle() {
+      if (mode === "external" && cachedExternalContent && cachedExternalHash && resolvedOutDir) {
+        const fileName = `spa-guard.${cachedExternalHash}.js`;
+        await fsPromise.mkdir(resolvedOutDir, { recursive: true });
+        await fsPromise.writeFile(
+          path.join(resolvedOutDir, fileName),
+          cachedExternalContent,
+          "utf8",
+        );
+      }
     },
   };
 };

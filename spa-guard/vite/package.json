@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "@ovineko/spa-guard": "workspace:*",
+    "@ovineko/spa-guard-node": "workspace:*",
     "html-minifier-terser": "7.2.0"
   },
   "devDependencies": {
