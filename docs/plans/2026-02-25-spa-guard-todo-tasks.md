@@ -53,12 +53,12 @@ Low-risk structural change.
 - Modify: `spa-guard/react/src/react/Spinner.tsx`
 - Modify: `spa-guard/react/src/DefaultErrorFallback.tsx`
 
-- [ ] Move `spinner` field from top-level `Options` interface into `Options.html`
-- [ ] Move `spinner` default value from top-level defaults into `html` defaults
-- [ ] Replace all `opts.spinner?.` references with `opts.html?.spinner?.` across all 7 files
-- [ ] Verify TypeScript compiles without errors (`pnpm --recursive typecheck` or `pnpm tsc`)
-- [ ] Update tests in `options.test.ts` and `spinner.test.ts` for new path
-- [ ] Run `pnpm --recursive test` — must pass
+- [x] Move `spinner` field from top-level `Options` interface into `Options.html`
+- [x] Move `spinner` default value from top-level defaults into `html` defaults
+- [x] Replace all `opts.spinner?.` references with `opts.html?.spinner?.` across all 7 files
+- [x] Verify TypeScript compiles without errors (`pnpm --recursive typecheck` or `pnpm tsc`)
+- [x] Update tests in `options.test.ts` and `spinner.test.ts` for new path
+- [x] Run `pnpm --recursive test` — must pass
 
 ### Task 3: Eliminate Circular Dependency (vite → node)
 

@@ -12,7 +12,7 @@ type SpinnerProps = Omit<ComponentProps<"div">, "children" | "dangerouslySetInne
  */
 export function Spinner(props: SpinnerProps): null | React.ReactElement {
   const opts = getOptions();
-  const content = opts.spinner?.disabled ? undefined : opts.spinner?.content;
+  const content = opts.html?.spinner?.disabled ? undefined : opts.html?.spinner?.content;
 
   const innerHtml = useMemo(() => (content ? { __html: content } : null), [content]);
 

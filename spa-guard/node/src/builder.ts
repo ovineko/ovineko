@@ -66,11 +66,14 @@ const resolveFinalOptions = (options: BuildScriptOptions): BuildScriptOptions =>
     version: options.version ?? crypto.randomUUID(),
   };
 
-  const spinnerOpts = options.spinner;
+  const spinnerOpts = options.html?.spinner;
   if (spinnerOpts?.disabled !== true) {
     const spinnerContent = spinnerOpts?.content ?? defaultSpinnerSvg;
     const bg = spinnerOpts?.background ?? "#fff";
-    finalOptions.spinner = { ...spinnerOpts, background: bg, content: spinnerContent };
+    finalOptions.html = {
+      ...finalOptions.html,
+      spinner: { ...spinnerOpts, background: bg, content: spinnerContent },
+    };
   }
 
   return finalOptions;
@@ -117,12 +120,12 @@ const buildSpinnerTags = (
   options: BuildScriptOptions,
   finalOptions: BuildScriptOptions,
 ): HtmlTagDescriptor[] => {
-  if (options.spinner?.disabled === true) {
+  if (options.html?.spinner?.disabled === true) {
     return [];
   }
 
-  const bg = finalOptions.spinner?.background ?? "#fff";
-  const spinnerContent = finalOptions.spinner?.content ?? defaultSpinnerSvg;
+  const bg = finalOptions.html?.spinner?.background ?? "#fff";
+  const spinnerContent = finalOptions.html?.spinner?.content ?? defaultSpinnerSvg;
 
   const tags: HtmlTagDescriptor[] = [
     {

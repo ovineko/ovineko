@@ -91,12 +91,15 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
           version: options.version ?? autoVersion,
         };
 
-        const spinnerOpts = finalOptions.spinner;
+        const spinnerOpts = finalOptions.html?.spinner;
         if (spinnerOpts?.disabled !== true) {
           const spinnerContent = spinnerOpts?.content ?? defaultSpinnerSvg;
           const bg = spinnerOpts?.background ?? "#fff";
 
-          finalOptions.spinner = { ...spinnerOpts, background: bg, content: spinnerContent };
+          finalOptions.html = {
+            ...finalOptions.html,
+            spinner: { ...spinnerOpts, background: bg, content: spinnerContent },
+          };
         }
 
         let mainTag: HtmlTagDescriptor;
@@ -132,9 +135,9 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
 
         const tags: HtmlTagDescriptor[] = [mainTag];
 
-        if (finalOptions.spinner?.disabled !== true) {
-          const bg = finalOptions.spinner?.background ?? "#fff";
-          const spinnerContent = finalOptions.spinner?.content ?? defaultSpinnerSvg;
+        if (finalOptions.html?.spinner?.disabled !== true) {
+          const bg = finalOptions.html?.spinner?.background ?? "#fff";
+          const spinnerContent = finalOptions.html?.spinner?.content ?? defaultSpinnerSvg;
 
           tags.push({
             attrs: {

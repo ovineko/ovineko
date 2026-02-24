@@ -16,9 +16,11 @@ import {
 const mockGetOptions = vi.mocked(getOptions);
 
 const defaultSpinnerOptions = {
-  spinner: {
-    background: "#fff",
-    disabled: false,
+  html: {
+    spinner: {
+      background: "#fff",
+      disabled: false,
+    },
   },
 };
 
@@ -77,7 +79,7 @@ describe("spinner", () => {
 
     it("uses background from options when no override", () => {
       mockGetOptions.mockReturnValue({
-        spinner: { background: "rgba(0,0,0,0.5)", disabled: false },
+        html: { spinner: { background: "rgba(0,0,0,0.5)", disabled: false } },
       });
       const html = getSpinnerHtml();
       expect(html).toContain("var(--spa-guard-spinner-bg,rgba(0,0,0,0.5))");
@@ -85,7 +87,7 @@ describe("spinner", () => {
 
     it("uses custom spinner content from options", () => {
       mockGetOptions.mockReturnValue({
-        spinner: { content: "<div>Custom Spinner</div>", disabled: false },
+        html: { spinner: { content: "<div>Custom Spinner</div>", disabled: false } },
       });
       const html = getSpinnerHtml();
       expect(html).toContain("<div>Custom Spinner</div>");
@@ -94,7 +96,7 @@ describe("spinner", () => {
 
     it("returns empty string when spinner is disabled", () => {
       mockGetOptions.mockReturnValue({
-        spinner: { disabled: true },
+        html: { spinner: { disabled: true } },
       });
       const html = getSpinnerHtml();
       expect(html).toBe("");
@@ -102,7 +104,7 @@ describe("spinner", () => {
 
     it("returns empty string when spinner disabled even with override", () => {
       mockGetOptions.mockReturnValue({
-        spinner: { disabled: true },
+        html: { spinner: { disabled: true } },
       });
       const html = getSpinnerHtml("#000");
       expect(html).toBe("");
@@ -172,7 +174,7 @@ describe("spinner", () => {
 
     it("returns no-op function when spinner is disabled", () => {
       mockGetOptions.mockReturnValue({
-        spinner: { disabled: true },
+        html: { spinner: { disabled: true } },
       });
       const cleanup = showSpinner();
       expect(document.getElementById(SPINNER_ID)).toBeNull();
@@ -182,7 +184,7 @@ describe("spinner", () => {
 
     it("returns no-op function when getSpinnerHtml returns empty", () => {
       mockGetOptions.mockReturnValue({
-        spinner: { disabled: true },
+        html: { spinner: { disabled: true } },
       });
       const cleanup = showSpinner();
       expect(typeof cleanup).toBe("function");

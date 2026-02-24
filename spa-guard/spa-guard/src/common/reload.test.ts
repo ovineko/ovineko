@@ -1304,7 +1304,10 @@ describe("attemptReload", () => {
     it("injects spinner content from options into data-spa-guard-spinner", () => {
       mockGetOptions.mockReturnValue({
         ...defaultOptions,
-        spinner: { content: "<div>Custom Spin</div>", disabled: false },
+        html: {
+          ...defaultOptions.html,
+          spinner: { content: "<div>Custom Spin</div>", disabled: false },
+        },
       });
       const mockEl = { innerHTML: "", querySelector: vi.fn(() => null) };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
@@ -1317,7 +1320,10 @@ describe("attemptReload", () => {
     it("removes spinner element when spinner.disabled is true", () => {
       mockGetOptions.mockReturnValue({
         ...defaultOptions,
-        spinner: { disabled: true },
+        html: {
+          ...defaultOptions.html,
+          spinner: { disabled: true },
+        },
       });
       const mockEl = { innerHTML: "", querySelector: vi.fn(() => null) };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);

@@ -227,10 +227,10 @@ const showLoadingUI = (attempt: number): void => {
 
     const spinnerEl = container.querySelector("[data-spa-guard-spinner]");
     if (spinnerEl) {
-      if (options.spinner?.disabled) {
+      if (options.html?.spinner?.disabled) {
         spinnerEl.remove();
-      } else if (options.spinner?.content) {
-        spinnerEl.innerHTML = options.spinner.content;
+      } else if (options.html?.spinner?.content) {
+        spinnerEl.innerHTML = options.html.spinner.content;
       }
     }
 

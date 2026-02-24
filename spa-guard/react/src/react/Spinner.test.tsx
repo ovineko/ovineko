@@ -21,13 +21,13 @@ describe("Spinner", () => {
   });
 
   it("returns null when spinner is disabled", () => {
-    mockGetOptions.mockReturnValue({ spinner: { disabled: true } });
+    mockGetOptions.mockReturnValue({ html: { spinner: { disabled: true } } });
     const { container } = render(<Spinner />);
     expect(container.firstChild).toBeNull();
   });
 
   it("returns null when no spinner content is available", () => {
-    mockGetOptions.mockReturnValue({ spinner: { disabled: false } });
+    mockGetOptions.mockReturnValue({ html: { spinner: { disabled: false } } });
     const { container } = render(<Spinner />);
     expect(container.firstChild).toBeNull();
   });
@@ -40,7 +40,7 @@ describe("Spinner", () => {
 
   it("renders spinner content when available", () => {
     mockGetOptions.mockReturnValue({
-      spinner: { content: "<div>Loading...</div>", disabled: false },
+      html: { spinner: { content: "<div>Loading...</div>", disabled: false } },
     });
     const { container } = render(<Spinner />);
     expect(container.querySelector("div div")).not.toBeNull();
@@ -49,7 +49,7 @@ describe("Spinner", () => {
 
   it("forwards props to wrapper div", () => {
     mockGetOptions.mockReturnValue({
-      spinner: { content: "<span>Spin</span>", disabled: false },
+      html: { spinner: { content: "<span>Spin</span>", disabled: false } },
     });
     const { container } = render(<Spinner className="my-spinner" data-testid="spinner" />);
     const wrapper = container.firstChild as HTMLDivElement;
@@ -60,7 +60,7 @@ describe("Spinner", () => {
   it("renders custom SVG spinner content", () => {
     const customSvg = '<svg width="24" height="24"><circle r="10" cx="12" cy="12"/></svg>';
     mockGetOptions.mockReturnValue({
-      spinner: { content: customSvg, disabled: false },
+      html: { spinner: { content: customSvg, disabled: false } },
     });
     const { container } = render(<Spinner />);
     expect(container.querySelector("svg")).not.toBeNull();

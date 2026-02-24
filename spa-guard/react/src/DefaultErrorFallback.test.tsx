@@ -509,7 +509,7 @@ describe("DefaultErrorFallback", () => {
   describe("spinner injection in loading template", () => {
     it("injects custom spinner content into data-spa-guard-spinner element", () => {
       vi.mocked(getOptions).mockReturnValue({
-        spinner: { content: "<div>Custom Spinner</div>", disabled: false },
+        html: { spinner: { content: "<div>Custom Spinner</div>", disabled: false } },
       });
 
       const { container } = render(
@@ -546,7 +546,7 @@ describe("DefaultErrorFallback", () => {
 
     it("does not inject spinner when spinner is disabled", () => {
       vi.mocked(getOptions).mockReturnValue({
-        spinner: { disabled: true },
+        html: { spinner: { disabled: true } },
       });
 
       const { container } = render(

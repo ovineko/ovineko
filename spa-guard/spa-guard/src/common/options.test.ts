@@ -28,6 +28,10 @@ describe("getOptions", () => {
       loading: {
         content: defaultLoadingFallbackHtml,
       },
+      spinner: {
+        background: "#fff",
+        disabled: false,
+      },
     });
     expect(result.checkVersion).toEqual({
       cache: "no-store",
@@ -88,6 +92,7 @@ describe("getOptions", () => {
       expect(result.html).toEqual({
         fallback: { content: "<div>Error</div>", selector: "#root" },
         loading: { content: "<div>Wait</div>" },
+        spinner: { background: "#fff", disabled: false },
       });
     });
 
@@ -103,6 +108,10 @@ describe("getOptions", () => {
         },
         loading: {
           content: defaultLoadingFallbackHtml,
+        },
+        spinner: {
+          background: "#fff",
+          disabled: false,
         },
       });
     });
@@ -145,10 +154,10 @@ describe("getOptions", () => {
     });
   });
 
-  describe("spinner namespace merge", () => {
+  describe("html.spinner namespace merge", () => {
     it("returns spinner defaults when no window options are set", () => {
       const result = getOptions();
-      expect(result.spinner).toEqual({
+      expect(result.html?.spinner).toEqual({
         background: "#fff",
         disabled: false,
       });
@@ -156,36 +165,47 @@ describe("getOptions", () => {
 
     it("merges spinner background override while retaining defaults", () => {
       setWindowOptions({
-        spinner: { background: "#000" },
+        html: { spinner: { background: "#000" } },
       });
 
       const result = getOptions();
 
-      expect(result.spinner?.background).toBe("#000");
-      expect(result.spinner?.disabled).toBe(false);
+      expect(result.html?.spinner?.background).toBe("#000");
+      expect(result.html?.spinner?.disabled).toBe(false);
     });
 
     it("merges spinner disabled override while retaining defaults", () => {
       setWindowOptions({
-        spinner: { disabled: true },
+        html: { spinner: { disabled: true } },
       });
 
       const result = getOptions();
 
-      expect(result.spinner?.disabled).toBe(true);
-      expect(result.spinner?.background).toBe("#fff");
+      expect(result.html?.spinner?.disabled).toBe(true);
+      expect(result.html?.spinner?.background).toBe("#fff");
     });
 
     it("merges spinner content override", () => {
       setWindowOptions({
-        spinner: { content: "<div>Custom</div>" },
+        html: { spinner: { content: "<div>Custom</div>" } },
       });
 
       const result = getOptions();
 
-      expect(result.spinner?.content).toBe("<div>Custom</div>");
-      expect(result.spinner?.background).toBe("#fff");
-      expect(result.spinner?.disabled).toBe(false);
+      expect(result.html?.spinner?.content).toBe("<div>Custom</div>");
+      expect(result.html?.spinner?.background).toBe("#fff");
+      expect(result.html?.spinner?.disabled).toBe(false);
+    });
+
+    it("retains spinner defaults when html is overridden without spinner", () => {
+      setWindowOptions({
+        html: { fallback: { content: "<div>Error</div>" } },
+      });
+
+      const result = getOptions();
+
+      expect(result.html?.spinner?.background).toBe("#fff");
+      expect(result.html?.spinner?.disabled).toBe(false);
     });
   });
 });

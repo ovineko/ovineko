@@ -114,7 +114,7 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
         sections: {
           retrying: true,
         },
-        spinnerHtml: opts.spinner?.content,
+        spinnerHtml: opts.html?.spinner?.content,
       });
     }
 

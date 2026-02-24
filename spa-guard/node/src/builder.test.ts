@@ -86,7 +86,7 @@ describe("builder", () => {
 
     it("omits spinner tags when spinner.disabled is true", async () => {
       const result = await buildSpaGuardScript({
-        spinner: { disabled: true },
+        html: { spinner: { disabled: true } },
         version: "1.0.0",
       });
       expect(result.tags).toHaveLength(1);
@@ -103,7 +103,7 @@ describe("builder", () => {
 
     it("includes :root style tag when background is not #fff", async () => {
       const result = await buildSpaGuardScript({
-        spinner: { background: "#000" },
+        html: { spinner: { background: "#000" } },
         version: "1.0.0",
       });
       const rootStyle = result.tags.find((t) => t.tag === "style" && t.children?.includes(":root"));
@@ -243,7 +243,7 @@ describe("builder", () => {
     });
 
     it("omits spinner when spinner.disabled is true", async () => {
-      const result = await buildExternalScript(makeOpts({ spinner: { disabled: true } }));
+      const result = await buildExternalScript(makeOpts({ html: { spinner: { disabled: true } } }));
       expect(result.tags).toHaveLength(1);
       expect(result.tags[0].tag).toBe("script");
     });

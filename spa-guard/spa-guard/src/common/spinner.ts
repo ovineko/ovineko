@@ -27,12 +27,12 @@ export function dismissSpinner(): void {
 
 export function getSpinnerHtml(backgroundOverride?: string): string {
   const opts = getOptions();
-  if (opts.spinner?.disabled) {
+  if (opts.html?.spinner?.disabled) {
     return "";
   }
 
-  const spinnerContent = opts.spinner?.content ?? defaultSpinnerSvg;
-  const bg = backgroundOverride ?? opts.spinner?.background ?? "#fff";
+  const spinnerContent = opts.html?.spinner?.content ?? defaultSpinnerSvg;
+  const bg = backgroundOverride ?? opts.html?.spinner?.background ?? "#fff";
 
   return `<div id="${SPINNER_ID}" style="position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:var(--spa-guard-spinner-bg,${bg})">${spinnerContent}</div>`;
 }
@@ -43,7 +43,7 @@ export function showSpinner(options?: { background?: string }): () => void {
   }
 
   const opts = getOptions();
-  if (opts.spinner?.disabled) {
+  if (opts.html?.spinner?.disabled) {
     return () => {};
   }
 

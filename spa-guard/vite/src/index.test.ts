@@ -308,7 +308,7 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
     });
 
     it("injects :root CSS variable when background differs from #fff", async () => {
-      const result = await invokeTransform({ spinner: { background: "#000" } });
+      const result = await invokeTransform({ html: { spinner: { background: "#000" } } });
       const rootStyle = result.tags.find(
         (t: { children?: string; tag: string }) =>
           t.tag === "style" && typeof t.children === "string" && t.children.includes(":root"),
@@ -320,7 +320,7 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
 
     it("uses custom spinner content from options", async () => {
       const result = await invokeTransform({
-        spinner: { content: "<div>My Spinner</div>" },
+        html: { spinner: { content: "<div>My Spinner</div>" } },
       });
       const spinnerTag = result.tags.find(
         (t: { attrs?: { id?: string }; tag: string }) =>
@@ -330,7 +330,7 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
     });
 
     it("does not inject spinner when spinner.disabled is true", async () => {
-      const result = await invokeTransform({ spinner: { disabled: true } });
+      const result = await invokeTransform({ html: { spinner: { disabled: true } } });
       const spinnerTag = result.tags.find(
         (t: { attrs?: { id?: string }; tag: string }) =>
           t.tag === "div" && t.attrs?.id === "__spa-guard-spinner",
@@ -339,7 +339,7 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
     });
 
     it("does not inject overflow script when spinner.disabled is true", async () => {
-      const result = await invokeTransform({ spinner: { disabled: true } });
+      const result = await invokeTransform({ html: { spinner: { disabled: true } } });
       const overflowScript = result.tags.find(
         (t: { children?: string; tag: string }) =>
           t.tag === "script" && t.children === "document.body.style.overflow='hidden'",
@@ -348,17 +348,17 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
     });
 
     it("only injects the inline script tag when spinner.disabled", async () => {
-      const result = await invokeTransform({ spinner: { disabled: true } });
+      const result = await invokeTransform({ html: { spinner: { disabled: true } } });
       expect(result.tags).toHaveLength(1);
       expect(result.tags[0].tag).toBe("script");
       expect(result.tags[0].injectTo).toBe("head-prepend");
     });
 
     it("stores resolved spinner content and background in serialized options", async () => {
-      const result = await invokeTransform({ spinner: { background: "#eee" } });
+      const result = await invokeTransform({ html: { spinner: { background: "#eee" } } });
       const parsed = parseOptionsFromScript(result.tags[0].children as string);
-      expect(parsed.spinner.background).toBe("#eee");
-      expect(parsed.spinner.content).toContain("<svg");
+      expect(parsed.html.spinner.background).toBe("#eee");
+      expect(parsed.html.spinner.content).toContain("<svg");
     });
   });
 
@@ -452,7 +452,7 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
 
     it("does not inject spinner when spinner.disabled is true", async () => {
       const { result } = await invokeExternalTransform({
-        spinner: { disabled: true },
+        html: { spinner: { disabled: true } },
         version: "1.0.0",
       });
       expect(result.tags).toHaveLength(1);
