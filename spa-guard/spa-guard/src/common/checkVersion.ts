@@ -1,16 +1,42 @@
+import { versionCheckStateWindowKey } from "./constants";
 import { getLogger } from "./events/internal";
 import { getOptions } from "./options";
 import { extractVersionFromHtml } from "./parseVersion";
 
-let versionCheckInterval: null | ReturnType<typeof setInterval> = null;
-let versionCheckTimeout: null | ReturnType<typeof setTimeout> = null;
-let lastKnownVersion: null | string = null;
-let lastCheckTimestamp: null | number = null;
-let visibilityHandler: (() => void) | null = null;
-let focusHandler: (() => void) | null = null;
-let blurHandler: (() => void) | null = null;
-let checkInProgress = false;
-let runEpoch = 0;
+interface VersionCheckState {
+  blurHandler: (() => void) | null;
+  checkInProgress: boolean;
+  focusHandler: (() => void) | null;
+  lastCheckTimestamp: null | number;
+  lastKnownVersion: null | string;
+  runEpoch: number;
+  versionCheckInterval: null | ReturnType<typeof setInterval>;
+  versionCheckTimeout: null | ReturnType<typeof setTimeout>;
+  visibilityHandler: (() => void) | null;
+}
+
+const createInitialState = (): VersionCheckState => ({
+  blurHandler: null,
+  checkInProgress: false,
+  focusHandler: null,
+  lastCheckTimestamp: null,
+  lastKnownVersion: null,
+  runEpoch: 0,
+  versionCheckInterval: null,
+  versionCheckTimeout: null,
+  visibilityHandler: null,
+});
+
+if (globalThis.window && !(globalThis.window as any)[versionCheckStateWindowKey]) {
+  (globalThis.window as any)[versionCheckStateWindowKey] = createInitialState();
+}
+
+const getState = (): VersionCheckState => {
+  return (
+    (globalThis.window as any)?.[versionCheckStateWindowKey] ??
+    ((globalThis.window as any)[versionCheckStateWindowKey] = createInitialState())
+  );
+};
 
 const fetchJsonVersion = async (): Promise<null | string> => {
   const endpoint = getOptions().checkVersion?.endpoint;
@@ -78,48 +104,51 @@ const onVersionChange = (oldVersion: null | string, latestVersion: string): void
 };
 
 const checkVersionOnce = async (mode: "html" | "json"): Promise<void> => {
-  if (checkInProgress) {
+  const s = getState();
+  if (s.checkInProgress) {
     return;
   }
-  checkInProgress = true;
-  const epochAtStart = runEpoch;
+  s.checkInProgress = true;
+  const epochAtStart = s.runEpoch;
   try {
     const remoteVersion = await fetchRemoteVersion(mode);
 
-    if (epochAtStart !== runEpoch) {
+    if (epochAtStart !== s.runEpoch) {
       return;
     }
 
-    if (remoteVersion && remoteVersion !== lastKnownVersion) {
-      const oldVersion = lastKnownVersion;
-      lastKnownVersion = remoteVersion;
+    if (remoteVersion && remoteVersion !== s.lastKnownVersion) {
+      const oldVersion = s.lastKnownVersion;
+      s.lastKnownVersion = remoteVersion;
       onVersionChange(oldVersion, remoteVersion);
     }
   } catch (error) {
     getLogger()?.versionCheckFailed(error);
   } finally {
-    if (epochAtStart === runEpoch) {
-      checkInProgress = false;
+    if (epochAtStart === s.runEpoch) {
+      s.checkInProgress = false;
     }
   }
 };
 
 const startPolling = (mode: "html" | "json", interval: number): void => {
+  const s = getState();
   clearTimers();
-  versionCheckInterval = setInterval(async () => {
-    lastCheckTimestamp = Date.now();
+  s.versionCheckInterval = setInterval(async () => {
+    s.lastCheckTimestamp = Date.now();
     await checkVersionOnce(mode);
   }, interval);
 };
 
 const clearTimers = (): void => {
-  if (versionCheckInterval !== null) {
-    clearInterval(versionCheckInterval);
-    versionCheckInterval = null;
+  const s = getState();
+  if (s.versionCheckInterval !== null) {
+    clearInterval(s.versionCheckInterval);
+    s.versionCheckInterval = null;
   }
-  if (versionCheckTimeout !== null) {
-    clearTimeout(versionCheckTimeout);
-    versionCheckTimeout = null;
+  if (s.versionCheckTimeout !== null) {
+    clearTimeout(s.versionCheckTimeout);
+    s.versionCheckTimeout = null;
   }
 };
 
@@ -129,16 +158,17 @@ const handleVisibilityHidden = (): void => {
 };
 
 const handleResume = (mode: "html" | "json", interval: number): void => {
+  const s = getState();
   // If timers are already running (from a prior resume), don't restart them
-  if (versionCheckInterval !== null || versionCheckTimeout !== null) {
+  if (s.versionCheckInterval !== null || s.versionCheckTimeout !== null) {
     return;
   }
 
-  const elapsed = Date.now() - (lastCheckTimestamp ?? 0);
+  const elapsed = Date.now() - (s.lastCheckTimestamp ?? 0);
 
   if (elapsed >= interval) {
     getLogger()?.versionCheckResumedImmediate();
-    lastCheckTimestamp = Date.now();
+    s.lastCheckTimestamp = Date.now();
     void checkVersionOnce(mode);
     startPolling(mode, interval);
     return;
@@ -146,9 +176,9 @@ const handleResume = (mode: "html" | "json", interval: number): void => {
 
   getLogger()?.versionCheckResumed();
   const remaining = interval - elapsed;
-  versionCheckTimeout = setTimeout(() => {
-    versionCheckTimeout = null;
-    lastCheckTimestamp = Date.now();
+  s.versionCheckTimeout = setTimeout(() => {
+    s.versionCheckTimeout = null;
+    s.lastCheckTimestamp = Date.now();
     void checkVersionOnce(mode);
     startPolling(mode, interval);
   }, remaining);
@@ -166,32 +196,34 @@ export const startVersionCheck = (): void => {
     return;
   }
 
-  if (versionCheckInterval !== null || visibilityHandler !== null) {
+  const s = getState();
+
+  if (s.versionCheckInterval !== null || s.visibilityHandler !== null) {
     getLogger()?.versionCheckAlreadyRunning();
     return;
   }
 
-  runEpoch++;
-  lastKnownVersion = options.version;
+  s.runEpoch++;
+  s.lastKnownVersion = options.version;
 
   const interval = options.checkVersion?.interval ?? 300_000;
   const mode = options.checkVersion?.mode ?? "html";
 
-  getLogger()?.versionCheckStarted(mode, interval, lastKnownVersion);
+  getLogger()?.versionCheckStarted(mode, interval, s.lastKnownVersion);
 
   // Only start polling if tab is visible and window is focused
   const isTabVisible = document.visibilityState === "visible";
   const isWindowFocused = document.hasFocus();
 
   if (isTabVisible && isWindowFocused) {
-    lastCheckTimestamp = Date.now();
+    s.lastCheckTimestamp = Date.now();
     startPolling(mode, interval);
   } else {
-    lastCheckTimestamp = 0;
+    s.lastCheckTimestamp = 0;
     getLogger()?.versionCheckPaused();
   }
 
-  visibilityHandler = () => {
+  s.visibilityHandler = () => {
     if (document.visibilityState === "hidden") {
       handleVisibilityHidden();
     } else {
@@ -199,41 +231,44 @@ export const startVersionCheck = (): void => {
     }
   };
 
-  focusHandler = () => {
+  s.focusHandler = () => {
     handleResume(mode, interval);
   };
 
-  blurHandler = () => {
+  s.blurHandler = () => {
     handleVisibilityHidden();
   };
 
-  document.addEventListener("visibilitychange", visibilityHandler);
-  globalThis.addEventListener("focus", focusHandler);
-  globalThis.addEventListener("blur", blurHandler);
+  document.addEventListener("visibilitychange", s.visibilityHandler);
+  globalThis.addEventListener("focus", s.focusHandler);
+  globalThis.addEventListener("blur", s.blurHandler);
 };
 
 export const stopVersionCheck = (): void => {
-  runEpoch++;
-  checkInProgress = false;
+  const s = getState();
+  s.runEpoch++;
+  s.checkInProgress = false;
 
   const wasRunning =
-    versionCheckInterval !== null || versionCheckTimeout !== null || visibilityHandler !== null;
+    s.versionCheckInterval !== null ||
+    s.versionCheckTimeout !== null ||
+    s.visibilityHandler !== null;
 
   clearTimers();
 
-  if (visibilityHandler !== null) {
-    document.removeEventListener("visibilitychange", visibilityHandler);
-    visibilityHandler = null;
+  if (s.visibilityHandler !== null) {
+    document.removeEventListener("visibilitychange", s.visibilityHandler);
+    s.visibilityHandler = null;
   }
 
-  if (focusHandler !== null) {
-    globalThis.removeEventListener("focus", focusHandler);
-    focusHandler = null;
+  if (s.focusHandler !== null) {
+    globalThis.removeEventListener("focus", s.focusHandler);
+    s.focusHandler = null;
   }
 
-  if (blurHandler !== null) {
-    globalThis.removeEventListener("blur", blurHandler);
-    blurHandler = null;
+  if (s.blurHandler !== null) {
+    globalThis.removeEventListener("blur", s.blurHandler);
+    s.blurHandler = null;
   }
 
   if (wasRunning) {
@@ -244,8 +279,7 @@ export const stopVersionCheck = (): void => {
 /** Reset internal state - exported for testing only */
 export const _resetForTesting = (): void => {
   stopVersionCheck();
-  lastKnownVersion = null;
-  lastCheckTimestamp = null;
-  checkInProgress = false;
-  runEpoch = 0;
+  if (globalThis.window) {
+    (globalThis.window as any)[versionCheckStateWindowKey] = createInitialState();
+  }
 };

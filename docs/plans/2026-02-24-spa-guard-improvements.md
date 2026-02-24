@@ -97,13 +97,13 @@ Implement all three tasks from TODO.md: HTML Cache Store, ETag/304 support (clie
 - Modify: `spa-guard/spa-guard/src/common/checkVersion.ts`
 - Modify: `spa-guard/spa-guard/src/common/checkVersion.test.ts`
 
-- [ ] Add `versionCheckStateWindowKey` constant to constants.ts
-- [ ] Define `VersionCheckState` interface in checkVersion.ts
-- [ ] Initialize singleton state in `window[versionCheckStateWindowKey]` on module load
-- [ ] Create `getState()` accessor function
-- [ ] Refactor all functions (clearTimers, handleVisibilityHidden, handleResume, checkVersionOnce, startPolling, startVersionCheck, stopVersionCheck, \_resetForTesting) to use getState() instead of module-level variables
-- [ ] Verify existing tests pass (update \_resetForTesting to clear window singleton)
-- [ ] Run tests: `cd spa-guard/spa-guard && pnpm test` - must pass
+- [x] Add `versionCheckStateWindowKey` constant to constants.ts
+- [x] Define `VersionCheckState` interface in checkVersion.ts
+- [x] Initialize singleton state in `window[versionCheckStateWindowKey]` on module load
+- [x] Create `getState()` accessor function
+- [x] Refactor all functions (clearTimers, handleVisibilityHidden, handleResume, checkVersionOnce, startPolling, startVersionCheck, stopVersionCheck, \_resetForTesting) to use getState() instead of module-level variables
+- [x] Verify existing tests pass (update \_resetForTesting to clear window singleton)
+- [x] Run tests: `cd spa-guard/spa-guard && pnpm test` - must pass
 
 ### Task 6: Verify acceptance criteria
 
