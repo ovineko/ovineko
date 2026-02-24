@@ -49,12 +49,14 @@
   "devDependencies": {
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
+    "@ovineko/spa-guard-node": "workspace:*",
     "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
     "@vitest/coverage-v8": "4.0.18",
     "tsup": "8.5.1",
     "vitest": "4.0.18"
   },
   "peerDependencies": {
+    "@ovineko/spa-guard-node": "workspace:*",
     "fastify": "^5 || ^4",
     "fastify-plugin": "^5 || ^4"
   },

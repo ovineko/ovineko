@@ -1,7 +1,9 @@
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
 
+import type { CreateHtmlCacheOptions, HtmlCache } from "@ovineko/spa-guard-node";
 import type { BeaconSchema } from "@ovineko/spa-guard/schema";
 
+import { createHtmlCache } from "@ovineko/spa-guard-node";
 import fp from "fastify-plugin";
 
 export { BeaconError } from "@ovineko/spa-guard";
@@ -173,3 +175,34 @@ export const fastifySPAGuard = fp(fastifySPAGuardPlugin, {
   fastify: "5.x || 4.x",
   name: `${name}/fastify`,
 });
+
+export interface SpaGuardHandlerOptions {
+  cache?: HtmlCache;
+  getHtml?: (() => CreateHtmlCacheOptions) | (() => Promise<CreateHtmlCacheOptions>);
+}
+
+export async function spaGuardFastifyHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  options: SpaGuardHandlerOptions,
+): Promise<FastifyReply> {
+  const { cache: providedCache, getHtml } = options;
+
+  if (!providedCache && !getHtml) {
+    throw new Error("spaGuardFastifyHandler requires either 'cache' or 'getHtml' option");
+  }
+
+  const cache = providedCache ?? (await createHtmlCache(await getHtml!()));
+
+  const acceptEncoding = request.headers["accept-encoding"] as string | undefined;
+  const acceptLanguage = request.headers["accept-language"] as string | undefined;
+  const ifNoneMatch = request.headers["if-none-match"] as string | undefined;
+
+  const response = cache.get({ acceptEncoding, acceptLanguage, ifNoneMatch });
+
+  for (const [key, value] of Object.entries(response.headers)) {
+    reply.header(key, value);
+  }
+
+  return reply.status(response.statusCode).send(response.body);
+}

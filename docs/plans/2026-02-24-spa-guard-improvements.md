@@ -81,13 +81,13 @@ Implement all three tasks from TODO.md: HTML Cache Store, ETag/304 support (clie
 - Create: `spa-guard/fastify/src/spaGuardFastifyHandler.test.ts`
 - Modify: `spa-guard/fastify/package.json`
 
-- [ ] Add `SpaGuardHandlerOptions` interface and `spaGuardFastifyHandler()` function to fastify/src/index.ts
-- [ ] Support both `cache` (pre-built HtmlCache) and `getHtml` (lazy creation) options
-- [ ] Extract accept-encoding, accept-language, if-none-match headers from request
-- [ ] Forward statusCode from HtmlCacheResponse to Fastify reply
-- [ ] Add `@ovineko/spa-guard-node` to peerDependencies in package.json
-- [ ] Write tests: 200 with HTML body, 304 on matching ETag, getHtml option (sync/async), error on missing options
-- [ ] Run tests: `cd spa-guard/fastify && pnpm test` - must pass
+- [x] Add `SpaGuardHandlerOptions` interface and `spaGuardFastifyHandler()` function to fastify/src/index.ts
+- [x] Support both `cache` (pre-built HtmlCache) and `getHtml` (lazy creation) options
+- [x] Extract accept-encoding, accept-language, if-none-match headers from request
+- [x] Forward statusCode from HtmlCacheResponse to Fastify reply
+- [x] Add `@ovineko/spa-guard-node` to peerDependencies in package.json
+- [x] Write tests: 200 with HTML body, 304 on matching ETag, getHtml option (sync/async), error on missing options
+- [x] Run tests: `cd spa-guard/fastify && pnpm test` - must pass
 
 ### Task 5: Fix Version Check Pause on Tab Hide (TODO Task 3)
 
