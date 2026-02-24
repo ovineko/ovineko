@@ -91,6 +91,7 @@ export default config;
       content: () => `packages:
   - apps/*
   - packages/*
+  - spa-guard/*
 enableGlobalVirtualStore: true
 enablePrePostScripts: false
 hoistPattern: []
