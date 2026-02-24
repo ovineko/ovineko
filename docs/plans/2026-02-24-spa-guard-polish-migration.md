@@ -44,10 +44,10 @@ Polish the happydom->parse5 and typebox->plain TS migration, fix spinner renderi
 - Modify: `packages/spa-guard/src/spinner.html`
 - Regenerate: `packages/spa-guard/src/common/html.generated.ts`
 
-- [ ] Add styles to SVG in spinner.html: width:100%, height:100%, aspect-ratio:1/1
-- [ ] Run generate:fallback script to regenerate html.generated.ts
-- [ ] Update spinner tests if assertions check SVG attributes
-- [ ] Run test suite - must pass before task 3
+- [x] Add styles to SVG in spinner.html: width:100%, height:100%, aspect-ratio:1/1
+- [x] Run generate:fallback script to regenerate html.generated.ts
+- [x] Update spinner tests if assertions check SVG attributes
+- [x] Run test suite - must pass before task 3
 
 ### Task 3: Remove spinner from loading template, inject from options
 
