@@ -7,7 +7,7 @@ import crypto from "node:crypto";
 import fsPromise from "node:fs/promises";
 import path from "node:path";
 
-import { name } from "../../package.json";
+import { name } from "../package.json";
 
 export interface VitePluginOptions extends Options {
   trace?: boolean;
