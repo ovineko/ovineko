@@ -8,7 +8,7 @@ Server-side HTML cache for spa-guard — pre-compresses your SPA's HTML for all 
 ## Install
 
 ```sh
-npm install @ovineko/spa-guard-node
+npm install @ovineko/spa-guard-node @ovineko/spa-guard
 npm install parse5
 ```
 

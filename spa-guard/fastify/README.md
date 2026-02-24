@@ -8,7 +8,7 @@ Fastify plugin for spa-guard beacon endpoint and HTML cache handler with ETag/30
 ## Install
 
 ```sh
-npm install @ovineko/spa-guard-fastify @ovineko/spa-guard-node fastify fastify-plugin
+npm install @ovineko/spa-guard-fastify @ovineko/spa-guard @ovineko/spa-guard-node fastify fastify-plugin
 ```
 
 ## Usage

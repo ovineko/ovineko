@@ -114,13 +114,13 @@ Medium-risk: affects npm install UX, not runtime behavior.
 - Modify: `spa-guard/react-router/README.md` (if exists)
 - Modify: `spa-guard/fastify/README.md` (if exists)
 
-- [ ] Move `@ovineko/spa-guard` from `dependencies` to `peerDependencies` + `devDependencies` in node, vite, react, react-router, fastify packages
-- [ ] Move `@ovineko/spa-guard-react` from `dependencies` to `peerDependencies` + `devDependencies` in react-router package
-- [ ] Keep `@ovineko/spa-guard-node` in vite's `dependencies` (needed for reading inline scripts)
-- [ ] Run `pnpm install` to regenerate lockfile
-- [ ] Run `pnpm --recursive build` — must succeed
-- [ ] Update installation instructions in README files for affected packages
-- [ ] Run `pnpm --recursive test` — must pass
+- [x] Move `@ovineko/spa-guard` from `dependencies` to `peerDependencies` + `devDependencies` in node, vite, react, react-router, fastify packages
+- [x] Move `@ovineko/spa-guard-react` from `dependencies` to `peerDependencies` + `devDependencies` in react-router package
+- [x] Keep `@ovineko/spa-guard-node` in vite's `dependencies` (needed for reading inline scripts)
+- [x] Run `pnpm install` to regenerate lockfile
+- [x] Run `pnpm --recursive build` — must succeed
+- [x] Update installation instructions in README files for affected packages
+- [x] Run `pnpm --recursive test` — must pass
 
 ### Task 6: Handle 404 Static Asset Errors During Deployment
 

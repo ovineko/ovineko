@@ -10,7 +10,7 @@ Catches route errors via `useRouteError()` and automatically retries chunk loadi
 ## Install
 
 ```sh
-npm install @ovineko/spa-guard-react-router react react-router
+npm install @ovineko/spa-guard-react-router @ovineko/spa-guard @ovineko/spa-guard-react react react-router
 ```
 
 ## Usage

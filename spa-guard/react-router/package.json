@@ -43,13 +43,11 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "@ovineko/spa-guard": "workspace:*",
-    "@ovineko/spa-guard-react": "workspace:*"
-  },
   "devDependencies": {
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
+    "@ovineko/spa-guard": "workspace:*",
+    "@ovineko/spa-guard-react": "workspace:*",
     "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
     "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",
@@ -62,6 +60,8 @@
     "vitest": "4.0.18"
   },
   "peerDependencies": {
+    "@ovineko/spa-guard": "workspace:*",
+    "@ovineko/spa-guard-react": "workspace:*",
     "react": "^19",
     "react-router": "^7"
   },

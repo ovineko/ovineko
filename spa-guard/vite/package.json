@@ -44,13 +44,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ovineko/spa-guard": "workspace:*",
     "@ovineko/spa-guard-node": "workspace:*",
     "html-minifier-terser": "7.2.0"
   },
   "devDependencies": {
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
+    "@ovineko/spa-guard": "workspace:*",
     "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
     "@types/html-minifier-terser": "7.0.2",
     "@vitest/coverage-v8": "4.0.18",
@@ -59,6 +59,7 @@
     "vitest": "4.0.18"
   },
   "peerDependencies": {
+    "@ovineko/spa-guard": "workspace:*",
     "vite": "^8 || ^7"
   },
   "packageManager": "pnpm@10.29.3",

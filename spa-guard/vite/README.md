@@ -8,7 +8,7 @@ Vite plugin for spa-guard — injects the runtime inline script and loading spin
 ## Install
 
 ```sh
-npm install @ovineko/spa-guard-vite
+npm install @ovineko/spa-guard-vite @ovineko/spa-guard
 npm install --save-dev vite
 ```
 
