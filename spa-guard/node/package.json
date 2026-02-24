@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard-node",
-  "version": "0.0.1-alpha-23",
+  "version": "0.0.1-alpha-24",
   "description": "Server-side HTML patching and i18n for spa-guard",
   "keywords": [
     "spa",
