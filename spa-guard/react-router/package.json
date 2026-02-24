@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard-react-router",
-  "version": "0.0.1-alpha-25",
+  "version": "0.0.1-alpha-26",
   "description": "React Router v7 error boundary integration for spa-guard",
   "keywords": [
     "spa",
