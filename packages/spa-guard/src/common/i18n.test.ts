@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { SpaGuardTranslations } from "../i18n";
 
-import { applyI18n, getI18n } from "./i18n";
+import { applyI18n, getI18n, setTranslations } from "./i18n";
 
 const koTranslations: SpaGuardTranslations = {
   heading: "문제가 발생했습니다",
@@ -71,6 +71,47 @@ describe("common/i18n", () => {
       document.head.append(meta);
 
       expect(getI18n()).toBeNull();
+    });
+  });
+
+  describe("setTranslations", () => {
+    beforeEach(() => {
+      document.head.innerHTML = "";
+    });
+
+    afterEach(() => {
+      document.head.innerHTML = "";
+    });
+
+    it("creates a meta tag when none exists", () => {
+      setTranslations(koTranslations);
+
+      const meta = document.querySelector('meta[name="spa-guard-i18n"]');
+      expect(meta).not.toBeNull();
+      expect(meta?.getAttribute("content")).toBe(JSON.stringify(koTranslations));
+    });
+
+    it("updates existing meta tag", () => {
+      setTranslations(koTranslations);
+      setTranslations(arTranslations);
+
+      const metas = document.querySelectorAll('meta[name="spa-guard-i18n"]');
+      expect(metas).toHaveLength(1);
+      expect(metas[0]?.getAttribute("content")).toBe(JSON.stringify(arTranslations));
+    });
+
+    it("round-trips with getI18n", () => {
+      setTranslations(koTranslations);
+
+      const result = getI18n();
+      expect(result).toEqual(koTranslations);
+    });
+
+    it("round-trips RTL translations with getI18n", () => {
+      setTranslations(arTranslations);
+
+      const result = getI18n();
+      expect(result).toEqual(arTranslations);
     });
   });
 

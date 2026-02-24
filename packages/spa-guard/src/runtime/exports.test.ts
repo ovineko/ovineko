@@ -48,4 +48,10 @@ describe("runtime/index exports", () => {
     expect(mod.getSpinnerHtml).toBeDefined();
     expect(typeof mod.getSpinnerHtml).toBe("function");
   });
+
+  it("exports setTranslations function", async () => {
+    const mod = await import("./index");
+    expect(mod.setTranslations).toBeDefined();
+    expect(typeof mod.setTranslations).toBe("function");
+  });
 });

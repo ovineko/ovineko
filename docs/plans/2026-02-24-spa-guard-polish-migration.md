@@ -98,11 +98,11 @@ Polish the happydom->parse5 and typebox->plain TS migration, fix spinner renderi
 - Modify: `packages/spa-guard/src/runtime/index.ts`
 - Create: `packages/spa-guard/src/common/i18n.test.ts` (update existing)
 
-- [ ] Add setTranslations(translations: SpaGuardTranslations) function to i18n.ts that writes translations to a `<meta name="spa-guard-i18n">` tag (creating or updating it)
-- [ ] Export setTranslations from runtime/index.ts so users can call it at runtime
-- [ ] This lets SPA apps import a translations map, pick the current language, and call setTranslations(t) to patch the inline fallback/loading UI translations dynamically
-- [ ] Write tests for setTranslations: creates meta tag, updates existing meta tag, getI18n() returns the set values
-- [ ] Run test suite - must pass before task 7
+- [x] Add setTranslations(translations: SpaGuardTranslations) function to i18n.ts that writes translations to a `<meta name="spa-guard-i18n">` tag (creating or updating it)
+- [x] Export setTranslations from runtime/index.ts so users can call it at runtime
+- [x] This lets SPA apps import a translations map, pick the current language, and call setTranslations(t) to patch the inline fallback/loading UI translations dynamically
+- [x] Write tests for setTranslations: creates meta tag, updates existing meta tag, getI18n() returns the set values
+- [x] Run test suite - must pass before task 7
 
 ### Task 7: Reorganize into separate packages
 

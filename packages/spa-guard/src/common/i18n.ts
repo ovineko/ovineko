@@ -63,3 +63,20 @@ export function getI18n(): null | SpaGuardTranslations {
     return null;
   }
 }
+
+/**
+ * Write i18n translations to the `<meta name="spa-guard-i18n">` tag.
+ * Creates the tag if it doesn't exist, or updates it if it does.
+ *
+ * Use this at runtime to dynamically patch the inline fallback/loading UI
+ * translations without server-side rendering.
+ */
+export function setTranslations(translations: SpaGuardTranslations): void {
+  let el = document.querySelector('meta[name="spa-guard-i18n"]');
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("name", "spa-guard-i18n");
+    document.head.append(el);
+  }
+  el.setAttribute("content", JSON.stringify(translations));
+}
