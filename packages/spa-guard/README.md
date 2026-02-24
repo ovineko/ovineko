@@ -1045,7 +1045,7 @@ spa-guard supports localized error and loading messages through a meta tag appro
 
 #### Built-in Languages
 
-Six languages are included: English (en), Korean (ko), Japanese (ja), Chinese (zh), Arabic (ar, RTL), and Hebrew (he, RTL).
+38 languages are included (see the Supported Languages table above). RTL is supported for Arabic (ar), Hebrew (he), and Persian (fa).
 
 #### Server-Side Setup
 
@@ -1803,7 +1803,7 @@ spa-guard provides 13 export entry points:
 | `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                         | `react@^19`                                       |
 | `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                         | `eslint@^9 \|\| ^10` (optional)                   |
 | `./i18n`                 | Translation types and utilities (SpaGuardTranslations, translations, matchLang)                                                        | None                                              |
-| `./node`                 | Server-side utilities (patchHtmlI18n, createHtmlCache, escapeAttr, matchLang, translations)                                            | None                                              |
+| `./node`                 | Server-side utilities (patchHtmlI18n, createHtmlCache, escapeAttr, matchLang, translations)                                            | `happy-dom@^20`                                   |
 
 **Import examples:**
 

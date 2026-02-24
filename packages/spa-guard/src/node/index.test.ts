@@ -321,6 +321,12 @@ describe("node", () => {
       const result = patchHtmlI18n({ html: htmlMixedHead, lang: "ko" });
       expect(result).toContain('<meta name="spa-guard-i18n"');
     });
+
+    it("handles HTML without head element", () => {
+      const htmlNoHead = `<!DOCTYPE html><html lang="en"><body>Content</body></html>`;
+      const result = patchHtmlI18n({ html: htmlNoHead, lang: "ko" });
+      expect(result).toContain('lang="ko"');
+    });
   });
 
   describe("createHtmlCache", () => {
@@ -539,6 +545,16 @@ describe("node", () => {
         });
         const response = cache.get({ lang: "xx" });
         expect(response.headers["Content-Language"]).toBe("en");
+      });
+
+      it("falls back to first available language when en is not in languages", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["ko", "ja"],
+        });
+        const response = cache.get({ lang: "xx" });
+        expect(["ko", "ja"]).toContain(response.headers["Content-Language"]);
+        expect(response.body).toBeInstanceOf(Buffer);
       });
     });
 

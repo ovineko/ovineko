@@ -1,6 +1,8 @@
 export type { SpaGuardTranslations } from "../i18n";
 export { matchLang, translations } from "../i18n";
 
+import { negotiate } from "@fastify/accept-negotiator";
+
 import { Window } from "happy-dom";
 import { createHash } from "node:crypto";
 import { promisify } from "node:util";
@@ -71,15 +73,7 @@ interface CacheEntry {
 export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<HtmlCache> {
   const { html, translations: customTranslations } = options;
 
-  // Build merged translation map to determine available languages
-  const merged: Record<string, SpaGuardTranslations> = { ...translations };
-  if (customTranslations) {
-    for (const [key, partial] of Object.entries(customTranslations)) {
-      const base = merged[key];
-      merged[key] = base ? { ...base, ...partial } : (partial as SpaGuardTranslations);
-    }
-  }
-
+  const merged = mergeTranslations(customTranslations);
   const languages = options.languages ?? Object.keys(merged);
 
   // Extract version for ETag base
@@ -116,16 +110,13 @@ export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<
 
   const available = [...entries.keys()];
 
-  // Lazy-load @fastify/accept-negotiator
-  const { negotiate } = await import("@fastify/accept-negotiator");
-
   return {
     get({ acceptEncoding, acceptLanguage, lang: langOverride }) {
       const resolvedLang = matchLang(langOverride ?? acceptLanguage, available);
-      const entry = entries.get(resolvedLang)!;
+      const entry = entries.get(resolvedLang) ?? entries.get(available[0]!)!;
 
       const headers: Record<string, string> = {
-        "Content-Language": resolvedLang,
+        "Content-Language": entry.lang,
         "Content-Type": "text/html; charset=utf-8",
         ETag: entry.etag,
         Vary: "Accept-Language, Accept-Encoding",
@@ -177,15 +168,7 @@ export function escapeAttr(str: string): string {
 export function patchHtmlI18n(options: PatchHtmlI18nOptions): string {
   const { acceptLanguage, html, lang: langOverride, translations: customTranslations } = options;
 
-  // Build merged translation map
-  const merged: Record<string, SpaGuardTranslations> = { ...translations };
-  if (customTranslations) {
-    for (const [key, partial] of Object.entries(customTranslations)) {
-      const base = merged[key];
-      merged[key] = base ? { ...base, ...partial } : (partial as SpaGuardTranslations);
-    }
-  }
-
+  const merged = mergeTranslations(customTranslations);
   const available = Object.keys(merged);
   const input = langOverride ?? acceptLanguage;
   const resolvedLang = matchLang(input, available);
@@ -202,27 +185,40 @@ export function patchHtmlI18n(options: PatchHtmlI18nOptions): string {
 
   // Parse HTML with happy-dom
   const window = new Window();
-  const document = window.document;
-  document.write(html);
+  try {
+    const document = window.document;
+    document.write(html);
 
-  // Set <html lang>
-  document.documentElement.setAttribute("lang", resolvedLang);
+    // Set <html lang>
+    document.documentElement.setAttribute("lang", resolvedLang);
 
-  // Create and inject <meta name="spa-guard-i18n"> into <head>
-  const meta = document.createElement("meta");
-  meta.setAttribute("name", "spa-guard-i18n");
-  meta.setAttribute("content", JSON.stringify(t));
+    // Create and inject <meta name="spa-guard-i18n"> into <head>
+    const meta = document.createElement("meta");
+    meta.setAttribute("name", "spa-guard-i18n");
+    meta.setAttribute("content", JSON.stringify(t));
 
-  if (document.head) {
-    document.head.prepend(meta);
+    if (document.head) {
+      document.head.prepend(meta);
+    }
+
+    // Reconstruct full HTML with original DOCTYPE
+    const doctypeMatch = html.match(/^(<!doctype[^>]*>)/i);
+    const doctype = doctypeMatch ? doctypeMatch[1] : "";
+    return doctype + document.documentElement.outerHTML;
+  } finally {
+    window.close();
   }
+}
 
-  // Reconstruct full HTML with original DOCTYPE
-  const doctypeMatch = html.match(/^(<!doctype[^>]*>)/i);
-  const doctype = doctypeMatch ? doctypeMatch[1] : "";
-  const result = doctype + document.documentElement.outerHTML;
-
-  window.close();
-
-  return result;
+function mergeTranslations(
+  customTranslations?: Record<string, Partial<SpaGuardTranslations>>,
+): Record<string, SpaGuardTranslations> {
+  const merged: Record<string, SpaGuardTranslations> = { ...translations };
+  if (customTranslations) {
+    for (const [key, partial] of Object.entries(customTranslations)) {
+      const base = merged[key];
+      merged[key] = base ? { ...base, ...partial } : (partial as SpaGuardTranslations);
+    }
+  }
+  return merged;
 }
