@@ -29,6 +29,7 @@ export interface HtmlCache {
   get(options: {
     acceptEncoding?: string;
     acceptLanguage?: string;
+    ifNoneMatch?: string;
     lang?: string;
   }): HtmlCacheResponse;
 }
@@ -36,6 +37,7 @@ export interface HtmlCache {
 export interface HtmlCacheResponse {
   body: Buffer | string;
   headers: Record<string, string>;
+  statusCode: 200 | 304;
 }
 
 export interface PatchHtmlI18nOptions {
@@ -120,7 +122,7 @@ export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<
   const available = languages;
 
   return {
-    get({ acceptEncoding, acceptLanguage, lang: langOverride }) {
+    get({ acceptEncoding, acceptLanguage, ifNoneMatch, lang: langOverride }) {
       const resolvedLang = matchLang(langOverride ?? acceptLanguage, available);
       const entry = entries.get(resolvedLang) ?? entries.get(available[0]!)!;
 
@@ -131,14 +133,18 @@ export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<
         Vary: "Accept-Language, Accept-Encoding",
       };
 
+      if (ifNoneMatch && ifNoneMatch === entry.etag) {
+        return { body: "", headers, statusCode: 304 as const };
+      }
+
       if (!acceptEncoding) {
-        return { body: entry.identity, headers };
+        return { body: entry.identity, headers, statusCode: 200 as const };
       }
 
       const encoding = negotiate(acceptEncoding, ["br", "zstd", "gzip"]);
 
       if (!encoding) {
-        return { body: entry.identity, headers };
+        return { body: entry.identity, headers, statusCode: 200 as const };
       }
 
       headers["Content-Encoding"] = encoding;
@@ -149,7 +155,7 @@ export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<
         zstd: entry.zstd,
       };
 
-      return { body: bodyMap[encoding]!, headers };
+      return { body: bodyMap[encoding]!, headers, statusCode: 200 as const };
     },
   };
 }

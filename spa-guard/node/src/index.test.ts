@@ -400,6 +400,71 @@ describe("node", () => {
       });
     });
 
+    describe("ETag/304 conditional requests", () => {
+      it("returns 304 with empty body when ifNoneMatch matches ETag", async () => {
+        const cache = await createHtmlCache({
+          html: sampleHtmlWithVersion,
+          languages: ["en", "ko"],
+        });
+        const first = cache.get({ lang: "ko" });
+        expect(first.statusCode).toBe(200);
+
+        const second = cache.get({ ifNoneMatch: first.headers.ETag, lang: "ko" });
+        expect(second.statusCode).toBe(304);
+        expect(second.body).toBe("");
+        expect(second.headers.ETag).toBe(first.headers.ETag);
+      });
+
+      it("returns 200 when ifNoneMatch does not match ETag", async () => {
+        const cache = await createHtmlCache({
+          html: sampleHtmlWithVersion,
+          languages: ["en", "ko"],
+        });
+        const response = cache.get({ ifNoneMatch: '"wrong-etag"', lang: "ko" });
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toBeInstanceOf(Buffer);
+      });
+
+      it("returns 304 only for the matching language ETag", async () => {
+        const cache = await createHtmlCache({
+          html: sampleHtmlWithVersion,
+          languages: ["en", "ko", "ja"],
+        });
+        const koResponse = cache.get({ lang: "ko" });
+        const koEtag = koResponse.headers.ETag;
+
+        // Same language should match
+        const koConditional = cache.get({ ifNoneMatch: koEtag, lang: "ko" });
+        expect(koConditional.statusCode).toBe(304);
+
+        // Different language should not match
+        const jaConditional = cache.get({ ifNoneMatch: koEtag, lang: "ja" });
+        expect(jaConditional.statusCode).toBe(200);
+      });
+
+      it("returns 200 with statusCode when ifNoneMatch is not provided (backward compatibility)", async () => {
+        const cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en"],
+        });
+        const response = cache.get({ lang: "en" });
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toBeInstanceOf(Buffer);
+      });
+
+      it("returns 304 with headers preserved", async () => {
+        const cache = await createHtmlCache({
+          html: sampleHtmlWithVersion,
+          languages: ["ko"],
+        });
+        const first = cache.get({ lang: "ko" });
+        const second = cache.get({ ifNoneMatch: first.headers.ETag, lang: "ko" });
+        expect(second.headers["Content-Language"]).toBe("ko");
+        expect(second.headers["Content-Type"]).toBe("text/html; charset=utf-8");
+        expect(second.headers.Vary).toBe("Accept-Language, Accept-Encoding");
+      });
+    });
+
     describe("compression", () => {
       it("returns valid gzip content that decompresses correctly", async () => {
         cache = await createHtmlCache({
