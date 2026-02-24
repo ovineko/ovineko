@@ -47,7 +47,7 @@
     "lint": "datamitsu lint",
     "prepack": "clean-pkg-json clean",
     "postpack": "clean-pkg-json restore",
-    "prepublishOnly": "pnpm build",
+    "prepublishOnly": "pnpm build && pnpm copy:bundles",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:debug": "DEBUG=1 vitest run",
