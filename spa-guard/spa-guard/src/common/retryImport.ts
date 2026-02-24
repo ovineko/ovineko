@@ -28,7 +28,7 @@ const wait = (ms: number, signal?: AbortSignal): Promise<void> =>
 export interface RetryImportOptions {
   /**
    * If true and all retries fail with a chunk error, calls attemptReload before rethrowing.
-   * @default false
+   * @default true (when used via lazyWithRetry)
    */
   callReloadOnFailure?: boolean;
   /**

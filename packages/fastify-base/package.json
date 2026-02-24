@@ -1,7 +1,7 @@
 {
   "name": "@ovineko/fastify-base",
   "version": "0.0.0",
-  "private": "true",
+  "private": true,
   "description": "Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, and healthcheck integrations",
   "keywords": [
     "fastify",

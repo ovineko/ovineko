@@ -38,6 +38,10 @@ export function getSpinnerHtml(backgroundOverride?: string): string {
 }
 
 export function showSpinner(options?: { background?: string }): () => void {
+  if (typeof document === "undefined") {
+    return () => {};
+  }
+
   const opts = getOptions();
   if (opts.spinner?.disabled) {
     return () => {};

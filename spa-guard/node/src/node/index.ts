@@ -116,8 +116,7 @@ export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<
     }),
   );
 
-  // Use the original languages array (stable order) instead of entries.keys()
-  // (Map insertion order from Promise.all is nondeterministic)
+  // Use the original languages array for stable, explicit ordering
   const available = languages;
 
   return {
