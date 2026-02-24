@@ -40,6 +40,12 @@ export interface HtmlCacheResponse {
   statusCode: 200 | 304;
 }
 
+export type HTMLCacheStoreInput<K extends string> =
+  | (() => Promise<HTMLCacheStoreMap<K>>)
+  | HTMLCacheStoreMap<K>;
+
+export type HTMLCacheStoreMap<K extends string> = Record<K, (() => Promise<string>) | string>;
+
 export interface PatchHtmlI18nOptions {
   /** Raw Accept-Language header value */
   acceptLanguage?: string;
@@ -159,6 +165,62 @@ export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<
     },
   };
 }
+
+/**
+ * Create a store managing multiple named HtmlCache instances.
+ *
+ * Accepts either a static map of HTML strings (or async getters) keyed by name,
+ * or an async factory that returns such a map. Call `load()` once at startup to
+ * build all caches sequentially (each key calls `createHtmlCache`, which
+ * parallelizes language variants internally). After loading, retrieve individual
+ * caches via `getCache(key)`.
+ */
+export const createHTMLCacheStore = <K extends string>(
+  input: HTMLCacheStoreInput<K>,
+  languages?: string[],
+): {
+  getCache: (key: K) => HtmlCache;
+  isLoaded: () => boolean;
+  load: () => Promise<void>;
+} => {
+  let loaded = false;
+  const cacheMap = new Map<K, HtmlCache>();
+
+  const load = async (): Promise<void> => {
+    if (loaded) {
+      return;
+    }
+
+    const htmlMap = typeof input === "function" ? await input() : input;
+
+    for (const key of Object.keys(htmlMap) as K[]) {
+      const htmlOrFn: (() => Promise<string>) | string = htmlMap[key];
+      const html = typeof htmlOrFn === "function" ? await htmlOrFn() : htmlOrFn;
+      const cache = await createHtmlCache({ html, languages });
+      cacheMap.set(key, cache);
+    }
+
+    loaded = true;
+  };
+
+  const getCache = (key: K): HtmlCache => {
+    if (!loaded) {
+      throw new Error(
+        "HTMLCacheStore is not loaded yet. Call load() first before accessing caches.",
+      );
+    }
+    const cache = cacheMap.get(key);
+    if (!cache) {
+      const availableKeys = [...cacheMap.keys()].join(", ");
+      throw new Error(`Cache not found for key: ${String(key)}. Available keys: ${availableKeys}`);
+    }
+    return cache;
+  };
+
+  const isLoaded = (): boolean => loaded;
+
+  return { getCache, isLoaded, load };
+};
 
 /**
  * Server-side HTML patching for i18n.

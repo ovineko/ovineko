@@ -50,13 +50,13 @@ Implement all three tasks from TODO.md: HTML Cache Store, ETag/304 support (clie
 - Modify: `spa-guard/node/src/index.ts`
 - Modify: `spa-guard/node/src/index.test.ts`
 
-- [ ] Add types: `HTMLCacheStoreInput<K>`, `HTMLCacheStoreMap<K>`
-- [ ] Implement `createHTMLCacheStore()` function with `getCache`, `isLoaded`, `load` methods
-- [ ] Sequential key processing in `load()` (each key calls createHtmlCache)
-- [ ] Error handling: throw on getCache before load(), throw on unknown key
-- [ ] Idempotent load() (skip if already loaded)
-- [ ] Write tests: static HTML input, async HTML input, lazy loading (throw before load), unknown key error, idempotent load
-- [ ] Run tests: `cd spa-guard/node && pnpm test` - must pass
+- [x] Add types: `HTMLCacheStoreInput<K>`, `HTMLCacheStoreMap<K>`
+- [x] Implement `createHTMLCacheStore()` function with `getCache`, `isLoaded`, `load` methods
+- [x] Sequential key processing in `load()` (each key calls createHtmlCache)
+- [x] Error handling: throw on getCache before load(), throw on unknown key
+- [x] Idempotent load() (skip if already loaded)
+- [x] Write tests: static HTML input, async HTML input, lazy loading (throw before load), unknown key error, idempotent load
+- [x] Run tests: `cd spa-guard/node && pnpm test` - must pass
 
 ### Task 3: Client-Side Cache Parameter (TODO Task 2.1)
 

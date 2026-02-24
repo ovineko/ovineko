@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 
 import type { HtmlCache } from "./index";
 
-import { createHtmlCache, matchLang, patchHtmlI18n, translations } from "./index";
+import {
+  createHtmlCache,
+  createHTMLCacheStore,
+  matchLang,
+  patchHtmlI18n,
+  translations,
+} from "./index";
 
 const sampleHtml = `<!DOCTYPE html><html lang="en"><head><title>App</title></head><body><div id="app"></div></body></html>`;
 
@@ -648,6 +654,87 @@ describe("node", () => {
         expect(response.headers["Content-Encoding"]).toBeUndefined();
         expect(response.body.toString()).toContain("<html");
       });
+    });
+  });
+
+  describe("createHTMLCacheStore", () => {
+    it("loads static HTML inputs and retrieves caches by key", async () => {
+      const store = createHTMLCacheStore({ admin: sampleHtmlWithVersion, app: sampleHtml }, [
+        "en",
+        "ko",
+      ]);
+
+      expect(store.isLoaded()).toBe(false);
+      await store.load();
+      expect(store.isLoaded()).toBe(true);
+
+      const appCache = store.getCache("app");
+      const appResponse = appCache.get({ lang: "ko" });
+      expect(appResponse.statusCode).toBe(200);
+      expect(appResponse.body.toString()).toContain('lang="ko"');
+
+      const adminCache = store.getCache("admin");
+      const adminResponse = adminCache.get({ lang: "en" });
+      expect(adminResponse.headers.ETag).toBe('"1.2.3-en"');
+    });
+
+    it("loads async HTML inputs (function values)", async () => {
+      const store = createHTMLCacheStore(
+        {
+          admin: async () => sampleHtmlWithVersion,
+          app: async () => sampleHtml,
+        },
+        ["en"],
+      );
+
+      await store.load();
+
+      const appCache = store.getCache("app");
+      const appResponse = appCache.get({ lang: "en" });
+      expect(appResponse.statusCode).toBe(200);
+      expect(appResponse.body).toBeInstanceOf(Buffer);
+    });
+
+    it("loads from async factory function", async () => {
+      const store = createHTMLCacheStore(async () => ({ app: sampleHtml }), ["en"]);
+
+      await store.load();
+
+      const appCache = store.getCache("app");
+      const appResponse = appCache.get({ lang: "en" });
+      expect(appResponse.statusCode).toBe(200);
+    });
+
+    it("throws when getCache is called before load()", () => {
+      const store = createHTMLCacheStore({ app: sampleHtml }, ["en"]);
+
+      expect(() => store.getCache("app")).toThrow(
+        "HTMLCacheStore is not loaded yet. Call load() first before accessing caches.",
+      );
+    });
+
+    it("throws when accessing unknown key after load()", async () => {
+      const store = createHTMLCacheStore({ app: sampleHtml }, ["en"]);
+      await store.load();
+
+      expect(() => store.getCache("unknown" as "app")).toThrow(
+        "Cache not found for key: unknown. Available keys: app",
+      );
+    });
+
+    it("load() is idempotent (second call is a no-op)", async () => {
+      let callCount = 0;
+      const store = createHTMLCacheStore(async () => {
+        callCount++;
+        return { app: sampleHtml };
+      }, ["en"]);
+
+      await store.load();
+      expect(callCount).toBe(1);
+
+      await store.load();
+      expect(callCount).toBe(1);
+      expect(store.isLoaded()).toBe(true);
     });
   });
 });
