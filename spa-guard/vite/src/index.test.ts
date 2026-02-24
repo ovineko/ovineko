@@ -553,5 +553,63 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
         "utf8",
       );
     });
+
+    it("falls back to inline mode when configResolved reports serve command", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configResolved as (config: any) => void)({
+        base: "/",
+        build: { outDir: "/project/dist" },
+        command: "serve",
+      });
+
+      const handler = getTransformHandler(plugin);
+      const result = await handler("<html></html>");
+
+      expect(result.tags[0].tag).toBe("script");
+      expect(result.tags[0].injectTo).toBe("head-prepend");
+      expect(result.tags[0].attrs?.src).toBeUndefined();
+      expect(result.tags[0].children).toBeDefined();
+    });
+
+    it("uses Vite config.base as default publicPath when publicPath is not specified", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configResolved as (config: any) => void)({
+        base: "/app/",
+        build: { outDir: "/project/dist" },
+        command: "build",
+      });
+
+      const handler = getTransformHandler(plugin);
+      const result = await handler("<html></html>");
+
+      expect(result.tags[0].attrs?.src).toMatch(/^\/app\/spa-guard\.[a-f0-9]{16}\.js$/);
+    });
+
+    it("publicPath option takes precedence over Vite config.base", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({
+        mode: "external",
+        publicPath: "/assets",
+        version: "1.0.0",
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configResolved as (config: any) => void)({
+        base: "/app/",
+        build: { outDir: "/project/dist" },
+        command: "build",
+      });
+
+      const handler = getTransformHandler(plugin);
+      const result = await handler("<html></html>");
+
+      expect(result.tags[0].attrs?.src).toMatch(/^\/assets\/spa-guard\.[a-f0-9]{16}\.js$/);
+    });
   });
 });

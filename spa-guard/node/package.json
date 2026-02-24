@@ -42,7 +42,7 @@
   ],
   "scripts": {
     "build": "tsup",
-    "copy:bundles": "cp -r ../vite/dist-inline ./dist-inline && cp -r ../vite/dist-inline-trace ./dist-inline-trace",
+    "copy:bundles": "rm -rf ./dist-inline ./dist-inline-trace && cp -r ../vite/dist-inline ./dist-inline && cp -r ../vite/dist-inline-trace ./dist-inline-trace",
     "fix": "datamitsu fix",
     "lint": "datamitsu lint",
     "prepack": "clean-pkg-json clean",

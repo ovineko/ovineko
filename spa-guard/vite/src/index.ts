@@ -68,11 +68,15 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
   const { mode = "inline" } = options;
 
   let resolvedOutDir: null | string = null;
+  let resolvedBase: null | string = null;
+  let resolvedCommand: null | string = null;
   let cachedExternalContent: null | string = null;
   let cachedExternalHash: null | string = null;
 
   return {
     configResolved(config) {
+      resolvedBase = config.base ?? null;
+      resolvedCommand = config.command ?? null;
       if (mode === "external") {
         resolvedOutDir = options.externalScriptDir ?? config.build.outDir;
       }
@@ -97,7 +101,9 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
 
         let mainTag: HtmlTagDescriptor;
 
-        if (mode === "external") {
+        const effectiveMode = mode === "external" && resolvedCommand === "serve" ? "inline" : mode;
+
+        if (effectiveMode === "external") {
           if (!cachedExternalContent) {
             const rawScript = await getInlineScript(finalOptions);
             const hash = crypto.createHash("sha256").update(rawScript).digest("hex").slice(0, 16);
@@ -105,7 +111,7 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
             cachedExternalHash = hash;
           }
 
-          const publicPath = options.publicPath ?? "/";
+          const publicPath = options.publicPath ?? resolvedBase ?? "/";
           const normalizedPath = publicPath.endsWith("/") ? publicPath : `${publicPath}/`;
           const publicUrl = `${normalizedPath}spa-guard.${cachedExternalHash}.js`;
 
