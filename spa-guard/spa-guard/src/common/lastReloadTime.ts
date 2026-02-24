@@ -73,6 +73,11 @@ export const getLastReloadTime = (): LastReloadData | null => {
         return JSON.parse(stored) as LastReloadData;
       }
     } catch {
+      try {
+        sessionStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // Ignore
+      }
       return getInMemoryState().storage;
     }
   }
@@ -157,6 +162,11 @@ export const getLastRetryResetInfo = (): LastRetryResetInfo | null => {
         return JSON.parse(stored) as LastRetryResetInfo;
       }
     } catch {
+      try {
+        sessionStorage.removeItem(RESET_INFO_KEY);
+      } catch {
+        // Ignore
+      }
       return getInMemoryState().resetInfo;
     }
   }

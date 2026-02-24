@@ -197,6 +197,9 @@ importers:
       "@ovineko/datamitsu-config":
         specifier: workspace:*
         version: link:../../packages/datamitsu-config
+      "@ovineko/spa-guard-vite":
+        specifier: workspace:*
+        version: link:../vite
       "@shibanet0/datamitsu-config":
         specifier: 0.0.1-alpha-34
         version: 0.0.1-alpha-34(@types/node@24.10.12)(@typescript-eslint/eslint-plugin@8.53.1(@typescript-eslint/parser@8.54.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.54.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(jiti@2.6.1)(postcss@8.5.6)(storybook@10.2.4(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(turbo@2.8.1)(vite@7.3.1(@types/node@24.10.12)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.18)(yaml@2.8.2)
