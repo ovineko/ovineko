@@ -336,6 +336,15 @@ describe("dispatchFinallyError", () => {
 });
 
 describe("dispatchRetryExhausted", () => {
+  let unsub: (() => void) | undefined;
+
+  afterEach(() => {
+    unsub?.();
+    unsub = undefined;
+    // Clean up any custom options set during tests
+    delete (globalThis.window as any).__SPA_GUARD_OPTIONS__;
+  });
+
   it("returns void", () => {
     const result = dispatchRetryExhausted();
     expect(result).toBeUndefined();
@@ -344,7 +353,7 @@ describe("dispatchRetryExhausted", () => {
   it("emits retry-exhausted event with correct finalAttempt", async () => {
     const { subscribe } = await import("../../common/events/internal");
     const events: unknown[] = [];
-    const unsub = subscribe((event) => events.push(event));
+    unsub = subscribe((event) => events.push(event));
 
     dispatchRetryExhausted();
 
@@ -355,14 +364,12 @@ describe("dispatchRetryExhausted", () => {
         retryId: "",
       }),
     );
-
-    unsub();
   });
 
   it("emits fallback-ui-shown event via showFallbackUI", async () => {
     const { subscribe } = await import("../../common/events/internal");
     const events: unknown[] = [];
-    const unsub = subscribe((event) => events.push(event));
+    unsub = subscribe((event) => events.push(event));
 
     dispatchRetryExhausted();
 
@@ -371,7 +378,24 @@ describe("dispatchRetryExhausted", () => {
         name: "fallback-ui-shown",
       }),
     );
+  });
 
-    unsub();
+  it("uses configured reloadDelays length as finalAttempt", async () => {
+    (globalThis.window as any).__SPA_GUARD_OPTIONS__ = {
+      reloadDelays: [500, 1500],
+    };
+
+    const { subscribe } = await import("../../common/events/internal");
+    const events: unknown[] = [];
+    unsub = subscribe((event) => events.push(event));
+
+    dispatchRetryExhausted();
+
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        finalAttempt: 2,
+        name: "retry-exhausted",
+      }),
+    );
   });
 });
