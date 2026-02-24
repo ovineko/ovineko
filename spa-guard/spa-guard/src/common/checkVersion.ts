@@ -32,8 +32,11 @@ if (globalThis.window && !(globalThis.window as any)[versionCheckStateWindowKey]
 }
 
 const getState = (): VersionCheckState => {
+  if (globalThis.window === undefined) {
+    return createInitialState();
+  }
   return (
-    (globalThis.window as any)?.[versionCheckStateWindowKey] ??
+    (globalThis.window as any)[versionCheckStateWindowKey] ??
     ((globalThis.window as any)[versionCheckStateWindowKey] = createInitialState())
   );
 };

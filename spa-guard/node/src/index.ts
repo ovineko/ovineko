@@ -337,7 +337,7 @@ function mergeTranslations(
   if (customTranslations) {
     for (const [key, partial] of Object.entries(customTranslations)) {
       const base = merged[key];
-      merged[key] = base ? { ...base, ...partial } : (partial as SpaGuardTranslations);
+      merged[key] = { ...(base ?? translations.en), ...partial } as SpaGuardTranslations;
     }
   }
   return merged;
