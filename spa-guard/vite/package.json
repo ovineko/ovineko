@@ -1,0 +1,73 @@
+{
+  "name": "@ovineko/spa-guard-vite",
+  "version": "0.0.1-alpha-17",
+  "description": "Vite plugin and inline scripts for spa-guard",
+  "keywords": [
+    "spa",
+    "vite",
+    "plugin",
+    "chunk-load-error"
+  ],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/spa-guard/vite",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "spa-guard/vite"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/vite-plugin/index.d.ts",
+      "default": "./dist/vite-plugin/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "dist-inline",
+    "dist-inline-trace",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup --config tsup.inline.config.ts && tsup --config tsup.inline.trace.config.ts && tsup",
+    "fix": "datamitsu fix",
+    "lint": "datamitsu lint",
+    "prepack": "clean-pkg-json clean",
+    "postpack": "clean-pkg-json restore",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:debug": "DEBUG=1 vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ovineko/spa-guard": "workspace:*",
+    "html-minifier-terser": "7.2.0"
+  },
+  "devDependencies": {
+    "@ovineko/clean-pkg-json": "workspace:*",
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
+    "@types/html-minifier-terser": "7.0.2",
+    "@vitest/coverage-v8": "4.0.18",
+    "terser": "5.46.0",
+    "tsup": "8.5.1",
+    "vitest": "4.0.18"
+  },
+  "peerDependencies": {
+    "vite": "^8 || ^7"
+  },
+  "packageManager": "pnpm@10.29.3",
+  "engines": {
+    "node": ">=22.15.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

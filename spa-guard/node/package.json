@@ -1,0 +1,71 @@
+{
+  "name": "@ovineko/spa-guard-node",
+  "version": "0.0.1-alpha-17",
+  "description": "Server-side HTML patching and i18n for spa-guard",
+  "keywords": [
+    "spa",
+    "node",
+    "i18n",
+    "html",
+    "server-side"
+  ],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/spa-guard/node",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "spa-guard/node"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/node/index.d.ts",
+      "default": "./dist/node/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "fix": "datamitsu fix",
+    "lint": "datamitsu lint",
+    "prepack": "clean-pkg-json clean",
+    "postpack": "clean-pkg-json restore",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:debug": "DEBUG=1 vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fastify/accept-negotiator": "2.0.1",
+    "@ovineko/spa-guard": "workspace:*"
+  },
+  "devDependencies": {
+    "@ovineko/clean-pkg-json": "workspace:*",
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
+    "@types/node": "24.10.12",
+    "@vitest/coverage-v8": "4.0.18",
+    "tsup": "8.5.1",
+    "vitest": "4.0.18"
+  },
+  "peerDependencies": {
+    "parse5": "^8"
+  },
+  "packageManager": "pnpm@10.29.3",
+  "engines": {
+    "node": ">=22.15.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

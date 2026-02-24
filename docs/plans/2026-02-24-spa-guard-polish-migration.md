@@ -118,20 +118,20 @@ Polish the happydom->parse5 and typebox->plain TS migration, fix spinner renderi
 - Modify: `pnpm-workspace.yaml`
 - Delete: `packages/spa-guard/` (after migration)
 
-- [ ] Create spa-guard/ directory at repo root
-- [ ] Create core package @ovineko/spa-guard with: src/common/, src/runtime/, src/inline/, src/inline-trace/, src/i18n/, src/schema/ - NO peer dependencies
-- [ ] Create @ovineko/spa-guard-react with: src/react/, src/react-error-boundary/ - peer: react@^19
-- [ ] Create @ovineko/spa-guard-react-router with: src/react-router/ - peer: react@^19, react-router@^7
-- [ ] Create @ovineko/spa-guard-fastify with: src/fastify/ - peer: fastify@^5||^4, fastify-plugin@^5||^4
-- [ ] Create @ovineko/spa-guard-node with: src/node/ - peer: parse5@^8
-- [ ] Create @ovineko/spa-guard-vite with: src/vite-plugin/, scripts/, HTML templates, dist-inline/ - peer: vite@^8||^7
-- [ ] Create @ovineko/spa-guard-eslint with: src/eslint/ - peer: eslint@^9||^10
-- [ ] Each package: package.json, tsconfig.json, tsup.config.ts, vitest.config.ts, move relevant tests
-- [ ] Update pnpm-workspace.yaml to include spa-guard/\*
-- [ ] Update internal workspace:\* dependencies between new packages
-- [ ] Delete old packages/spa-guard after verification
-- [ ] Run pnpm install, turbo build, pnpm test - all must pass
-- [ ] Run turbo prune to verify no long lockfile key issues
+- [x] Create spa-guard/ directory at repo root
+- [x] Create core package @ovineko/spa-guard with: src/common/, src/runtime/, src/inline/, src/inline-trace/, src/i18n/, src/schema/ - NO peer dependencies
+- [x] Create @ovineko/spa-guard-react with: src/react/, src/react-error-boundary/ - peer: react@^19
+- [x] Create @ovineko/spa-guard-react-router with: src/react-router/ - peer: react@^19, react-router@^7
+- [x] Create @ovineko/spa-guard-fastify with: src/fastify/ - peer: fastify@^5||^4, fastify-plugin@^5||^4
+- [x] Create @ovineko/spa-guard-node with: src/node/ - peer: parse5@^8
+- [x] Create @ovineko/spa-guard-vite with: src/vite-plugin/, scripts/, HTML templates, dist-inline/ - peer: vite@^8||^7
+- [x] Create @ovineko/spa-guard-eslint with: src/eslint/ - peer: eslint@^9||^10
+- [x] Each package: package.json, tsconfig.json, tsup.config.ts, vitest.config.ts, move relevant tests
+- [x] Update pnpm-workspace.yaml to include spa-guard/\*
+- [x] Update internal workspace:\* dependencies between new packages
+- [x] Delete old packages/spa-guard after verification
+- [x] Run pnpm install, turbo build, pnpm test - all must pass
+- [x] Run turbo prune to verify no long lockfile key issues
 
 ### Task 8: Cleanup and verify acceptance criteria
 

@@ -1,0 +1,69 @@
+{
+  "name": "@ovineko/spa-guard-fastify",
+  "version": "0.0.1-alpha-17",
+  "description": "Fastify plugin for spa-guard beacon endpoint",
+  "keywords": [
+    "spa",
+    "fastify",
+    "beacon",
+    "monitoring"
+  ],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/spa-guard/fastify",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "spa-guard/fastify"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/fastify/index.d.ts",
+      "default": "./dist/fastify/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "fix": "datamitsu fix",
+    "lint": "datamitsu lint",
+    "prepack": "clean-pkg-json clean",
+    "postpack": "clean-pkg-json restore",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:debug": "DEBUG=1 vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ovineko/spa-guard": "workspace:*"
+  },
+  "devDependencies": {
+    "@ovineko/clean-pkg-json": "workspace:*",
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
+    "@vitest/coverage-v8": "4.0.18",
+    "tsup": "8.5.1",
+    "vitest": "4.0.18"
+  },
+  "peerDependencies": {
+    "fastify": "^5 || ^4",
+    "fastify-plugin": "^5 || ^4"
+  },
+  "packageManager": "pnpm@10.29.3",
+  "engines": {
+    "node": ">=22.15.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
