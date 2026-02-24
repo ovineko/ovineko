@@ -5,6 +5,7 @@ export { optionsWindowKey } from "./constants";
 
 const defaultOptions: Options = {
   checkVersion: {
+    cache: "no-store",
     interval: 300_000,
     mode: "html",
     onUpdate: "reload",
@@ -53,6 +54,13 @@ export interface Options {
    * and dispatches a `spa-guard:version-change` CustomEvent on the window.
    */
   checkVersion?: {
+    /**
+     * Cache mode for the fetch request used to check the version.
+     * - "no-store": Bypass the HTTP cache entirely (default).
+     * - "no-cache": Revalidate with the server before using cached response.
+     * @default "no-store"
+     */
+    cache?: "no-cache" | "no-store";
     /**
      * Endpoint URL for JSON mode version checking.
      * Required when mode is "json".

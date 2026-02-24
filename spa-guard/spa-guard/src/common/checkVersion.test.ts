@@ -215,6 +215,30 @@ describe("common/checkVersion", () => {
           }),
         );
       });
+
+      it('fetches with cache: "no-cache" when explicitly configured', async () => {
+        setWindowOptions({
+          checkVersion: { cache: "no-cache", interval: 1000, mode: "html" },
+          version: "1.0.0",
+        });
+
+        globalThis.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          text: async () => 'window.__SPA_GUARD_OPTIONS__={"version":"1.0.0"}',
+        });
+
+        mod.startVersionCheck();
+
+        await vi.advanceTimersByTimeAsync(1000);
+
+        expect(globalThis.fetch).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            cache: "no-cache",
+            headers: { Accept: "text/html" },
+          }),
+        );
+      });
     });
 
     describe("JSON mode", () => {
@@ -282,6 +306,35 @@ describe("common/checkVersion", () => {
           "/api/version",
           expect.objectContaining({
             cache: "no-store",
+            headers: { Accept: "application/json" },
+          }),
+        );
+      });
+
+      it('fetches with cache: "no-cache" when explicitly configured', async () => {
+        setWindowOptions({
+          checkVersion: {
+            cache: "no-cache",
+            endpoint: "/api/version",
+            interval: 1000,
+            mode: "json",
+          },
+          version: "1.0.0",
+        });
+
+        globalThis.fetch = vi.fn().mockResolvedValue({
+          json: async () => ({ version: "1.0.0" }),
+          ok: true,
+        });
+
+        mod.startVersionCheck();
+
+        await vi.advanceTimersByTimeAsync(1000);
+
+        expect(globalThis.fetch).toHaveBeenCalledWith(
+          "/api/version",
+          expect.objectContaining({
+            cache: "no-cache",
             headers: { Accept: "application/json" },
           }),
         );

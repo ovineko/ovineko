@@ -30,6 +30,7 @@ describe("getOptions", () => {
       },
     });
     expect(result.checkVersion).toEqual({
+      cache: "no-store",
       interval: 300_000,
       mode: "html",
       onUpdate: "reload",

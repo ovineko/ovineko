@@ -66,12 +66,12 @@ Implement all three tasks from TODO.md: HTML Cache Store, ETag/304 support (clie
 - Modify: `spa-guard/spa-guard/src/common/checkVersion.ts`
 - Modify: `spa-guard/spa-guard/src/common/checkVersion.test.ts`
 
-- [ ] Add `cache?: "no-cache" | "no-store"` to checkVersion options interface
-- [ ] Add `cache: "no-store"` to defaultOptions
-- [ ] Update `fetchJsonVersion()` to use `getOptions().checkVersion?.cache ?? "no-store"` in fetch call
-- [ ] Update `fetchHtmlVersion()` similarly
-- [ ] Write tests: default "no-store" behavior, explicit "no-cache" for both HTML and JSON modes
-- [ ] Run tests: `cd spa-guard/spa-guard && pnpm test` - must pass
+- [x] Add `cache?: "no-cache" | "no-store"` to checkVersion options interface
+- [x] Add `cache: "no-store"` to defaultOptions
+- [x] Update `fetchJsonVersion()` to use `getOptions().checkVersion?.cache ?? "no-store"` in fetch call
+- [x] Update `fetchHtmlVersion()` similarly
+- [x] Write tests: default "no-store" behavior, explicit "no-cache" for both HTML and JSON modes
+- [x] Run tests: `cd spa-guard/spa-guard && pnpm test` - must pass
 
 ### Task 4: Fastify Handler Wrapper (TODO Task 2.3)
 

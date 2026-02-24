@@ -20,7 +20,7 @@ const fetchJsonVersion = async (): Promise<null | string> => {
   }
 
   const response = await fetch(endpoint, {
-    cache: "no-store",
+    cache: getOptions().checkVersion?.cache ?? "no-store",
     headers: { Accept: "application/json" },
   });
   if (!response.ok) {
@@ -39,7 +39,7 @@ const fetchHtmlVersion = async (): Promise<null | string> => {
   url.search = "";
   url.hash = "";
   const response = await fetch(url.toString(), {
-    cache: "no-store",
+    cache: getOptions().checkVersion?.cache ?? "no-store",
     headers: { Accept: "text/html" },
   });
   if (!response.ok) {
