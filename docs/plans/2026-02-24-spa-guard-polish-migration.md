@@ -84,11 +84,11 @@ Polish the happydom->parse5 and typebox->plain TS migration, fix spinner renderi
 - Modify: `packages/spa-guard/src/node/index.test.ts`
 - Modify: `packages/spa-guard/README.md`
 
-- [ ] CONFIRM WITH USER: escapeAttr in node/index.ts - was used with happy-dom for manual attribute escaping, no longer needed with parse5 (which handles serialization). Remove it?
-- [ ] Search for any other functions that became unused after the migration
-- [ ] Remove confirmed unused functions and their tests
-- [ ] Update README exports documentation
-- [ ] Run test suite - must pass before task 6
+- [x] CONFIRM WITH USER: escapeAttr in node/index.ts - was used with happy-dom for manual attribute escaping, no longer needed with parse5 (which handles serialization). Remove it?
+- [x] Search for any other functions that became unused after the migration
+- [x] Remove confirmed unused functions and their tests
+- [x] Update README exports documentation
+- [x] Run test suite - must pass before task 6
 
 ### Task 6: Runtime i18n translation patching API
 

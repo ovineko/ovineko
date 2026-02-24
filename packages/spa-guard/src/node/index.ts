@@ -157,17 +157,6 @@ export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<
 }
 
 /**
- * Escape special characters for safe use in HTML attribute values.
- */
-export function escapeAttr(str: string): string {
-  return str
-    .replaceAll("&", "&amp;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
-}
-
-/**
  * Server-side HTML patching for i18n.
  *
  * Resolves language from `lang` (explicit) or `acceptLanguage` (header),

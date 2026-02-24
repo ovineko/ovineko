@@ -1802,7 +1802,7 @@ spa-guard provides 13 export entry points:
 | `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                         | `react@^19`                                       |
 | `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                         | `eslint@^9 \|\| ^10` (optional)                   |
 | `./i18n`                 | Translation types and utilities (SpaGuardTranslations, translations, matchLang)                                                        | None                                              |
-| `./node`                 | Server-side utilities (patchHtmlI18n, createHtmlCache, escapeAttr, matchLang, translations)                                            | `parse5@^8`                                       |
+| `./node`                 | Server-side utilities (patchHtmlI18n, createHtmlCache, matchLang, translations)                                                        | `parse5@^8`                                       |
 
 **Import examples:**
 
@@ -1859,13 +1859,7 @@ import type { SpaGuardTranslations } from "@ovineko/spa-guard/i18n";
 import { translations, matchLang } from "@ovineko/spa-guard/i18n";
 
 // Server utilities (i18n HTML patching + caching)
-import {
-  patchHtmlI18n,
-  createHtmlCache,
-  escapeAttr,
-  translations,
-  matchLang,
-} from "@ovineko/spa-guard/node";
+import { patchHtmlI18n, createHtmlCache, translations, matchLang } from "@ovineko/spa-guard/node";
 ```
 
 ## Build Sizes

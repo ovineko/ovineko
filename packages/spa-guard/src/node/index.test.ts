@@ -3,39 +3,13 @@ import { describe, expect, it } from "vitest";
 
 import type { HtmlCache } from "./index";
 
-import { createHtmlCache, escapeAttr, matchLang, patchHtmlI18n, translations } from "./index";
+import { createHtmlCache, matchLang, patchHtmlI18n, translations } from "./index";
 
 const sampleHtml = `<!DOCTYPE html><html lang="en"><head><title>App</title></head><body><div id="app"></div></body></html>`;
 
 const sampleHtmlWithVersion = `<!DOCTYPE html><html lang="en"><head><title>App</title><script>window.__SPA_GUARD_VERSION__="1.2.3";</script></head><body></body></html>`;
 
 describe("node", () => {
-  describe("escapeAttr", () => {
-    it("escapes & character", () => {
-      expect(escapeAttr("a&b")).toBe("a&amp;b");
-    });
-
-    it("escapes double quote", () => {
-      expect(escapeAttr('a"b')).toBe("a&quot;b");
-    });
-
-    it("escapes < character", () => {
-      expect(escapeAttr("a<b")).toBe("a&lt;b");
-    });
-
-    it("escapes > character", () => {
-      expect(escapeAttr("a>b")).toBe("a&gt;b");
-    });
-
-    it("escapes all special characters together", () => {
-      expect(escapeAttr('<"&>')).toBe("&lt;&quot;&amp;&gt;");
-    });
-
-    it("returns unchanged string without special chars", () => {
-      expect(escapeAttr("hello world")).toBe("hello world");
-    });
-  });
-
   describe("re-exports from i18n", () => {
     it("re-exports translations", () => {
       expect(translations).toBeDefined();
