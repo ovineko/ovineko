@@ -136,7 +136,7 @@ export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<
         Vary: "Accept-Language, Accept-Encoding",
       };
 
-      if (ifNoneMatch && ifNoneMatch === entry.etag) {
+      if (ifNoneMatch && etagWeakMatch(ifNoneMatch, entry.etag)) {
         return { body: "", headers, statusCode: 304 as const };
       }
 
@@ -181,6 +181,7 @@ export const createHTMLCacheStore = <K extends string>(
   load: () => Promise<void>;
 } => {
   let loaded = false;
+  let loadPromise: Promise<void> | undefined;
   const cacheMap = new Map<K, HtmlCache>();
 
   const load = async (): Promise<void> => {
@@ -188,16 +189,31 @@ export const createHTMLCacheStore = <K extends string>(
       return;
     }
 
-    const htmlMap = typeof input === "function" ? await input() : input;
+    // Deduplicate concurrent load() calls via a single in-flight promise.
+    // Clear on rejection so a later call can retry.
+    loadPromise ??= (async () => {
+      const htmlMap = typeof input === "function" ? await input() : input;
 
-    for (const key of Object.keys(htmlMap) as K[]) {
-      const htmlOrFn: (() => Promise<string>) | string = htmlMap[key];
-      const html = typeof htmlOrFn === "function" ? await htmlOrFn() : htmlOrFn;
-      const cache = await createHtmlCache({ html, languages });
-      cacheMap.set(key, cache);
-    }
+      // Build into a temporary map so cacheMap is committed atomically
+      const pending = new Map<K, HtmlCache>();
+      for (const key of Object.keys(htmlMap) as K[]) {
+        const htmlOrFn: (() => Promise<string>) | string = htmlMap[key];
+        const html = typeof htmlOrFn === "function" ? await htmlOrFn() : htmlOrFn;
+        const cache = await createHtmlCache({ html, languages });
+        pending.set(key, cache);
+      }
 
-    loaded = true;
+      // Atomic commit: only update shared state after full success
+      for (const [key, cache] of pending) {
+        cacheMap.set(key, cache);
+      }
+      loaded = true;
+    })().catch((error: unknown) => {
+      loadPromise = undefined;
+      throw error;
+    });
+
+    return loadPromise;
   };
 
   const getCache = (key: K): HtmlCache => {
@@ -288,6 +304,30 @@ export function patchHtmlI18n(options: PatchHtmlI18nOptions): string {
   headEl.childNodes.unshift(meta);
 
   return serialize(doc);
+}
+
+/**
+ * RFC 7232 weak comparison for If-None-Match.
+ * Supports wildcard (*), comma-separated entity-tags, and W/ weak prefix.
+ * Weak comparison: two entity-tags are equivalent if their opaque-tags match,
+ * regardless of either or both being tagged as "weak".
+ */
+function etagWeakMatch(ifNoneMatch: string, etag: string): boolean {
+  const trimmed = ifNoneMatch.trim();
+  if (trimmed === "*") {
+    return true;
+  }
+
+  const opaqueTag = etag.replace(/^W\//, "");
+
+  for (const raw of trimmed.split(",")) {
+    const candidate = raw.trim().replace(/^W\//, "");
+    if (candidate === opaqueTag) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function mergeTranslations(

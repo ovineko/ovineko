@@ -195,8 +195,14 @@ export async function spaGuardFastifyHandler(
   }
 
   if (!options.cache && getHtml) {
-    // Wrap in IIFE so the promise is stored synchronously before any await yields
-    options._cachePromise ??= (async () => createHtmlCache(await getHtml()))();
+    // Wrap in IIFE so the promise is stored synchronously before any await yields.
+    // Clear on rejection so subsequent requests can retry initialization.
+    options._cachePromise ??= (async () => createHtmlCache(await getHtml()))().catch(
+      (error: unknown) => {
+        options._cachePromise = undefined;
+        throw error;
+      },
+    );
     options.cache = await options._cachePromise;
   }
 
