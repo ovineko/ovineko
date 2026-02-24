@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard-eslint",
-  "version": "0.0.1-alpha-18",
+  "version": "0.0.1-alpha-19",
   "description": "ESLint rules for spa-guard (no-direct-lazy, no-direct-error-boundary)",
   "keywords": [
     "spa",
@@ -22,8 +22,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/eslint/index.d.ts",
-      "default": "./dist/eslint/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "files": [

@@ -1,6 +1,6 @@
 import type { ESLint, Linter } from "eslint";
 
-import { name } from "../../package.json";
+import { name } from "../package.json";
 import noDirectErrorBoundary from "./rules/no-direct-error-boundary";
 import noDirectLazy from "./rules/no-direct-lazy";
 

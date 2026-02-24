@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard-node",
-  "version": "0.0.1-alpha-18",
+  "version": "0.0.1-alpha-19",
   "description": "Server-side HTML patching and i18n for spa-guard",
   "keywords": [
     "spa",
@@ -24,8 +24,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/node/index.d.ts",
-      "default": "./dist/node/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "files": [

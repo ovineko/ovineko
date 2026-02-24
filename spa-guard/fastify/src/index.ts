@@ -9,7 +9,7 @@ export { BeaconError } from "@ovineko/spa-guard";
 import { logMessage } from "@ovineko/spa-guard/_internal";
 import { parseBeacon } from "@ovineko/spa-guard/schema/parse";
 
-import { name } from "../../package.json";
+import { name } from "../package.json";
 
 const parseStringBody = (body: string): unknown => {
   try {

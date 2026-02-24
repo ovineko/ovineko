@@ -6,7 +6,7 @@ const execAsync = promisify(exec);
 
 export default tsup.defineConfig({
   clean: true,
-  entry: ["src/eslint/index.ts"],
+  entry: ["src/index.ts"],
   format: "esm",
   async onSuccess() {
     await execAsync("rm -f tsconfig.tsbuildinfo && pnpm exec tsc --emitDeclarationOnly");

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { name } from "../../package.json";
+import { name } from "../package.json";
 import plugin, { configs, rules } from "./index";
 
 const expectedPluginName = name;

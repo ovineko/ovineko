@@ -6,7 +6,7 @@ const execAsync = promisify(exec);
 
 export default tsup.defineConfig({
   clean: true,
-  entry: ["src/react-router/index.tsx"],
+  entry: ["src/index.tsx"],
   format: "esm",
   async onSuccess() {
     await execAsync("rm -f tsconfig.tsbuildinfo && pnpm exec tsc --emitDeclarationOnly");

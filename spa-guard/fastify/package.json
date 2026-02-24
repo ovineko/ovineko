@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard-fastify",
-  "version": "0.0.1-alpha-18",
+  "version": "0.0.1-alpha-19",
   "description": "Fastify plugin for spa-guard beacon endpoint",
   "keywords": [
     "spa",
@@ -23,8 +23,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/fastify/index.d.ts",
-      "default": "./dist/fastify/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "files": [

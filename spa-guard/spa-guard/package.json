@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard",
-  "version": "0.0.1-alpha-18",
+  "version": "0.0.1-alpha-19",
   "description": "Chunk load error handling for SPAs — core runtime, error handling, schema, i18n",
   "keywords": [
     "spa",
@@ -23,7 +23,9 @@
   },
   "license": "MIT",
   "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/chunk-*.js"
+  ],
   "type": "module",
   "exports": {
     ".": {
