@@ -6,6 +6,7 @@ import { minify } from "html-minifier-terser";
 import crypto from "node:crypto";
 import fsPromise from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { name } from "../package.json";
 
@@ -35,8 +36,11 @@ const minifyHtml = async (html: string): Promise<string> => {
 const getInlineScript = async (options: VitePluginOptions) => {
   const buildDir = options.trace ? "dist-inline-trace" : "dist-inline";
 
+  const nodePackageJsonUrl = import.meta.resolve("@ovineko/spa-guard-node/package.json");
+  const nodePackageDir = path.dirname(fileURLToPath(nodePackageJsonUrl));
+
   const script = await fsPromise
-    .readFile(path.join(import.meta.dirname, `../${buildDir}/index.js`), "utf8")
+    .readFile(path.join(nodePackageDir, buildDir, "index.js"), "utf8")
     .then((r) => r.trim());
 
   const processedOptions = {

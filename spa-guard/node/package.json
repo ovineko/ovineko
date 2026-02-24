@@ -33,7 +33,8 @@
     "./builder": {
       "types": "./dist/builder.d.ts",
       "default": "./dist/builder.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
@@ -41,13 +42,13 @@
     "dist-inline-trace"
   ],
   "scripts": {
-    "build": "tsup && pnpm copy:bundles",
-    "copy:bundles": "rm -rf ./dist-inline ./dist-inline-trace && cp -r ../vite/dist-inline ./dist-inline && cp -r ../vite/dist-inline-trace ./dist-inline-trace",
+    "build": "tsup",
+    "build:inline": "tsup --config tsup.inline.config.ts && tsup --config tsup.inline.trace.config.ts",
     "fix": "datamitsu fix",
     "lint": "datamitsu lint",
     "prepack": "clean-pkg-json clean",
     "postpack": "clean-pkg-json restore",
-    "prepublishOnly": "pnpm build",
+    "prepublishOnly": "pnpm build:inline && pnpm build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:debug": "DEBUG=1 vitest run",
@@ -62,11 +63,11 @@
   "devDependencies": {
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
-    "@ovineko/spa-guard-vite": "workspace:*",
     "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
     "@types/html-minifier-terser": "7.0.2",
     "@types/node": "24.10.12",
     "@vitest/coverage-v8": "4.0.18",
+    "terser": "5.46.0",
     "tsup": "8.5.1",
     "vitest": "4.0.18"
   },

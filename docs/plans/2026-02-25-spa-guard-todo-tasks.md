@@ -74,15 +74,15 @@ High-risk refactor — inline scripts move from vite to node package.
 - Modify: `spa-guard/vite/src/index.ts`
 - Modify: `spa-guard/node/src/index.ts`
 
-- [ ] Move inline source directories and tsup configs from vite to node
-- [ ] Add `build:inline` script to `node/package.json`; update `prepublishOnly` to use it; add `dist-inline` and `dist-inline-trace` to `files`
-- [ ] Remove `build:inline` script and `copy:bundles` script from `vite/package.json`; add `@ovineko/spa-guard-node` to dependencies
-- [ ] Update `vite/src/index.ts`: replace local `getInlineScript` with version that reads from `@ovineko/spa-guard-node` package via `import.meta.resolve`
-- [ ] Remove builder re-exports from `node/src/index.ts` (lines that re-export from `./builder`)
-- [ ] Build node first: `pnpm --filter @ovineko/spa-guard-node build:inline && pnpm --filter @ovineko/spa-guard-node build`
-- [ ] Build vite: `pnpm --filter @ovineko/spa-guard-vite build`
-- [ ] Verify `dist-inline/` and `dist-inline-trace/` exist in node package
-- [ ] Run `pnpm --recursive test` — must pass
+- [x] Move inline source directories and tsup configs from vite to node
+- [x] Add `build:inline` script to `node/package.json`; update `prepublishOnly` to use it; add `dist-inline` and `dist-inline-trace` to `files`
+- [x] Remove `build:inline` script and `copy:bundles` script from `vite/package.json`; add `@ovineko/spa-guard-node` to dependencies
+- [x] Update `vite/src/index.ts`: replace local `getInlineScript` with version that reads from `@ovineko/spa-guard-node` package via `import.meta.resolve`
+- [x] Remove builder re-exports from `node/src/index.ts` (lines that re-export from `./builder`)
+- [x] Build node first: `pnpm --filter @ovineko/spa-guard-node build:inline && pnpm --filter @ovineko/spa-guard-node build`
+- [x] Build vite: `pnpm --filter @ovineko/spa-guard-vite build`
+- [x] Verify `dist-inline/` and `dist-inline-trace/` exist in node package
+- [x] Run `pnpm --recursive test` — must pass
 
 ### Task 4: Fix External Mode in Dev Server
 

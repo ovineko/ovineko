@@ -28,12 +28,10 @@
     }
   },
   "files": [
-    "dist",
-    "dist-inline",
-    "dist-inline-trace"
+    "dist"
   ],
   "scripts": {
-    "build": "tsup --config tsup.inline.config.ts && tsup --config tsup.inline.trace.config.ts && tsup",
+    "build": "tsup",
     "fix": "datamitsu fix",
     "lint": "datamitsu lint",
     "prepack": "clean-pkg-json clean",
@@ -47,6 +45,7 @@
   },
   "dependencies": {
     "@ovineko/spa-guard": "workspace:*",
+    "@ovineko/spa-guard-node": "workspace:*",
     "html-minifier-terser": "7.2.0"
   },
   "devDependencies": {
