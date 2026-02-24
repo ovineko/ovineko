@@ -332,6 +332,12 @@ describe("node", () => {
   describe("createHtmlCache", () => {
     let cache: HtmlCache;
 
+    it("throws when languages array is empty", async () => {
+      await expect(createHtmlCache({ html: sampleHtml, languages: [] })).rejects.toThrow(
+        "createHtmlCache requires at least one language",
+      );
+    });
+
     describe("multi-language cache", () => {
       it("creates a cache with specified languages", async () => {
         cache = await createHtmlCache({

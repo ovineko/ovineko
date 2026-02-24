@@ -76,6 +76,10 @@ export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<
   const merged = mergeTranslations(customTranslations);
   const languages = options.languages ?? Object.keys(merged);
 
+  if (languages.length === 0) {
+    throw new Error("createHtmlCache requires at least one language");
+  }
+
   // Extract version for ETag base
   const version = extractVersionFromHtml(html);
   const sha256Prefix = version
