@@ -17,13 +17,14 @@ import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
 import { handleStaticAssetFailure } from "../staticAssetRecovery";
 
 export const listenInternal = (serializeError: (error: unknown) => string, logger?: Logger) => {
+  if (isInitialized()) {
+    return;
+  }
+
   if (logger) {
     setLogger(logger);
   }
 
-  if (isInitialized()) {
-    return;
-  }
   markInitialized();
 
   const options = getOptions();
@@ -40,6 +41,16 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
   wa(
     "error",
     (event) => {
+      if (isStaticAssetError(event) && isLikely404()) {
+        const assetUrl = getAssetUrl(event);
+        event.preventDefault();
+        emitEvent({ name: "static-asset-load-failed", url: assetUrl });
+        if (options.staticAssets?.autoRecover !== false) {
+          handleStaticAssetFailure(assetUrl);
+        }
+        return;
+      }
+
       if (shouldIgnoreMessages([event.message])) {
         return;
       }
@@ -55,16 +66,6 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
       if (shouldForceRetry([event.message])) {
         event.preventDefault();
         attemptReload(event.error ?? event);
-        return;
-      }
-
-      if (isStaticAssetError(event) && isLikely404()) {
-        const assetUrl = getAssetUrl(event);
-        event.preventDefault();
-        emitEvent({ name: "static-asset-load-failed", url: assetUrl });
-        if (options.staticAssets?.autoRecover !== false) {
-          handleStaticAssetFailure(assetUrl);
-        }
         return;
       }
 

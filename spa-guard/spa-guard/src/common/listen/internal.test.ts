@@ -232,11 +232,11 @@ describe("listenInternal", () => {
       expect(mockSetLogger).not.toHaveBeenCalled();
     });
 
-    it("calls setLogger before isInitialized check (logger available even when already initialized)", () => {
+    it("does not call setLogger when already initialized", () => {
       mockIsInitialized.mockReturnValue(true);
       const fakeLogger = { capturedError: vi.fn() } as any;
       listenInternal(vi.fn(), fakeLogger);
-      expect(mockSetLogger).toHaveBeenCalledWith(fakeLogger);
+      expect(mockSetLogger).not.toHaveBeenCalled();
     });
 
     it("calls logger.retryLimitExceeded when retry limit is exceeded", () => {

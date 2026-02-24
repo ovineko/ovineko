@@ -2,11 +2,14 @@ import type { BeaconSchema } from ".";
 
 const STRING_FIELDS = [
   "appName",
+  "errorContext",
   "errorMessage",
+  "errorType",
   "eventMessage",
   "eventName",
   "retryId",
   "serialized",
+  "url",
 ] as const;
 
 export function parseBeacon(data: unknown): BeaconSchema {
@@ -25,11 +28,13 @@ export function parseBeacon(data: unknown): BeaconSchema {
     }
   }
 
-  if ("retryAttempt" in d) {
-    if (typeof d.retryAttempt !== "number") {
-      throw new TypeError("Beacon validation failed: retryAttempt must be a number");
+  for (const field of ["retryAttempt", "httpStatus"] as const) {
+    if (field in d) {
+      if (typeof d[field] !== "number") {
+        throw new TypeError(`Beacon validation failed: ${field} must be a number`);
+      }
+      result[field] = d[field] as number;
     }
-    result.retryAttempt = d.retryAttempt;
   }
 
   return result;
