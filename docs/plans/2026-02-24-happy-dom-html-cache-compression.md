@@ -91,10 +91,10 @@ Replace fragile regex-based HTML parsing in patchHtmlI18n with proper DOM manipu
 
 ### Task 5: Verify acceptance criteria
 
-- [ ] Run full test suite (`pnpm test` in packages/spa-guard)
-- [ ] Run linter (`pnpm lint` in packages/spa-guard)
-- [ ] Verify build succeeds (`pnpm build` in packages/spa-guard)
-- [ ] Verify test coverage meets 80%+
+- [x] Run full test suite (`pnpm test` in packages/spa-guard)
+- [x] Run linter (`pnpm lint` in packages/spa-guard)
+- [x] Verify build succeeds (`pnpm build` in packages/spa-guard)
+- [x] Verify test coverage meets 80%+
 
 ### Task 6: Update documentation
 
