@@ -151,6 +151,6 @@ Polish the happydom->parse5 and typebox->plain TS migration, fix spinner renderi
 
 ### Task 9: Update documentation
 
-- [ ] Update README.md if user-facing changes (new packages, new exports, removed functions)
-- [ ] Update CLAUDE.md if internal patterns changed
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Update README.md if user-facing changes (new packages, new exports, removed functions)
+- [x] Update CLAUDE.md if internal patterns changed
+- [x] Move this plan to `docs/plans/completed/`

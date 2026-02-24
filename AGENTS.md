@@ -22,8 +22,14 @@ This follows the same philosophy as `@shibanet0/datamitsu-config` (opinionated c
 
 This monorepo contains the following packages:
 
+- **@ovineko/spa-guard**: Core runtime, error handling, schema, i18n for SPAs — automatic retry with cache busting, beacon error reporting, debug test panel
+- **@ovineko/spa-guard-react**: React hooks, components (`lazyWithRetry`, `Spinner`), and error boundaries (`DefaultErrorFallback`, `ErrorBoundary`)
+- **@ovineko/spa-guard-react-router**: React Router v7 error boundary integration for spa-guard
+- **@ovineko/spa-guard-vite**: Vite plugin and inline scripts for spa-guard
+- **@ovineko/spa-guard-node**: Server-side HTML patching and i18n for spa-guard (uses parse5 for DOM parsing)
+- **@ovineko/spa-guard-fastify**: Fastify plugin for spa-guard beacon endpoint
+- **@ovineko/spa-guard-eslint**: ESLint rules for spa-guard (no-direct-lazy, no-direct-error-boundary)
 - **@ovineko/react-router**: Type-safe wrapper for React Router v7 with valibot schema validation, automatic error handling, and typed params
-- **@ovineko/spa-guard**: Production-ready chunk load error handling for SPAs — automatic retry with cache busting, `lazyWithRetry` for module-level retry before page reload, beacon error reporting, React error boundaries, debug test panel, Fastify plugin, and Vite plugin
 - **@ovineko/clean-pkg-json**: Zero-config tool to clean package.json before publishing and restore it after
 - **@ovineko/datamitsu-config**: Internal configuration package for datamitsu tooling (linting, formatting, etc.)
 - **@ovineko/fastify-base**: Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck, and other common integrations
@@ -32,13 +38,19 @@ This monorepo contains the following packages:
 
 ```plaintext
 ovineko/
-├── packages/                    # All publishable packages
+├── spa-guard/                   # spa-guard package family
+│   ├── spa-guard/              # Core: runtime, error handling, schema, i18n
+│   ├── react/                  # React hooks, components, error boundaries
+│   ├── react-router/           # React Router v7 error boundary integration
+│   ├── vite/                   # Vite plugin and inline scripts
+│   ├── node/                   # Server-side HTML patching (parse5)
+│   ├── fastify/                # Fastify beacon endpoint plugin
+│   └── eslint/                 # ESLint rules
+├── packages/                    # Other publishable packages
 │   ├── react-router/           # Type-safe React Router v7 wrapper (valibot validation)
-│   ├── spa-guard/              # Chunk load error handling for SPAs (lazyWithRetry, beacons, debug panel, Vite plugin)
 │   ├── clean-pkg-json/         # Package.json cleanup tool for publishing
 │   ├── datamitsu-config/       # Shared config for datamitsu tooling
 │   └── fastify-base/           # Pre-configured Fastify server with observability
-├── test/                       # Shared test utilities and setup files
 ├── turbo.json                  # Turborepo build orchestration config
 ├── pnpm-workspace.yaml         # pnpm workspace configuration
 ├── datamitsu.ts                # Centralized linting/formatting config
@@ -76,7 +88,7 @@ ovineko/
 - `vitest` - Fast unit test framework (Vite-powered)
 - `@testing-library/react` - React component testing utilities
 - `@testing-library/jest-dom` - Custom jest-dom matchers for assertions
-- `happy-dom` - Lightweight DOM implementation for tests; also used as an optional peer dependency in `@ovineko/spa-guard`'s `./node` entry point for DOM-based HTML patching
+- `happy-dom` - Lightweight DOM implementation for tests
 
 ### Code Quality
 
@@ -244,15 +256,16 @@ After successful publishing:
 ### Monorepo Structure
 
 - **Root**: Contains shared configuration files (turbo.json, datamitsu.ts, eslint.config.js, etc.)
-- **Packages**: Each package in `packages/` is independently versioned and publishable
+- **spa-guard/**: The spa-guard package family, split into 7 separate packages (core, react, react-router, vite, node, fastify, eslint)
+- **packages/**: Other publishable packages (react-router, clean-pkg-json, datamitsu-config, fastify-base)
 - **Workspace protocol**: Internal dependencies use `workspace:*` for cross-package references
 
 ### Type Safety & Validation
 
 The codebase emphasizes runtime type safety:
 
-- **TypeBox** is the primary schema validation library used across most packages
-- **Valibot** is specifically used in @ovineko/react-router for URL params and search params validation
+- **Valibot** is used in @ovineko/react-router for URL params and search params validation
+- @ovineko/spa-guard uses plain TypeScript validation (no schema library dependency)
 - Type inference from schemas eliminates the need for duplicate TypeScript types
 
 Example from @ovineko/react-router (using valibot):
@@ -368,30 +381,39 @@ When modifying a package, always run its tests and ensure the build succeeds bef
 - Requires React Router v7 as peer dependency
 - URL params validated at runtime with valibot
 
-### @ovineko/spa-guard
+### @ovineko/spa-guard (package family)
 
-- Dual build system: tsup builds the library (`dist/`); a separate Terser pipeline builds the inline script (`dist-inline/` for production, `dist-inline-trace/` for trace/debug mode)
+The spa-guard functionality is split into 7 separate packages under `spa-guard/`:
+
+- **@ovineko/spa-guard** (core): Runtime, error handling, schema validation, i18n — no peer dependencies
+- **@ovineko/spa-guard-react**: React hooks, components, error boundaries — peer: react@^19
+- **@ovineko/spa-guard-react-router**: React Router v7 error boundary — peer: react@^19, react-router@^7
+- **@ovineko/spa-guard-vite**: Vite plugin and inline scripts — peer: vite@^8||^7
+- **@ovineko/spa-guard-node**: Server-side HTML patching using parse5 — peer: parse5@^8
+- **@ovineko/spa-guard-fastify**: Fastify beacon endpoint plugin — peer: fastify@^5||^4, fastify-plugin@^5||^4
+- **@ovineko/spa-guard-eslint**: ESLint rules — peer: eslint@^9||^10
+
+Key architecture notes:
+
 - Configuration flows from `spaGuardVitePlugin()` → injected as `window.__SPA_GUARD_OPTIONS__` at build time; all runtime code reads options exclusively from this global via `getOptions()`
-- Two-level retry strategy: `lazyWithRetry` retries the individual module import first (`lazyRetry.retryDelays`), then falls back to full page reload via `attemptReload()` (`reloadDelays`)
-- `src/common/retryImport.ts` is framework-agnostic retry logic; `src/react/lazyWithRetry.tsx` wraps it for `React.lazy` compatibility
+- Two-level retry strategy: `lazyWithRetry` (in spa-guard-react) retries the individual module import first (`lazyRetry.retryDelays`), then falls back to full page reload via `attemptReload()` (`reloadDelays`)
+- `src/common/retryImport.ts` (in core) is framework-agnostic retry logic; `src/react/lazyWithRetry.tsx` (in spa-guard-react) wraps it for `React.lazy` compatibility
 - Event system uses `name` field as the discriminant (not `type`) in both internal `emitEvent()` calls and the public `events.subscribe()` API
-- Peer dependency for `./react` export is `react@^19` only
+- Schema validation uses plain TypeScript (no TypeBox or other schema library dependency)
 - Test setup (`test/setup.ts`) globally suppresses `console.log/warn/error` to keep test output clean; run `pnpm test:debug` (sets `DEBUG=1`) to pass console output through when diagnosing test failures
-- ESLint plugin name is dynamically computed as `${packageName}/eslint` (i.e., `@ovineko/spa-guard/eslint`) from `package.json` `name` field in `src/eslint/index.ts`; rule names follow as `@ovineko/spa-guard/eslint/no-direct-error-boundary` etc.
+- ESLint plugin (spa-guard-eslint) rule names: `@ovineko/spa-guard-eslint/no-direct-lazy`, `@ovineko/spa-guard-eslint/no-direct-error-boundary`
 - ESLint v10 is supported (`^9 || ^10`); `@types/eslint` was removed because ESLint v10 ships its own types; the plugin uses `satisfies ESLint.Plugin` for type checking
-- Injectable Logger via DI: all console output uses a `Logger` interface (`src/common/logger.ts`). `listenInternal(serializeError, logger?)` accepts an optional logger stored on `window[loggerWindowKey]` and retrieved via `getLogger()?.method()` (optional chaining for graceful degradation). `createLogger()` contains all human-readable message strings. The production inline entry (`src/inline/index.ts`) passes no logger so tree-shaking eliminates all log strings from the bundle. The trace entry (`src/inline-trace/index.ts`) passes `createLogger()` for full logging. `emitEvent()` auto-calls `getLogger()?.logEvent(event)` before notifying subscribers; the `EmitOptions.silent` flag suppresses this auto-logging (used by `shouldIgnoreMessages` filters)
-- **Inline script rebuild requirement**: After any change to `src/common/` (core) code that could affect the inline scripts, you MUST rebuild inline scripts by running `pnpm build` from `packages/spa-guard/`. The build command (`tsup --config tsup.inline.config.ts && tsup --config tsup.inline.trace.config.ts`) outputs the minified file sizes for `dist-inline/index.js` (production) and `dist-inline-trace/index.js` (trace). After rebuilding, check the reported sizes and update the "Build Sizes" section in `packages/spa-guard/README.md` to match the new values (e.g., `~5.9 KB` → `~6.1 KB`).
-- `ForceRetryError` uses a magic substring (`__SPA_GUARD_FORCE_RETRY__`) prepended to the error message; `shouldForceRetry()` in `src/common/shouldIgnore.ts` always checks for this substring regardless of `errors.forceRetry` config, so throwing `ForceRetryError` triggers retry without any user configuration. The constructor accepts an optional second `options?: ErrorOptions` parameter (ES2022) for wrapping original errors via `{ cause }`
-- `errors.ignore` early-return pattern: In all four event handlers (`error`, `unhandledrejection`, `securitypolicyviolation`, `vite:preloadError`) in `src/common/listen/internal.ts`, when `shouldIgnoreMessages()` returns `true`, the handler returns immediately — no `sendBeacon()`, no `attemptReload()`, no `preventDefault()`, no `serializeError()`. This takes absolute priority over `isChunkError` and `shouldForceRetry` checks
-- `BeaconError` wraps `BeaconSchema` data into an `Error` subclass with typed readonly properties and `toJSON()`; exported from both `.` (root via `src/common/index.ts`) and `./fastify` (via `src/fastify/index.ts`) entry points for use with error tracking services (Sentry, Datadog, etc.)
-- `appName` enrichment happens client-side in `sendBeacon.ts` — the option value from `getOptions()` is merged into the beacon payload before transmission; on the server side, the Fastify plugin conditionally includes `appName` in log payloads only when present
-- Version detection uses a two-tier approach: the Vite plugin prepends `window.__SPA_GUARD_VERSION__="<version>"` before the options object in the inline script. The regex logic is extracted into `extractVersionFromHtml(html)` in `src/common/parseVersion.ts`, shared by both client-side `fetchHtmlVersion()` in `checkVersion.ts` and server-side `createHtmlCache()` in `src/node/index.ts`. It tries the `__SPA_GUARD_VERSION__` regex first, then falls back to parsing `__SPA_GUARD_OPTIONS__` for backward compatibility with HTML generated by older spa-guard versions (gradual rollout, rolling deployment)
-- Fallback/loading HTML templates use `data-spa-guard-*` attributes for all dynamic content manipulation: `data-spa-guard-content="<key>"` for text content, `data-spa-guard-action="<action>"` for interactive buttons, `data-spa-guard-section="<name>"` for visibility toggling, and `[data-spa-guard-spinner]` for spinner injection. Both the inline script (`showFallbackUI()`/`showLoadingUI()` in `src/common/reload.ts`) and the React `DefaultErrorFallback` component (`buildHtml()` helper) parse templates in virtual containers, patch via `querySelector`, then insert into DOM. This replaces the previous fragile `.replace()` string manipulation
-- HTML template generation pipeline: `scripts/generate-fallback.ts` reads source HTML files (`src/fallback-error.html`, `src/fallback-loading.html`, `src/spinner.html`), minifies them via `html-minifier-terser`, and writes exports to `src/common/html.generated.ts`. The spinner SVG markup lives in `src/spinner.html` (not inline in TypeScript). Run `pnpm generate:fallback` to regenerate after editing any source HTML file
-- Spinner overlay is injected at build time by the Vite plugin as a `body-prepend` `HtmlTagDescriptor` with fixed positioning and z-index 2147483647. The overlay blocks scrolling (`body.style.overflow='hidden'`) until `dismissSpinner()` is called. `recommendedSetup()` calls `dismissSpinner()` as its first action. Runtime API (`showSpinner`/`dismissSpinner`/`getSpinnerHtml`) lives in `src/common/spinner.ts` and is re-exported from `./runtime`. When `spinner.disabled` is true, all spinner operations are no-ops
-- The inline script now shows loading UI during retry delays via `showLoadingUI(attempt)` in `src/common/reload.ts`. This renders the `html.loading.content` template into the fallback selector element, injecting spinner content into `[data-spa-guard-spinner]`, showing the retrying section, and setting the attempt number. Previously users saw stale content during retry delays
-- i18n uses a meta tag approach: server calls `patchHtmlI18n()` (`src/node/index.ts`) to inject `<meta name="spa-guard-i18n" content="...">` into `<head>` and update `<html lang="...">`. `patchHtmlI18n` uses happy-dom (`Window`/`Document`) for DOM parsing instead of regex — parses with `document.write()`, manipulates via standard DOM APIs (`setAttribute`, `createElement`, `prepend`), and serializes back via `document.documentElement.outerHTML`. The `happy-dom` peer dependency (`^20`, optional) is required for the `./node` entry point. Client-side, `getI18n()` (`src/common/i18n.ts`) reads the meta tag. `applyI18n(container, translations)` patches `[data-spa-guard-content]` and `[data-spa-guard-action]` elements in a virtual container before DOM insertion. Built-in translations for 38 languages live in `src/i18n/translations.ts` (re-exported via `src/i18n/index.ts`). `matchLang()` resolves Accept-Language headers with q-value sorting, exact match, then prefix match, falling back to `"en"`. English without custom translations is a no-op (returns HTML unchanged). Two entry points: `./i18n` (types + translations + matchLang) and `./node` (patchHtmlI18n + createHtmlCache + escapeAttr + re-exports)
-- `createHtmlCache` (`src/node/index.ts`) pre-generates all language variants at startup via `patchHtmlI18n` and pre-compresses each with gzip, brotli, and zstd (unconditional, requires Node >= 22). ETag is derived from `__SPA_GUARD_VERSION__` via `extractVersionFromHtml()` (falls back to sha256 prefix). Encoding negotiation uses `@fastify/accept-negotiator`. The cache's `get()` method resolves language via `matchLang` and returns a ready-to-use `{ body, headers }` response object
+- Injectable Logger via DI: all console output uses a `Logger` interface (`src/common/logger.ts` in core). `listenInternal(serializeError, logger?)` accepts an optional logger. The production inline entry (in spa-guard-vite `src/inline/index.ts`) passes no logger so tree-shaking eliminates all log strings from the bundle. The trace entry (`src/inline-trace/index.ts`) passes `createLogger()` for full logging
+- **Inline script rebuild requirement**: After any change to core code that could affect the inline scripts, you MUST rebuild inline scripts by running `pnpm build` from `spa-guard/vite/`
+- `ForceRetryError` uses a magic substring (`__SPA_GUARD_FORCE_RETRY__`) prepended to the error message; `shouldForceRetry()` in `src/common/shouldIgnore.ts` always checks for this substring regardless of `errors.forceRetry` config
+- `errors.ignore` early-return pattern: In all four event handlers in `src/common/listen/internal.ts`, when `shouldIgnoreMessages()` returns `true`, the handler returns immediately — no `sendBeacon()`, no `attemptReload()`, no `preventDefault()`, no `serializeError()`
+- `BeaconError` wraps `BeaconSchema` data into an `Error` subclass; exported from both core and spa-guard-fastify for use with error tracking services
+- Version detection uses a two-tier approach: the Vite plugin prepends `window.__SPA_GUARD_VERSION__="<version>"` before the options object. The regex logic is extracted into `extractVersionFromHtml(html)` in `src/common/parseVersion.ts` (core), shared by both client-side `fetchHtmlVersion()` and server-side `createHtmlCache()` (spa-guard-node)
+- Fallback/loading HTML templates use `data-spa-guard-*` attributes for all dynamic content manipulation
+- HTML template generation pipeline: `scripts/generate-fallback.ts` (in spa-guard-vite) reads source HTML files, minifies them via `html-minifier-terser`, and writes exports to `src/common/html.generated.ts` (in core). Run `pnpm generate:fallback` in spa-guard-vite to regenerate
+- Spinner overlay is injected at build time by the Vite plugin as a `body-prepend` `HtmlTagDescriptor`
+- i18n uses a meta tag approach: server calls `patchHtmlI18n()` (spa-guard-node `src/node/index.ts`) to inject `<meta name="spa-guard-i18n" content="...">` into `<head>`. `patchHtmlI18n` uses parse5 for DOM parsing/serialization. Client-side, `getI18n()` (core `src/common/i18n.ts`) reads the meta tag. Runtime `setTranslations()` API allows dynamic i18n patching. Built-in translations for 38 languages live in `src/i18n/translations.ts` (core)
+- `createHtmlCache` (spa-guard-node) pre-generates all language variants at startup via `patchHtmlI18n` and pre-compresses each with gzip, brotli, and zstd. ETag is derived from `__SPA_GUARD_VERSION__` via `extractVersionFromHtml()`. Encoding negotiation uses `@fastify/accept-negotiator`
 
 ### @ovineko/clean-pkg-json
 
