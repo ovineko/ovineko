@@ -239,7 +239,7 @@ const showLoadingUI = (attempt: number): void => {
   }
 };
 
-const showFallbackUI = (): void => {
+export const showFallbackUI = (): void => {
   const options = getOptions();
   const fallbackHtml = options.html?.fallback?.content;
   const selector = options.html?.fallback?.selector ?? "body";

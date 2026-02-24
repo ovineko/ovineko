@@ -10,6 +10,7 @@ import {
   dispatchFinallyError,
   dispatchForceRetryError,
   dispatchNetworkTimeout,
+  dispatchRetryExhausted,
   dispatchSyncRuntimeError,
   dispatchUnhandledRejection,
 } from "./errorDispatchers";
@@ -331,5 +332,46 @@ describe("dispatchFinallyError", () => {
     dispatchFinallyError();
     const error = await capture;
     expect((error as Error).message).toContain("finally");
+  });
+});
+
+describe("dispatchRetryExhausted", () => {
+  it("returns void", () => {
+    const result = dispatchRetryExhausted();
+    expect(result).toBeUndefined();
+  });
+
+  it("emits retry-exhausted event with correct finalAttempt", async () => {
+    const { subscribe } = await import("../../common/events/internal");
+    const events: unknown[] = [];
+    const unsub = subscribe((event) => events.push(event));
+
+    dispatchRetryExhausted();
+
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        finalAttempt: 3, // default reloadDelays = [1000, 2000, 5000] => length 3
+        name: "retry-exhausted",
+        retryId: "",
+      }),
+    );
+
+    unsub();
+  });
+
+  it("emits fallback-ui-shown event via showFallbackUI", async () => {
+    const { subscribe } = await import("../../common/events/internal");
+    const events: unknown[] = [];
+    const unsub = subscribe((event) => events.push(event));
+
+    dispatchRetryExhausted();
+
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        name: "fallback-ui-shown",
+      }),
+    );
+
+    unsub();
   });
 });

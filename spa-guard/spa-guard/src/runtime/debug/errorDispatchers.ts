@@ -11,6 +11,9 @@
 
 import { debugSyncErrorEventType } from "../../common/constants";
 import { ForceRetryError } from "../../common/errors/ForceRetryError";
+import { emitEvent } from "../../common/events/internal";
+import { getOptions } from "../../common/options";
+import { showFallbackUI } from "../../common/reload";
 
 /**
  * Dispatches an async runtime error via setTimeout.
@@ -64,6 +67,24 @@ export function dispatchNetworkTimeout(delayMs = 3000): void {
   setTimeout(() => {
     void Promise.reject(new TypeError("NetworkError: request timed out"));
   }, delayMs);
+}
+
+/**
+ * Simulates the retry-exhausted state by emitting the "retry-exhausted" event
+ * with finalAttempt equal to the configured reloadDelays length, then renders
+ * the fallback UI into the DOM.
+ */
+export function dispatchRetryExhausted(): void {
+  const options = getOptions();
+  const reloadDelays = options.reloadDelays ?? [1000, 2000, 5000];
+
+  emitEvent({
+    finalAttempt: reloadDelays.length,
+    name: "retry-exhausted",
+    retryId: "",
+  });
+
+  showFallbackUI();
 }
 
 /**
