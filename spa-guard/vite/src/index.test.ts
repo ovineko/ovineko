@@ -554,7 +554,7 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
       );
     });
 
-    it("falls back to inline mode when configResolved reports serve command", async () => {
+    it("uses external URL in serve mode (handled by configureServer middleware)", async () => {
       const spaGuardVitePlugin = await importPlugin();
       const plugin = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
 
@@ -570,8 +570,8 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
 
       expect(result.tags[0].tag).toBe("script");
       expect(result.tags[0].injectTo).toBe("head-prepend");
-      expect(result.tags[0].attrs?.src).toBeUndefined();
-      expect(result.tags[0].children).toBeDefined();
+      expect(result.tags[0].attrs?.src).toMatch(/^\/spa-guard\.[a-f0-9]{16}\.js$/);
+      expect(result.tags[0].children).toBeUndefined();
     });
 
     it("uses Vite config.base as default publicPath when publicPath is not specified", async () => {
@@ -610,6 +610,166 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
       const result = await handler("<html></html>");
 
       expect(result.tags[0].attrs?.src).toMatch(/^\/assets\/spa-guard\.[a-f0-9]{16}\.js$/);
+    });
+  });
+
+  describe("configureServer", () => {
+    it("registers middleware when mode is external", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+
+      const mockServer = { middlewares: { use: vi.fn() } };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configureServer as (server: any) => void)(mockServer);
+
+      expect(mockServer.middlewares.use).toHaveBeenCalledOnce();
+    });
+
+    it("does not register middleware when mode is inline", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ mode: "inline", version: "1.0.0" });
+
+      const mockServer = { middlewares: { use: vi.fn() } };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configureServer as (server: any) => void)(mockServer);
+
+      expect(mockServer.middlewares.use).not.toHaveBeenCalled();
+    });
+
+    it("does not register middleware when mode is default (inline)", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ version: "1.0.0" });
+
+      const mockServer = { middlewares: { use: vi.fn() } };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configureServer as (server: any) => void)(mockServer);
+
+      expect(mockServer.middlewares.use).not.toHaveBeenCalled();
+    });
+
+    it("middleware serves the external script when URL matches cached filename", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let registeredMiddleware: (req: any, res: any, next: any) => void;
+      const mockServer = {
+        middlewares: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          use: vi.fn((fn: (req: any, res: any, next: any) => void) => {
+            registeredMiddleware = fn;
+          }),
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configureServer as (server: any) => void)(mockServer);
+
+      // Populate cache via transformIndexHtml
+      const handler = getTransformHandler(plugin);
+      const result = await handler("<html></html>");
+      const srcUrl = result.tags[0].attrs?.src as string;
+      const fileName = srcUrl.split("/").pop()!;
+
+      const mockReq = { url: `/${fileName}` };
+      const mockRes = { end: vi.fn(), setHeader: vi.fn() };
+      const next = vi.fn();
+
+      registeredMiddleware!(mockReq, mockRes, next);
+
+      expect(mockRes.setHeader).toHaveBeenCalledWith("Content-Type", "application/javascript");
+      expect(mockRes.end).toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("middleware response content matches the cached script", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let registeredMiddleware: (req: any, res: any, next: any) => void;
+      const mockServer = {
+        middlewares: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          use: vi.fn((fn: (req: any, res: any, next: any) => void) => {
+            registeredMiddleware = fn;
+          }),
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configureServer as (server: any) => void)(mockServer);
+
+      const handler = getTransformHandler(plugin);
+      const result = await handler("<html></html>");
+      const srcUrl = result.tags[0].attrs?.src as string;
+      const fileName = srcUrl.split("/").pop()!;
+
+      const mockReq = { url: `/${fileName}` };
+      const mockRes = { end: vi.fn(), setHeader: vi.fn() };
+      const next = vi.fn();
+
+      registeredMiddleware!(mockReq, mockRes, next);
+
+      expect(mockRes.end).toHaveBeenCalledWith(
+        expect.stringContaining("/* inline-script-content */"),
+      );
+    });
+
+    it("middleware calls next for non-matching URLs", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let registeredMiddleware: (req: any, res: any, next: any) => void;
+      const mockServer = {
+        middlewares: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          use: vi.fn((fn: (req: any, res: any, next: any) => void) => {
+            registeredMiddleware = fn;
+          }),
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configureServer as (server: any) => void)(mockServer);
+
+      const handler = getTransformHandler(plugin);
+      await handler("<html></html>");
+
+      const mockReq = { url: "/some-other-file.js" };
+      const mockRes = { end: vi.fn(), setHeader: vi.fn() };
+      const next = vi.fn();
+
+      registeredMiddleware!(mockReq, mockRes, next);
+
+      expect(next).toHaveBeenCalled();
+      expect(mockRes.end).not.toHaveBeenCalled();
+    });
+
+    it("middleware calls next when cache is not yet populated", async () => {
+      const spaGuardVitePlugin = await importPlugin();
+      const plugin = spaGuardVitePlugin({ mode: "external", version: "1.0.0" });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let registeredMiddleware: (req: any, res: any, next: any) => void;
+      const mockServer = {
+        middlewares: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          use: vi.fn((fn: (req: any, res: any, next: any) => void) => {
+            registeredMiddleware = fn;
+          }),
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (plugin.configureServer as (server: any) => void)(mockServer);
+
+      // Do NOT call transformIndexHtml - cache is empty
+      const mockReq = { url: "/spa-guard.abc123abc123abc1.js" };
+      const mockRes = { end: vi.fn(), setHeader: vi.fn() };
+      const next = vi.fn();
+
+      registeredMiddleware!(mockReq, mockRes, next);
+
+      expect(next).toHaveBeenCalled();
+      expect(mockRes.end).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,4 +1,4 @@
-import type { HtmlTagDescriptor, Plugin } from "vite";
+import type { HtmlTagDescriptor, Plugin, ViteDevServer } from "vite";
 
 import { type Options, optionsWindowKey } from "@ovineko/spa-guard/_internal";
 import { defaultSpinnerSvg, SPINNER_ID } from "@ovineko/spa-guard/_internal";
@@ -73,17 +73,30 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
 
   let resolvedOutDir: null | string = null;
   let resolvedBase: null | string = null;
-  let resolvedCommand: null | string = null;
   let cachedExternalContent: null | string = null;
   let cachedExternalHash: null | string = null;
+  let cachedExternalFileName: null | string = null;
 
   return {
     configResolved(config) {
       resolvedBase = config.base ?? null;
-      resolvedCommand = config.command ?? null;
       if (mode === "external") {
         resolvedOutDir = options.externalScriptDir ?? config.build.outDir;
       }
+    },
+
+    configureServer(server: ViteDevServer) {
+      if (mode !== "external") {
+        return;
+      }
+      server.middlewares.use((req, res, next) => {
+        if (cachedExternalFileName && req.url === `/${cachedExternalFileName}`) {
+          res.setHeader("Content-Type", "application/javascript");
+          res.end(cachedExternalContent);
+          return;
+        }
+        next();
+      });
     },
 
     name: `${name}/vite-plugin`,
@@ -108,14 +121,13 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
 
         let mainTag: HtmlTagDescriptor;
 
-        const effectiveMode = mode === "external" && resolvedCommand === "serve" ? "inline" : mode;
-
-        if (effectiveMode === "external") {
+        if (mode === "external") {
           if (!cachedExternalContent) {
             const rawScript = await getInlineScript(finalOptions);
             const hash = crypto.createHash("sha256").update(rawScript).digest("hex").slice(0, 16);
             cachedExternalContent = rawScript;
             cachedExternalHash = hash;
+            cachedExternalFileName = `spa-guard.${hash}.js`;
           }
 
           const publicPath = options.publicPath ?? resolvedBase ?? "/";
@@ -174,11 +186,15 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
     },
 
     async writeBundle() {
-      if (mode === "external" && cachedExternalContent && cachedExternalHash && resolvedOutDir) {
-        const fileName = `spa-guard.${cachedExternalHash}.js`;
+      if (
+        mode === "external" &&
+        cachedExternalContent &&
+        cachedExternalFileName &&
+        resolvedOutDir
+      ) {
         await fsPromise.mkdir(resolvedOutDir, { recursive: true });
         await fsPromise.writeFile(
-          path.join(resolvedOutDir, fileName),
+          path.join(resolvedOutDir, cachedExternalFileName),
           cachedExternalContent,
           "utf8",
         );

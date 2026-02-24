@@ -91,12 +91,12 @@ Medium-risk addition to vite plugin.
 **Files:**
 - Modify: `spa-guard/vite/src/index.ts`
 
-- [ ] Add `cachedExternalContent`, `cachedExternalHash`, `cachedExternalFileName` variables to plugin closure
-- [ ] Add `configureServer` hook: register middleware that serves `/spa-guard.{hash}.js` from cache when mode is external
-- [ ] Update `transformIndexHtml` handler: populate cache variables when building external content
-- [ ] Ensure `writeBundle` hook still reads from cache (no regression)
-- [ ] Write tests for dev server middleware behavior in `index.test.ts`
-- [ ] Run `pnpm --filter @ovineko/spa-guard-vite test` — must pass
+- [x] Add `cachedExternalContent`, `cachedExternalHash`, `cachedExternalFileName` variables to plugin closure
+- [x] Add `configureServer` hook: register middleware that serves `/spa-guard.{hash}.js` from cache when mode is external
+- [x] Update `transformIndexHtml` handler: populate cache variables when building external content
+- [x] Ensure `writeBundle` hook still reads from cache (no regression)
+- [x] Write tests for dev server middleware behavior in `index.test.ts`
+- [x] Run `pnpm --filter @ovineko/spa-guard-vite test` — must pass
 
 ### Task 5: Convert Internal Deps to peerDependencies
 
