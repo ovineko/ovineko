@@ -322,6 +322,20 @@ describe("node", () => {
       expect(result).toContain('<meta name="spa-guard-i18n"');
     });
 
+    it("preserves DOCTYPE when HTML has leading whitespace", () => {
+      const htmlWithWhitespace = `  \n<!DOCTYPE html><html lang="en"><head></head><body></body></html>`;
+      const result = patchHtmlI18n({ html: htmlWithWhitespace, lang: "ko" });
+      expect(result).toMatch(/^<!DOCTYPE html>/i);
+      expect(result).toContain('lang="ko"');
+    });
+
+    it("preserves DOCTYPE when HTML has leading BOM", () => {
+      const htmlWithBom = `\uFEFF<!DOCTYPE html><html lang="en"><head></head><body></body></html>`;
+      const result = patchHtmlI18n({ html: htmlWithBom, lang: "ko" });
+      expect(result).toMatch(/^<!DOCTYPE html>/i);
+      expect(result).toContain('lang="ko"');
+    });
+
     it("handles HTML without head element", () => {
       const htmlNoHead = `<!DOCTYPE html><html lang="en"><body>Content</body></html>`;
       const result = patchHtmlI18n({ html: htmlNoHead, lang: "ko" });
@@ -559,8 +573,28 @@ describe("node", () => {
           languages: ["ko", "ja"],
         });
         const response = cache.get({ lang: "xx" });
-        expect(["ko", "ja"]).toContain(response.headers["Content-Language"]);
+        // Deterministic: always falls back to first language in the array
+        expect(response.headers["Content-Language"]).toBe("ko");
         expect(response.body).toBeInstanceOf(Buffer);
+      });
+    });
+
+    describe("invalid language filtering", () => {
+      it("filters out language codes not in merged translations", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en", "xx", "ko"],
+        });
+        // "xx" is silently dropped; requesting "xx" falls back to "en"
+        const response = cache.get({ lang: "xx" });
+        expect(response.headers["Content-Language"]).toBe("en");
+        expect(response.body.toString()).toContain('lang="en"');
+      });
+
+      it("throws when all provided languages are invalid", async () => {
+        await expect(
+          createHtmlCache({ html: sampleHtml, languages: ["xx", "yy"] }),
+        ).rejects.toThrow("createHtmlCache requires at least one language");
       });
     });
 

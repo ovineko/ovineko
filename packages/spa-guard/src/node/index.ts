@@ -74,7 +74,12 @@ export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<
   const { html, translations: customTranslations } = options;
 
   const merged = mergeTranslations(customTranslations);
-  const languages = options.languages ?? Object.keys(merged);
+  const mergedKeys = new Set(Object.keys(merged));
+  // Filter out language codes not present in merged translations to prevent
+  // Content-Language header mismatching the actual body language
+  const languages = (options.languages ?? Object.keys(merged)).filter((lang) =>
+    mergedKeys.has(lang),
+  );
 
   if (languages.length === 0) {
     throw new Error("createHtmlCache requires at least one language");
@@ -112,7 +117,9 @@ export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<
     }),
   );
 
-  const available = [...entries.keys()];
+  // Use the original languages array (stable order) instead of entries.keys()
+  // (Map insertion order from Promise.all is nondeterministic)
+  const available = languages;
 
   return {
     get({ acceptEncoding, acceptLanguage, lang: langOverride }) {
@@ -205,8 +212,8 @@ export function patchHtmlI18n(options: PatchHtmlI18nOptions): string {
       document.head.prepend(meta);
     }
 
-    // Reconstruct full HTML with original DOCTYPE
-    const doctypeMatch = html.match(/^(<!doctype[^>]*>)/i);
+    // Reconstruct full HTML with original DOCTYPE (tolerate leading whitespace/BOM)
+    const doctypeMatch = html.match(/^[\s\uFEFF]*(<!doctype[^>]*>)/i);
     const doctype = doctypeMatch ? doctypeMatch[1] : "";
     return doctype + document.documentElement.outerHTML;
   } finally {
