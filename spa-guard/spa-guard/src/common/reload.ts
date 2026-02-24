@@ -1,4 +1,4 @@
-import { RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
+import { reloadScheduledKey, RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
 import { emitEvent, getLogger, isDefaultRetryEnabled } from "./events/internal";
 import { applyI18n, getI18n } from "./i18n";
 import {
@@ -32,21 +32,39 @@ const buildReloadUrlAttemptOnly = (retryAttempt: number): string => {
   return url.toString();
 };
 
-let reloadScheduled = false;
+interface ReloadState {
+  scheduled: boolean;
+}
+
+if (globalThis.window && !(globalThis.window as any)[reloadScheduledKey]) {
+  (globalThis.window as any)[reloadScheduledKey] = { scheduled: false } as ReloadState;
+}
+
+const getReloadState = (): ReloadState => {
+  if (globalThis.window === undefined) {
+    return { scheduled: false };
+  }
+  return (
+    (globalThis.window as any)[reloadScheduledKey] ??
+    ((globalThis.window as any)[reloadScheduledKey] = { scheduled: false } as ReloadState)
+  );
+};
 
 /** @internal */
 export const resetReloadScheduled = (): void => {
-  reloadScheduled = false;
+  getReloadState().scheduled = false;
 };
 
 export const attemptReload = (error: unknown): void => {
-  if (reloadScheduled) {
+  const reloadState = getReloadState();
+
+  if (reloadState.scheduled) {
     getLogger()?.reloadAlreadyScheduled(error);
     return;
   }
 
   // Set early to prevent re-entrant calls from synchronous event subscribers
-  reloadScheduled = true;
+  reloadState.scheduled = true;
 
   try {
     const options = getOptions();
@@ -77,7 +95,7 @@ export const attemptReload = (error: unknown): void => {
     });
 
     if (!retryEnabled) {
-      reloadScheduled = false;
+      reloadState.scheduled = false;
       return;
     }
 
@@ -115,7 +133,7 @@ export const attemptReload = (error: unknown): void => {
       if (!shouldIgnoreMessages([errorMsg])) {
         getLogger()?.fallbackAlreadyShown(error);
       }
-      reloadScheduled = false;
+      reloadState.scheduled = false;
       showFallbackUI();
       return;
     }
@@ -148,7 +166,7 @@ export const attemptReload = (error: unknown): void => {
         clearRetryAttemptFromUrl();
       }
 
-      reloadScheduled = false;
+      reloadState.scheduled = false;
       showFallbackUI();
       return;
     }
@@ -185,7 +203,7 @@ export const attemptReload = (error: unknown): void => {
       }
     }, delay);
   } catch {
-    reloadScheduled = false;
+    reloadState.scheduled = false;
   }
 };
 

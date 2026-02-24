@@ -1,5 +1,7 @@
 import type { RetryState } from "./retryState";
 
+import { inMemoryLastReloadKey } from "./constants";
+
 const STORAGE_KEY = "__spa_guard_last_reload_timestamp__";
 const RESET_INFO_KEY = "__spa_guard_last_retry_reset__";
 
@@ -14,8 +16,28 @@ export interface LastRetryResetInfo {
   timestamp: number;
 }
 
-let inMemoryStorage: LastReloadData | null = null;
-let inMemoryResetInfo: LastRetryResetInfo | null = null;
+interface InMemoryLastReloadState {
+  resetInfo: LastRetryResetInfo | null;
+  storage: LastReloadData | null;
+}
+
+if (globalThis.window && !(globalThis.window as any)[inMemoryLastReloadKey]) {
+  (globalThis.window as any)[inMemoryLastReloadKey] = {
+    resetInfo: null,
+    storage: null,
+  } as InMemoryLastReloadState;
+}
+
+const getInMemoryState = (): InMemoryLastReloadState => {
+  const w = globalThis.window as any;
+  if (!w) {
+    return { resetInfo: null, storage: null };
+  }
+  return (
+    w[inMemoryLastReloadKey] ??
+    (w[inMemoryLastReloadKey] = { resetInfo: null, storage: null } as InMemoryLastReloadState)
+  );
+};
 
 const hasSessionStorage = (): boolean => {
   try {
@@ -36,10 +58,10 @@ export const setLastReloadTime = (retryId: string, attemptNumber: number): void 
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch {
-      inMemoryStorage = data;
+      getInMemoryState().storage = data;
     }
   } else {
-    inMemoryStorage = data;
+    getInMemoryState().storage = data;
   }
 };
 
@@ -51,11 +73,11 @@ export const getLastReloadTime = (): LastReloadData | null => {
         return JSON.parse(stored) as LastReloadData;
       }
     } catch {
-      return inMemoryStorage;
+      return getInMemoryState().storage;
     }
   }
 
-  return inMemoryStorage;
+  return getInMemoryState().storage;
 };
 
 export const clearLastReloadTime = (): void => {
@@ -67,7 +89,7 @@ export const clearLastReloadTime = (): void => {
     }
   }
 
-  inMemoryStorage = null;
+  getInMemoryState().storage = null;
 };
 
 export const shouldResetRetryCycle = (
@@ -120,10 +142,10 @@ export const setLastRetryResetInfo = (previousRetryId: string): void => {
     try {
       sessionStorage.setItem(RESET_INFO_KEY, JSON.stringify(data));
     } catch {
-      inMemoryResetInfo = data;
+      getInMemoryState().resetInfo = data;
     }
   } else {
-    inMemoryResetInfo = data;
+    getInMemoryState().resetInfo = data;
   }
 };
 
@@ -135,11 +157,11 @@ export const getLastRetryResetInfo = (): LastRetryResetInfo | null => {
         return JSON.parse(stored) as LastRetryResetInfo;
       }
     } catch {
-      return inMemoryResetInfo;
+      return getInMemoryState().resetInfo;
     }
   }
 
-  return inMemoryResetInfo;
+  return getInMemoryState().resetInfo;
 };
 
 export const clearLastRetryResetInfo = (): void => {
@@ -151,5 +173,5 @@ export const clearLastRetryResetInfo = (): void => {
     }
   }
 
-  inMemoryResetInfo = null;
+  getInMemoryState().resetInfo = null;
 };

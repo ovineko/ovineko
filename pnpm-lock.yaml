@@ -355,9 +355,6 @@ importers:
       "@ovineko/spa-guard":
         specifier: workspace:*
         version: link:../spa-guard
-      "@ovineko/spa-guard-node":
-        specifier: workspace:*
-        version: link:../node
       html-minifier-terser:
         specifier: 7.2.0
         version: 7.2.0

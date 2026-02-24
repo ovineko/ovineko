@@ -15,4 +15,8 @@ export const RETRY_ATTEMPT_PARAM = "spaGuardRetryAttempt";
 
 export const versionCheckStateWindowKey = Symbol.for(`${name}:version-check-state`);
 
+export const reloadScheduledKey = Symbol.for(`${name}:reload-scheduled`);
+
+export const inMemoryLastReloadKey = Symbol.for(`${name}:in-memory-last-reload`);
+
 export const debugSyncErrorEventType = "spa-guard:debug-sync-error";
