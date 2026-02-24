@@ -1,8 +1,13 @@
+import { gunzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 
-import { escapeAttr, matchLang, patchHtmlI18n, translations } from "./index";
+import type { HtmlCache } from "./index";
+
+import { createHtmlCache, escapeAttr, matchLang, patchHtmlI18n, translations } from "./index";
 
 const sampleHtml = `<!DOCTYPE html><html lang="en"><head><title>App</title></head><body><div id="app"></div></body></html>`;
+
+const sampleHtmlWithVersion = `<!DOCTYPE html><html lang="en"><head><title>App</title><script>window.__SPA_GUARD_VERSION__="1.2.3";</script></head><body></body></html>`;
 
 describe("node", () => {
   describe("escapeAttr", () => {
@@ -315,6 +320,238 @@ describe("node", () => {
       const htmlMixedHead = `<!DOCTYPE html><html lang="en"><Head class="x"><title>App</title></Head><body></body></html>`;
       const result = patchHtmlI18n({ html: htmlMixedHead, lang: "ko" });
       expect(result).toContain('<meta name="spa-guard-i18n"');
+    });
+  });
+
+  describe("createHtmlCache", () => {
+    let cache: HtmlCache;
+
+    describe("multi-language cache", () => {
+      it("creates a cache with specified languages", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en", "ko", "ja"],
+        });
+        const response = cache.get({ lang: "ko" });
+        expect(response.body).toBeInstanceOf(Buffer);
+        expect(response.body.toString()).toContain('lang="ko"');
+      });
+
+      it("defaults to all built-in languages when languages not specified", async () => {
+        cache = await createHtmlCache({ html: sampleHtml });
+        // Should have entries for all built-in translation languages
+        const koResponse = cache.get({ lang: "ko" });
+        expect(koResponse.body.toString()).toContain('lang="ko"');
+        const jaResponse = cache.get({ lang: "ja" });
+        expect(jaResponse.body.toString()).toContain('lang="ja"');
+      });
+
+      it("includes custom translation languages in defaults", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          translations: {
+            th: {
+              heading: "Error",
+              loading: "Loading",
+              message: "Msg",
+              reload: "Reload",
+              retrying: "Retry",
+              tryAgain: "Try",
+            },
+          },
+        });
+        const response = cache.get({ lang: "th" });
+        expect(response.body.toString()).toContain('lang="th"');
+      });
+    });
+
+    describe("ETag", () => {
+      it("uses version from HTML when __SPA_GUARD_VERSION__ is available", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtmlWithVersion,
+          languages: ["en", "ko"],
+        });
+        const response = cache.get({ lang: "ko" });
+        expect(response.headers.ETag).toBe('"1.2.3-ko"');
+      });
+
+      it("falls back to sha256 prefix when no version in HTML", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en", "ko"],
+        });
+        const response = cache.get({ lang: "ko" });
+        // Should be a quoted string with format "<hash>-<lang>"
+        expect(response.headers.ETag).toMatch(/^"[a-f0-9]{16}-ko"$/);
+      });
+
+      it("produces different ETags for different languages", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtmlWithVersion,
+          languages: ["en", "ko", "ja"],
+        });
+        const enEtag = cache.get({ lang: "en" }).headers.ETag;
+        const koEtag = cache.get({ lang: "ko" }).headers.ETag;
+        const jaEtag = cache.get({ lang: "ja" }).headers.ETag;
+        expect(enEtag).not.toBe(koEtag);
+        expect(koEtag).not.toBe(jaEtag);
+        expect(enEtag).not.toBe(jaEtag);
+      });
+    });
+
+    describe("compression", () => {
+      it("returns valid gzip content that decompresses correctly", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["ko"],
+        });
+        const response = cache.get({ acceptEncoding: "gzip", lang: "ko" });
+        expect(response.headers["Content-Encoding"]).toBe("gzip");
+        const decompressed = gunzipSync(response.body as Buffer).toString();
+        expect(decompressed).toContain('lang="ko"');
+      });
+
+      it("returns valid brotli content that decompresses correctly", async () => {
+        const { brotliDecompressSync } = await import("node:zlib");
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["ko"],
+        });
+        const response = cache.get({ acceptEncoding: "br", lang: "ko" });
+        expect(response.headers["Content-Encoding"]).toBe("br");
+        const decompressed = brotliDecompressSync(response.body as Buffer).toString();
+        expect(decompressed).toContain('lang="ko"');
+      });
+
+      it("returns valid zstd content that decompresses correctly", async () => {
+        const { zstdDecompress } = await import("node:zlib");
+        const { promisify } = await import("node:util");
+        const zstdDecompressAsync = promisify(zstdDecompress);
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["ko"],
+        });
+        const response = cache.get({ acceptEncoding: "zstd", lang: "ko" });
+        expect(response.headers["Content-Encoding"]).toBe("zstd");
+        const decompressedBuf = await zstdDecompressAsync(response.body as Buffer);
+        const decompressed = decompressedBuf.toString();
+        expect(decompressed).toContain('lang="ko"');
+      });
+    });
+
+    describe("get() headers", () => {
+      it("returns correct Content-Type", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en"],
+        });
+        const response = cache.get({ lang: "en" });
+        expect(response.headers["Content-Type"]).toBe("text/html; charset=utf-8");
+      });
+
+      it("returns Content-Language matching resolved language", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en", "ko"],
+        });
+        const response = cache.get({ lang: "ko" });
+        expect(response.headers["Content-Language"]).toBe("ko");
+      });
+
+      it("always includes Vary header", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en"],
+        });
+        const response = cache.get({ lang: "en" });
+        expect(response.headers.Vary).toBe("Accept-Language, Accept-Encoding");
+      });
+
+      it("omits Content-Encoding for identity (no acceptEncoding)", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en"],
+        });
+        const response = cache.get({ lang: "en" });
+        expect(response.headers["Content-Encoding"]).toBeUndefined();
+      });
+
+      it("omits Content-Encoding when no encoding matches", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en"],
+        });
+        const response = cache.get({ acceptEncoding: "compress", lang: "en" });
+        expect(response.headers["Content-Encoding"]).toBeUndefined();
+      });
+
+      it("returns Content-Encoding for gzip", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en"],
+        });
+        const response = cache.get({ acceptEncoding: "gzip, deflate", lang: "en" });
+        expect(response.headers["Content-Encoding"]).toBe("gzip");
+      });
+
+      it("returns Content-Encoding for br", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en"],
+        });
+        const response = cache.get({ acceptEncoding: "gzip, br", lang: "en" });
+        expect(response.headers["Content-Encoding"]).toBe("br");
+      });
+
+      it("returns Content-Encoding for zstd", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en"],
+        });
+        const response = cache.get({ acceptEncoding: "zstd, gzip", lang: "en" });
+        expect(response.headers["Content-Encoding"]).toBe("zstd");
+      });
+    });
+
+    describe("language resolution", () => {
+      it("resolves language from acceptLanguage header", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en", "ko", "ja"],
+        });
+        const response = cache.get({ acceptLanguage: "ja-JP,ja;q=0.9" });
+        expect(response.headers["Content-Language"]).toBe("ja");
+      });
+
+      it("lang takes priority over acceptLanguage", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en", "ko", "ja"],
+        });
+        const response = cache.get({ acceptLanguage: "ja-JP", lang: "ko" });
+        expect(response.headers["Content-Language"]).toBe("ko");
+      });
+
+      it("falls back to en for unrecognized language", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en", "ko"],
+        });
+        const response = cache.get({ lang: "xx" });
+        expect(response.headers["Content-Language"]).toBe("en");
+      });
+    });
+
+    describe("fallback to identity", () => {
+      it("returns uncompressed body when acceptEncoding is empty string", async () => {
+        cache = await createHtmlCache({
+          html: sampleHtml,
+          languages: ["en"],
+        });
+        const response = cache.get({ acceptEncoding: "", lang: "en" });
+        expect(response.headers["Content-Encoding"]).toBeUndefined();
+        expect(response.body.toString()).toContain("<html");
+      });
     });
   });
 });

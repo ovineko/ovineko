@@ -76,18 +76,18 @@ Replace fragile regex-based HTML parsing in patchHtmlI18n with proper DOM manipu
 - Modify: `packages/spa-guard/src/node/index.ts`
 - Modify: `packages/spa-guard/src/node/index.test.ts`
 
-- [ ] Extract version parsing regex from fetchHtmlVersion (checkVersion.ts lines 50-57) into a shared `extractVersionFromHtml(html: string): string | null` function in parseVersion.ts. Handles both **SPA_GUARD_VERSION** and fallback to **SPA_GUARD_OPTIONS**.version
-- [ ] Update fetchHtmlVersion in checkVersion.ts to use the new shared helper
-- [ ] Write tests for extractVersionFromHtml: HTML with **SPA_GUARD_VERSION** (returns version), HTML without it but with **SPA_GUARD_OPTIONS** (returns version from fallback), HTML with neither (returns null)
-- [ ] Export CreateHtmlCacheOptions interface: `{ html: string; languages?: string[]; translations?: Record<string, Partial<SpaGuardTranslations>> }`
-- [ ] Export HtmlCacheResponse type: `{ body: Buffer | string; headers: Record<string, string> }` - headers include Content-Encoding (when compressed), ETag, Vary, Content-Type, Content-Language
-- [ ] Export HtmlCache interface with `get(options: { acceptLanguage?: string; lang?: string; acceptEncoding?: string }): HtmlCacheResponse`
-- [ ] Implement createHtmlCache (async): call extractVersionFromHtml on input HTML to get version for ETag base; iterate languages, call patchHtmlI18n for each, pre-compress each variant with zlib.gzip, zlib.brotliCompress, and zlib zstd (unconditional, Node >= 22); compute ETag as `"<version>-<lang>"` if version found, otherwise `"<sha256_prefix>-<lang>"`; store in Map
-- [ ] get() resolves language via matchLang, negotiates encoding via @fastify/accept-negotiator's negotiate(acceptEncoding, ["br", "zstd", "gzip"]) - returns best match or null for identity; returns the corresponding pre-compressed variant
-- [ ] get() returns headers object: `{ "Content-Type": "text/html; charset=utf-8", "Content-Language": lang, "Content-Encoding": encoding (omitted for identity), "ETag": etag, "Vary": "Accept-Language, Accept-Encoding" }`
-- [ ] If languages not provided, default to all keys from built-in + custom translations
-- [ ] Write tests: multi-language cache, ETag uses version from HTML when available, ETag falls back to sha256 when no version in HTML, ETag differs between languages, compression output is valid (decompress and compare), get() returns correct headers for different Accept-Encoding values, Vary header always present, Content-Language matches resolved language, Content-Encoding omitted for identity, fallback to identity when no encoding matches
-- [ ] Run project test suite - must pass before task 5
+- [x] Extract version parsing regex from fetchHtmlVersion (checkVersion.ts lines 50-57) into a shared `extractVersionFromHtml(html: string): string | null` function in parseVersion.ts. Handles both **SPA_GUARD_VERSION** and fallback to **SPA_GUARD_OPTIONS**.version
+- [x] Update fetchHtmlVersion in checkVersion.ts to use the new shared helper
+- [x] Write tests for extractVersionFromHtml: HTML with **SPA_GUARD_VERSION** (returns version), HTML without it but with **SPA_GUARD_OPTIONS** (returns version from fallback), HTML with neither (returns null)
+- [x] Export CreateHtmlCacheOptions interface: `{ html: string; languages?: string[]; translations?: Record<string, Partial<SpaGuardTranslations>> }`
+- [x] Export HtmlCacheResponse type: `{ body: Buffer | string; headers: Record<string, string> }` - headers include Content-Encoding (when compressed), ETag, Vary, Content-Type, Content-Language
+- [x] Export HtmlCache interface with `get(options: { acceptLanguage?: string; lang?: string; acceptEncoding?: string }): HtmlCacheResponse`
+- [x] Implement createHtmlCache (async): call extractVersionFromHtml on input HTML to get version for ETag base; iterate languages, call patchHtmlI18n for each, pre-compress each variant with zlib.gzip, zlib.brotliCompress, and zlib zstd (unconditional, Node >= 22); compute ETag as `"<version>-<lang>"` if version found, otherwise `"<sha256_prefix>-<lang>"`; store in Map
+- [x] get() resolves language via matchLang, negotiates encoding via @fastify/accept-negotiator's negotiate(acceptEncoding, ["br", "zstd", "gzip"]) - returns best match or null for identity; returns the corresponding pre-compressed variant
+- [x] get() returns headers object: `{ "Content-Type": "text/html; charset=utf-8", "Content-Language": lang, "Content-Encoding": encoding (omitted for identity), "ETag": etag, "Vary": "Accept-Language, Accept-Encoding" }`
+- [x] If languages not provided, default to all keys from built-in + custom translations
+- [x] Write tests: multi-language cache, ETag uses version from HTML when available, ETag falls back to sha256 when no version in HTML, ETag differs between languages, compression output is valid (decompress and compare), get() returns correct headers for different Accept-Encoding values, Vary header always present, Content-Language matches resolved language, Content-Encoding omitted for identity, fallback to identity when no encoding matches
+- [x] Run project test suite - must pass before task 5
 
 ### Task 5: Verify acceptance criteria
 
