@@ -4,6 +4,9 @@ vi.mock("./reload", () => ({
   attemptReload: vi.fn(),
 }));
 
+import type { SPAGuardEvent } from "./events/types";
+
+import { subscribe } from "./events/internal";
 import { attemptReload } from "./reload";
 import { retryImport } from "./retryImport";
 
@@ -129,6 +132,97 @@ describe("retryImport", () => {
       await promise;
 
       expect(removeListenerSpy).toHaveBeenCalledWith("abort", expect.any(Function));
+    });
+  });
+
+  describe("event emissions", () => {
+    it("emits lazy-retry-start before first attempt", async () => {
+      const importFn = vi.fn().mockResolvedValue({ default: "module" });
+      const events: SPAGuardEvent[] = [];
+      const unsub = subscribe((e) => events.push(e));
+
+      await retryImport(importFn, [500]);
+
+      unsub();
+      expect(events[0]).toMatchObject({ name: "lazy-retry-start", totalAttempts: 2 });
+    });
+
+    it("emits lazy-retry-start with correct totalAttempts", async () => {
+      const importFn = vi.fn().mockResolvedValue({ default: "module" });
+      const events: SPAGuardEvent[] = [];
+      const unsub = subscribe((e) => events.push(e));
+
+      await retryImport(importFn, [100, 200, 300]);
+
+      unsub();
+      expect(events[0]).toMatchObject({ name: "lazy-retry-start", totalAttempts: 4 });
+    });
+
+    it("includes error in lazy-retry-attempt event", async () => {
+      vi.useFakeTimers();
+      const error = new Error("chunk load failed");
+      const importFn = vi
+        .fn()
+        .mockRejectedValueOnce(error)
+        .mockResolvedValue({ default: "module" });
+      const events: SPAGuardEvent[] = [];
+      const unsub = subscribe((e) => events.push(e));
+
+      const promise = retryImport(importFn, [100]);
+      await vi.runAllTimersAsync();
+      await promise;
+
+      unsub();
+      const attemptEvent = events.find((e) => e.name === "lazy-retry-attempt");
+      expect(attemptEvent).toMatchObject({
+        attempt: 1,
+        delay: 100,
+        error,
+        name: "lazy-retry-attempt",
+        totalAttempts: 2,
+      });
+    });
+
+    it("includes totalTime in lazy-retry-success event", async () => {
+      vi.useFakeTimers();
+      const error = new Error("chunk load failed");
+      const importFn = vi
+        .fn()
+        .mockRejectedValueOnce(error)
+        .mockResolvedValue({ default: "module" });
+      const events: SPAGuardEvent[] = [];
+      const unsub = subscribe((e) => events.push(e));
+
+      const promise = retryImport(importFn, [100]);
+      await vi.runAllTimersAsync();
+      await promise;
+
+      unsub();
+      const successEvent = events.find((e) => e.name === "lazy-retry-success");
+      expect(successEvent).toBeDefined();
+      expect((successEvent as { totalTime?: number }).totalTime).toBeGreaterThanOrEqual(0);
+    });
+
+    it("includes error in lazy-retry-exhausted event", async () => {
+      vi.useFakeTimers();
+      const error = new Error("chunk load failed");
+      const importFn = vi.fn().mockRejectedValue(error);
+      const events: SPAGuardEvent[] = [];
+      const unsub = subscribe((e) => events.push(e));
+
+      const promise = retryImport(importFn, [100]);
+      promise.catch(() => {});
+      await vi.runAllTimersAsync();
+      await expect(promise).rejects.toThrow("chunk load failed");
+
+      unsub();
+      const exhaustedEvent = events.find((e) => e.name === "lazy-retry-exhausted");
+      expect(exhaustedEvent).toMatchObject({
+        error,
+        name: "lazy-retry-exhausted",
+        totalAttempts: 2,
+        willReload: false,
+      });
     });
   });
 

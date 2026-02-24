@@ -758,6 +758,503 @@ pnpm --filter @ovineko/spa-guard-vite test
 
 ---
 
+## Task #6: Handle 404 Static Asset Errors During Deployment
+
+### Problem
+
+During Kubernetes rolling deployments, when two app versions run simultaneously, there's a critical race condition:
+
+1. Browser loads HTML from version 1 (e.g., with `main.Bs8thFbo.js`)
+2. During loading, Kubernetes switches traffic to version 2
+3. Browser requests `main.Bs8thFbo.js` but version 2 has `main.Cx9tyGh1.js` instead
+4. CDN/server returns 404 for the old asset hash
+5. Application shows infinite spinner with no recovery attempt
+
+**Current behavior**:
+
+- Error events are captured but not identified as deployment-related 404s
+- No retry mechanism for failed static assets
+- Beacon logs don't include HTTP status code (404)
+- Page is stuck - no reload, no recovery
+
+**Example error beacons from production**:
+
+```json
+// Script tag 404
+{
+  "eventName": "error",
+  "serialized": {
+    "eventType": "error",
+    "target": {
+      "tagName": "SCRIPT",
+      "src": "https://my.example.com/assets/main.Bs8thFbo.js"
+    },
+    "type": "Event"
+  }
+}
+
+// Link tag 404 (preload CSS)
+{
+  "eventName": "error",
+  "serialized": {
+    "eventType": "error",
+    "target": {
+      "tagName": "LINK",
+      "href": "https://my.example.com/cache.LbE9QV8b.js"
+    },
+    "type": "Event"
+  }
+}
+```
+
+### Root Cause
+
+The library doesn't distinguish between:
+
+- Network failures (transient, should retry)
+- 404 errors on static assets (version mismatch, should reload page)
+- API 404s (different handling)
+
+Additionally, error events on `<script>` and `<link>` tags don't expose HTTP status codes - we only know loading failed, not why.
+
+### Solution
+
+Implement comprehensive 404 static asset detection and recovery:
+
+1. **Detect static asset 404s** by analyzing error event targets
+2. **Capture HTTP status codes** where possible (via fetch interception for some cases)
+3. **Add retry mechanism** for static assets before full page reload
+4. **Enhance beacon logging** to clearly indicate 404 vs other errors
+5. **Implement smart reload** when version mismatch is detected
+
+### Changes
+
+#### 1. Create static asset error detection
+
+**New file**: `spa-guard/spa-guard/src/common/isStaticAssetError.ts`
+
+```typescript
+/**
+ * Detects if an error event is from a static asset (script/link) failure
+ */
+export const isStaticAssetError = (event: Event | ErrorEvent): boolean => {
+  if (!(event.target instanceof HTMLElement)) {
+    return false;
+  }
+
+  const target = event.target;
+  const tagName = target.tagName?.toLowerCase();
+
+  // Check if it's a script or link tag
+  if (tagName !== "script" && tagName !== "link") {
+    return false;
+  }
+
+  // Get the resource URL
+  const url =
+    tagName === "script" ? (target as HTMLScriptElement).src : (target as HTMLLinkElement).href;
+
+  if (!url) {
+    return false;
+  }
+
+  // Check if URL looks like a versioned asset (has hash in filename)
+  // Patterns: main.Bs8thFbo.js, chunk-ABCD1234.js, cache.LbE9QV8b.js
+  const hashedAssetPattern = /[.-][a-zA-Z0-9]{8,}\.(js|css|mjs)$/i;
+
+  return hashedAssetPattern.test(url);
+};
+
+/**
+ * Checks if error is likely a 404 based on context
+ * Since error events don't expose HTTP status, we use heuristics
+ */
+export const isLikely404 = (event: Event | ErrorEvent): boolean => {
+  // If it's a static asset error during page load, likely 404
+  if (!isStaticAssetError(event)) {
+    return false;
+  }
+
+  // During initial page load (within first 30s), static asset errors
+  // are usually 404s from version mismatches
+  const timeSinceLoad = Date.now() - performance.timing.navigationStart;
+  const isDuringInitialLoad = timeSinceLoad < 30000;
+
+  return isDuringInitialLoad;
+};
+```
+
+**Tests**: `spa-guard/spa-guard/src/common/isStaticAssetError.test.ts`
+
+```typescript
+describe("isStaticAssetError", () => {
+  it("detects script tag with hashed filename", () => {
+    const script = document.createElement("script");
+    script.src = "https://example.com/assets/main.Bs8thFbo.js";
+    const event = new Event("error");
+    Object.defineProperty(event, "target", { value: script });
+
+    expect(isStaticAssetError(event)).toBe(true);
+  });
+
+  it("detects link tag with hashed filename", () => {
+    const link = document.createElement("link");
+    link.href = "https://example.com/cache.LbE9QV8b.css";
+    const event = new Event("error");
+    Object.defineProperty(event, "target", { value: link });
+
+    expect(isStaticAssetError(event)).toBe(true);
+  });
+
+  it("ignores API requests", () => {
+    const script = document.createElement("script");
+    script.src = "https://api.example.com/data";
+    const event = new Event("error");
+    Object.defineProperty(event, "target", { value: script });
+
+    expect(isStaticAssetError(event)).toBe(false);
+  });
+
+  it("ignores non-hashed assets", () => {
+    const script = document.createElement("script");
+    script.src = "https://example.com/vendor.js";
+    const event = new Event("error");
+    Object.defineProperty(event, "target", { value: script });
+
+    expect(isStaticAssetError(event)).toBe(false);
+  });
+});
+```
+
+#### 2. Enhance error event capture with 404 detection
+
+**File**: [spa-guard/spa-guard/src/common/listen/internal.ts](../../../spa-guard/spa-guard/src/common/listen/internal.ts)
+
+Update the `error` event listener (lines 32-62):
+
+```typescript
+import { isStaticAssetError, isLikely404 } from "../isStaticAssetError";
+
+window.addEventListener(
+  "error",
+  (event) => {
+    // ... existing ignore checks ...
+
+    const isStaticAsset = isStaticAssetError(event);
+    const isLikely404Error = isLikely404(event);
+
+    // If it's a static asset 404, this is likely a deployment version mismatch
+    if (isStaticAsset && isLikely404Error) {
+      emitEvent({
+        errorType: "static-asset-404",
+        name: "static-asset-load-failed",
+        url: getResourceUrl(event.target),
+      });
+
+      // Send beacon with enhanced context
+      sendBeacon({
+        errorMessage: `Static asset 404: ${getResourceUrl(event.target)}`,
+        eventName: "static-asset-404",
+        serialized: serializeError(event),
+        errorContext: "deployment-version-mismatch",
+      });
+
+      // Attempt reload after short delay (allow multiple assets to fail first)
+      attemptStaticAssetRecovery();
+      return;
+    }
+
+    // ... rest of existing error handling ...
+  },
+  true,
+);
+
+const getResourceUrl = (target: EventTarget | null): string => {
+  if (!(target instanceof HTMLElement)) return "";
+  const tagName = target.tagName?.toLowerCase();
+  if (tagName === "script") return (target as HTMLScriptElement).src;
+  if (tagName === "link") return (target as HTMLLinkElement).href;
+  return "";
+};
+```
+
+#### 3. Implement static asset recovery mechanism
+
+**New file**: `spa-guard/spa-guard/src/common/staticAssetRecovery.ts`
+
+```typescript
+import { attemptReload } from "./reload";
+
+let failedAssets: Set<string> = new Set();
+let recoveryTimeout: number | undefined;
+
+/**
+ * Attempts to recover from static asset loading failures
+ *
+ * Strategy:
+ * 1. Collect failed assets for 500ms (multiple might fail at once)
+ * 2. If any critical assets failed (scripts), reload page
+ * 3. Add version bust parameter to force cache invalidation
+ */
+export const attemptStaticAssetRecovery = (url?: string) => {
+  if (url) {
+    failedAssets.add(url);
+  }
+
+  // Clear existing timeout
+  if (recoveryTimeout) {
+    clearTimeout(recoveryTimeout);
+  }
+
+  // Wait 500ms to collect all failures, then decide
+  recoveryTimeout = window.setTimeout(() => {
+    const failedCount = failedAssets.size;
+
+    if (failedCount > 0) {
+      console.warn(
+        `[spa-guard] ${failedCount} static asset(s) failed to load (likely deployment version mismatch). Reloading page...`,
+        Array.from(failedAssets),
+      );
+
+      // Clear the set
+      failedAssets.clear();
+
+      // Force reload with cache bust
+      // This ensures we get the new HTML with correct asset references
+      attemptReload({
+        reason: "static-asset-404",
+        cacheBust: true,
+      });
+    }
+  }, 500);
+};
+
+/**
+ * Reset recovery state (useful for testing)
+ */
+export const resetStaticAssetRecovery = () => {
+  failedAssets.clear();
+  if (recoveryTimeout) {
+    clearTimeout(recoveryTimeout);
+    recoveryTimeout = undefined;
+  }
+};
+```
+
+#### 4. Update reload mechanism to support cache busting
+
+**File**: [spa-guard/spa-guard/src/common/reload.ts](../../../spa-guard/spa-guard/src/common/reload.ts)
+
+Add cache busting support:
+
+```typescript
+interface ReloadOptions {
+  reason?: string;
+  cacheBust?: boolean;
+}
+
+export const attemptReload = (options?: ReloadOptions) => {
+  // ... existing retry logic ...
+
+  let reloadUrl = window.location.href;
+
+  // Add cache bust if requested (for 404 recovery)
+  if (options?.cacheBust) {
+    const url = new URL(reloadUrl);
+    url.searchParams.set("spaGuardCacheBust", Date.now().toString());
+    reloadUrl = url.toString();
+  }
+
+  // ... existing reload logic ...
+  window.location.href = reloadUrl;
+};
+```
+
+#### 5. Enhance beacon schema for 404 errors
+
+**File**: [spa-guard/spa-guard/src/schema/index.ts](../../../spa-guard/spa-guard/src/schema/index.ts)
+
+```typescript
+export interface BeaconSchema {
+  appName?: string;
+  errorContext?: string; // NEW: "deployment-version-mismatch", "network", etc.
+  errorMessage?: string;
+  errorType?: string; // NEW: "static-asset-404", "chunk-error", etc.
+  eventMessage?: string;
+  eventName?: string;
+  httpStatus?: number; // NEW: HTTP status code when available
+  retryAttempt?: number;
+  retryId?: string;
+  serialized?: string;
+  url?: string; // NEW: failed resource URL
+}
+```
+
+#### 6. Add new event type for static asset failures
+
+**File**: [spa-guard/spa-guard/src/common/events/types.ts](../../../spa-guard/spa-guard/src/common/events/types.ts)
+
+```typescript
+export interface SPAGuardEventStaticAssetLoadFailed {
+  errorType: "static-asset-404" | "static-asset-network" | "static-asset-unknown";
+  name: "static-asset-load-failed";
+  url: string;
+}
+
+export type SPAGuardEvent =
+  | SPAGuardEventChunkError
+  | SPAGuardEventRetryAttempt
+  | SPAGuardEventRetryExhausted
+  | SPAGuardEventLazyRetryAttempt
+  | SPAGuardEventLazyRetryExhausted
+  | SPAGuardEventLazyRetrySuccess
+  | SPAGuardEventRetryReset
+  | SPAGuardEventFallbackUiShown
+  | SPAGuardEventStaticAssetLoadFailed; // NEW
+```
+
+#### 7. Update logger to handle static asset errors
+
+**File**: [spa-guard/spa-guard/src/common/logger.ts](../../../spa-guard/spa-guard/src/common/logger.ts)
+
+```typescript
+const formatEvent = (event: SPAGuardEvent): string => {
+  switch (event.name) {
+    // ... existing cases ...
+
+    case "static-asset-load-failed": {
+      return `${PREFIX} static-asset-load-failed: ${event.errorType} - ${event.url} (likely deployment version mismatch)`;
+    }
+  }
+};
+
+// Configure log level
+const eventLogConfig: Record<SPAGuardEvent["name"], "log" | "warn" | "error"> = {
+  // ... existing config ...
+  "static-asset-load-failed": "error",
+};
+```
+
+#### 8. Add configuration options
+
+**File**: [spa-guard/spa-guard/src/common/options.ts](../../../spa-guard/spa-guard/src/common/options.ts)
+
+```typescript
+export interface Options {
+  // ... existing options ...
+
+  staticAssets?: {
+    /**
+     * Enable automatic recovery from 404 static asset errors
+     * @default true
+     */
+    autoRecover?: boolean;
+
+    /**
+     * Delay before reloading after static asset failures (ms)
+     * @default 500
+     */
+    recoveryDelay?: number;
+
+    /**
+     * Patterns to identify static assets (in addition to default hash detection)
+     */
+    patterns?: string[];
+  };
+}
+
+const defaultOptions: Options = {
+  // ... existing defaults ...
+  staticAssets: {
+    autoRecover: true,
+    recoveryDelay: 500,
+  },
+};
+```
+
+### Expected Behavior After Implementation
+
+**Before** (current):
+
+```
+[Network] GET https://my.example.com/assets/main.Bs8thFbo.js - 404
+[Console] (nothing)
+[UI] Infinite spinner, page stuck
+```
+
+**After** (with fix):
+
+```
+[Network] GET https://my.example.com/assets/main.Bs8thFbo.js - 404
+[Console] [spa-guard] static-asset-load-failed: static-asset-404 - https://my.example.com/assets/main.Bs8thFbo.js (likely deployment version mismatch)
+[Console] [spa-guard] 1 static asset(s) failed to load (likely deployment version mismatch). Reloading page... ["https://my.example.com/assets/main.Bs8thFbo.js"]
+[Beacon] { eventName: "static-asset-404", errorContext: "deployment-version-mismatch", url: "..." }
+[Action] Page reloads with cache bust → gets new HTML → loads correct assets → success
+```
+
+### Testing
+
+```bash
+# Unit tests
+pnpm --filter @ovineko/spa-guard test
+
+# Integration test - simulate deployment 404
+pnpm --filter @ovineko/spa-guard-react dev
+
+# In browser console:
+const script = document.createElement("script");
+script.src = "https://example.com/assets/fake.Abc123Def.js";
+script.onerror = () => console.log("Script failed");
+document.head.appendChild(script);
+# Should trigger recovery after 500ms
+
+# Production simulation
+# 1. Build version 1
+pnpm build
+# 2. Deploy to server
+# 3. Start serving
+# 4. Build version 2 (different hashes)
+pnpm build
+# 5. Replace server files while page is loading
+# 6. Verify automatic recovery
+```
+
+### Edge Cases to Handle
+
+1. **Multiple 404s at once**: Collect for 500ms before reload (implemented)
+2. **404 during navigation vs initial load**: Only auto-reload on initial load
+3. **Non-hashed assets**: Don't treat as deployment issue
+4. **CDN delays**: 500ms collection window helps
+5. **User navigates away**: Clear recovery timeout on beforeunload
+6. **Retry exhaustion**: Fall back to fallback UI if reload also fails
+
+### Acceptance Criteria
+
+- ✅ Static asset 404s detected via `isStaticAssetError`
+- ✅ Recovery mechanism triggers after 500ms collection window
+- ✅ Page reloads with cache bust parameter
+- ✅ Beacon includes `errorContext: "deployment-version-mismatch"`
+- ✅ Beacon includes failed asset URL
+- ✅ Console logs clearly indicate 404 vs other errors
+- ✅ Configuration option to disable auto-recovery
+- ✅ Tests cover script and link tag failures
+- ✅ Tests cover multiple simultaneous failures
+- ✅ Works in both dev and production
+- ✅ No infinite reload loops (retry limits still apply)
+
+### Migration Notes
+
+This is a **non-breaking addition**. Existing behavior for chunk errors remains unchanged. New 404 recovery is opt-out via `staticAssets.autoRecover: false`.
+
+### Future Enhancements (Out of Scope)
+
+1. **Smarter CDN strategies**: Keep old assets available for N minutes after deploy
+2. **Service Worker cache**: Pre-cache assets to survive version switches
+3. **Version negotiation**: Send app version in requests, server redirects to correct assets
+4. **Partial reload**: Only reload failed modules instead of full page (requires module federation)
+
+---
+
 ## Verification
 
 After completing all tasks:
@@ -814,9 +1311,14 @@ Tasks are ordered by risk to minimize impact of rollbacks.
 
 ### Task #1 (Circular Dependency)
 
-- [spa-guard/node/package.json](../../../spa-guard/node/package.json)
-- [spa-guard/node/src/builder.ts:79-84](../../../spa-guard/node/src/builder.ts#L79-L84)
-- [spa-guard/node/src/index.ts:1-8](../../../spa-guard/node/src/index.ts#L1-L8)
+- [spa-guard/vite/src/inline/](../../../spa-guard/vite/src/inline/) - Move to node
+- [spa-guard/vite/src/inline-trace/](../../../spa-guard/vite/src/inline-trace/) - Move to node
+- [spa-guard/vite/tsup.inline.config.ts](../../../spa-guard/vite/tsup.inline.config.ts) - Move to node
+- [spa-guard/vite/tsup.inline.trace.config.ts](../../../spa-guard/vite/tsup.inline.trace.config.ts) - Move to node
+- [spa-guard/node/package.json](../../../spa-guard/node/package.json) - Add build:inline script
+- [spa-guard/vite/package.json](../../../spa-guard/vite/package.json) - Add node dependency, remove inline scripts
+- [spa-guard/vite/src/index.ts](../../../spa-guard/vite/src/index.ts) - Read from node package
+- [spa-guard/node/src/index.ts:1-8](../../../spa-guard/node/src/index.ts#L1-L8) - Remove builder re-exports
 
 ### Task #2 (Spinner Options)
 

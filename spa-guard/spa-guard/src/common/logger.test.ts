@@ -121,7 +121,40 @@ describe("common/logger", () => {
       expect(warnSpy).toHaveBeenCalledWith("[spa-guard] fallback-ui-shown");
     });
 
-    it("logs lazy-retry-attempt at warn level", () => {
+    it("logs lazy-retry-start at log level", () => {
+      const logger = createLogger();
+      const event: SPAGuardEvent = {
+        name: "lazy-retry-start",
+        totalAttempts: 3,
+      };
+
+      logger.logEvent(event);
+
+      expect(logSpy).toHaveBeenCalledTimes(1);
+      expect(logSpy).toHaveBeenCalledWith("[spa-guard] lazy-retry-start: totalAttempts=3");
+    });
+
+    it("logs lazy-retry-attempt at warn level with error object", () => {
+      const logger = createLogger();
+      const err = new Error("chunk load failed");
+      const event: SPAGuardEvent = {
+        attempt: 1,
+        delay: 200,
+        error: err,
+        name: "lazy-retry-attempt",
+        totalAttempts: 3,
+      };
+
+      logger.logEvent(event);
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy).toHaveBeenCalledWith(
+        "[spa-guard] lazy-retry-attempt: attempt 1/3, delay 200ms",
+        err,
+      );
+    });
+
+    it("logs lazy-retry-attempt without error when error is undefined", () => {
       const logger = createLogger();
       const event: SPAGuardEvent = {
         attempt: 1,
@@ -135,12 +168,15 @@ describe("common/logger", () => {
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy).toHaveBeenCalledWith(
         "[spa-guard] lazy-retry-attempt: attempt 1/3, delay 200ms",
+        undefined,
       );
     });
 
-    it("logs lazy-retry-exhausted at error level", () => {
+    it("logs lazy-retry-exhausted at error level with error object", () => {
       const logger = createLogger();
+      const err = new Error("chunk exhausted");
       const event: SPAGuardEvent = {
+        error: err,
         name: "lazy-retry-exhausted",
         totalAttempts: 3,
         willReload: true,
@@ -151,10 +187,11 @@ describe("common/logger", () => {
       expect(errorSpy).toHaveBeenCalledTimes(1);
       expect(errorSpy).toHaveBeenCalledWith(
         "[spa-guard] lazy-retry-exhausted: 3 attempts, willReload=true",
+        err,
       );
     });
 
-    it("logs lazy-retry-success at log level", () => {
+    it("logs lazy-retry-success at log level without totalTime", () => {
       const logger = createLogger();
       const event: SPAGuardEvent = {
         attempt: 2,
@@ -165,6 +202,22 @@ describe("common/logger", () => {
 
       expect(logSpy).toHaveBeenCalledTimes(1);
       expect(logSpy).toHaveBeenCalledWith("[spa-guard] lazy-retry-success: succeeded on attempt 2");
+    });
+
+    it("logs lazy-retry-success at log level with totalTime", () => {
+      const logger = createLogger();
+      const event: SPAGuardEvent = {
+        attempt: 2,
+        name: "lazy-retry-success",
+        totalTime: 1500,
+      };
+
+      logger.logEvent(event);
+
+      expect(logSpy).toHaveBeenCalledTimes(1);
+      expect(logSpy).toHaveBeenCalledWith(
+        "[spa-guard] lazy-retry-success: succeeded on attempt 2, totalTime=1500ms",
+      );
     });
   });
 

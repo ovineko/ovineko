@@ -39,6 +39,7 @@ const eventLogConfig: Record<SPAGuardEvent["name"], "error" | "log" | "warn"> = 
   "fallback-ui-shown": "warn",
   "lazy-retry-attempt": "warn",
   "lazy-retry-exhausted": "error",
+  "lazy-retry-start": "log",
   "lazy-retry-success": "log",
   "retry-attempt": "warn",
   "retry-exhausted": "error",
@@ -59,8 +60,12 @@ const formatEvent = (event: SPAGuardEvent): string => {
     case "lazy-retry-exhausted": {
       return `${PREFIX} lazy-retry-exhausted: ${event.totalAttempts} attempts, willReload=${event.willReload}`;
     }
+    case "lazy-retry-start": {
+      return `${PREFIX} lazy-retry-start: totalAttempts=${event.totalAttempts}`;
+    }
     case "lazy-retry-success": {
-      return `${PREFIX} lazy-retry-success: succeeded on attempt ${event.attempt}`;
+      const timePart = event.totalTime === undefined ? "" : `, totalTime=${event.totalTime}ms`;
+      return `${PREFIX} lazy-retry-success: succeeded on attempt ${event.attempt}${timePart}`;
     }
     case "retry-attempt": {
       return `${PREFIX} retry-attempt: attempt ${event.attempt} in ${event.delay}ms (retryId: ${event.retryId})`;
@@ -105,7 +110,11 @@ export const createLogger = (): Logger => ({
   logEvent(event: SPAGuardEvent): void {
     const level = eventLogConfig[event.name];
     const message = formatEvent(event);
-    if (event.name === "chunk-error") {
+    if (
+      event.name === "chunk-error" ||
+      event.name === "lazy-retry-attempt" ||
+      event.name === "lazy-retry-exhausted"
+    ) {
       console[level](message, event.error);
     } else {
       console[level](message);

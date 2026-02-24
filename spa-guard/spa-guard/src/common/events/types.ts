@@ -12,6 +12,7 @@ export type SPAGuardEvent =
   | (SPAGuardEventFallbackUIShown & { name: "fallback-ui-shown" })
   | (SPAGuardEventLazyRetryAttempt & { name: "lazy-retry-attempt" })
   | (SPAGuardEventLazyRetryExhausted & { name: "lazy-retry-exhausted" })
+  | (SPAGuardEventLazyRetryStart & { name: "lazy-retry-start" })
   | (SPAGuardEventLazyRetrySuccess & { name: "lazy-retry-success" })
   | (SPAGuardEventRetryAttempt & { name: "retry-attempt" })
   | (SPAGuardEventRetryExhausted & { name: "retry-exhausted" })
@@ -33,6 +34,8 @@ export interface SPAGuardEventLazyRetryAttempt {
   attempt: number;
   /** Delay in milliseconds before this retry attempt. */
   delay: number;
+  /** The error that caused the previous attempt to fail. */
+  error?: unknown;
   name: "lazy-retry-attempt";
   /** Total number of attempts including the initial try (delays.length + 1). */
   totalAttempts: number;
@@ -40,6 +43,8 @@ export interface SPAGuardEventLazyRetryAttempt {
 
 /** Emitted when all module-level retry attempts are exhausted. */
 export interface SPAGuardEventLazyRetryExhausted {
+  /** The final error after all attempts failed. */
+  error: unknown;
   name: "lazy-retry-exhausted";
   /** Total number of attempts that were made (delays.length + 1). */
   totalAttempts: number;
@@ -47,11 +52,20 @@ export interface SPAGuardEventLazyRetryExhausted {
   willReload: boolean;
 }
 
+/** Emitted once before the first import attempt, when retries are configured. */
+export interface SPAGuardEventLazyRetryStart {
+  name: "lazy-retry-start";
+  /** Total number of attempts that will be made (delays.length + 1). */
+  totalAttempts: number;
+}
+
 /** Emitted when a module loads successfully after one or more retry attempts. */
 export interface SPAGuardEventLazyRetrySuccess {
   /** 1-based retry number on which the import succeeded (1 = first retry). */
   attempt: number;
   name: "lazy-retry-success";
+  /** Total time in milliseconds from first attempt to success. */
+  totalTime?: number;
 }
 
 export interface SPAGuardEventRetryAttempt {

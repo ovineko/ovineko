@@ -74,6 +74,9 @@ export const retryImport = async <T>(
   let lastError: Error = new Error("Import failed after all retry attempts");
 
   const totalAttempts = delays.length + 1;
+  const startTime = Date.now();
+
+  emitEvent({ name: "lazy-retry-start", totalAttempts });
 
   for (let attempt = 0; attempt < totalAttempts; attempt++) {
     if (signal?.aborted) {
@@ -83,7 +86,7 @@ export const retryImport = async <T>(
     try {
       const result = await importFn();
       if (attempt > 0) {
-        emitEvent({ attempt, name: "lazy-retry-success" });
+        emitEvent({ attempt, name: "lazy-retry-success", totalTime: Date.now() - startTime });
       }
       return result;
     } catch (error) {
@@ -98,6 +101,7 @@ export const retryImport = async <T>(
       emitEvent({
         attempt: attempt + 1,
         delay: currentDelay,
+        error: lastError,
         name: "lazy-retry-attempt",
         totalAttempts,
       });
@@ -107,7 +111,7 @@ export const retryImport = async <T>(
 
   const willReload =
     callReloadOnFailure === true && isChunkError(lastError) && isDefaultRetryEnabled();
-  emitEvent({ name: "lazy-retry-exhausted", totalAttempts, willReload });
+  emitEvent({ error: lastError, name: "lazy-retry-exhausted", totalAttempts, willReload });
 
   if (willReload) {
     attemptReload(lastError);
