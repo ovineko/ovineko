@@ -38,6 +38,10 @@ const defaultOptions: Options = {
   },
   minTimeBetweenResets: 5000,
   reloadDelays: [1000, 2000, 5000],
+  staticAssets: {
+    autoRecover: true,
+    recoveryDelay: 500,
+  },
   useRetryId: true,
 };
 
@@ -206,6 +210,25 @@ export interface Options {
     endpoint?: string;
   };
 
+  /**
+   * Configuration for automatic recovery from static asset 404 errors
+   * caused by deployment version mismatches.
+   */
+  staticAssets?: {
+    /**
+     * Automatically trigger a cache-busting reload when a hashed static asset
+     * fails to load and the page has been open long enough to suggest a stale deployment.
+     * @default true
+     */
+    autoRecover?: boolean;
+    /**
+     * Milliseconds to wait after the first failed asset before triggering the reload.
+     * Allows collecting multiple concurrent failures into a single reload.
+     * @default 500
+     */
+    recoveryDelay?: number;
+  };
+
   /** @default true */
   useRetryId?: boolean;
 
@@ -255,6 +278,10 @@ export const getOptions = (): Options => {
     reportBeacon: {
       ...defaultOptions.reportBeacon,
       ...windowOptions?.reportBeacon,
+    },
+    staticAssets: {
+      ...defaultOptions.staticAssets,
+      ...windowOptions?.staticAssets,
     },
   };
 };

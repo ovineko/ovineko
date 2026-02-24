@@ -16,7 +16,8 @@ export type SPAGuardEvent =
   | (SPAGuardEventLazyRetrySuccess & { name: "lazy-retry-success" })
   | (SPAGuardEventRetryAttempt & { name: "retry-attempt" })
   | (SPAGuardEventRetryExhausted & { name: "retry-exhausted" })
-  | (SPAGuardEventRetryReset & { name: "retry-reset" });
+  | (SPAGuardEventRetryReset & { name: "retry-reset" })
+  | (SPAGuardEventStaticAssetLoadFailed & { name: "static-asset-load-failed" });
 
 export interface SPAGuardEventChunkError {
   error: unknown;
@@ -86,6 +87,13 @@ export interface SPAGuardEventRetryReset {
   previousAttempt: number;
   previousRetryId: string;
   timeSinceReload: number;
+}
+
+/** Emitted when a hashed static asset (script/link) fails to load, likely due to a stale deployment. */
+export interface SPAGuardEventStaticAssetLoadFailed {
+  name: "static-asset-load-failed";
+  /** The URL of the asset that failed to load. */
+  url: string;
 }
 
 export type SubscribeFn = (event: SPAGuardEvent) => void;

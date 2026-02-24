@@ -138,18 +138,18 @@ New feature for detecting and recovering from deployment version mismatches.
 - Modify: `spa-guard/spa-guard/src/common/logger.ts`
 - Modify: `spa-guard/spa-guard/src/schema/index.ts`
 
-- [ ] Create `isStaticAssetError.ts`: detect script/link errors with hashed filenames; implement `isLikely404` heuristic based on time since navigation
-- [ ] Create `staticAssetRecovery.ts`: collect failed assets for 500ms, then trigger `attemptReload` with cache bust; export `resetStaticAssetRecovery` for tests
-- [ ] Update `reload.ts`: add `cacheBust?: boolean` to reload options; append `spaGuardCacheBust` query param when true
-- [ ] Update `options.ts`: add `staticAssets?: { autoRecover?: boolean; recoveryDelay?: number }` with defaults `{ autoRecover: true, recoveryDelay: 500 }`
-- [ ] Update `events/types.ts`: add `SPAGuardEventStaticAssetLoadFailed` type and add to `SPAGuardEvent` union
-- [ ] Update `listen/internal.ts`: call `isStaticAssetError` and `isLikely404` on error events; emit event and call recovery when detected
-- [ ] Update `logger.ts`: handle `static-asset-load-failed` event at `error` level
-- [ ] Update `schema/index.ts`: add `errorContext`, `errorType`, `httpStatus`, `url` fields to `BeaconSchema`
-- [ ] Write tests for `isStaticAssetError.ts` (script/link/API/non-hashed cases)
-- [ ] Write tests for `staticAssetRecovery.ts` (single/multiple failures, delay behavior)
-- [ ] Run `pnpm --filter @ovineko/spa-guard test` — must pass
-- [ ] Run `pnpm --recursive test` — must pass
+- [x] Create `isStaticAssetError.ts`: detect script/link errors with hashed filenames; implement `isLikely404` heuristic based on time since navigation
+- [x] Create `staticAssetRecovery.ts`: collect failed assets for 500ms, then trigger `attemptReload` with cache bust; export `resetStaticAssetRecovery` for tests
+- [x] Update `reload.ts`: add `cacheBust?: boolean` to reload options; append `spaGuardCacheBust` query param when true
+- [x] Update `options.ts`: add `staticAssets?: { autoRecover?: boolean; recoveryDelay?: number }` with defaults `{ autoRecover: true, recoveryDelay: 500 }`
+- [x] Update `events/types.ts`: add `SPAGuardEventStaticAssetLoadFailed` type and add to `SPAGuardEvent` union
+- [x] Update `listen/internal.ts`: call `isStaticAssetError` and `isLikely404` on error events; emit event and call recovery when detected
+- [x] Update `logger.ts`: handle `static-asset-load-failed` event at `error` level
+- [x] Update `schema/index.ts`: add `errorContext`, `errorType`, `httpStatus`, `url` fields to `BeaconSchema`
+- [x] Write tests for `isStaticAssetError.ts` (script/link/API/non-hashed cases)
+- [x] Write tests for `staticAssetRecovery.ts` (single/multiple failures, delay behavior)
+- [x] Run `pnpm --filter @ovineko/spa-guard test` — must pass
+- [x] Run `pnpm --recursive test` — must pass
 
 ### Task 7: Final Verification and Cleanup
 

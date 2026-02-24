@@ -55,7 +55,7 @@ export const resetReloadScheduled = (): void => {
   getReloadState().scheduled = false;
 };
 
-export const attemptReload = (error: unknown): void => {
+export const attemptReload = (error: unknown, opts?: { cacheBust?: boolean }): void => {
   const reloadState = getReloadState();
 
   if (reloadState.scheduled) {
@@ -195,12 +195,18 @@ export const attemptReload = (error: unknown): void => {
         setLastReloadTime(retryId, nextAttempt);
       }
 
-      if (useRetryId) {
-        const reloadUrl = buildReloadUrl(retryId, nextAttempt);
-        globalThis.window.location.href = reloadUrl;
-      } else {
-        globalThis.window.location.href = buildReloadUrlAttemptOnly(nextAttempt);
+      let reloadUrl: string;
+      reloadUrl = useRetryId
+        ? buildReloadUrl(retryId, nextAttempt)
+        : buildReloadUrlAttemptOnly(nextAttempt);
+
+      if (opts?.cacheBust) {
+        const url = new URL(reloadUrl);
+        url.searchParams.set("spaGuardCacheBust", String(Date.now()));
+        reloadUrl = url.toString();
       }
+
+      globalThis.window.location.href = reloadUrl;
     }, delay);
   } catch {
     reloadState.scheduled = false;

@@ -1,12 +1,20 @@
 import type { Logger } from "../logger";
 
-import { getLogger, isInitialized, markInitialized, setLogger } from "../events/internal";
+import {
+  emitEvent,
+  getLogger,
+  isInitialized,
+  markInitialized,
+  setLogger,
+} from "../events/internal";
 import { isChunkError } from "../isChunkError";
+import { getAssetUrl, isLikely404, isStaticAssetError } from "../isStaticAssetError";
 import { getOptions } from "../options";
 import { attemptReload } from "../reload";
 import { getRetryInfoForBeacon, getRetryStateFromUrl, updateRetryStateInUrl } from "../retryState";
 import { sendBeacon } from "../sendBeacon";
 import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
+import { handleStaticAssetFailure } from "../staticAssetRecovery";
 
 export const listenInternal = (serializeError: (error: unknown) => string, logger?: Logger) => {
   if (logger) {
@@ -47,6 +55,16 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
       if (shouldForceRetry([event.message])) {
         event.preventDefault();
         attemptReload(event.error ?? event);
+        return;
+      }
+
+      if (isStaticAssetError(event) && isLikely404()) {
+        const assetUrl = getAssetUrl(event);
+        event.preventDefault();
+        emitEvent({ name: "static-asset-load-failed", url: assetUrl });
+        if (options.staticAssets?.autoRecover !== false) {
+          handleStaticAssetFailure(assetUrl);
+        }
         return;
       }
 

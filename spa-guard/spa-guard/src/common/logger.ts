@@ -44,6 +44,7 @@ const eventLogConfig: Record<SPAGuardEvent["name"], "error" | "log" | "warn"> = 
   "retry-attempt": "warn",
   "retry-exhausted": "error",
   "retry-reset": "log",
+  "static-asset-load-failed": "error",
 };
 
 const formatEvent = (event: SPAGuardEvent): string => {
@@ -75,6 +76,9 @@ const formatEvent = (event: SPAGuardEvent): string => {
     }
     case "retry-reset": {
       return `${PREFIX} retry-reset: ${event.timeSinceReload}ms since last reload (retryId: ${event.previousRetryId})`;
+    }
+    case "static-asset-load-failed": {
+      return `${PREFIX} static-asset-load-failed: ${event.url}`;
     }
   }
 };
