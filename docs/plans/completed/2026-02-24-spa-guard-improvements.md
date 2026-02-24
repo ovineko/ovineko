@@ -115,6 +115,6 @@ Implement all three tasks from TODO.md: HTML Cache Store, ETag/304 support (clie
 
 ### Task 7: Cleanup and documentation
 
-- [ ] Delete TODO.md
-- [ ] Update CLAUDE.md if internal patterns changed (window singleton pattern documentation)
-- [ ] Move plan to `docs/plans/completed/`
+- [x] Delete TODO.md
+- [x] Update CLAUDE.md if internal patterns changed (window singleton pattern documentation)
+- [x] Move plan to `docs/plans/completed/`
