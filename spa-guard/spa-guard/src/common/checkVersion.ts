@@ -245,6 +245,9 @@ export const startVersionCheck = (): void => {
 };
 
 export const stopVersionCheck = (): void => {
+  if (globalThis.window === undefined) {
+    return;
+  }
   const s = getState();
   s.runEpoch++;
   s.checkInProgress = false;

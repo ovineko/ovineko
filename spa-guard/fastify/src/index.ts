@@ -177,6 +177,8 @@ export const fastifySPAGuard = fp(fastifySPAGuardPlugin, {
 });
 
 export interface SpaGuardHandlerOptions {
+  /** @internal Promise used to deduplicate concurrent lazy cache creation */
+  _cachePromise?: Promise<HtmlCache>;
   cache?: HtmlCache;
   getHtml?: (() => CreateHtmlCacheOptions) | (() => Promise<CreateHtmlCacheOptions>);
 }
@@ -193,7 +195,9 @@ export async function spaGuardFastifyHandler(
   }
 
   if (!options.cache && getHtml) {
-    options.cache = await createHtmlCache(await getHtml());
+    // Wrap in IIFE so the promise is stored synchronously before any await yields
+    options._cachePromise ??= (async () => createHtmlCache(await getHtml()))();
+    options.cache = await options._cachePromise;
   }
 
   const cache = options.cache!;
