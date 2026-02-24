@@ -8,6 +8,9 @@ post-checkout:
       run: pnpm i
 pre-commit:
   commands:
+    build:lib:
+      priority: 3
+      run: pnpm turbo run build:lib
     datamitsu-fix:
       priority: 1
       run: pnpm datamitsu fix --file-scoped
