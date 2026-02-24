@@ -158,6 +158,17 @@ describe("retryImport", () => {
       expect(events[0]).toMatchObject({ name: "lazy-retry-start", totalAttempts: 4 });
     });
 
+    it("does not emit lazy-retry-start when delays is empty", async () => {
+      const importFn = vi.fn().mockResolvedValue({ default: "module" });
+      const events: SPAGuardEvent[] = [];
+      const unsub = subscribe((e) => events.push(e));
+
+      await retryImport(importFn, []);
+
+      unsub();
+      expect(events.some((e) => e.name === "lazy-retry-start")).toBe(false);
+    });
+
     it("includes error in lazy-retry-attempt event", async () => {
       vi.useFakeTimers();
       const error = new Error("chunk load failed");

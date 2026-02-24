@@ -219,6 +219,21 @@ describe("common/logger", () => {
         "[spa-guard] lazy-retry-success: succeeded on attempt 2, totalTime=1500ms",
       );
     });
+
+    it("logs static-asset-load-failed at error level with url", () => {
+      const logger = createLogger();
+      const event: SPAGuardEvent = {
+        name: "static-asset-load-failed",
+        url: "https://example.com/assets/chunk-abc123.js",
+      };
+
+      logger.logEvent(event);
+
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenCalledWith(
+        "[spa-guard] static-asset-load-failed: https://example.com/assets/chunk-abc123.js",
+      );
+    });
   });
 
   describe("specific methods - listen/internal.ts", () => {

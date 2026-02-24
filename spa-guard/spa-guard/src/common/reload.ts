@@ -1,4 +1,9 @@
-import { reloadScheduledKey, RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
+import {
+  CACHE_BUST_PARAM,
+  reloadScheduledKey,
+  RETRY_ATTEMPT_PARAM,
+  RETRY_ID_PARAM,
+} from "./constants";
 import { emitEvent, getLogger, isDefaultRetryEnabled } from "./events/internal";
 import { applyI18n, getI18n } from "./i18n";
 import {
@@ -202,7 +207,7 @@ export const attemptReload = (error: unknown, opts?: { cacheBust?: boolean }): v
 
       if (opts?.cacheBust) {
         const url = new URL(reloadUrl);
-        url.searchParams.set("spaGuardCacheBust", String(Date.now()));
+        url.searchParams.set(CACHE_BUST_PARAM, String(Date.now()));
         reloadUrl = url.toString();
       }
 

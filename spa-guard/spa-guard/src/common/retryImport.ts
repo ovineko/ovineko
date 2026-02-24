@@ -76,7 +76,9 @@ export const retryImport = async <T>(
   const totalAttempts = delays.length + 1;
   const startTime = Date.now();
 
-  emitEvent({ name: "lazy-retry-start", totalAttempts });
+  if (delays.length > 0) {
+    emitEvent({ name: "lazy-retry-start", totalAttempts });
+  }
 
   for (let attempt = 0; attempt < totalAttempts; attempt++) {
     if (signal?.aborted) {

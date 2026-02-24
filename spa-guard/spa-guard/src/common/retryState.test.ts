@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
+import { CACHE_BUST_PARAM, RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
 import {
   clearRetryAttemptFromUrl,
   clearRetryStateFromUrl,
@@ -101,6 +101,11 @@ describe("getRetryStateFromUrl", () => {
     setupMockLocation(
       `http://localhost/?${RETRY_ID_PARAM}=abc123&${RETRY_ATTEMPT_PARAM}=not-a-number`,
     );
+    expect(getRetryStateFromUrl()).toBeNull();
+  });
+
+  it("returns null when retryAttempt is below -1 (invalid manipulation)", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=abc123&${RETRY_ATTEMPT_PARAM}=-2`);
     expect(getRetryStateFromUrl()).toBeNull();
   });
 
@@ -211,6 +216,13 @@ describe("clearRetryStateFromUrl", () => {
     expect(calledUrl.searchParams.has(RETRY_ATTEMPT_PARAM)).toBe(false);
   });
 
+  it("removes spaGuardCacheBust param from URL", () => {
+    setupMockLocation(`http://localhost/?${CACHE_BUST_PARAM}=1234567890`);
+    clearRetryStateFromUrl();
+    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
+    expect(calledUrl.searchParams.has(CACHE_BUST_PARAM)).toBe(false);
+  });
+
   it("preserves other URL params when clearing", () => {
     setupMockLocation(
       `http://localhost/?foo=bar&${RETRY_ID_PARAM}=id&${RETRY_ATTEMPT_PARAM}=1&baz=qux`,
@@ -270,6 +282,11 @@ describe("getRetryAttemptFromUrl", () => {
 
   it("returns null when retryAttempt is NaN", () => {
     setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=not-a-number`);
+    expect(getRetryAttemptFromUrl()).toBeNull();
+  });
+
+  it("returns null when retryAttempt is below -1 (invalid manipulation)", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=-2`);
     expect(getRetryAttemptFromUrl()).toBeNull();
   });
 

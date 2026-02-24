@@ -76,6 +76,7 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
   let cachedExternalContent: null | string = null;
   let cachedExternalHash: null | string = null;
   let cachedExternalFileName: null | string = null;
+  let cachedExternalPublicPath: null | string = null;
 
   return {
     configResolved(config) {
@@ -90,7 +91,8 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
         return;
       }
       server.middlewares.use((req, res, next) => {
-        if (cachedExternalFileName && req.url === `/${cachedExternalFileName}`) {
+        const requestPath = req.url?.split("?")[0];
+        if (cachedExternalPublicPath && requestPath === cachedExternalPublicPath) {
           res.setHeader("Content-Type", "application/javascript");
           res.end(cachedExternalContent);
           return;
@@ -133,6 +135,7 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
           const publicPath = options.publicPath ?? resolvedBase ?? "/";
           const normalizedPath = publicPath.endsWith("/") ? publicPath : `${publicPath}/`;
           const publicUrl = `${normalizedPath}spa-guard.${cachedExternalHash}.js`;
+          cachedExternalPublicPath = publicUrl;
 
           mainTag = {
             attrs: { src: publicUrl },

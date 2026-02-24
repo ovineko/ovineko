@@ -1,23 +1,41 @@
+import { staticAssetRecoveryKey } from "./constants";
 import { getOptions } from "./options";
 import { attemptReload } from "./reload";
 
-let recoveryTimer: null | ReturnType<typeof setTimeout> = null;
-let failedAssets: Set<string> = new Set();
+interface StaticAssetRecoveryState {
+  failedAssets: Set<string>;
+  recoveryTimer: null | ReturnType<typeof setTimeout>;
+}
+
+const getState = (): StaticAssetRecoveryState => {
+  if (globalThis.window === undefined) {
+    return { failedAssets: new Set<string>(), recoveryTimer: null };
+  }
+  if (!(globalThis.window as any)[staticAssetRecoveryKey]) {
+    (globalThis.window as any)[staticAssetRecoveryKey] = {
+      failedAssets: new Set<string>(),
+      recoveryTimer: null,
+    } as StaticAssetRecoveryState;
+  }
+  return (globalThis.window as any)[staticAssetRecoveryKey] as StaticAssetRecoveryState;
+};
 
 export const handleStaticAssetFailure = (url: string): void => {
-  failedAssets.add(url);
+  const state = getState();
+  state.failedAssets.add(url);
 
-  if (recoveryTimer !== null) {
+  if (state.recoveryTimer !== null) {
     return;
   }
 
   const options = getOptions();
   const delay = options.staticAssets?.recoveryDelay ?? 500;
 
-  recoveryTimer = setTimeout(() => {
-    const assets = [...failedAssets];
-    failedAssets = new Set();
-    recoveryTimer = null;
+  state.recoveryTimer = setTimeout(() => {
+    const s = getState();
+    const assets = [...s.failedAssets];
+    s.failedAssets = new Set();
+    s.recoveryTimer = null;
 
     const error = new Error(`Static asset load failed: ${assets.join(", ")}`);
     attemptReload(error, { cacheBust: true });
@@ -25,9 +43,10 @@ export const handleStaticAssetFailure = (url: string): void => {
 };
 
 export const resetStaticAssetRecovery = (): void => {
-  if (recoveryTimer !== null) {
-    clearTimeout(recoveryTimer);
-    recoveryTimer = null;
+  const state = getState();
+  if (state.recoveryTimer !== null) {
+    clearTimeout(state.recoveryTimer);
+    state.recoveryTimer = null;
   }
-  failedAssets = new Set();
+  state.failedAssets = new Set();
 };

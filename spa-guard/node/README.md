@@ -81,7 +81,7 @@ import { buildSpaGuardScript, buildExternalScript } from "@ovineko/spa-guard-nod
 // Inline script — returns script content and HTML tag strings
 const { scriptContent, hash, html, tags } = await buildSpaGuardScript({
   version: "1.0.0",
-  spinner: { background: "#f5f5f5" },
+  html: { spinner: { background: "#f5f5f5" } },
 });
 
 // External script — writes a content-hashed file to disk

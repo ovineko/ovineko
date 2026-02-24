@@ -1,4 +1,4 @@
-import { RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
+import { CACHE_BUST_PARAM, RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
 
 export interface RetryState {
   retryAttempt: number;
@@ -13,7 +13,7 @@ export const getRetryStateFromUrl = (): null | RetryState => {
 
     if (retryId && retryAttempt) {
       const parsed = parseInt(retryAttempt, 10);
-      if (Number.isNaN(parsed)) {
+      if (Number.isNaN(parsed) || parsed < -1) {
         return null;
       }
       return {
@@ -32,6 +32,7 @@ export const clearRetryStateFromUrl = (): void => {
     const url = new URL(globalThis.window.location.href);
     url.searchParams.delete(RETRY_ID_PARAM);
     url.searchParams.delete(RETRY_ATTEMPT_PARAM);
+    url.searchParams.delete(CACHE_BUST_PARAM);
     globalThis.window.history.replaceState(null, "", url.toString());
   } catch {}
 };
@@ -67,7 +68,7 @@ export const getRetryAttemptFromUrl = (): null | number => {
 
     if (retryAttempt) {
       const parsed = parseInt(retryAttempt, 10);
-      if (Number.isNaN(parsed)) {
+      if (Number.isNaN(parsed) || parsed < -1) {
         return null;
       }
       return parsed;

@@ -33,7 +33,7 @@ export default defineConfig({
     spaGuardVitePlugin({
       version: "1.0.0",
       reloadDelays: [1000, 3000, 10000],
-      spinner: { background: "#f5f5f5" },
+      html: { spinner: { background: "#f5f5f5" } },
     }),
   ],
 });
@@ -42,7 +42,7 @@ export default defineConfig({
 Disable the spinner:
 
 ```ts
-spaGuardVitePlugin({ spinner: { disabled: true } });
+spaGuardVitePlugin({ html: { spinner: { disabled: true } } });
 ```
 
 Enable trace mode (logs extra debug info at runtime):
@@ -66,19 +66,19 @@ spaGuardVitePlugin({
 
 `VitePluginOptions` extends the core `Options` type and adds:
 
-| Option                  | Type                     | Default      | Description                                              |
-| ----------------------- | ------------------------ | ------------ | -------------------------------------------------------- |
-| `mode`                  | `'inline' \| 'external'` | `'inline'`   | Inject script inline or write an external file           |
-| `externalScriptDir`     | `string`                 | —            | Output directory for external mode (e.g., `dist/assets`) |
-| `publicPath`            | `string`                 | `'/'`        | Public path prefix for the generated script URL          |
-| `version`               | `string`                 | auto UUID    | Version string for cache busting                         |
-| `reloadDelays`          | `number[]`               | —            | Retry delay sequence in ms                               |
-| `useRetryId`            | `boolean`                | —            | Append retry ID to chunk URLs                            |
-| `spinner.disabled`      | `boolean`                | `false`      | Disable loading spinner injection                        |
-| `spinner.content`       | `string`                 | built-in SVG | Custom spinner HTML content                              |
-| `spinner.background`    | `string`                 | `"#fff"`     | Spinner overlay background color                         |
-| `html.fallback.content` | `string`                 | —            | Fallback HTML shown on error (auto-minified)             |
-| `trace`                 | `boolean`                | `false`      | Use trace build with debug logging                       |
+| Option                    | Type                     | Default      | Description                                              |
+| ------------------------- | ------------------------ | ------------ | -------------------------------------------------------- |
+| `mode`                    | `'inline' \| 'external'` | `'inline'`   | Inject script inline or write an external file           |
+| `externalScriptDir`       | `string`                 | —            | Output directory for external mode (e.g., `dist/assets`) |
+| `publicPath`              | `string`                 | `'/'`        | Public path prefix for the generated script URL          |
+| `version`                 | `string`                 | auto UUID    | Version string for cache busting                         |
+| `reloadDelays`            | `number[]`               | —            | Retry delay sequence in ms                               |
+| `useRetryId`              | `boolean`                | —            | Append retry ID to chunk URLs                            |
+| `html.spinner.disabled`   | `boolean`                | `false`      | Disable loading spinner injection                        |
+| `html.spinner.content`    | `string`                 | built-in SVG | Custom spinner HTML content                              |
+| `html.spinner.background` | `string`                 | `"#fff"`     | Spinner overlay background color                         |
+| `html.fallback.content`   | `string`                 | —            | Fallback HTML shown on error (auto-minified)             |
+| `trace`                   | `boolean`                | `false`      | Use trace build with debug logging                       |
 
 ## What the plugin injects
 

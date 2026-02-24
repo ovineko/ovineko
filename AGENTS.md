@@ -25,7 +25,7 @@ This monorepo contains the following packages:
 - **@ovineko/spa-guard**: Core runtime, error handling, schema, i18n for SPAs — automatic retry with cache busting, beacon error reporting, debug test panel
 - **@ovineko/spa-guard-react**: React hooks, components (`lazyWithRetry`, `Spinner`), and error boundaries (`DefaultErrorFallback`, `ErrorBoundary`)
 - **@ovineko/spa-guard-react-router**: React Router v7 error boundary integration for spa-guard
-- **@ovineko/spa-guard-vite**: Vite plugin and inline scripts for spa-guard
+- **@ovineko/spa-guard-vite**: Vite plugin for spa-guard
 - **@ovineko/spa-guard-node**: Server-side HTML cache with ETag/304, pre-compression (gzip/brotli/zstd), and i18n for spa-guard (uses parse5 for DOM parsing)
 - **@ovineko/spa-guard-fastify**: Fastify plugin for spa-guard beacon endpoint and HTML cache handler with ETag/304 support
 - **@ovineko/spa-guard-eslint**: ESLint rules for spa-guard (no-direct-lazy, no-direct-error-boundary)
@@ -42,7 +42,7 @@ ovineko/
 │   ├── spa-guard/              # Core: runtime, error handling, schema, i18n
 │   ├── react/                  # React hooks, components, error boundaries
 │   ├── react-router/           # React Router v7 error boundary integration
-│   ├── vite/                   # Vite plugin and inline scripts
+│   ├── vite/                   # Vite plugin
 │   ├── node/                   # Server-side HTML cache, ETag/304, i18n (parse5)
 │   ├── fastify/                # Fastify beacon endpoint plugin and HTML cache handler
 │   └── eslint/                 # ESLint rules
@@ -388,7 +388,7 @@ The spa-guard functionality is split into 7 separate packages under `spa-guard/`
 - **@ovineko/spa-guard** (core): Runtime, error handling, schema validation, i18n — no peer dependencies
 - **@ovineko/spa-guard-react**: React hooks, components, error boundaries — peer: react@^19
 - **@ovineko/spa-guard-react-router**: React Router v7 error boundary — peer: react@^19, react-router@^7
-- **@ovineko/spa-guard-vite**: Vite plugin and inline scripts — peer: vite@^8||^7
+- **@ovineko/spa-guard-vite**: Vite plugin — peer: vite@^8||^7
 - **@ovineko/spa-guard-node**: Server-side HTML cache with ETag/304, pre-compression, and i18n (parse5) — peer: parse5@^8
 - **@ovineko/spa-guard-fastify**: Fastify beacon endpoint plugin and HTML cache handler — peer: fastify@^5||^4, fastify-plugin@^5||^4, @ovineko/spa-guard-node
 - **@ovineko/spa-guard-eslint**: ESLint rules — peer: eslint@^9||^10
@@ -403,8 +403,8 @@ Key architecture notes:
 - Test setup (`test/setup.ts`) globally suppresses `console.log/warn/error` to keep test output clean; run `pnpm test:debug` (sets `DEBUG=1`) to pass console output through when diagnosing test failures
 - ESLint plugin (spa-guard-eslint) rule names: `@ovineko/spa-guard-eslint/no-direct-lazy`, `@ovineko/spa-guard-eslint/no-direct-error-boundary`
 - ESLint v10 is supported (`^9 || ^10`); `@types/eslint` was removed because ESLint v10 ships its own types; the plugin uses `satisfies ESLint.Plugin` for type checking
-- Injectable Logger via DI: all console output uses a `Logger` interface (`src/common/logger.ts` in core). `listenInternal(serializeError, logger?)` accepts an optional logger. The production inline entry (in spa-guard-vite `src/inline/index.ts`) passes no logger so tree-shaking eliminates all log strings from the bundle. The trace entry (`src/inline-trace/index.ts`) passes `createLogger()` for full logging
-- **Inline script rebuild requirement**: After any change to core code that could affect the inline scripts, you MUST rebuild inline scripts by running `pnpm build` from `spa-guard/vite/`
+- Injectable Logger via DI: all console output uses a `Logger` interface (`src/common/logger.ts` in core). `listenInternal(serializeError, logger?)` accepts an optional logger. The production inline entry (in spa-guard-node `src/inline/index.ts`) passes no logger so tree-shaking eliminates all log strings from the bundle. The trace entry (`src/inline-trace/index.ts`) passes `createLogger()` for full logging
+- **Inline script rebuild requirement**: After any change to core code that could affect the inline scripts, you MUST rebuild inline scripts by running `pnpm build:inline && pnpm build` from `spa-guard/node/`
 - `ForceRetryError` uses a magic substring (`__SPA_GUARD_FORCE_RETRY__`) prepended to the error message; `shouldForceRetry()` in `src/common/shouldIgnore.ts` always checks for this substring regardless of `errors.forceRetry` config
 - `errors.ignore` early-return pattern: In all four event handlers in `src/common/listen/internal.ts`, when `shouldIgnoreMessages()` returns `true`, the handler returns immediately — no `sendBeacon()`, no `attemptReload()`, no `preventDefault()`, no `serializeError()`
 - `BeaconError` wraps `BeaconSchema` data into an `Error` subclass; exported from both core and spa-guard-fastify for use with error tracking services
@@ -418,7 +418,7 @@ Key architecture notes:
 - `createHTMLCacheStore` (spa-guard-node) manages multiple named `HtmlCache` instances via `getCache(key)`, `isLoaded()`, and `load()`. Keys are processed sequentially during `load()` to control CPU; `createHtmlCache` parallelizes language variants internally. Throws if accessed before `load()` completes
 - `HtmlCache.get()` supports conditional requests via `ifNoneMatch` option — returns `statusCode: 304` with empty body when the provided ETag matches, avoiding redundant response bodies
 - `spaGuardFastifyHandler` (spa-guard-fastify) wraps `HtmlCache` for Fastify routes: extracts `accept-encoding`, `accept-language`, `if-none-match` headers from the request, forwards `statusCode` from `HtmlCacheResponse` to the reply. Supports both pre-built `cache` and lazy `getHtml` options
-- **Builder API (spa-guard-node)**: `buildSpaGuardScript()` and `buildExternalScript()` in `spa-guard/node/src/builder.ts` read the pre-built inline script from `dist-inline/index.js` (or `dist-inline-trace/index.js` when `trace: true`) relative to `import.meta.dirname`. These directories are populated by `pnpm copy:bundles` in `spa-guard/node/`, which copies them from `spa-guard/vite/`. The vite package must be built first. If builder tests fail with ENOENT, run `pnpm build` in `spa-guard/vite/` then `pnpm copy:bundles` in `spa-guard/node/`. The `./builder` subpath export in `node/package.json` exposes the builder API separately from the main index
+- **Builder API (spa-guard-node)**: `buildSpaGuardScript()` and `buildExternalScript()` in `spa-guard/node/src/builder.ts` read the pre-built inline script from `dist-inline/index.js` (or `dist-inline-trace/index.js` when `trace: true`) relative to `import.meta.dirname`. These directories are built directly in `spa-guard/node/` by running `pnpm build:inline` (or `pnpm prepublishOnly` to build everything). If builder tests fail with ENOENT, run `pnpm build:inline` in `spa-guard/node/`. The `./builder` subpath export in `node/package.json` exposes the builder API separately from the main index
 - **External script mode (spa-guard-vite)**: When `mode: 'external'`, `configResolved` hook captures `config.build.outDir` as the fallback `externalScriptDir`. `transformIndexHtml` computes and caches the script content and hash on first invocation (shared across all HTML entry points processed in the same build). The actual file write happens in `writeBundle`, not during transform. The injected tag is `<script src="...">` with a content-hashed filename (e.g., `spa-guard.<hash16>.js`). `HtmlTagDescriptor` in `builder.ts` is intentionally independent of Vite's type (same shape, structurally compatible) to keep spa-guard-node framework-agnostic
 
 ### @ovineko/clean-pkg-json
