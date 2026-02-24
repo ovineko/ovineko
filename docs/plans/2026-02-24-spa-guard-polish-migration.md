@@ -141,13 +141,13 @@ Polish the happydom->parse5 and typebox->plain TS migration, fix spinner renderi
 - Delete: `TODO.md`
 - Delete: `TODO/` directory (already deleted in working tree)
 
-- [ ] Delete revise.txt (tasks captured in this plan)
-- [ ] Delete TODO.md (reorganization planned in task 7)
-- [ ] Manual test: verify pnpm install produces clean lockfile
-- [ ] Run full test suite: pnpm test
-- [ ] Run linter: pnpm lint (or datamitsu lint)
-- [ ] Run typecheck: pnpm typecheck
-- [ ] Verify test coverage meets 80%+
+- [x] Delete revise.txt (tasks captured in this plan)
+- [x] Delete TODO.md (reorganization planned in task 7)
+- [x] Manual test: verify pnpm install produces clean lockfile
+- [x] Run full test suite: pnpm test
+- [x] Run linter: pnpm lint (or datamitsu lint)
+- [x] Run typecheck: pnpm typecheck
+- [x] Verify test coverage meets 80%+
 
 ### Task 9: Update documentation
 
