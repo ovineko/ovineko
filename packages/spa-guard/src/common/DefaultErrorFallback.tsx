@@ -99,9 +99,11 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const html = useMemo(() => {
+    const opts = getOptions();
+
     if (isRetrying) {
-      const opts = getOptions();
-      return buildHtml(defaultLoadingFallbackHtml, {
+      const loadingTemplate = opts.html?.loading?.content ?? defaultLoadingFallbackHtml;
+      return buildHtml(loadingTemplate, {
         content: {
           attempt: String(spaGuardState.currentAttempt),
         },
@@ -114,8 +116,9 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
 
     const heading = isChunk ? "Failed to load module" : "Something went wrong";
     const message = error instanceof Error ? error.message : String(error);
+    const errorTemplate = opts.html?.fallback?.content ?? defaultErrorFallbackHtml;
 
-    return buildHtml(defaultErrorFallbackHtml, {
+    return buildHtml(errorTemplate, {
       actions: {
         "try-again": Boolean(onReset),
       },

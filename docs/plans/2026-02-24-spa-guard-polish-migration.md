@@ -71,10 +71,10 @@ Polish the happydom->parse5 and typebox->plain TS migration, fix spinner renderi
 - Modify: `packages/spa-guard/src/common/DefaultErrorFallback.tsx`
 - Modify: `packages/spa-guard/src/common/DefaultErrorFallback.test.tsx`
 
-- [ ] In DefaultErrorFallback.tsx, replace direct import of defaultErrorFallbackHtml/defaultLoadingFallbackHtml with getOptions().html.fallback.content / getOptions().html.loading.content (fall back to generated defaults if undefined)
-- [ ] This allows users to override fallback/loading HTML via window options
-- [ ] Update tests to verify custom HTML from options is used when configured
-- [ ] Run test suite - must pass before task 5
+- [x] In DefaultErrorFallback.tsx, replace direct import of defaultErrorFallbackHtml/defaultLoadingFallbackHtml with getOptions().html.fallback.content / getOptions().html.loading.content (fall back to generated defaults if undefined)
+- [x] This allows users to override fallback/loading HTML via window options
+- [x] Update tests to verify custom HTML from options is used when configured
+- [x] Run test suite - must pass before task 5
 
 ### Task 5: Audit and confirm removal of unused functions
 

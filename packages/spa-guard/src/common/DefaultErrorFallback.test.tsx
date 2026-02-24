@@ -413,6 +413,92 @@ describe("DefaultErrorFallback", () => {
     });
   });
 
+  describe("custom HTML from options", () => {
+    it("uses custom error fallback HTML from options when configured", () => {
+      const customErrorHtml =
+        '<div><h1 data-spa-guard-content="heading">Placeholder</h1><p data-spa-guard-content="message">Placeholder</p><button data-spa-guard-action="reload" type="button">Custom Reload</button></div>';
+      vi.mocked(getOptions).mockReturnValue({
+        html: {
+          fallback: { content: customErrorHtml },
+        },
+      });
+
+      const { container } = render(
+        <DefaultErrorFallback
+          error={new Error("custom test error")}
+          isChunkError={false}
+          isRetrying={false}
+          spaGuardState={defaultState}
+        />,
+      );
+
+      const heading = container.querySelector('[data-spa-guard-content="heading"]');
+      expect(heading?.textContent).toBe("Something went wrong");
+      const message = container.querySelector('[data-spa-guard-content="message"]');
+      expect(message?.textContent).toBe("custom test error");
+      expect(container.querySelector("button")?.textContent).toBe("Custom Reload");
+    });
+
+    it("uses custom loading HTML from options when configured", () => {
+      const customLoadingHtml =
+        '<div><div data-spa-guard-spinner></div><h2 data-spa-guard-content="loading">Custom Loading</h2><p data-spa-guard-section="retrying" style="display:none"><span data-spa-guard-content="retrying">Custom Retry</span> <span data-spa-guard-content="attempt"></span></p></div>';
+      vi.mocked(getOptions).mockReturnValue({
+        html: {
+          loading: { content: customLoadingHtml },
+        },
+      });
+
+      const { container } = render(
+        <DefaultErrorFallback
+          error={new Error("test")}
+          isChunkError={false}
+          isRetrying={true}
+          spaGuardState={retryingStateAttempt2}
+        />,
+      );
+
+      const loadingHeading = container.querySelector('[data-spa-guard-content="loading"]');
+      expect(loadingHeading?.textContent).toBe("Custom Loading");
+      const retryLabel = container.querySelector('[data-spa-guard-content="retrying"]');
+      expect(retryLabel?.textContent).toBe("Custom Retry");
+      const attemptEl = container.querySelector('[data-spa-guard-content="attempt"]');
+      expect(attemptEl?.textContent).toBe("2");
+    });
+
+    it("falls back to default templates when options do not provide HTML", () => {
+      vi.mocked(getOptions).mockReturnValue({});
+
+      const { container: errorContainer } = render(
+        <DefaultErrorFallback
+          error={new Error("fallback test")}
+          isChunkError={false}
+          isRetrying={false}
+          spaGuardState={defaultState}
+        />,
+      );
+
+      expect(
+        errorContainer.querySelector('[data-spa-guard-content="heading"]'),
+      ).toBeInTheDocument();
+      expect(errorContainer.querySelector('[data-spa-guard-content="message"]')?.textContent).toBe(
+        "fallback test",
+      );
+
+      const { container: loadingContainer } = render(
+        <DefaultErrorFallback
+          error={new Error("test")}
+          isChunkError={false}
+          isRetrying={true}
+          spaGuardState={retryingStateAttempt1}
+        />,
+      );
+
+      expect(
+        loadingContainer.querySelector('[data-spa-guard-content="loading"]'),
+      ).toBeInTheDocument();
+    });
+  });
+
   describe("spinner injection in loading template", () => {
     it("injects custom spinner content into data-spa-guard-spinner element", () => {
       vi.mocked(getOptions).mockReturnValue({
