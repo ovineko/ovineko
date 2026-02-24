@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard-vite",
-  "version": "0.0.1-alpha-22",
+  "version": "0.0.1-alpha-23",
   "description": "Vite plugin and inline scripts for spa-guard",
   "keywords": [
     "spa",

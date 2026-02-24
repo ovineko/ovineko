@@ -30,7 +30,7 @@ const getInlineScript = async (options: VitePluginOptions) => {
   const buildDir = options.trace ? "dist-inline-trace" : "dist-inline";
 
   const script = await fsPromise
-    .readFile(path.join(import.meta.dirname, `../../${buildDir}/index.js`), "utf8")
+    .readFile(path.join(import.meta.dirname, `../${buildDir}/index.js`), "utf8")
     .then((r) => r.trim());
 
   const processedOptions = { ...options, trace: undefined };
