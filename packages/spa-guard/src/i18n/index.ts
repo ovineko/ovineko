@@ -18,21 +18,25 @@ export interface SpaGuardTranslations {
  *   with quality values sorted descending.
  * - Otherwise it's treated as a direct language code.
  *
- * Resolution: exact match → prefix match → `"en"`.
+ * Resolution: exact match → prefix match → `"en"` (or first available if `"en"` not in list).
  */
 export function matchLang(
   input: string | undefined,
   available: string[] = Object.keys(translations),
 ): string {
   if (input === undefined) {
-    return "en";
+    return defaultLang(available);
   }
 
   if (input.includes(",") || input.includes(";q=")) {
     return matchAcceptLanguage(input, available);
   }
 
-  return matchSingle(input, available) ?? "en";
+  return matchSingle(input, available) ?? defaultLang(available);
+}
+
+function defaultLang(available: string[]): string {
+  return available.includes("en") ? "en" : (available[0] ?? "en");
 }
 
 function matchAcceptLanguage(header: string, available: string[]): string {
@@ -53,7 +57,7 @@ function matchAcceptLanguage(header: string, available: string[]): string {
     }
   }
 
-  return "en";
+  return defaultLang(available);
 }
 
 function matchSingle(code: string, available: string[]): string | undefined {

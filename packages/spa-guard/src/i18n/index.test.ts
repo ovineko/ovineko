@@ -187,6 +187,18 @@ describe("i18n", () => {
       it("uses prefix matching with custom available list", () => {
         expect(matchLang("zh-TW", ["en", "zh", "zh-Hant"])).toBe("zh");
       });
+
+      it("falls back to first available when en is not in list", () => {
+        expect(matchLang("xx", ["fr", "de"])).toBe("fr");
+      });
+
+      it("falls back to first available for undefined input when en is not in list", () => {
+        expect(matchLang(undefined, ["ko", "ja"])).toBe("ko");
+      });
+
+      it("falls back to first available for Accept-Language with no matches when en is not in list", () => {
+        expect(matchLang("xx;q=1,yy;q=0.5", ["fr", "de"])).toBe("fr");
+      });
     });
   });
 });
