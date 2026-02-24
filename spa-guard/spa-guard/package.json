@@ -62,7 +62,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "pnpm generate:fallback && tsup",
+    "build": "tsup",
+    "build:lib": "pnpm generate:fallback",
     "fix": "datamitsu fix",
     "generate:fallback": "tsx scripts/generate-fallback.ts",
     "lint": "datamitsu lint",
