@@ -17,6 +17,7 @@ vi.mock("./errorDispatchers", () => ({
   dispatchFinallyError: vi.fn(),
   dispatchForceRetryError: vi.fn(),
   dispatchNetworkTimeout: vi.fn(),
+  dispatchRetryExhausted: vi.fn(),
   dispatchSyncRuntimeError: vi.fn(),
   dispatchUnhandledRejection: vi.fn(),
 }));
@@ -29,6 +30,7 @@ import {
   dispatchFinallyError,
   dispatchForceRetryError,
   dispatchNetworkTimeout,
+  dispatchRetryExhausted,
   dispatchSyncRuntimeError,
   dispatchUnhandledRejection,
 } from "./errorDispatchers";
@@ -41,6 +43,7 @@ const mockDispatchSyncRuntimeError = vi.mocked(dispatchSyncRuntimeError);
 const mockDispatchAsyncRuntimeError = vi.mocked(dispatchAsyncRuntimeError);
 const mockDispatchFinallyError = vi.mocked(dispatchFinallyError);
 const mockDispatchForceRetryError = vi.mocked(dispatchForceRetryError);
+const mockDispatchRetryExhausted = vi.mocked(dispatchRetryExhausted);
 const mockDispatchUnhandledRejection = vi.mocked(dispatchUnhandledRejection);
 
 const defaultState: SpaGuardState = {
@@ -218,7 +221,7 @@ describe("createDebugger - buttons", () => {
   beforeEach(setupMocks);
   afterEach(cleanupDom);
 
-  it("renders all 7 error buttons", async () => {
+  it("renders all 8 error buttons", async () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     expect(getButton("chunk-load-error")).not.toBeNull();
@@ -228,6 +231,7 @@ describe("createDebugger - buttons", () => {
     expect(getButton("finally-error")).not.toBeNull();
     expect(getButton("force-retry-error")).not.toBeNull();
     expect(getButton("unhandled-rejection")).not.toBeNull();
+    expect(getButton("exhaust-retries")).not.toBeNull();
     destroy();
   });
 
@@ -287,6 +291,14 @@ describe("createDebugger - buttons", () => {
     destroy();
   });
 
+  it("calls dispatchRetryExhausted when exhaust-retries button is clicked", async () => {
+    const { createDebugger: create } = await import("./index");
+    const destroy = create();
+    getButton("exhaust-retries")!.click();
+    expect(mockDispatchRetryExhausted).toHaveBeenCalledOnce();
+    destroy();
+  });
+
   it("shows default labels initially", async () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
@@ -297,6 +309,7 @@ describe("createDebugger - buttons", () => {
     expect(getButton("finally-error")!.textContent).toBe("Finally Error");
     expect(getButton("force-retry-error")!.textContent).toBe("ForceRetry Error");
     expect(getButton("unhandled-rejection")!.textContent).toBe("Unhandled Rejection");
+    expect(getButton("exhaust-retries")!.textContent).toBe("Exhaust Retries");
     destroy();
   });
 

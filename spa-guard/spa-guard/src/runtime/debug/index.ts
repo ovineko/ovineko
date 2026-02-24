@@ -8,6 +8,7 @@ import {
   dispatchFinallyError,
   dispatchForceRetryError,
   dispatchNetworkTimeout,
+  dispatchRetryExhausted,
   dispatchSyncRuntimeError,
   dispatchUnhandledRejection,
 } from "./errorDispatchers";
@@ -33,6 +34,7 @@ const SCENARIOS: Scenario[] = [
     key: "unhandled-rejection",
     label: "Unhandled Rejection",
   },
+  { dispatch: dispatchRetryExhausted, key: "exhaust-retries", label: "Exhaust Retries" },
 ];
 
 const POSITION_MAP: Record<Position, string> = {

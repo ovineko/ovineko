@@ -44,11 +44,11 @@ Add a button to the spa-guard debug panel that simulates the state when all retr
 - Modify: `spa-guard/spa-guard/src/runtime/debug/index.ts`
 - Modify: `spa-guard/spa-guard/src/runtime/debug/index.test.ts`
 
-- [ ] Import `dispatchRetryExhausted` in `debug/index.ts`
-- [ ] Add entry to SCENARIOS array: `{ dispatch: dispatchRetryExhausted, key: "exhaust-retries", label: "Exhaust Retries" }`
-- [ ] Add test: verify button `debug-btn-exhaust-retries` is rendered (update "renders all N error buttons" test from 7 to 8)
-- [ ] Add test: verify clicking the button calls `dispatchRetryExhausted`
-- [ ] Run project test suite - must pass before task 3
+- [x] Import `dispatchRetryExhausted` in `debug/index.ts`
+- [x] Add entry to SCENARIOS array: `{ dispatch: dispatchRetryExhausted, key: "exhaust-retries", label: "Exhaust Retries" }`
+- [x] Add test: verify button `debug-btn-exhaust-retries` is rendered (update "renders all N error buttons" test from 7 to 8)
+- [x] Add test: verify clicking the button calls `dispatchRetryExhausted`
+- [x] Run project test suite - must pass before task 3
 
 ### Task 3: Verify acceptance criteria
 
