@@ -334,6 +334,51 @@ describe("fastifySPAGuard", () => {
       await fastify.close();
     });
 
+    it("calls onUnknownBeacon when body is not a string", async () => {
+      const onUnknownBeacon = vi.fn();
+      const fastify = Fastify({ logger: false });
+      await fastify.register(fastifySPAGuard, { onUnknownBeacon, path: "/api/beacon" });
+      await fastify.ready();
+
+      const response = await fastify.inject({
+        headers: { "content-type": "application/json" },
+        method: "POST",
+        payload: JSON.stringify({ errorMessage: "test" }),
+        url: "/api/beacon",
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(onUnknownBeacon).toHaveBeenCalledTimes(1);
+      expect(onUnknownBeacon).toHaveBeenCalledWith(
+        expect.objectContaining({ errorMessage: "test" }),
+        expect.anything(),
+        expect.anything(),
+      );
+      await fastify.close();
+    });
+
+    it("allows onUnknownBeacon to send custom reply for non-string body", async () => {
+      const fastify = Fastify({ logger: false });
+      await fastify.register(fastifySPAGuard, {
+        onUnknownBeacon: async (_body, _request, reply) => {
+          await reply.status(422).send({ error: "invalid format" });
+        },
+        path: "/api/beacon",
+      });
+      await fastify.ready();
+
+      const response = await fastify.inject({
+        headers: { "content-type": "application/json" },
+        method: "POST",
+        payload: JSON.stringify({ errorMessage: "test" }),
+        url: "/api/beacon",
+      });
+
+      expect(response.statusCode).toBe(422);
+      expect(JSON.parse(response.body)).toEqual({ error: "invalid format" });
+      await fastify.close();
+    });
+
     it("onBeacon with skipDefaultLog=true still returns 200", async () => {
       const app = await buildApp({
         onBeacon: () => ({ skipDefaultLog: true }),

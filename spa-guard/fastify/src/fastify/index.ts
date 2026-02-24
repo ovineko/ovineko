@@ -138,11 +138,26 @@ const fastifySPAGuardPlugin: FastifyPluginAsync<FastifySPAGuardOptions> = async 
 
   fastify.post(path, async (request, reply) => {
     if (typeof request.body !== "string") {
-      request.log.warn(
-        { bodyType: typeof request.body },
-        logMessage("Invalid beacon body type, expected string"),
-      );
-      return reply.status(400).send({ error: "Invalid body type" });
+      if (onUnknownBeacon) {
+        const result = await onUnknownBeacon(request.body, request, reply);
+
+        if (!result?.skipDefaultLog) {
+          request.log.warn(
+            { bodyType: typeof request.body },
+            logMessage("Invalid beacon body type, expected string"),
+          );
+        }
+      } else {
+        request.log.warn(
+          { bodyType: typeof request.body },
+          logMessage("Invalid beacon body type, expected string"),
+        );
+      }
+
+      if (!reply.sent) {
+        return reply.status(400).send({ error: "Invalid body type" });
+      }
+      return reply;
     }
 
     const body = parseStringBody(request.body);
