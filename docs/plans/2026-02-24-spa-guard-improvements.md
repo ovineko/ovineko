@@ -107,11 +107,11 @@ Implement all three tasks from TODO.md: HTML Cache Store, ETag/304 support (clie
 
 ### Task 6: Verify acceptance criteria
 
-- [ ] Run full test suite: `pnpm test` (all packages)
-- [ ] Run linter: `pnpm lint`
-- [ ] Run typecheck: `cd spa-guard/spa-guard && pnpm typecheck && cd ../node && pnpm typecheck && cd ../fastify && pnpm typecheck`
-- [ ] Run build: `pnpm build`
-- [ ] Verify test coverage meets 80%+
+- [x] Run full test suite: `pnpm test` (all packages)
+- [x] Run linter: `pnpm lint`
+- [x] Run typecheck: `cd spa-guard/spa-guard && pnpm typecheck && cd ../node && pnpm typecheck && cd ../fastify && pnpm typecheck`
+- [x] Run build: `pnpm build`
+- [x] Verify test coverage meets 80%+
 
 ### Task 7: Cleanup and documentation
 
