@@ -57,12 +57,12 @@ Polish the happydom->parse5 and typebox->plain TS migration, fix spinner renderi
 - Regenerate: `packages/spa-guard/src/common/html.generated.ts`
 - Modify: `packages/spa-guard/src/common/html.generated.test.ts`
 
-- [ ] In fallback-loading.html, keep the `<div data-spa-guard-spinner>` container but remove the SVG and `<style>` from inside it (leave it empty - spinner will be injected from options)
-- [ ] Run generate:fallback to regenerate html.generated.ts
-- [ ] Update html.generated.test.ts: loading template should no longer contain `@keyframes spa-guard-spin` or `<svg`
-- [ ] Verify that reload.ts showLoadingUI() already injects spinner from options.spinner.content into [data-spa-guard-spinner] (it does)
-- [ ] Verify DefaultErrorFallback.tsx buildHtml() already injects spinnerHtml into [data-spa-guard-spinner] (it does)
-- [ ] Run test suite - must pass before task 4
+- [x] In fallback-loading.html, keep the `<div data-spa-guard-spinner>` container but remove the SVG and `<style>` from inside it (leave it empty - spinner will be injected from options)
+- [x] Run generate:fallback to regenerate html.generated.ts
+- [x] Update html.generated.test.ts: loading template should no longer contain `@keyframes spa-guard-spin` or `<svg`
+- [x] Verify that reload.ts showLoadingUI() already injects spinner from options.spinner.content into [data-spa-guard-spinner] (it does)
+- [x] Verify DefaultErrorFallback.tsx buildHtml() already injects spinnerHtml into [data-spa-guard-spinner] (it does)
+- [x] Run test suite - must pass before task 4
 
 ### Task 4: Read fallback/loading HTML from options in DefaultErrorFallback
 

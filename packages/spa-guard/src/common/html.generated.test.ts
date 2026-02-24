@@ -105,10 +105,9 @@ describe("html.generated", () => {
       expect(defaultLoadingFallbackHtml).toContain("data-spa-guard-spinner");
     });
 
-    it("contains default SVG spinner with animation", () => {
-      expect(defaultLoadingFallbackHtml).toContain("@keyframes spa-guard-spin");
-      expect(defaultLoadingFallbackHtml).toContain("animation:");
-      expect(defaultLoadingFallbackHtml).toContain("<svg");
+    it("does not contain inline SVG or spinner animation (injected from options)", () => {
+      expect(defaultLoadingFallbackHtml).not.toContain("@keyframes spa-guard-spin");
+      expect(defaultLoadingFallbackHtml).not.toContain("<svg");
     });
 
     it("uses system-ui font-family", () => {

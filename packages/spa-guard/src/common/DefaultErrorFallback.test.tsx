@@ -80,8 +80,9 @@ describe("DefaultErrorFallback", () => {
       expect(defaultErrorFallbackHtml).toContain("<svg");
     });
 
-    it("loading template has spinner with animation", () => {
-      expect(defaultLoadingFallbackHtml).toContain("@keyframes spa-guard-spin");
+    it("loading template has empty spinner container (injected from options)", () => {
+      expect(defaultLoadingFallbackHtml).not.toContain("@keyframes spa-guard-spin");
+      expect(defaultLoadingFallbackHtml).not.toContain("<svg");
       expect(defaultLoadingFallbackHtml).toContain("data-spa-guard-spinner");
     });
   });
@@ -446,8 +447,8 @@ describe("DefaultErrorFallback", () => {
 
       const spinnerEl = container.querySelector("[data-spa-guard-spinner]");
       expect(spinnerEl).toBeInTheDocument();
-      // Default SVG from template should remain
-      expect(spinnerEl?.querySelector("svg")).toBeInTheDocument();
+      // Spinner container is empty in template (SVG injected from options)
+      expect(spinnerEl?.querySelector("svg")).not.toBeInTheDocument();
     });
 
     it("does not inject spinner when spinner is disabled", () => {
