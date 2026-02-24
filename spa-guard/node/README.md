@@ -71,8 +71,33 @@ const patched = patchHtmlI18n({
 });
 ```
 
+## Builder API
+
+Use the builder API to generate the spa-guard runtime script outside of Vite (e.g., in a custom build step or SSR framework):
+
+```ts
+import { buildSpaGuardScript, buildExternalScript } from "@ovineko/spa-guard-node";
+
+// Inline script — returns script content and HTML tag strings
+const { scriptContent, hash, html, tags } = await buildSpaGuardScript({
+  version: "1.0.0",
+  spinner: { background: "#f5f5f5" },
+});
+
+// External script — writes a content-hashed file to disk
+const result = await buildExternalScript({
+  outDir: "dist/assets",
+  publicPath: "/assets",
+  version: "1.0.0",
+});
+// result.publicUrl => '/assets/spa-guard.abc12345.js'
+// result.html => ['<script src="/assets/spa-guard.abc12345.js"></script>', ...]
+```
+
 ## API
 
+- `buildSpaGuardScript(options?)` — builds the inline runtime script; returns `{ scriptContent, hash, html, tags }`
+- `buildExternalScript(options)` — writes a content-hashed script file to `outDir`; returns `{ fileName, publicUrl, html, tags }`
 - `createHtmlCache(options)` — builds a cache with gzip/brotli/zstd variants for all languages; returns an `HtmlCache` with a `get()` method
 - `createHTMLCacheStore(input, languages?)` — manages multiple named caches; call `load()` once then `getCache(key)`
 - `patchHtmlI18n(options)` — injects `<meta name="spa-guard-i18n">` and updates `<html lang>` for server-side rendering

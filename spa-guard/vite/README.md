@@ -51,20 +51,34 @@ Enable trace mode (logs extra debug info at runtime):
 spaGuardVitePlugin({ trace: true });
 ```
 
+Use external script mode to write a content-hashed `.js` file instead of inlining the script:
+
+```ts
+spaGuardVitePlugin({
+  mode: "external",
+  externalScriptDir: "dist/assets",
+  publicPath: "/assets",
+});
+// Injects <script src="/assets/spa-guard.abc12345.js"> into the HTML
+```
+
 ## Options
 
 `VitePluginOptions` extends the core `Options` type and adds:
 
-| Option                  | Type       | Default      | Description                                  |
-| ----------------------- | ---------- | ------------ | -------------------------------------------- |
-| `version`               | `string`   | auto UUID    | Version string for cache busting             |
-| `reloadDelays`          | `number[]` | —            | Retry delay sequence in ms                   |
-| `useRetryId`            | `boolean`  | —            | Append retry ID to chunk URLs                |
-| `spinner.disabled`      | `boolean`  | `false`      | Disable loading spinner injection            |
-| `spinner.content`       | `string`   | built-in SVG | Custom spinner HTML content                  |
-| `spinner.background`    | `string`   | `"#fff"`     | Spinner overlay background color             |
-| `html.fallback.content` | `string`   | —            | Fallback HTML shown on error (auto-minified) |
-| `trace`                 | `boolean`  | `false`      | Use trace build with debug logging           |
+| Option                  | Type                     | Default      | Description                                              |
+| ----------------------- | ------------------------ | ------------ | -------------------------------------------------------- |
+| `mode`                  | `'inline' \| 'external'` | `'inline'`   | Inject script inline or write an external file           |
+| `externalScriptDir`     | `string`                 | —            | Output directory for external mode (e.g., `dist/assets`) |
+| `publicPath`            | `string`                 | `'/'`        | Public path prefix for the generated script URL          |
+| `version`               | `string`                 | auto UUID    | Version string for cache busting                         |
+| `reloadDelays`          | `number[]`               | —            | Retry delay sequence in ms                               |
+| `useRetryId`            | `boolean`                | —            | Append retry ID to chunk URLs                            |
+| `spinner.disabled`      | `boolean`                | `false`      | Disable loading spinner injection                        |
+| `spinner.content`       | `string`                 | built-in SVG | Custom spinner HTML content                              |
+| `spinner.background`    | `string`                 | `"#fff"`     | Spinner overlay background color                         |
+| `html.fallback.content` | `string`                 | —            | Fallback HTML shown on error (auto-minified)             |
+| `trace`                 | `boolean`                | `false`      | Use trace build with debug logging                       |
 
 ## What the plugin injects
 
