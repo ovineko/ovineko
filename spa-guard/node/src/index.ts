@@ -1,3 +1,12 @@
+export type {
+  BuildExternalScriptOptions,
+  BuildExternalScriptResult,
+  BuildScriptOptions,
+  BuildScriptResult,
+  HtmlTagDescriptor,
+} from "./builder";
+export { buildExternalScript, buildSpaGuardScript } from "./builder";
+
 export type { SpaGuardTranslations } from "@ovineko/spa-guard/i18n";
 export { matchLang, translations } from "@ovineko/spa-guard/i18n";
 

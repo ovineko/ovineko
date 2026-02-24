@@ -29,13 +29,20 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./builder": {
+      "types": "./dist/builder.d.ts",
+      "default": "./dist/builder.js"
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "dist-inline",
+    "dist-inline-trace"
   ],
   "scripts": {
     "build": "tsup",
+    "copy:bundles": "cp -r ../vite/dist-inline ./dist-inline && cp -r ../vite/dist-inline-trace ./dist-inline-trace",
     "fix": "datamitsu fix",
     "lint": "datamitsu lint",
     "prepack": "clean-pkg-json clean",
@@ -49,12 +56,14 @@
   },
   "dependencies": {
     "@fastify/accept-negotiator": "2.0.1",
-    "@ovineko/spa-guard": "workspace:*"
+    "@ovineko/spa-guard": "workspace:*",
+    "html-minifier-terser": "7.2.0"
   },
   "devDependencies": {
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
     "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
+    "@types/html-minifier-terser": "7.0.2",
     "@types/node": "24.10.12",
     "@vitest/coverage-v8": "4.0.18",
     "tsup": "8.5.1",
