@@ -1541,7 +1541,6 @@ From `@ovineko/spa-guard`:
 
 From `@ovineko/spa-guard/schema`:
 
-- `beaconSchema` - TypeBox schema for validation
 - `BeaconSchema` - TypeScript type
 
 From `@ovineko/spa-guard/schema/parse`:
@@ -1792,8 +1791,8 @@ spa-guard provides 13 export entry points:
 | Export                   | Description                                                                                                                            | Peer Dependencies                                 |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
 | `.`                      | Core functionality (events, listen, options, retry control, ForceRetryError, BeaconError)                                              | None                                              |
-| `./schema`               | BeaconSchema type definitions                                                                                                          | `typebox@^1`                                      |
-| `./schema/parse`         | Beacon parsing utilities                                                                                                               | `typebox@^1`                                      |
+| `./schema`               | BeaconSchema type definitions                                                                                                          | None                                              |
+| `./schema/parse`         | Beacon parsing utilities                                                                                                               | None                                              |
 | `./runtime`              | Runtime state management, subscriptions, spinner API, and ForceRetryError                                                              | None                                              |
 | `./react`                | React hooks and components (useSpaGuardState, useSPAGuardEvents, useSPAGuardChunkError, lazyWithRetry, DebugSyncErrorTrigger, Spinner) | `react@^19`                                       |
 | `./runtime/debug`        | Debug panel factory (`createDebugger`) - framework-agnostic vanilla JS                                                                 | None                                              |
@@ -1803,7 +1802,7 @@ spa-guard provides 13 export entry points:
 | `./react-error-boundary` | React error boundary component (ErrorBoundary)                                                                                         | `react@^19`                                       |
 | `./eslint`               | ESLint plugin with `configs.recommended` preset (`no-direct-error-boundary`, `no-direct-lazy`)                                         | `eslint@^9 \|\| ^10` (optional)                   |
 | `./i18n`                 | Translation types and utilities (SpaGuardTranslations, translations, matchLang)                                                        | None                                              |
-| `./node`                 | Server-side utilities (patchHtmlI18n, createHtmlCache, escapeAttr, matchLang, translations)                                            | `happy-dom@^20`                                   |
+| `./node`                 | Server-side utilities (patchHtmlI18n, createHtmlCache, escapeAttr, matchLang, translations)                                            | `parse5@^8`                                       |
 
 **Import examples:**
 
@@ -2139,7 +2138,7 @@ const handleBeacon = (beacon: BeaconSchema) => {
 **Type features:**
 
 - JSDoc comments with default values
-- BeaconSchema from TypeBox with runtime validation
+- BeaconSchema type with runtime validation via parseBeacon
 - Fastify plugin types for type-safe integration
 - Options interface with optional fields
 

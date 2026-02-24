@@ -1,17 +1,36 @@
-import { Value } from "typebox/value";
-
 import type { BeaconSchema } from ".";
 
-import { beaconSchema } from ".";
+const STRING_FIELDS = [
+  "appName",
+  "errorMessage",
+  "eventMessage",
+  "eventName",
+  "retryId",
+  "serialized",
+] as const;
 
-export const parseBeacon = (value: unknown): BeaconSchema => {
-  const cleaned = Value.Clean(beaconSchema, value);
-  const isValid = Value.Check(beaconSchema, cleaned);
+export function parseBeacon(data: unknown): BeaconSchema {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error("Invalid beacon");
+  }
+  const d = data as Record<string, unknown>;
+  const result: BeaconSchema = {};
 
-  if (!isValid) {
-    const errors = [...Value.Errors(beaconSchema, cleaned)];
-    throw new Error(`Beacon validation failed: ${JSON.stringify(errors)}`);
+  for (const field of STRING_FIELDS) {
+    if (field in d) {
+      if (typeof d[field] !== "string") {
+        throw new TypeError(`Beacon validation failed: ${field} must be a string`);
+      }
+      (result as Record<string, unknown>)[field] = d[field];
+    }
   }
 
-  return cleaned as BeaconSchema;
-};
+  if ("retryAttempt" in d) {
+    if (typeof d.retryAttempt !== "number") {
+      throw new TypeError("Beacon validation failed: retryAttempt must be a number");
+    }
+    result.retryAttempt = d.retryAttempt;
+  }
+
+  return result;
+}

@@ -3,10 +3,10 @@ export { matchLang, translations } from "../i18n";
 
 import { negotiate } from "@fastify/accept-negotiator";
 
-import { Window } from "happy-dom";
 import { createHash } from "node:crypto";
 import { promisify } from "node:util";
 import { brotliCompress, gzip, zstdCompress } from "node:zlib";
+import { type DefaultTreeAdapterTypes, parse, html as parse5Html, serialize } from "parse5";
 
 import type { SpaGuardTranslations } from "../i18n";
 
@@ -185,7 +185,8 @@ export function patchHtmlI18n(options: PatchHtmlI18nOptions): string {
   const resolvedLang = matchLang(input, available);
   const t = merged[resolvedLang];
 
-  // English without custom translations → no-op
+  // English without custom translations is a no-op — the HTML already contains
+  // English defaults, so parsing and serializing would be unnecessary work.
   if (resolvedLang === "en" && !customTranslations?.en) {
     return html;
   }
@@ -194,31 +195,47 @@ export function patchHtmlI18n(options: PatchHtmlI18nOptions): string {
     return html;
   }
 
-  // Parse HTML with happy-dom
-  const window = new Window();
-  try {
-    const document = window.document;
-    document.write(html);
+  const doc = parse(html);
 
-    // Set <html lang>
-    document.documentElement.setAttribute("lang", resolvedLang);
-
-    // Create and inject <meta name="spa-guard-i18n"> into <head>
-    const meta = document.createElement("meta");
-    meta.setAttribute("name", "spa-guard-i18n");
-    meta.setAttribute("content", JSON.stringify(t));
-
-    if (document.head) {
-      document.head.prepend(meta);
-    }
-
-    // Reconstruct full HTML with original DOCTYPE (tolerate leading whitespace/BOM)
-    const doctypeMatch = html.match(/^[\s\uFEFF]*(<!doctype[^>]*>)/i);
-    const doctype = doctypeMatch ? doctypeMatch[1] : "";
-    return doctype + document.documentElement.outerHTML;
-  } finally {
-    window.close();
+  // Find <html> and <head>
+  const htmlEl = doc.childNodes.find(
+    (n): n is DefaultTreeAdapterTypes.Element => n.nodeName === "html",
+  );
+  if (!htmlEl) {
+    return html;
   }
+
+  // Set <html lang>
+  const langAttr = htmlEl.attrs.find((a) => a.name === "lang");
+  if (langAttr) {
+    langAttr.value = resolvedLang;
+  } else {
+    htmlEl.attrs.push({ name: "lang", value: resolvedLang });
+  }
+
+  const headEl = htmlEl.childNodes.find(
+    (n): n is DefaultTreeAdapterTypes.Element => n.nodeName === "head",
+  );
+  if (!headEl) {
+    return html;
+  }
+
+  // Inject <meta name="spa-guard-i18n"> to <head>
+  const meta: DefaultTreeAdapterTypes.Element = {
+    attrs: [
+      { name: "name", value: "spa-guard-i18n" },
+      { name: "content", value: JSON.stringify(t) },
+    ],
+    childNodes: [],
+    namespaceURI: parse5Html.NS.HTML,
+    nodeName: "meta",
+    parentNode: headEl,
+    tagName: "meta",
+  };
+
+  headEl.childNodes.unshift(meta);
+
+  return serialize(doc);
 }
 
 function mergeTranslations(

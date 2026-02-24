@@ -170,8 +170,8 @@ describe("parseBeacon", () => {
     });
   });
 
-  describe("BeaconSchema TypeBox validation integration", () => {
-    it("uses TypeBox to validate beacon structure (Value.Check)", () => {
+  describe("BeaconSchema validation integration", () => {
+    it("validates beacon structure", () => {
       const validBeacon = {
         errorMessage: "test",
         retryAttempt: 1,
@@ -182,7 +182,7 @@ describe("parseBeacon", () => {
       expect(() => parseBeacon(validBeacon)).not.toThrow();
     });
 
-    it("strips extra properties via Value.Clean (additionalProperties: false)", () => {
+    it("strips extra properties not in the schema", () => {
       const inputWithExtra = {
         anotherExtra: 999,
         errorMessage: "test error",
