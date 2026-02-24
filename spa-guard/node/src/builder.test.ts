@@ -146,11 +146,11 @@ describe("builder", () => {
     it("does not include trace in serialized options", async () => {
       const result = await buildSpaGuardScript({ trace: true, version: "1.0.0" });
       const optionsMatch = result.scriptContent.match(/window\.__SPA_GUARD_OPTIONS__=(\{.*?\});/);
-      expect(optionsMatch).toBeTruthy();
-      if (optionsMatch) {
-        const parsed = JSON.parse(optionsMatch[1]!);
-        expect(parsed.trace).toBeUndefined();
+      if (!optionsMatch) {
+        throw new Error("__SPA_GUARD_OPTIONS__ assignment not found in scriptContent");
       }
+      const parsed = JSON.parse(optionsMatch[1]!);
+      expect(parsed.trace).toBeUndefined();
     });
 
     it("minifies fallback HTML when provided", async () => {
@@ -174,9 +174,7 @@ describe("builder", () => {
     });
 
     afterEach(() => {
-      try {
-        rmSync(tempDir, { force: true, recursive: true });
-      } catch {}
+      rmSync(tempDir, { force: true, recursive: true });
     });
 
     const makeOpts = (overrides: Partial<BuildExternalScriptOptions> = {}) => ({

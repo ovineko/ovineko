@@ -126,7 +126,7 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
 
         const tags: HtmlTagDescriptor[] = [mainTag];
 
-        if (spinnerOpts?.disabled !== true) {
+        if (finalOptions.spinner?.disabled !== true) {
           const bg = finalOptions.spinner?.background ?? "#fff";
           const spinnerContent = finalOptions.spinner?.content ?? defaultSpinnerSvg;
 

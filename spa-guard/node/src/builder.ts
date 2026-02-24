@@ -102,10 +102,12 @@ const buildRawScript = async (finalOptions: BuildScriptOptions): Promise<string>
   return `window.__SPA_GUARD_VERSION__=${safeVersion};window.${optionsWindowKey}=${escapedJson};${script}`;
 };
 
+const escapeAttrValue = (v: string): string => v.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
+
 const tagToHtml = (tag: HtmlTagDescriptor): string => {
   const attrs = tag.attrs
     ? Object.entries(tag.attrs)
-        .map(([k, v]) => ` ${k}="${v}"`)
+        .map(([k, v]) => ` ${k}="${escapeAttrValue(v)}"`)
         .join("")
     : "";
   return `<${tag.tag}${attrs}>${tag.children ?? ""}</${tag.tag}>`;

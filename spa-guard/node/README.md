@@ -96,8 +96,13 @@ const result = await buildExternalScript({
 
 ## API
 
-- `buildSpaGuardScript(options?)` — builds the inline runtime script; returns `{ scriptContent, hash, html, tags }`
-- `buildExternalScript(options)` — writes a content-hashed script file to `outDir`; returns `{ fileName, publicUrl, html, tags }`
+- `buildSpaGuardScript(options?)` — builds the inline runtime script; returns `BuildScriptResult`
+- `buildExternalScript(options)` — writes a content-hashed script file to `outDir`; returns `BuildExternalScriptResult`
+- `BuildScriptOptions` — options for `buildSpaGuardScript` (extends core `Options`, adds `trace?: boolean`)
+- `BuildExternalScriptOptions` — options for `buildExternalScript` (extends `BuildScriptOptions`, adds `outDir: string` and `publicPath?: string`)
+- `BuildScriptResult` — `{ scriptContent, hash, html: string[], tags: HtmlTagDescriptor[] }`
+- `BuildExternalScriptResult` — `{ fileName, publicUrl, html: string[], tags: HtmlTagDescriptor[] }`
+- `HtmlTagDescriptor` — structured tag object `{ tag, attrs?, children?, injectTo }` for framework injection
 - `createHtmlCache(options)` — builds a cache with gzip/brotli/zstd variants for all languages; returns an `HtmlCache` with a `get()` method
 - `createHTMLCacheStore(input, languages?)` — manages multiple named caches; call `load()` once then `getCache(key)`
 - `patchHtmlI18n(options)` — injects `<meta name="spa-guard-i18n">` and updates `<html lang>` for server-side rendering

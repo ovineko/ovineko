@@ -82,7 +82,17 @@ spaGuardVitePlugin({
 
 ## What the plugin injects
 
-- A `<script>` in `<head>` (prepended) containing the inline spa-guard runtime
+In **inline mode** (default):
+
+- A `<script>` in `<head>` (prepended) containing the full spa-guard runtime inline
+
+In **external mode** (`mode: 'external'`):
+
+- A `<script src="...">` in `<head>` (prepended) referencing the content-hashed file
+- The content-hashed `.js` file is written to `externalScriptDir` (or Vite's `build.outDir`) during the bundle step
+
+In both modes:
+
 - A spinner `<div>` in `<body>` (prepended) that hides until your app loads
 - A `<script>` to set `overflow: hidden` while loading
 - A `<style>` for the spinner background CSS variable (only when background differs from `#fff`)
