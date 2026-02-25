@@ -97,6 +97,7 @@ Default fallback/loading templates are theme-aware: they set `color-scheme: ligh
 ### Unhandledrejection serialization
 
 `serializeError` handles `PromiseRejectionEvent` with strict redaction guardrails. For HTTP-like errors it extracts only safe metadata: `status`, `statusText`, `url`, `method`, `response.type`, and `X-Request-ID` from response headers when present. Response body, request/response payload, and the full headers object are **never** included in serialized output. For request wrappers (`reason.request` / `reason.config`) only `method`, `url`, and `baseURL` are extracted. Deep object traversal is bounded by `MAX_DEPTH=4`, `MAX_KEYS=20`, and `MAX_STRING_LEN=500` to prevent oversized beacons. Circular references are handled via a `WeakSet` visited tracker. The output also includes `isTrusted`, `timeStamp` from the event, and runtime context (`pageUrl`, `constructorName`).
+This HTTP-like extraction also applies to `Error` subclasses that carry a `response` field (for example `ResponseError`), not only to plain objects.
 
 ### Retry reset
 

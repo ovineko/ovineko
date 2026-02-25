@@ -134,11 +134,6 @@ const serializeRejectionReason = (
     };
   }
 
-  // Error
-  if (reason instanceof Error) {
-    return serializeSafeError(reason, visited, depth);
-  }
-
   // HTTP-like errors with response
   const reasonObj = reason as any;
   if (reasonObj.response != null) {
@@ -201,6 +196,11 @@ const serializeRejectionReason = (
     }
 
     return result;
+  }
+
+  // Error
+  if (reason instanceof Error) {
+    return serializeSafeError(reason, visited, depth);
   }
 
   // Non-Error object: safe bounded preview

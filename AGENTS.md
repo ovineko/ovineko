@@ -352,6 +352,7 @@ Follow GitHub Flow with feature branches from main.
 - **Node.js**: >= 24.11.0
 - **pnpm**: >= 10.25.0 (enforced by preinstall script)
 - **Package Manager**: Only pnpm is allowed (enforced via only-allow)
+- **Language policy**: Use English only for code comments, identifiers (function/variable/type names), and developer-facing docs. Non-English text is allowed only in explicit localization assets (for example `i18n/translations.ts`) and tests that validate localized output.
 
 ## Package Dependencies
 
@@ -511,6 +512,10 @@ Do not call `markRetryHealthyBoot()` during early app startup (for example immed
 ### Non-chunk unhandledrejection can look like retry loops
 
 `handleUnhandledRejections.retry` defaults to `true`. This means regular app-level unhandled promise rejections (not only chunk errors) can trigger reload attempts. If a project has known non-chunk rejections, set `handleUnhandledRejections.retry = false` to avoid reload-loop-like behavior.
+
+### HTTP-like unhandledrejection must be checked before generic Error
+
+In `src/common/serializeError.ts`, keep the `reason.response` (HttpError) branch before the generic `reason instanceof Error` branch inside `serializeRejectionReason()`. Many client libraries throw `Error` subclasses (for example `ResponseError`) that also carry `response`. If the Error branch runs first, `status`/`statusText`/`url`/`method` are lost from serialized beacons.
 
 <!-- Add corrections here as you encounter issues -->
 

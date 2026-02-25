@@ -91,6 +91,44 @@ describe("serializeError", () => {
   });
 
   describe("PromiseRejectionEvent - serialization and redaction", () => {
+    it("serializes Error subclass with response as HttpError", () => {
+      class ResponseError extends Error {
+        response: {
+          method: string;
+          status: number;
+          statusText: string;
+          type: string;
+          url: string;
+        };
+
+        constructor() {
+          super("Response returned an error code");
+          this.name = "ResponseError";
+          this.response = {
+            method: "POST",
+            status: 422,
+            statusText: "Unprocessable Entity",
+            type: "cors",
+            url: "https://api.example.com/refunds",
+          };
+        }
+      }
+
+      const event = { promise: Promise.resolve(), reason: new ResponseError() };
+      const result = parse(serializeError(event));
+
+      expect(result.type).toBe("PromiseRejectionEvent");
+      expect(result.reason.type).toBe("HttpError");
+      expect(result.reason.status).toBe(422);
+      expect(result.reason.statusText).toBe("Unprocessable Entity");
+      expect(result.reason.url).toBe("https://api.example.com/refunds");
+      expect(result.reason.method).toBe("POST");
+      expect(result.reason.responseType).toBe("cors");
+      expect(result.reason.message).toBeUndefined();
+      expect(result.reason.name).toBeUndefined();
+      expect(result.reason.stack).toBeUndefined();
+    });
+
     it("serializes ResponseError with response status/statusText/url/method/type", () => {
       const event = {
         promise: Promise.resolve(),
