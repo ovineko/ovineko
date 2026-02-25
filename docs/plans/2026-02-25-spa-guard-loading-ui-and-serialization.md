@@ -139,10 +139,10 @@ Two independent improvements from TODO.md:
 
 ### Task 8: Verify acceptance criteria
 
-- [ ] manual check: `showLoadingUI` is exported and called in orchestrator before setTimeout
-- [ ] manual check: serializeError PromiseRejectionEvent output includes expanded reason fields and redacts body/payload/full headers
-- [ ] run full test suite in `spa-guard/spa-guard`: `pnpm test`
-- [ ] run linter in `spa-guard/spa-guard`: `pnpm lint`
+- [x] manual check: `showLoadingUI` is exported and called in orchestrator before setTimeout
+- [x] manual check: serializeError PromiseRejectionEvent output includes expanded reason fields and redacts body/payload/full headers
+- [x] run full test suite in `spa-guard/spa-guard`: `pnpm test`
+- [x] run linter in `spa-guard/spa-guard`: `pnpm lint`
 
 ### Task 9: Cleanup
 
