@@ -18,6 +18,7 @@ vi.mock("./errorDispatchers", () => ({
   dispatchForceRetryError: vi.fn(),
   dispatchNetworkTimeout: vi.fn(),
   dispatchRetryExhausted: vi.fn(),
+  dispatchStaticAsset404: vi.fn(),
   dispatchSyncRuntimeError: vi.fn(),
   dispatchUnhandledRejection: vi.fn(),
 }));
@@ -31,6 +32,7 @@ import {
   dispatchForceRetryError,
   dispatchNetworkTimeout,
   dispatchRetryExhausted,
+  dispatchStaticAsset404,
   dispatchSyncRuntimeError,
   dispatchUnhandledRejection,
 } from "./errorDispatchers";
@@ -44,6 +46,7 @@ const mockDispatchAsyncRuntimeError = vi.mocked(dispatchAsyncRuntimeError);
 const mockDispatchFinallyError = vi.mocked(dispatchFinallyError);
 const mockDispatchForceRetryError = vi.mocked(dispatchForceRetryError);
 const mockDispatchRetryExhausted = vi.mocked(dispatchRetryExhausted);
+const mockDispatchStaticAsset404 = vi.mocked(dispatchStaticAsset404);
 const mockDispatchUnhandledRejection = vi.mocked(dispatchUnhandledRejection);
 
 const defaultState: SpaGuardState = {
@@ -221,7 +224,7 @@ describe("createDebugger - buttons", () => {
   beforeEach(setupMocks);
   afterEach(cleanupDom);
 
-  it("renders all 8 error buttons", async () => {
+  it("renders all 9 error buttons", async () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     expect(getButton("chunk-load-error")).not.toBeNull();
@@ -232,6 +235,7 @@ describe("createDebugger - buttons", () => {
     expect(getButton("force-retry-error")).not.toBeNull();
     expect(getButton("unhandled-rejection")).not.toBeNull();
     expect(getButton("exhaust-retries")).not.toBeNull();
+    expect(getButton("static-asset-404")).not.toBeNull();
     destroy();
   });
 
@@ -299,6 +303,14 @@ describe("createDebugger - buttons", () => {
     destroy();
   });
 
+  it("calls dispatchStaticAsset404 when static-asset-404 button is clicked", async () => {
+    const { createDebugger: create } = await import("./index");
+    const destroy = create();
+    getButton("static-asset-404")!.click();
+    expect(mockDispatchStaticAsset404).toHaveBeenCalledOnce();
+    destroy();
+  });
+
   it("shows default labels initially", async () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
@@ -310,6 +322,7 @@ describe("createDebugger - buttons", () => {
     expect(getButton("force-retry-error")!.textContent).toBe("ForceRetry Error");
     expect(getButton("unhandled-rejection")!.textContent).toBe("Unhandled Rejection");
     expect(getButton("exhaust-retries")!.textContent).toBe("Exhaust Retries");
+    expect(getButton("static-asset-404")!.textContent).toBe("Static Asset 404");
     destroy();
   });
 

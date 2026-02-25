@@ -11,6 +11,7 @@ import {
   dispatchForceRetryError,
   dispatchNetworkTimeout,
   dispatchRetryExhausted,
+  dispatchStaticAsset404,
   dispatchSyncRuntimeError,
   dispatchUnhandledRejection,
 } from "./errorDispatchers";
@@ -332,6 +333,46 @@ describe("dispatchFinallyError", () => {
     dispatchFinallyError();
     const error = await capture;
     expect((error as Error).message).toContain("finally");
+  });
+});
+
+describe("dispatchStaticAsset404", () => {
+  afterEach(() => {
+    // Remove any script elements added by the dispatcher
+    for (const el of document.head.querySelectorAll("script[src^='/assets/index-']")) {
+      el.remove();
+    }
+  });
+
+  it("returns void", () => {
+    const result = dispatchStaticAsset404();
+    expect(result).toBeUndefined();
+  });
+
+  it("appends a script element to document.head", () => {
+    const before = document.head.querySelectorAll("script").length;
+    dispatchStaticAsset404();
+    const after = document.head.querySelectorAll("script").length;
+    expect(after).toBe(before + 1);
+  });
+
+  it("appended script has a hashed URL matching /assets/index-<hash>.js pattern", () => {
+    dispatchStaticAsset404();
+    const scripts = [
+      ...document.head.querySelectorAll<HTMLScriptElement>("script[src^='/assets/index-']"),
+    ];
+    expect(scripts.length).toBeGreaterThan(0);
+    const src = scripts.at(-1)!.src;
+    expect(src).toMatch(/\/assets\/index-[a-z0-9]+\.js$/);
+  });
+
+  it("each call appends a script with a unique URL", () => {
+    dispatchStaticAsset404();
+    dispatchStaticAsset404();
+    const scripts = document.head.querySelectorAll("script[src^='/assets/index-']");
+    const srcs = [...scripts].map((s) => (s as HTMLScriptElement).src);
+    const uniqueSrcs = new Set(srcs);
+    expect(uniqueSrcs.size).toBe(srcs.length);
   });
 });
 

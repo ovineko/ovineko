@@ -88,6 +88,19 @@ export function dispatchRetryExhausted(): void {
 }
 
 /**
+ * Simulates a static asset 404 by appending a <script> element with a
+ * nonexistent hashed URL to document.head. The browser fires an "error"
+ * event on the element, which spa-guard's listenInternal() detects via
+ * the Resource Timing API-based isLikely404 check.
+ */
+export function dispatchStaticAsset404(): void {
+  const hash = crypto.randomUUID().replaceAll("-", "").slice(0, 8);
+  const script = document.createElement("script");
+  script.src = `/assets/index-${hash}.js`;
+  document.head.append(script);
+}
+
+/**
  * Dispatches a sync runtime error via CustomEvent.
  * DebugSyncErrorTrigger (a React component) listens for this event,
  * stores the error in state, and throws it during render so that

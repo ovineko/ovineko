@@ -9,6 +9,7 @@ import {
   dispatchForceRetryError,
   dispatchNetworkTimeout,
   dispatchRetryExhausted,
+  dispatchStaticAsset404,
   dispatchSyncRuntimeError,
   dispatchUnhandledRejection,
 } from "./errorDispatchers";
@@ -35,6 +36,7 @@ const SCENARIOS: Scenario[] = [
     label: "Unhandled Rejection",
   },
   { dispatch: dispatchRetryExhausted, key: "exhaust-retries", label: "Exhaust Retries" },
+  { dispatch: dispatchStaticAsset404, key: "static-asset-404", label: "Static Asset 404" },
 ];
 
 const POSITION_MAP: Record<Position, string> = {

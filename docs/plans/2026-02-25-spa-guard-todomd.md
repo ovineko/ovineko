@@ -48,10 +48,10 @@ Then delete TODO.md.
 - Modify: `spa-guard/spa-guard/src/runtime/debug/index.ts`
 - Modify: `spa-guard/spa-guard/src/runtime/debug/errorDispatchers.test.ts`
 
-- [ ] Add `dispatchStaticAsset404(): void` to `errorDispatchers.ts`: creates a `<script>` element with a nonexistent hashed URL (`/assets/index-` + random hash + `.js`), appends it to `document.head` to trigger a real browser error event; no delay needed since `isLikely404(url)` now uses Resource Timing API
-- [ ] Add to SCENARIOS array in `index.ts`: `{ dispatch: dispatchStaticAsset404, key: "static-asset-404", label: "Static Asset 404" }`
-- [ ] Add tests for `dispatchStaticAsset404` in `errorDispatchers.test.ts`: verify returns void, verify a script element with hashed URL is appended to document.head
-- [ ] Run test suite — must pass before task 3
+- [x] Add `dispatchStaticAsset404(): void` to `errorDispatchers.ts`: creates a `<script>` element with a nonexistent hashed URL (`/assets/index-` + random hash + `.js`), appends it to `document.head` to trigger a real browser error event; no delay needed since `isLikely404(url)` now uses Resource Timing API
+- [x] Add to SCENARIOS array in `index.ts`: `{ dispatch: dispatchStaticAsset404, key: "static-asset-404", label: "Static Asset 404" }`
+- [x] Add tests for `dispatchStaticAsset404` in `errorDispatchers.test.ts`: verify returns void, verify a script element with hashed URL is appended to document.head
+- [x] Run test suite — must pass before task 3
 
 ### Task 3: Delete TODO.md
 
