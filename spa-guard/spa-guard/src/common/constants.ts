@@ -25,3 +25,5 @@ export const staticAssetRecoveryKey = Symbol.for(`${name}:static-asset-recovery`
 export const debugSyncErrorEventType = "spa-guard:debug-sync-error";
 
 export const spinnerStateWindowKey = Symbol.for(`${name}:spinner-state`);
+
+export const fallbackModeKey = Symbol.for(`${name}:fallback-mode`);
