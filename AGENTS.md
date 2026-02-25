@@ -396,9 +396,14 @@ The spa-guard functionality is split into 7 separate packages under `spa-guard/`
 Key architecture notes:
 
 - Configuration flows from `spaGuardVitePlugin()` → injected as `window.__SPA_GUARD_OPTIONS__` at build time; all runtime code reads options exclusively from this global via `getOptions()`
-- Two-level retry strategy: `lazyWithRetry` (in spa-guard-react) retries the individual module import first (`lazyRetry.retryDelays`), then falls back to full page reload via `attemptReload()` (`reloadDelays`)
-- **Fallback mode guard**: `isInFallbackMode()` / `setFallbackMode()` / `resetFallbackMode()` in `src/common/fallbackState.ts` use the window-singleton pattern (`fallbackModeKey` from `constants.ts`) to share a one-way boolean latch across all module instances. Once fallback UI is shown, `setFallbackMode()` is called; subsequent calls to `attemptReload()` and `handleStaticAssetFailure()` check `isInFallbackMode()` and return early, preventing an infinite reload loop from 404'd static assets. `isInFallbackMode` and `resetFallbackMode` are exported from the public `common` index.
+- Two-level retry strategy: `lazyWithRetry` (in spa-guard-react) retries the individual module import first (`lazyRetry.retryDelays`), then falls back to full page reload via `triggerRetry()` in `retryOrchestrator.ts` (`reloadDelays`)
+- **Retry orchestrator — single retry owner** (`src/common/retryOrchestrator.ts`): All reload scheduling, deduplication, and fallback transitions go through `triggerRetry(input)`. The orchestrator owns an explicit state machine stored on `window[Symbol.for(...)]` with three phases — `idle | scheduled | fallback` — and fields `attempt`, `retryId`, and `timer`. Once phase is `scheduled`, concurrent calls are deduplicated (first trigger wins). Once phase is `fallback`, all further triggers return immediately without scheduling a reload. The public API is: `triggerRetry(input): TriggerResult`, `markRetryHealthyBoot(): void`, `getRetrySnapshot(): RetrySnapshot`, `resetRetryOrchestratorForTests(): void`. The retry ownership rule: **only the orchestrator may advance retry state, schedule reloads, or transition to fallback — no other module may do this directly**.
+- **Fallback mode guard**: `isInFallbackMode()` / `setFallbackMode()` / `resetFallbackMode()` in `src/common/fallbackState.ts` use the window-singleton pattern (`fallbackModeKey` from `constants.ts`) to share a one-way boolean latch across all module instances. `setFallbackMode()` is called exclusively by `retryOrchestrator.ts` as part of the fallback transition — no other module sets it. Once fallback UI is shown, subsequent calls to `triggerRetry()` check `isInFallbackMode()` and return `{ status: "fallback" }` immediately, preventing an infinite reload loop from 404'd static assets. `isInFallbackMode` and `resetFallbackMode` are exported from the public `common` index.
 - `src/common/retryImport.ts` (in core) is framework-agnostic retry logic; `src/react/lazyWithRetry.tsx` (in spa-guard-react) wraps it for `React.lazy` compatibility
+- **Listener responsibilities are classification-only** (`src/common/listen/internal.ts`): Event handlers classify browser events (chunk error, unhandled rejection, vite:preloadError, static asset failure, CSP violation) and call `triggerRetry()` or `handleStaticAssetFailure()`. They do not schedule retries, manage timers, or own lifecycle state.
+- **Static asset recovery coalesces burst errors** (`src/common/staticAssetRecovery.ts`): Multiple 404'd asset errors within a short window are coalesced by a debounce timer (default 500 ms). After the timer fires, a single `triggerRetry({ cacheBust: true, source: "static-asset-error" })` is issued. The orchestrator's `scheduled` phase deduplication ensures storms cannot schedule multiple reloads.
+- **Strict URL retry param parsing**: `RETRY_ATTEMPT_PARAM` in the URL is parsed with `/^\d+$/` — only non-negative integers are accepted. Values like `-1`, `1foo`, `1.5`, `1e2` are rejected and treated as `null`. The `-1` sentinel is no longer used anywhere in the retry lifecycle.
+- **Fallback rendering is a pure renderer** (`src/common/fallbackRendering.ts`): `showFallbackUI()` only writes HTML to the DOM and emits `fallback-ui-shown`. It does not set fallback mode, does not check whether fallback is already active, and does not modify orchestrator state. The orchestrator calls `showFallbackUI()` after completing the fallback transition.
 - Event system uses `name` field as the discriminant (not `type`) in both internal `emitEvent()` calls and the public `events.subscribe()` API
 - Schema validation uses plain TypeScript (no TypeBox or other schema library dependency)
 - Test setup (`test/setup.ts`) globally suppresses `console.log/warn/error` to keep test output clean; run `pnpm test:debug` (sets `DEBUG=1`) to pass console output through when diagnosing test failures
@@ -483,6 +488,18 @@ Before finalizing any change:
 ### Build output missing
 
 Check that `tsup.config.ts` entry patterns exclude test files
+
+### Retry orchestrator: do not bypass the single owner
+
+Never call `setFallbackMode()`, `clearLastReloadTime()`, or schedule a `setTimeout` for reload outside of `retryOrchestrator.ts`. All retry lifecycle transitions must go through `triggerRetry()`. Bypassing this creates race conditions and inconsistent state between the orchestrator phase, fallback flag, and URL params.
+
+### Retry orchestrator: deduplification relies on phase check
+
+The orchestrator transitions phase to `scheduled` before any async work. If an error in the try-block causes an exception, the phase is reset to `idle`. Do not add code between `setState({ phase: "scheduled" })` and the try-block — that would leave the orchestrator in `scheduled` indefinitely on failure.
+
+### URL retry params are stripped by markRetryHealthyBoot
+
+After a successful boot following a retry reload, call `markRetryHealthyBoot()`. This clears the `RETRY_ATTEMPT_PARAM`, `RETRY_ID_PARAM`, and `CACHE_BUST_PARAM` from the URL, resets orchestrator state, and clears `lastReloadTime`. Failing to call it leaves stale params in the URL.
 
 <!-- Add corrections here as you encounter issues -->
 

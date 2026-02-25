@@ -109,9 +109,9 @@ No sentinel semantics in core state.
 - [x] Update listener tests to assert delegation, not hidden retry internals.
 
 ### Task 8: Documentation rewrite
-- [ ] Update `AGENTS.md` architecture notes and pitfalls.
-- [ ] Update package README retry behavior and event flow.
-- [ ] Document new retry ownership rule: only orchestrator controls lifecycle.
+- [x] Update `AGENTS.md` architecture notes and pitfalls.
+- [x] Update package README retry behavior and event flow.
+- [x] Document new retry ownership rule: only orchestrator controls lifecycle.
 
 ## Acceptance Criteria
 - Retry lifecycle is owned by one module and one API.
