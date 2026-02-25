@@ -260,11 +260,16 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
     setState({ attempt: nextAttempt, retryId });
 
     const timer = setTimeout(() => {
-      if (useRetryId && enableRetryReset) {
-        setLastReloadTime(retryId, nextAttempt);
+      try {
+        if (useRetryId && enableRetryReset) {
+          setLastReloadTime(retryId, nextAttempt);
+        }
+        const reloadUrl = buildReloadUrl(retryId, nextAttempt, input.cacheBust, useRetryId);
+        globalThis.window.location.href = reloadUrl;
+      } catch (navError) {
+        getLogger()?.error("triggerRetry navigation failed", navError);
+        setState({ phase: "idle" });
       }
-      const reloadUrl = buildReloadUrl(retryId, nextAttempt, input.cacheBust, useRetryId);
-      globalThis.window.location.href = reloadUrl;
     }, delay);
 
     setState({ timer });

@@ -75,8 +75,9 @@ class ErrorBoundaryImpl extends Component<
     const prevResetKeys = prevProps.resetKeys ?? [];
 
     if (
-      resetKeys.length !== prevResetKeys.length ||
-      resetKeys.some((key, i) => key !== prevResetKeys[i])
+      this.state.error !== null &&
+      (resetKeys.length !== prevResetKeys.length ||
+        resetKeys.some((key, i) => key !== prevResetKeys[i]))
     ) {
       this.resetError();
     }
