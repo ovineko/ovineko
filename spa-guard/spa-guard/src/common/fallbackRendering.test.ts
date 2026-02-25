@@ -20,7 +20,8 @@ vi.mock("./retryState", () => ({
 
 // Intentionally NOT mocking fallbackState - showFallbackUI must never call setFallbackMode
 import { emitEvent, getLogger } from "./events/internal";
-import { showFallbackUI } from "./fallbackRendering";
+import { showFallbackUI, showLoadingUI } from "./fallbackRendering";
+import { applyI18n, getI18n } from "./i18n";
 import { getOptions } from "./options";
 import { getRetryStateFromUrl } from "./retryState";
 
@@ -28,6 +29,8 @@ const mockEmitEvent = vi.mocked(emitEvent);
 const mockGetLogger = vi.mocked(getLogger);
 const mockGetOptions = vi.mocked(getOptions);
 const mockGetRetryStateFromUrl = vi.mocked(getRetryStateFromUrl);
+const mockApplyI18n = vi.mocked(applyI18n);
+const mockGetI18n = vi.mocked(getI18n);
 
 const createMockLogger = () => ({
   beaconSendFailed: vi.fn(),
@@ -401,5 +404,109 @@ describe("showFallbackUI", () => {
 
       expect(() => showFallbackUI()).not.toThrow();
     });
+  });
+});
+
+describe("showLoadingUI", () => {
+  const loadingTemplate = `<div><section data-spa-guard-section="retrying" style="display:none;visibility:hidden">Attempt <span data-spa-guard-content="attempt">?</span></section><div data-spa-guard-spinner>Loading...</div></div>`;
+
+  beforeEach(() => {
+    mockGetI18n.mockReturnValue(null);
+    mockGetOptions.mockReturnValue({
+      html: {
+        fallback: { selector: "body" },
+        loading: { content: loadingTemplate },
+      },
+    });
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("renders loading template content into target element", () => {
+    const targetEl = document.createElement("div");
+    vi.spyOn(document, "querySelector").mockReturnValue(targetEl as unknown as Element);
+
+    showLoadingUI(1);
+
+    expect(targetEl.innerHTML).toContain("data-spa-guard-section");
+  });
+
+  it("sets attempt number in elements with [data-spa-guard-content='attempt']", () => {
+    const targetEl = document.createElement("div");
+    vi.spyOn(document, "querySelector").mockReturnValue(targetEl as unknown as Element);
+
+    showLoadingUI(3);
+
+    const attemptEl = targetEl.querySelector('[data-spa-guard-content="attempt"]');
+    expect(attemptEl?.textContent).toBe("3");
+  });
+
+  it("reveals retry section via data-spa-guard-section='retrying'", () => {
+    const targetEl = document.createElement("div");
+    vi.spyOn(document, "querySelector").mockReturnValue(targetEl as unknown as Element);
+
+    showLoadingUI(1);
+
+    const retrySection = targetEl.querySelector(
+      '[data-spa-guard-section="retrying"]',
+    ) as HTMLElement;
+    expect(retrySection?.style.visibility).toBe("visible");
+  });
+
+  it("hides spinner when spinner.disabled is true", () => {
+    mockGetOptions.mockReturnValue({
+      html: {
+        fallback: { selector: "body" },
+        loading: { content: loadingTemplate },
+        spinner: { disabled: true },
+      },
+    });
+    const targetEl = document.createElement("div");
+    vi.spyOn(document, "querySelector").mockReturnValue(targetEl as unknown as Element);
+
+    showLoadingUI(1);
+
+    const spinnerEl = targetEl.querySelector("[data-spa-guard-spinner]") as HTMLElement;
+    expect(spinnerEl?.style.display).toBe("none");
+  });
+
+  it("applies i18n when i18n is configured", () => {
+    const mockT = { greeting: "Hello" } as any;
+    mockGetI18n.mockReturnValue(mockT);
+    const targetEl = document.createElement("div");
+    vi.spyOn(document, "querySelector").mockReturnValue(targetEl as unknown as Element);
+
+    showLoadingUI(1);
+
+    expect(mockApplyI18n).toHaveBeenCalled();
+  });
+
+  it("returns silently when loading content is not configured", () => {
+    mockGetOptions.mockReturnValue({
+      html: {
+        fallback: { selector: "body" },
+      },
+    });
+    vi.spyOn(document, "querySelector");
+
+    showLoadingUI(1);
+
+    expect(document.querySelector).not.toHaveBeenCalled();
+  });
+
+  it("returns silently when target element not found", () => {
+    vi.spyOn(document, "querySelector").mockReturnValue(null);
+
+    expect(() => showLoadingUI(1)).not.toThrow();
+  });
+
+  it("does not throw when DOM access throws", () => {
+    vi.spyOn(document, "querySelector").mockImplementation(() => {
+      throw new Error("DOM error");
+    });
+
+    expect(() => showLoadingUI(1)).not.toThrow();
   });
 });

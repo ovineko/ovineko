@@ -52,16 +52,16 @@ Two independent improvements from TODO.md:
 **Files:**
 - Modify: `spa-guard/spa-guard/src/common/fallbackRendering.test.ts`
 
-- [ ] Add describe block `showLoadingUI`
-- [ ] Test: renders loading template content into target element
-- [ ] Test: sets attempt number in elements with `[data-spa-guard-content="attempt"]`
-- [ ] Test: reveals retry section via `data-spa-guard-section="retrying"`
-- [ ] Test: spinner hidden when spinner.disabled is true
-- [ ] Test: applies i18n when i18n is configured
-- [ ] Test: returns silently when loading content is not configured
-- [ ] Test: returns silently when target element not found
-- [ ] Test: does not throw when DOM access throws
-- [ ] Run tests: `pnpm test src/common/fallbackRendering.test.ts` - must pass before task 3
+- [x] Add describe block `showLoadingUI`
+- [x] Test: renders loading template content into target element
+- [x] Test: sets attempt number in elements with `[data-spa-guard-content="attempt"]`
+- [x] Test: reveals retry section via `data-spa-guard-section="retrying"`
+- [x] Test: spinner hidden when spinner.disabled is true
+- [x] Test: applies i18n when i18n is configured
+- [x] Test: returns silently when loading content is not configured
+- [x] Test: returns silently when target element not found
+- [x] Test: does not throw when DOM access throws
+- [x] Run tests: `pnpm test src/common/fallbackRendering.test.ts` - must pass before task 3
 
 ### Task 3: Integrate showLoadingUI into retryOrchestrator.ts
 
