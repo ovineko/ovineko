@@ -13,6 +13,7 @@ import { debugSyncErrorEventType } from "../../common/constants";
 import { ForceRetryError } from "../../common/errors/ForceRetryError";
 import { emitEvent } from "../../common/events/internal";
 import { showFallbackUI } from "../../common/fallbackRendering";
+import { setFallbackMode } from "../../common/fallbackState";
 import { getOptions } from "../../common/options";
 
 /**
@@ -84,6 +85,7 @@ export function dispatchRetryExhausted(): void {
     retryId: "",
   });
 
+  setFallbackMode();
   showFallbackUI();
 }
 

@@ -96,6 +96,8 @@ const buildReloadUrl = (
   return url.toString();
 };
 
+const MAX_RETRY_ATTEMPT = 100;
+
 const parseAttemptFromUrl = (): null | number => {
   try {
     const params = new URLSearchParams(globalThis.window.location.search);
@@ -108,7 +110,10 @@ const parseAttemptFromUrl = (): null | number => {
       return null;
     }
     const parsed = parseInt(raw, 10);
-    return Number.isNaN(parsed) ? null : parsed;
+    if (Number.isNaN(parsed) || parsed < 0 || parsed > MAX_RETRY_ATTEMPT) {
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }

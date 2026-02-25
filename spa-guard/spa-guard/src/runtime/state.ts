@@ -71,7 +71,13 @@ const stateSubscribers = new Set<StateSubscriber>();
 
 const updateState = (nextState: SpaGuardState): void => {
   currentState = nextState;
-  stateSubscribers.forEach((cb) => cb(currentState));
+  stateSubscribers.forEach((cb) => {
+    try {
+      cb(currentState);
+    } catch {
+      // Isolate subscriber errors so all subscribers receive the update
+    }
+  });
 };
 
 // Subscribe to events and update state

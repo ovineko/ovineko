@@ -1,4 +1,5 @@
 import { startVersionCheck, stopVersionCheck } from "../common/checkVersion";
+import { markRetryHealthyBoot } from "../common/retryOrchestrator";
 import { dismissSpinner } from "../common/spinner";
 
 export interface RecommendedSetupOptions {
@@ -15,6 +16,7 @@ export interface RecommendedSetupOptions {
  */
 export const recommendedSetup = (overrides?: RecommendedSetupOptions): (() => void) => {
   dismissSpinner();
+  markRetryHealthyBoot();
 
   const options = { versionCheck: true, ...overrides };
 
