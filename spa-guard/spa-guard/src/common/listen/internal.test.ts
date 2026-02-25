@@ -10,8 +10,8 @@ vi.mock("../options", () => ({
   getOptions: vi.fn(),
 }));
 
-vi.mock("../reload", () => ({
-  attemptReload: vi.fn(),
+vi.mock("../retryOrchestrator", () => ({
+  triggerRetry: vi.fn(),
 }));
 
 vi.mock("../retryState", () => ({
@@ -49,7 +49,7 @@ import { emitEvent, getLogger, isInitialized, setLogger } from "../events/intern
 import { isChunkError } from "../isChunkError";
 import { getAssetUrl, isLikely404, isStaticAssetError } from "../isStaticAssetError";
 import { getOptions } from "../options";
-import { attemptReload } from "../reload";
+import { triggerRetry } from "../retryOrchestrator";
 import { getRetryInfoForBeacon } from "../retryState";
 import { sendBeacon } from "../sendBeacon";
 import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
@@ -65,7 +65,7 @@ const mockIsStaticAssetError = vi.mocked(isStaticAssetError);
 const mockIsLikely404 = vi.mocked(isLikely404);
 const mockGetAssetUrl = vi.mocked(getAssetUrl);
 const mockGetOptions = vi.mocked(getOptions);
-const mockAttemptReload = vi.mocked(attemptReload);
+const mockTriggerRetry = vi.mocked(triggerRetry);
 const mockGetRetryInfoForBeacon = vi.mocked(getRetryInfoForBeacon);
 const mockSendBeacon = vi.mocked(sendBeacon);
 const mockShouldForceRetry = vi.mocked(shouldForceRetry);
@@ -284,7 +284,7 @@ describe("listenInternal", () => {
       expect(mockPreventDefault).toHaveBeenCalledTimes(1);
     });
 
-    it("calls attemptReload with event.error for chunk errors", () => {
+    it("delegates to triggerRetry with chunk-error source for chunk errors", () => {
       mockIsChunkError.mockReturnValue(true);
       const { handlers } = captureListeners();
       const innerError = new Error("Failed to fetch dynamically imported module");
@@ -294,7 +294,9 @@ describe("listenInternal", () => {
         preventDefault: vi.fn(),
       };
       handlers.error!(event);
-      expect(mockAttemptReload).toHaveBeenCalledWith(innerError);
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: innerError, source: "chunk-error" }),
+      );
     });
 
     it("falls back to full event when event.error is undefined", () => {
@@ -305,7 +307,9 @@ describe("listenInternal", () => {
         preventDefault: vi.fn(),
       };
       handlers.error!(event);
-      expect(mockAttemptReload).toHaveBeenCalledWith(event);
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: event, source: "chunk-error" }),
+      );
     });
 
     it("does not call sendBeacon for chunk errors", () => {
@@ -347,12 +351,12 @@ describe("listenInternal", () => {
       expect(mockSerialize).not.toHaveBeenCalled();
     });
 
-    it("does not call attemptReload when shouldIgnoreMessages returns true", () => {
+    it("does not call triggerRetry when shouldIgnoreMessages returns true", () => {
       mockIsChunkError.mockReturnValue(true);
       mockShouldIgnoreMessages.mockReturnValue(true);
       const { handlers } = captureListeners();
       handlers.error!({ message: "ignored chunk error", preventDefault: vi.fn() });
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
     });
 
     it("does not call preventDefault when shouldIgnoreMessages returns true", () => {
@@ -372,7 +376,7 @@ describe("listenInternal", () => {
       handlers.error!({ message: "ignored", preventDefault: vi.fn() });
       expect(mockIsChunkError).not.toHaveBeenCalled();
       expect(mockShouldForceRetry).not.toHaveBeenCalled();
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
@@ -433,8 +437,8 @@ describe("listenInternal", () => {
       mockIsChunkError.mockReturnValue(true);
       const { handlers } = captureListeners();
       handlers.error!({ message: "", preventDefault: vi.fn() });
-      // Static asset 404 path returns early — no attemptReload or sendBeacon
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      // Static asset 404 path returns early — no triggerRetry or sendBeacon
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
@@ -492,12 +496,14 @@ describe("listenInternal", () => {
       expect(mockPreventDefault).toHaveBeenCalledTimes(1);
     });
 
-    it("calls attemptReload with event.reason (not the full event) for chunk errors", () => {
+    it("delegates to triggerRetry with chunk-error source for chunk rejection reasons", () => {
       mockIsChunkError.mockReturnValue(true);
       const { handlers } = captureListeners();
       const reason = new Error("ChunkLoadError");
       handlers.unhandledrejection!({ preventDefault: vi.fn(), reason });
-      expect(mockAttemptReload).toHaveBeenCalledWith(reason);
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: reason, source: "chunk-error" }),
+      );
     });
 
     it("does not call sendBeacon for chunk error rejection reasons", () => {
@@ -549,12 +555,12 @@ describe("listenInternal", () => {
       expect(mockSerialize).not.toHaveBeenCalled();
     });
 
-    it("does not call attemptReload when shouldIgnoreMessages returns true", () => {
+    it("does not call triggerRetry when shouldIgnoreMessages returns true", () => {
       mockIsChunkError.mockReturnValue(false);
       mockShouldIgnoreMessages.mockReturnValue(true);
       const { handlers } = captureListeners();
       handlers.unhandledrejection!({ preventDefault: vi.fn(), reason: new Error("ignored") });
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
     });
 
     it("does not call preventDefault when shouldIgnoreMessages returns true", () => {
@@ -577,7 +583,7 @@ describe("listenInternal", () => {
       handlers.unhandledrejection!({ preventDefault: vi.fn(), reason: new Error("ignored") });
       expect(mockIsChunkError).not.toHaveBeenCalled();
       expect(mockShouldForceRetry).not.toHaveBeenCalled();
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
@@ -728,14 +734,14 @@ describe("listenInternal", () => {
       expect(mockSerialize).not.toHaveBeenCalled();
     });
 
-    it("does not call attemptReload for CSP violations", () => {
+    it("does not call triggerRetry for CSP violations", () => {
       const { handlers } = captureListeners();
       handlers.securitypolicyviolation!({
         blockedURI: "https://evil.com",
         preventDefault: vi.fn(),
         violatedDirective: "script-src",
       });
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
     });
 
     it("includes retry info from getRetryInfoForBeacon", () => {
@@ -763,14 +769,16 @@ describe("listenInternal", () => {
       expect(mockPreventDefault).toHaveBeenCalledTimes(1);
     });
 
-    it("calls attemptReload with event.payload", () => {
+    it("delegates to triggerRetry with vite:preloadError source and payload as error", () => {
       const { handlers } = captureListeners();
       const event = { payload: { message: "preload error" }, preventDefault: vi.fn() };
       handlers["vite:preloadError"]!(event);
-      expect(mockAttemptReload).toHaveBeenCalledWith(event.payload);
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: event.payload, source: "vite:preloadError" }),
+      );
     });
 
-    it("does not call sendBeacon - always uses attemptReload", () => {
+    it("does not call sendBeacon - always delegates to triggerRetry", () => {
       const { handlers } = captureListeners();
       handlers["vite:preloadError"]!({
         payload: { message: "preload error" },
@@ -818,14 +826,14 @@ describe("listenInternal", () => {
       expect(mockLogger.capturedError).not.toHaveBeenCalled();
     });
 
-    it("does not call attemptReload when shouldIgnoreMessages returns true", () => {
+    it("does not call triggerRetry when shouldIgnoreMessages returns true", () => {
       mockShouldIgnoreMessages.mockReturnValue(true);
       const { handlers } = captureListeners();
       handlers["vite:preloadError"]!({
         payload: { message: "ignored chunk error" },
         preventDefault: vi.fn(),
       });
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
     });
 
     it("does not call preventDefault when shouldIgnoreMessages returns true", () => {
@@ -849,6 +857,15 @@ describe("listenInternal", () => {
       handlers["vite:preloadError"]!(event);
       expect(mockLogger.capturedError).toHaveBeenCalledWith("vite:preloadError", event);
     });
+
+    it("falls back to event as error when payload is undefined", () => {
+      const { handlers } = captureListeners();
+      const event = { payload: undefined, preventDefault: vi.fn() };
+      expect(() => handlers["vite:preloadError"]!(event)).not.toThrow();
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: event, source: "vite:preloadError" }),
+      );
+    });
   });
 
   describe("logger graceful degradation", () => {
@@ -869,34 +886,38 @@ describe("listenInternal", () => {
     });
   });
 
-  describe("chunk error → handleErrorWithSpaGuard integration", () => {
-    it("window error event with chunk error calls attemptReload (not sendBeacon)", () => {
+  describe("chunk error → orchestrator delegation", () => {
+    it("window error event with chunk error delegates to triggerRetry (not sendBeacon)", () => {
       mockIsChunkError.mockReturnValue(true);
       const { handlers } = captureListeners();
       handlers.error!({
         message: "Failed to fetch dynamically imported module",
         preventDefault: vi.fn(),
       });
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
-    it("unhandledrejection with chunk error reason calls attemptReload with the reason", () => {
+    it("unhandledrejection with chunk error reason delegates to triggerRetry with the reason", () => {
       mockIsChunkError.mockReturnValue(true);
       const { handlers } = captureListeners();
       const reason = new Error("ChunkLoadError");
       handlers.unhandledrejection!({ preventDefault: vi.fn(), reason });
-      expect(mockAttemptReload).toHaveBeenCalledWith(reason);
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: reason, source: "chunk-error" }),
+      );
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
-    it("vite:preloadError always calls attemptReload with payload (does not check isChunkError)", () => {
-      // vite:preloadError handler doesn't call isChunkError - it always does attemptReload
+    it("vite:preloadError always delegates to triggerRetry with payload (does not check isChunkError)", () => {
+      // vite:preloadError handler doesn't call isChunkError - it always delegates
       mockIsChunkError.mockReturnValue(false);
       const { handlers } = captureListeners();
       const event = { payload: { message: "vite preload" }, preventDefault: vi.fn() };
       handlers["vite:preloadError"]!(event);
-      expect(mockAttemptReload).toHaveBeenCalledWith(event.payload);
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: event.payload, source: "vite:preloadError" }),
+      );
       expect(mockIsChunkError).not.toHaveBeenCalled();
     });
 
@@ -992,13 +1013,6 @@ describe("listenInternal", () => {
       }).not.toThrow();
     });
 
-    it("handles vite:preloadError with undefined payload without throwing", () => {
-      const { handlers } = captureListeners();
-      const event = { payload: undefined, preventDefault: vi.fn() };
-      expect(() => handlers["vite:preloadError"]!(event)).not.toThrow();
-      expect(mockAttemptReload).toHaveBeenCalledWith(event);
-    });
-
     it("multiple different listeners can be triggered independently", () => {
       mockIsChunkError.mockReturnValue(false);
       const { handlers } = captureListeners();
@@ -1038,15 +1052,17 @@ describe("listenInternal", () => {
     });
   });
 
-  describe("forceRetry errors trigger attemptReload", () => {
-    it("calls attemptReload with event.error when error message matches forceRetry pattern", () => {
+  describe("forceRetry errors delegate to orchestrator", () => {
+    it("delegates to triggerRetry with force-retry source when error message matches forceRetry pattern", () => {
       mockIsChunkError.mockReturnValue(false);
       mockShouldForceRetry.mockReturnValue(true);
       const { handlers } = captureListeners();
       const innerError = new Error("StaleModule detected");
       const event = { error: innerError, message: "StaleModule detected", preventDefault: vi.fn() };
       handlers.error!(event);
-      expect(mockAttemptReload).toHaveBeenCalledWith(innerError);
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: innerError, source: "force-retry" }),
+      );
     });
 
     it("calls event.preventDefault() for forceRetry error events", () => {
@@ -1073,13 +1089,15 @@ describe("listenInternal", () => {
       expect(mockShouldForceRetry).toHaveBeenCalledWith(["my custom error"]);
     });
 
-    it("calls attemptReload with event.reason when unhandledrejection matches forceRetry", () => {
+    it("delegates to triggerRetry with force-retry source when unhandledrejection matches forceRetry", () => {
       mockIsChunkError.mockReturnValue(false);
       mockShouldForceRetry.mockReturnValue(true);
       const { handlers } = captureListeners();
       const reason = new Error("VersionMismatch");
       handlers.unhandledrejection!({ preventDefault: vi.fn(), reason });
-      expect(mockAttemptReload).toHaveBeenCalledWith(reason);
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: reason, source: "force-retry" }),
+      );
     });
 
     it("calls event.preventDefault() for forceRetry unhandledrejection events", () => {
@@ -1120,7 +1138,9 @@ describe("listenInternal", () => {
       const innerError = new Error("ChunkLoadError");
       const event = { error: innerError, message: "ChunkLoadError", preventDefault: vi.fn() };
       handlers.error!(event);
-      expect(mockAttemptReload).toHaveBeenCalledWith(innerError);
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: innerError, source: "chunk-error" }),
+      );
       // shouldForceRetry is not even checked since isChunkError returns first
       expect(mockShouldForceRetry).not.toHaveBeenCalled();
     });
@@ -1131,10 +1151,10 @@ describe("listenInternal", () => {
       const { handlers } = captureListeners();
       handlers.error!({ message: "regular error", preventDefault: vi.fn() });
       expect(mockSendBeacon).toHaveBeenCalledTimes(1);
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
     });
 
-    it("non-matching rejections send beacons and attempt reload with default config", () => {
+    it("non-matching rejections send beacons and delegate to orchestrator with default config", () => {
       mockIsChunkError.mockReturnValue(false);
       mockShouldForceRetry.mockReturnValue(false);
       const { handlers } = captureListeners();
@@ -1143,12 +1163,12 @@ describe("listenInternal", () => {
         reason: new Error("regular rejection"),
       });
       expect(mockSendBeacon).toHaveBeenCalledTimes(1);
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("handleUnhandledRejections config", () => {
-    it("retry:true + sendBeacon:true (default) sends beacon first, then attempts reload", () => {
+    it("retry:true + sendBeacon:true (default) sends beacon first, then delegates to orchestrator", () => {
       mockIsChunkError.mockReturnValue(false);
       mockShouldForceRetry.mockReturnValue(false);
       const { handlers } = captureListeners();
@@ -1162,15 +1182,17 @@ describe("listenInternal", () => {
       expect(mockSendBeacon).toHaveBeenCalledWith(
         expect.objectContaining({ errorMessage: String(reason), eventName: "unhandledrejection" }),
       );
-      expect(mockAttemptReload).toHaveBeenCalledWith(reason);
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: reason, source: "unhandled-rejection" }),
+      );
       expect(mockPreventDefault).toHaveBeenCalledTimes(1);
-      // Beacon is sent before attemptReload
+      // Beacon is sent before triggerRetry
       const sendBeaconOrder = mockSendBeacon.mock.invocationCallOrder[0]!;
-      const attemptReloadOrder = mockAttemptReload.mock.invocationCallOrder[0]!;
-      expect(sendBeaconOrder).toBeLessThan(attemptReloadOrder);
+      const triggerRetryOrder = mockTriggerRetry.mock.invocationCallOrder[0]!;
+      expect(sendBeaconOrder).toBeLessThan(triggerRetryOrder);
     });
 
-    it("retry:true + sendBeacon:false only attempts reload, no beacon", () => {
+    it("retry:true + sendBeacon:false only delegates to orchestrator, no beacon", () => {
       mockGetOptions.mockReturnValue({
         ...DEFAULT_OPTIONS,
         handleUnhandledRejections: { retry: true, sendBeacon: false },
@@ -1185,11 +1207,13 @@ describe("listenInternal", () => {
         reason,
       });
       expect(mockSendBeacon).not.toHaveBeenCalled();
-      expect(mockAttemptReload).toHaveBeenCalledWith(reason);
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: reason, source: "unhandled-rejection" }),
+      );
       expect(mockPreventDefault).toHaveBeenCalledTimes(1);
     });
 
-    it("retry:false + sendBeacon:true only sends beacon, no reload", () => {
+    it("retry:false + sendBeacon:true only sends beacon, no retry delegation", () => {
       mockGetOptions.mockReturnValue({
         ...DEFAULT_OPTIONS,
         handleUnhandledRejections: { retry: false, sendBeacon: true },
@@ -1207,7 +1231,7 @@ describe("listenInternal", () => {
       expect(mockSendBeacon).toHaveBeenCalledWith(
         expect.objectContaining({ errorMessage: String(reason), eventName: "unhandledrejection" }),
       );
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
       expect(mockPreventDefault).not.toHaveBeenCalled();
     });
 
@@ -1225,7 +1249,7 @@ describe("listenInternal", () => {
         reason: new Error("test rejection"),
       });
       expect(mockSendBeacon).not.toHaveBeenCalled();
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
       expect(mockPreventDefault).not.toHaveBeenCalled();
       // logger.capturedError is still called
       expect(mockLogger.capturedError).toHaveBeenCalledWith(
@@ -1272,8 +1296,10 @@ describe("listenInternal", () => {
       const mockPreventDefault = vi.fn();
       const reason = new Error("ChunkLoadError");
       handlers.unhandledrejection!({ preventDefault: mockPreventDefault, reason });
-      // Chunk errors always call attemptReload and preventDefault regardless of config
-      expect(mockAttemptReload).toHaveBeenCalledWith(reason);
+      // Chunk errors always delegate to orchestrator and call preventDefault regardless of config
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: reason, source: "chunk-error" }),
+      );
       expect(mockPreventDefault).toHaveBeenCalledTimes(1);
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
@@ -1289,8 +1315,10 @@ describe("listenInternal", () => {
       const mockPreventDefault = vi.fn();
       const reason = new Error("ForceRetryError");
       handlers.unhandledrejection!({ preventDefault: mockPreventDefault, reason });
-      // ForceRetry errors always call attemptReload and preventDefault regardless of config
-      expect(mockAttemptReload).toHaveBeenCalledWith(reason);
+      // ForceRetry errors always delegate to orchestrator and call preventDefault regardless of config
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ error: reason, source: "force-retry" }),
+      );
       expect(mockPreventDefault).toHaveBeenCalledTimes(1);
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
@@ -1309,7 +1337,7 @@ describe("listenInternal", () => {
       });
       // sendBeacon defaults to true when not specified
       expect(mockSendBeacon).toHaveBeenCalledTimes(1);
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
     });
 
     it("partial config: only sendBeacon specified, retry uses default (true)", () => {
@@ -1326,7 +1354,7 @@ describe("listenInternal", () => {
       });
       // retry defaults to true when not specified
       expect(mockSendBeacon).not.toHaveBeenCalled();
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
     });
   });
 });

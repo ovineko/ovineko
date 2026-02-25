@@ -10,7 +10,7 @@ import {
 import { isChunkError } from "../isChunkError";
 import { getAssetUrl, isLikely404, isStaticAssetError } from "../isStaticAssetError";
 import { getOptions } from "../options";
-import { attemptReload } from "../reload";
+import { triggerRetry } from "../retryOrchestrator";
 import { getRetryInfoForBeacon } from "../retryState";
 import { sendBeacon } from "../sendBeacon";
 import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
@@ -55,13 +55,13 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
 
       if (isChunkError(event)) {
         event.preventDefault();
-        attemptReload(event.error ?? event);
+        triggerRetry({ error: event.error ?? event, source: "chunk-error" });
         return;
       }
 
       if (shouldForceRetry([event.message])) {
         event.preventDefault();
-        attemptReload(event.error ?? event);
+        triggerRetry({ error: event.error ?? event, source: "force-retry" });
         return;
       }
 
@@ -87,13 +87,13 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
 
     if (isChunkError(event.reason)) {
       event.preventDefault();
-      attemptReload(event.reason);
+      triggerRetry({ error: event.reason, source: "chunk-error" });
       return;
     }
 
     if (shouldForceRetry([errorMessage])) {
       event.preventDefault();
-      attemptReload(event.reason);
+      triggerRetry({ error: event.reason, source: "force-retry" });
       return;
     }
 
@@ -111,7 +111,7 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
 
     if (rejectionConfig?.retry !== false) {
       event.preventDefault();
-      attemptReload(event.reason);
+      triggerRetry({ error: event.reason, source: "unhandled-rejection" });
     }
   });
 
@@ -134,7 +134,8 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
   });
 
   wa("vite:preloadError", (event) => {
-    const errorMsg = (event as any)?.payload?.message || (event as any)?.message;
+    const payload = (event as any)?.payload;
+    const errorMsg = payload?.message || (event as any)?.message;
 
     if (shouldIgnoreMessages([errorMsg])) {
       return;
@@ -143,6 +144,6 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
     getLogger()?.capturedError("vite:preloadError", event);
 
     event.preventDefault();
-    attemptReload((event as any)?.payload ?? event);
+    triggerRetry({ error: payload ?? event, source: "vite:preloadError" });
   });
 };

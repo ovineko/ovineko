@@ -82,9 +82,9 @@ No sentinel semantics in core state.
 - [x] Strict-parse URL retry params (`-1` no longer needed as control signal).
 
 ### Task 3: Refactor event listeners to pure classification
-- [ ] Replace direct `attemptReload` calls with orchestrator trigger calls.
-- [ ] Guard `vite:preloadError` with minimal validity checks.
-- [ ] Keep beacon behavior explicit and independent from scheduling internals.
+- [x] Replace direct `attemptReload` calls with orchestrator trigger calls.
+- [x] Guard `vite:preloadError` with minimal validity checks.
+- [x] Keep beacon behavior explicit and independent from scheduling internals.
 
 ### Task 4: Refactor static asset recovery integration
 - [ ] `staticAssetRecovery` triggers orchestrator with `source=static-asset-error`.
