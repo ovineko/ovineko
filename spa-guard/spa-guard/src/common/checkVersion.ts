@@ -161,6 +161,11 @@ const handleVisibilityHidden = (): void => {
 };
 
 const handleResume = (mode: "html" | "json", interval: number): void => {
+  // Only resume if both conditions required to start are satisfied
+  if (document.visibilityState !== "visible" || !document.hasFocus()) {
+    return;
+  }
+
   const s = getState();
   // If timers are already running (from a prior resume), don't restart them
   if (s.versionCheckInterval !== null || s.versionCheckTimeout !== null) {

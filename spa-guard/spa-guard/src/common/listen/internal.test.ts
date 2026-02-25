@@ -30,25 +30,42 @@ vi.mock("../shouldIgnore", () => ({
 }));
 
 vi.mock("../events/internal", () => ({
+  emitEvent: vi.fn(),
   getLogger: vi.fn(),
   isInitialized: vi.fn().mockReturnValue(false),
   markInitialized: vi.fn(),
   setLogger: vi.fn(),
 }));
 
-import { getLogger, isInitialized, setLogger } from "../events/internal";
+vi.mock("../isStaticAssetError", () => ({
+  getAssetUrl: vi.fn(),
+  isLikely404: vi.fn(),
+  isStaticAssetError: vi.fn(),
+}));
+
+vi.mock("../staticAssetRecovery", () => ({
+  handleStaticAssetFailure: vi.fn(),
+}));
+
+import { emitEvent, getLogger, isInitialized, setLogger } from "../events/internal";
 import { isChunkError } from "../isChunkError";
+import { getAssetUrl, isLikely404, isStaticAssetError } from "../isStaticAssetError";
 import { getOptions } from "../options";
 import { attemptReload } from "../reload";
 import { getRetryInfoForBeacon, getRetryStateFromUrl, updateRetryStateInUrl } from "../retryState";
 import { sendBeacon } from "../sendBeacon";
 import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
+import { handleStaticAssetFailure } from "../staticAssetRecovery";
 import { listenInternal } from "./internal";
 
+const mockEmitEvent = vi.mocked(emitEvent);
 const mockGetLogger = vi.mocked(getLogger);
 const mockIsInitialized = vi.mocked(isInitialized);
 const mockSetLogger = vi.mocked(setLogger);
 const mockIsChunkError = vi.mocked(isChunkError);
+const mockIsStaticAssetError = vi.mocked(isStaticAssetError);
+const mockIsLikely404 = vi.mocked(isLikely404);
+const mockGetAssetUrl = vi.mocked(getAssetUrl);
 const mockGetOptions = vi.mocked(getOptions);
 const mockAttemptReload = vi.mocked(attemptReload);
 const mockGetRetryInfoForBeacon = vi.mocked(getRetryInfoForBeacon);
@@ -57,6 +74,7 @@ const mockUpdateRetryStateInUrl = vi.mocked(updateRetryStateInUrl);
 const mockSendBeacon = vi.mocked(sendBeacon);
 const mockShouldForceRetry = vi.mocked(shouldForceRetry);
 const mockShouldIgnoreMessages = vi.mocked(shouldIgnoreMessages);
+const mockHandleStaticAssetFailure = vi.mocked(handleStaticAssetFailure);
 
 const DEFAULT_OPTIONS = {
   handleUnhandledRejections: { retry: true, sendBeacon: true },
@@ -127,6 +145,9 @@ describe("listenInternal", () => {
     mockGetRetryStateFromUrl.mockReturnValue(null);
     mockGetRetryInfoForBeacon.mockReturnValue({});
     mockIsChunkError.mockReturnValue(false);
+    mockIsStaticAssetError.mockReturnValue(false);
+    mockIsLikely404.mockReturnValue(false);
+    mockGetAssetUrl.mockReturnValue("");
     mockShouldForceRetry.mockReturnValue(false);
     mockShouldIgnoreMessages.mockReturnValue(false);
     mockGetLogger.mockReturnValue(mockLogger);
@@ -412,6 +433,74 @@ describe("listenInternal", () => {
       const { handlers } = captureListeners();
       handlers.error!({ message: "specific message", preventDefault: vi.fn() });
       expect(mockShouldIgnoreMessages).toHaveBeenCalledWith(["specific message"]);
+    });
+  });
+
+  describe("static asset error path", () => {
+    it("emits static-asset-load-failed event and calls handleStaticAssetFailure when asset error is a likely 404", () => {
+      mockIsStaticAssetError.mockReturnValue(true);
+      mockIsLikely404.mockReturnValue(true);
+      mockGetAssetUrl.mockReturnValue("https://example.com/app.abc123.js");
+      const { handlers } = captureListeners();
+      const mockPreventDefault = vi.fn();
+      handlers.error!({ message: "", preventDefault: mockPreventDefault });
+      expect(mockEmitEvent).toHaveBeenCalledWith({
+        name: "static-asset-load-failed",
+        url: "https://example.com/app.abc123.js",
+      });
+      expect(mockHandleStaticAssetFailure).toHaveBeenCalledWith(
+        "https://example.com/app.abc123.js",
+      );
+    });
+
+    it("calls event.preventDefault() for static asset 404 errors", () => {
+      mockIsStaticAssetError.mockReturnValue(true);
+      mockIsLikely404.mockReturnValue(true);
+      mockGetAssetUrl.mockReturnValue("https://example.com/chunk.xyz.js");
+      const { handlers } = captureListeners();
+      const mockPreventDefault = vi.fn();
+      handlers.error!({ message: "", preventDefault: mockPreventDefault });
+      expect(mockPreventDefault).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not call handleStaticAssetFailure when autoRecover is false", () => {
+      mockGetOptions.mockReturnValue({
+        ...DEFAULT_OPTIONS,
+        staticAssets: { autoRecover: false },
+      });
+      mockIsStaticAssetError.mockReturnValue(true);
+      mockIsLikely404.mockReturnValue(true);
+      mockGetAssetUrl.mockReturnValue("https://example.com/chunk.xyz.js");
+      const { handlers } = captureListeners();
+      handlers.error!({ message: "", preventDefault: vi.fn() });
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "static-asset-load-failed" }),
+      );
+      expect(mockHandleStaticAssetFailure).not.toHaveBeenCalled();
+    });
+
+    it("does not treat static asset error as chunk error when it is a likely 404", () => {
+      mockIsStaticAssetError.mockReturnValue(true);
+      mockIsLikely404.mockReturnValue(true);
+      mockGetAssetUrl.mockReturnValue("https://example.com/app.abc123.js");
+      mockIsChunkError.mockReturnValue(true);
+      const { handlers } = captureListeners();
+      handlers.error!({ message: "", preventDefault: vi.fn() });
+      // Static asset 404 path returns early — no attemptReload or sendBeacon
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockSendBeacon).not.toHaveBeenCalled();
+    });
+
+    it("falls through to normal error handling when isLikely404 returns false", () => {
+      mockIsStaticAssetError.mockReturnValue(true);
+      mockIsLikely404.mockReturnValue(false);
+      mockIsChunkError.mockReturnValue(false);
+      const { handlers } = captureListeners();
+      handlers.error!({ message: "load error", preventDefault: vi.fn() });
+      // Falls through to normal path
+      expect(mockHandleStaticAssetFailure).not.toHaveBeenCalled();
+      expect(mockEmitEvent).not.toHaveBeenCalled();
+      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
     });
   });
 
