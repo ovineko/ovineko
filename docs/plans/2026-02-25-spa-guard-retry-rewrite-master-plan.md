@@ -76,10 +76,10 @@ No sentinel semantics in core state.
 - [x] Implement fallback transition and lock behavior.
 
 ### Task 2: Move URL state behind orchestrator
-- [ ] Keep URL as serialization layer only.
-- [ ] Remove sentinel lifecycle logic from listeners.
-- [ ] Remove `-1` sentinel control flow from runtime decisions.
-- [ ] Strict-parse URL retry params (`-1` no longer needed as control signal).
+- [x] Keep URL as serialization layer only.
+- [x] Remove sentinel lifecycle logic from listeners.
+- [x] Remove `-1` sentinel control flow from runtime decisions.
+- [x] Strict-parse URL retry params (`-1` no longer needed as control signal).
 
 ### Task 3: Refactor event listeners to pure classification
 - [ ] Replace direct `attemptReload` calls with orchestrator trigger calls.

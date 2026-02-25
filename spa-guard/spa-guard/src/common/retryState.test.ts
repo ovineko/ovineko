@@ -88,13 +88,9 @@ describe("getRetryStateFromUrl", () => {
     });
   });
 
-  it("parses fallback state (retryAttempt=-1) correctly", () => {
+  it("returns null when retryAttempt is -1 (negative values no longer valid)", () => {
     setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=my-id&${RETRY_ATTEMPT_PARAM}=-1`);
-    const state = getRetryStateFromUrl();
-    expect(state).toEqual({
-      retryAttempt: -1,
-      retryId: "my-id",
-    });
+    expect(getRetryStateFromUrl()).toBeNull();
   });
 
   it("returns null when retryAttempt is NaN", () => {
@@ -104,7 +100,7 @@ describe("getRetryStateFromUrl", () => {
     expect(getRetryStateFromUrl()).toBeNull();
   });
 
-  it("returns null when retryAttempt is below -1 (invalid manipulation)", () => {
+  it("returns null when retryAttempt is negative (invalid)", () => {
     setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=abc123&${RETRY_ATTEMPT_PARAM}=-2`);
     expect(getRetryStateFromUrl()).toBeNull();
   });
@@ -165,13 +161,6 @@ describe("updateRetryStateInUrl", () => {
     expect(mockHistoryReplaceState).toHaveBeenCalledOnce();
     const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
     expect(calledUrl.searchParams.get(RETRY_ATTEMPT_PARAM)).toBe("0");
-  });
-
-  it("stores fallback state (retryAttempt=-1)", () => {
-    updateRetryStateInUrl("my-id", -1);
-    expect(mockHistoryReplaceState).toHaveBeenCalledOnce();
-    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
-    expect(calledUrl.searchParams.get(RETRY_ATTEMPT_PARAM)).toBe("-1");
   });
 
   it("preserves existing URL params", () => {
@@ -285,8 +274,8 @@ describe("getRetryAttemptFromUrl", () => {
     expect(getRetryAttemptFromUrl()).toBeNull();
   });
 
-  it("returns null when retryAttempt is below -1 (invalid manipulation)", () => {
-    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=-2`);
+  it("returns null when retryAttempt is negative (invalid)", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=-1`);
     expect(getRetryAttemptFromUrl()).toBeNull();
   });
 

@@ -15,10 +15,7 @@ vi.mock("../reload", () => ({
 }));
 
 vi.mock("../retryState", () => ({
-  clearRetryStateFromUrl: vi.fn(),
   getRetryInfoForBeacon: vi.fn(),
-  getRetryStateFromUrl: vi.fn(),
-  updateRetryStateInUrl: vi.fn(),
 }));
 
 vi.mock("../sendBeacon", () => ({
@@ -53,12 +50,7 @@ import { isChunkError } from "../isChunkError";
 import { getAssetUrl, isLikely404, isStaticAssetError } from "../isStaticAssetError";
 import { getOptions } from "../options";
 import { attemptReload } from "../reload";
-import {
-  clearRetryStateFromUrl,
-  getRetryInfoForBeacon,
-  getRetryStateFromUrl,
-  updateRetryStateInUrl,
-} from "../retryState";
+import { getRetryInfoForBeacon } from "../retryState";
 import { sendBeacon } from "../sendBeacon";
 import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
 import { handleStaticAssetFailure } from "../staticAssetRecovery";
@@ -75,9 +67,6 @@ const mockGetAssetUrl = vi.mocked(getAssetUrl);
 const mockGetOptions = vi.mocked(getOptions);
 const mockAttemptReload = vi.mocked(attemptReload);
 const mockGetRetryInfoForBeacon = vi.mocked(getRetryInfoForBeacon);
-const mockGetRetryStateFromUrl = vi.mocked(getRetryStateFromUrl);
-const mockUpdateRetryStateInUrl = vi.mocked(updateRetryStateInUrl);
-const mockClearRetryStateFromUrl = vi.mocked(clearRetryStateFromUrl);
 const mockSendBeacon = vi.mocked(sendBeacon);
 const mockShouldForceRetry = vi.mocked(shouldForceRetry);
 const mockShouldIgnoreMessages = vi.mocked(shouldIgnoreMessages);
@@ -149,7 +138,6 @@ describe("listenInternal", () => {
     mockLogger = createMockLogger();
     mockIsInitialized.mockReturnValue(false);
     mockGetOptions.mockReturnValue({ ...DEFAULT_OPTIONS });
-    mockGetRetryStateFromUrl.mockReturnValue(null);
     mockGetRetryInfoForBeacon.mockReturnValue({});
     mockIsChunkError.mockReturnValue(false);
     mockIsStaticAssetError.mockReturnValue(false);
@@ -172,157 +160,6 @@ describe("listenInternal", () => {
     it("calls getOptions on initialization", () => {
       captureListeners();
       expect(mockGetOptions).toHaveBeenCalled();
-    });
-
-    it("calls getRetryStateFromUrl on initialization", () => {
-      captureListeners();
-      expect(mockGetRetryStateFromUrl).toHaveBeenCalled();
-    });
-
-    it("calls updateRetryStateInUrl with retryId and -1 when retryAttempt >= reloadDelays.length", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "test-id" });
-      captureListeners();
-      expect(mockUpdateRetryStateInUrl).toHaveBeenCalledWith("test-id", -1);
-    });
-
-    it("calls updateRetryStateInUrl when retryAttempt strictly equals reloadDelays.length", () => {
-      // reloadDelays.length = 3, retryAttempt = 3 → 3 >= 3 → true
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "exact-match-id" });
-      captureListeners();
-      expect(mockUpdateRetryStateInUrl).toHaveBeenCalledWith("exact-match-id", -1);
-    });
-
-    it("does not call updateRetryStateInUrl when retryAttempt < reloadDelays.length", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 1, retryId: "test-id" });
-      captureListeners();
-      expect(mockUpdateRetryStateInUrl).not.toHaveBeenCalled();
-    });
-
-    it("does not call updateRetryStateInUrl when retryAttempt is last valid attempt (length - 1)", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 2, retryId: "test-id" });
-      captureListeners();
-      expect(mockUpdateRetryStateInUrl).not.toHaveBeenCalled();
-    });
-
-    it("does not call updateRetryStateInUrl when retryState is null", () => {
-      mockGetRetryStateFromUrl.mockReturnValue(null);
-      captureListeners();
-      expect(mockUpdateRetryStateInUrl).not.toHaveBeenCalled();
-    });
-
-    it("clears -1 retry state from URL when page loads without a chunk error", () => {
-      // First call in listenInternal init: exhausted state → marks URL as -1
-      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: 3, retryId: "test-id" });
-      // Second call inside the load event handler: state is still -1 (no chunk error cleared it)
-      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "test-id" });
-
-      listenInternal(vi.fn());
-
-      // Simulate the page loading successfully without any chunk error
-      globalThis.dispatchEvent(new Event("load"));
-
-      expect(mockClearRetryStateFromUrl).toHaveBeenCalled();
-    });
-
-    it("does not clear retry state on load when it was already cleared by a chunk error", () => {
-      // First call in listenInternal init: exhausted state
-      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: 3, retryId: "test-id" });
-      // Second call inside the load event handler: state was already cleared (null)
-      mockGetRetryStateFromUrl.mockReturnValueOnce(null);
-
-      listenInternal(vi.fn());
-
-      globalThis.dispatchEvent(new Event("load"));
-
-      expect(mockClearRetryStateFromUrl).not.toHaveBeenCalled();
-    });
-
-    it("does not register a load listener when retry state is not exhausted", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 1, retryId: "test-id" });
-
-      listenInternal(vi.fn());
-
-      globalThis.dispatchEvent(new Event("load"));
-
-      // clearRetryStateFromUrl should NOT be called since no load listener was registered
-      expect(mockClearRetryStateFromUrl).not.toHaveBeenCalled();
-    });
-
-    it("clears stale -1 retry state from URL when page loads without a chunk error", () => {
-      // URL already has -1 from a previous session where cleanup did not run
-      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
-      // Second call inside the load event handler: state is still -1
-      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
-
-      listenInternal(vi.fn());
-
-      // Simulate the page loading successfully without any chunk error
-      globalThis.dispatchEvent(new Event("load"));
-
-      expect(mockClearRetryStateFromUrl).toHaveBeenCalled();
-    });
-
-    it("does not call updateRetryStateInUrl when retryAttempt is already -1", () => {
-      // stale -1 should not be re-written; only the cleanup listener is installed
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "stale-id" });
-      captureListeners();
-      expect(mockUpdateRetryStateInUrl).not.toHaveBeenCalled();
-    });
-
-    it("immediately clears stale -1 sentinel without load listener when document is already complete", () => {
-      // happy-dom defaults to readyState 'complete', so cleanup should run immediately
-      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
-      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
-
-      const spy = vi.spyOn(globalThis, "addEventListener");
-      listenInternal(vi.fn());
-
-      // Should have cleared immediately (no load event needed)
-      expect(mockClearRetryStateFromUrl).toHaveBeenCalled();
-      // Should NOT have registered a load listener
-      const loadListenerCalls = spy.mock.calls.filter(([type]) => type === "load");
-      spy.mockRestore();
-      expect(loadListenerCalls).toHaveLength(0);
-    });
-
-    it("registers load listener for sentinel cleanup when document is not yet loaded", () => {
-      Object.defineProperty(document, "readyState", {
-        configurable: true,
-        value: "loading",
-      });
-
-      try {
-        mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
-        mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
-
-        listenInternal(vi.fn());
-
-        // Should NOT have cleared immediately (page not yet loaded)
-        expect(mockClearRetryStateFromUrl).not.toHaveBeenCalled();
-
-        // Simulate the load event firing after initialization
-        globalThis.dispatchEvent(new Event("load"));
-
-        expect(mockClearRetryStateFromUrl).toHaveBeenCalled();
-      } finally {
-        Object.defineProperty(document, "readyState", {
-          configurable: true,
-          value: "complete",
-        });
-      }
-    });
-
-    it("does not clear stale -1 on load when chunk error cleared it first", () => {
-      // URL already has -1 from a previous session
-      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
-      // A chunk error fired and cleared the state before load event
-      mockGetRetryStateFromUrl.mockReturnValueOnce(null);
-
-      listenInternal(vi.fn());
-
-      globalThis.dispatchEvent(new Event("load"));
-
-      expect(mockClearRetryStateFromUrl).not.toHaveBeenCalled();
     });
 
     it("registers exactly 4 event listeners", () => {
@@ -380,18 +217,6 @@ describe("listenInternal", () => {
       const fakeLogger = { capturedError: vi.fn() } as any;
       listenInternal(vi.fn(), fakeLogger);
       expect(mockSetLogger).not.toHaveBeenCalled();
-    });
-
-    it("calls logger.retryLimitExceeded when retry limit is exceeded", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "test-id" });
-      captureListeners();
-      expect(mockLogger.retryLimitExceeded).toHaveBeenCalledWith(3, 3);
-    });
-
-    it("does not call logger.retryLimitExceeded when retryAttempt < reloadDelays.length", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 1, retryId: "test-id" });
-      captureListeners();
-      expect(mockLogger.retryLimitExceeded).not.toHaveBeenCalled();
     });
   });
 
@@ -1428,7 +1253,6 @@ describe("listenInternal", () => {
         ...DEFAULT_OPTIONS,
         handleUnhandledRejections: { retry: false, sendBeacon: true },
       });
-      mockGetRetryStateFromUrl.mockReturnValue(null);
       mockGetRetryInfoForBeacon.mockReturnValue({});
       mockGetLogger.mockReturnValue(mockLogger);
       mockShouldIgnoreMessages.mockReturnValue(false);

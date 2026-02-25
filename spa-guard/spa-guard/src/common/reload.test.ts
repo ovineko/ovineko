@@ -564,63 +564,6 @@ describe("attemptReload", () => {
     });
   });
 
-  describe("fallback already shown (attempt=-1)", () => {
-    it("calls showFallbackUI (injects HTML) and returns when attempt=-1", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "", querySelector: () => null };
-      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
-
-      const error = new Error("chunk error");
-
-      attemptReload(error);
-
-      expect(mockEl.innerHTML).toBe("<div>Fallback UI</div>");
-    });
-
-    it("emits chunk-error with isRetrying=false when attempt=-1", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "", querySelector: () => null };
-      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
-
-      const error = new Error("chunk error");
-
-      attemptReload(error);
-
-      expect(mockEmitEvent).toHaveBeenCalledWith(
-        expect.objectContaining({ isRetrying: false, name: "chunk-error" }),
-      );
-    });
-
-    it("does not emit retry-attempt or retry-exhausted when attempt=-1", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "", querySelector: () => null };
-      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
-
-      const error = new Error("chunk error");
-
-      attemptReload(error);
-
-      const eventNames = mockEmitEvent.mock.calls.map((call) => call[0]?.name);
-      expect(eventNames).not.toContain("retry-attempt");
-      expect(eventNames).not.toContain("retry-exhausted");
-    });
-
-    it("does not navigate when attempt=-1", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "", querySelector: () => null };
-      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
-
-      const error = new Error("chunk error");
-
-      attemptReload(error);
-
-      vi.advanceTimersByTime(10_000);
-
-      expect(mockLocationReload).not.toHaveBeenCalled();
-      expect(mockLocationHref).toBe("http://localhost/");
-    });
-  });
-
   describe("retry reset logic", () => {
     it("resets attempt to 0 and generates new retryId when shouldResetRetryCycle returns true", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 2, retryId: "old-id" });
@@ -845,22 +788,6 @@ describe("attemptReload", () => {
 
       expect(mockUpdateRetryStateInUrl).not.toHaveBeenCalled();
     });
-
-    it("clears retry state from URL when fallback is shown with attempt=-1 state", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "", querySelector: () => null };
-      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
-      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
-        [] as unknown as HTMLCollectionOf<Element>,
-      );
-
-      const error = new Error("chunk error");
-
-      attemptReload(error);
-
-      expect(mockClearRetryStateFromUrl).toHaveBeenCalledTimes(1);
-      expect(mockUpdateRetryStateInUrl).not.toHaveBeenCalled();
-    });
   });
 
   describe("event emissions", () => {
@@ -1081,35 +1008,6 @@ describe("attemptReload", () => {
   });
 
   describe("Logger method calls", () => {
-    it("calls fallbackAlreadyShown when attempt is -1 and not ignored", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "", querySelector: () => null };
-      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
-      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
-        [] as unknown as HTMLCollectionOf<Element>,
-      );
-
-      const error = new Error("chunk error");
-
-      attemptReload(error);
-
-      expect(mockLogger.fallbackAlreadyShown).toHaveBeenCalledWith(error);
-    });
-
-    it("does not call fallbackAlreadyShown when error is ignored", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      mockShouldIgnoreMessages.mockReturnValue(true);
-      const mockEl = { innerHTML: "", querySelector: () => null };
-      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
-      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
-        [] as unknown as HTMLCollectionOf<Element>,
-      );
-
-      attemptReload(new Error("ignored"));
-
-      expect(mockLogger.fallbackAlreadyShown).not.toHaveBeenCalled();
-    });
-
     it("calls noFallbackConfigured when no fallback HTML is set", () => {
       mockGetOptions.mockReturnValue({
         ...defaultOptions,
@@ -1129,19 +1027,6 @@ describe("attemptReload", () => {
       attemptReload(new Error("chunk error"));
 
       expect(mockLogger.fallbackTargetNotFound).toHaveBeenCalledWith("body");
-    });
-
-    it("calls clearingRetryState when showing fallback with attempt=-1", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "", querySelector: () => null };
-      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
-      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
-        [] as unknown as HTMLCollectionOf<Element>,
-      );
-
-      attemptReload(new Error("chunk error"));
-
-      expect(mockLogger.clearingRetryState).toHaveBeenCalledTimes(1);
     });
 
     it("does not call updatedRetryAttempt when showing fallback with exhausted retries", () => {
@@ -1171,7 +1056,7 @@ describe("attemptReload", () => {
 
     it("does not call Logger methods when no logger is set", () => {
       mockGetLogger.mockReturnValue();
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
       const mockEl = { innerHTML: "", querySelector: () => null };
       vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
       vi.spyOn(document, "getElementsByClassName").mockReturnValue(
@@ -1236,26 +1121,6 @@ describe("attemptReload", () => {
       attemptReload(error2);
       // Should emit 2 more events (chunk-error + retry-attempt)
       expect(mockEmitEvent).toHaveBeenCalledTimes(4);
-    });
-
-    it("does not set reloadScheduled flag when fallback is shown (attempt=-1)", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "", querySelector: () => null };
-      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
-      vi.spyOn(document, "getElementsByClassName").mockReturnValue(
-        [] as unknown as HTMLCollectionOf<Element>,
-      );
-
-      attemptReload(new Error("first error"));
-
-      // Should still allow subsequent calls since no reload was scheduled
-      mockEmitEvent.mockClear();
-      mockGetRetryStateFromUrl.mockReturnValue(null);
-
-      attemptReload(new Error("second error"));
-
-      // Should emit events for the second call
-      expect(mockEmitEvent).toHaveBeenCalled();
     });
 
     it("prevents re-entrant calls when a subscriber calls attemptReload during chunk-error emission", () => {
@@ -1349,16 +1214,6 @@ describe("attemptReload", () => {
       attemptReload(error);
 
       expect(mockLogger.fallbackAlreadyShown).toHaveBeenCalledWith(error);
-    });
-
-    it("calls setFallbackMode when currentAttempt=-1 (fallback already shown path)", () => {
-      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
-      const mockEl = { innerHTML: "", querySelector: () => null };
-      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
-
-      attemptReload(new Error("chunk error"));
-
-      expect(mockSetFallbackMode).toHaveBeenCalled();
     });
 
     it("calls setFallbackMode when retries are exhausted", () => {

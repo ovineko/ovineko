@@ -13,7 +13,7 @@ export const getRetryStateFromUrl = (): null | RetryState => {
 
     if (retryId && retryAttempt) {
       const parsed = parseInt(retryAttempt, 10);
-      if (Number.isNaN(parsed) || parsed < -1) {
+      if (Number.isNaN(parsed) || parsed < 0) {
         return null;
       }
       return {
@@ -68,7 +68,7 @@ export const getRetryAttemptFromUrl = (): null | number => {
 
     if (retryAttempt) {
       const parsed = parseInt(retryAttempt, 10);
-      if (Number.isNaN(parsed) || parsed < -1) {
+      if (Number.isNaN(parsed) || parsed < 0) {
         return null;
       }
       return parsed;

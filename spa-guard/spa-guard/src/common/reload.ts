@@ -139,16 +139,6 @@ export const attemptReload = (error: unknown, opts?: { cacheBust?: boolean }): v
       retryId = generateRetryId();
     }
 
-    if (currentAttempt === -1) {
-      const errorMsg = String(error);
-      if (!shouldIgnoreMessages([errorMsg])) {
-        getLogger()?.fallbackAlreadyShown(error);
-      }
-      reloadState.scheduled = false;
-      showFallbackUI();
-      return;
-    }
-
     if (currentAttempt >= reloadDelays.length) {
       const errorMsg = String(error);
 
@@ -306,10 +296,7 @@ export const showFallbackUI = (): void => {
 
     const useRetryId = options.useRetryId ?? true;
     const retryState = getRetryStateFromUrl();
-    if (retryState && retryState.retryAttempt === -1) {
-      getLogger()?.clearingRetryState();
-      clearRetryStateFromUrl();
-    } else if (!useRetryId && !retryState) {
+    if (!useRetryId && !retryState) {
       clearRetryAttemptFromUrl();
     }
 
