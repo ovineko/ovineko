@@ -4,22 +4,16 @@ vi.mock("./options", () => ({
   getOptions: vi.fn(),
 }));
 
-vi.mock("./reload", () => ({
-  attemptReload: vi.fn(),
+vi.mock("./retryOrchestrator", () => ({
+  triggerRetry: vi.fn(),
 }));
 
-vi.mock("./fallbackState", () => ({
-  isInFallbackMode: vi.fn(),
-}));
-
-import { isInFallbackMode } from "./fallbackState";
 import { getOptions } from "./options";
-import { attemptReload } from "./reload";
+import { triggerRetry } from "./retryOrchestrator";
 import { handleStaticAssetFailure, resetStaticAssetRecovery } from "./staticAssetRecovery";
 
 const mockGetOptions = vi.mocked(getOptions);
-const mockAttemptReload = vi.mocked(attemptReload);
-const mockIsInFallbackMode = vi.mocked(isInFallbackMode);
+const mockTriggerRetry = vi.mocked(triggerRetry);
 
 describe("staticAssetRecovery", () => {
   beforeEach(() => {
@@ -30,7 +24,7 @@ describe("staticAssetRecovery", () => {
         recoveryDelay: 500,
       },
     });
-    mockIsInFallbackMode.mockReturnValue(false);
+    mockTriggerRetry.mockReturnValue({ status: "accepted" });
     resetStaticAssetRecovery();
   });
 
@@ -41,31 +35,33 @@ describe("staticAssetRecovery", () => {
   });
 
   describe("handleStaticAssetFailure", () => {
-    it("does not call attemptReload immediately", () => {
+    it("does not call triggerRetry immediately", () => {
       handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
     });
 
-    it("calls attemptReload with cacheBust after delay for single failure", () => {
+    it("calls triggerRetry with cacheBust and source after delay for single failure", () => {
       handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
       vi.advanceTimersByTime(500);
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
-      expect(mockAttemptReload).toHaveBeenCalledWith(expect.any(Error), { cacheBust: true });
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ cacheBust: true, source: "static-asset-error" }),
+      );
     });
 
     it("error message includes the failed asset URL", () => {
       const url = "https://example.com/assets/index-Bd0Ef7jk.js";
       handleStaticAssetFailure(url);
       vi.advanceTimersByTime(500);
-      const errorArg = mockAttemptReload.mock.calls[0]![0] as Error;
-      expect(errorArg.message).toContain(url);
+      const call = mockTriggerRetry.mock.calls[0]![0];
+      expect((call.error as Error).message).toContain(url);
     });
 
     it("collects multiple failures within delay and triggers a single reload", () => {
       handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
       handleStaticAssetFailure("https://example.com/assets/vendor-abc12345.css");
       vi.advanceTimersByTime(500);
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
     });
 
     it("does not schedule duplicate timers for concurrent failures", () => {
@@ -73,7 +69,7 @@ describe("staticAssetRecovery", () => {
       handleStaticAssetFailure("https://example.com/assets/chunk2-def67890.js");
       handleStaticAssetFailure("https://example.com/assets/chunk3-ghi12345.css");
       vi.advanceTimersByTime(500);
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
     });
 
     it("uses recoveryDelay from options", () => {
@@ -82,63 +78,48 @@ describe("staticAssetRecovery", () => {
       });
       handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
       vi.advanceTimersByTime(999);
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
     });
 
     it("uses default 500ms delay when staticAssets config is absent", () => {
       mockGetOptions.mockReturnValue({});
       handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
       vi.advanceTimersByTime(499);
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
     });
 
     it("allows a new reload after the previous timer fires and resets state", () => {
       handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
       vi.advanceTimersByTime(500);
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
 
       // Trigger another failure after the first cycle completes
       handleStaticAssetFailure("https://example.com/assets/vendor-abc12345.js");
       vi.advanceTimersByTime(500);
-      expect(mockAttemptReload).toHaveBeenCalledTimes(2);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(2);
     });
 
-    it("does not call attemptReload when in fallback mode at entry", () => {
-      mockIsInFallbackMode.mockReturnValue(true);
+    it("delegates fallback mode handling to orchestrator", () => {
+      // triggerRetry returns fallback status — no error thrown, caller is not responsible
+      mockTriggerRetry.mockReturnValue({ status: "fallback" });
       handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
       vi.advanceTimersByTime(500);
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledWith(
+        expect.objectContaining({ source: "static-asset-error" }),
+      );
     });
 
-    it("does not call attemptReload when fallback mode is set after timer is registered", () => {
-      mockIsInFallbackMode.mockReturnValue(false);
+    it("delegates storm dedupe to orchestrator", () => {
+      // triggerRetry returns deduped status — no error thrown, burst handled by orchestrator
+      mockTriggerRetry.mockReturnValue({ reason: "already-scheduled", status: "deduped" });
       handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
-      // Fallback mode activates during the delay window
-      mockIsInFallbackMode.mockReturnValue(true);
       vi.advanceTimersByTime(500);
-      expect(mockAttemptReload).not.toHaveBeenCalled();
-    });
-
-    it("allows a new recovery timer after fallback mode fires mid-flight then is reset", () => {
-      mockIsInFallbackMode.mockReturnValue(false);
-      handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
-      // Fallback mode activates before the timer fires
-      mockIsInFallbackMode.mockReturnValue(true);
-      vi.advanceTimersByTime(500);
-      expect(mockAttemptReload).not.toHaveBeenCalled();
-
-      // Consumer resets fallback mode — recovery should work again
-      mockIsInFallbackMode.mockReturnValue(false);
-      handleStaticAssetFailure("https://example.com/assets/vendor-abc12345.js");
-      vi.advanceTimersByTime(500);
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
-      const errorArg = mockAttemptReload.mock.calls[0]![0] as Error;
-      expect(errorArg.message).toContain("vendor-abc12345.js");
-      expect(errorArg.message).not.toContain("index-Bd0Ef7jk.js");
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
     });
 
     it("is a no-op when window is undefined (SSR)", () => {
@@ -153,7 +134,7 @@ describe("staticAssetRecovery", () => {
           handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js"),
         ).not.toThrow();
         vi.advanceTimersByTime(500);
-        expect(mockAttemptReload).not.toHaveBeenCalled();
+        expect(mockTriggerRetry).not.toHaveBeenCalled();
       } finally {
         Object.defineProperty(globalThis, "window", {
           configurable: true,
@@ -165,11 +146,11 @@ describe("staticAssetRecovery", () => {
   });
 
   describe("resetStaticAssetRecovery", () => {
-    it("cancels a pending timer so attemptReload is never called", () => {
+    it("cancels a pending timer so triggerRetry is never called", () => {
       handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
       resetStaticAssetRecovery();
       vi.advanceTimersByTime(500);
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
     });
 
     it("is safe to call when no timer is pending", () => {
@@ -182,7 +163,7 @@ describe("staticAssetRecovery", () => {
       // New failure after reset should work normally
       handleStaticAssetFailure("https://example.com/assets/vendor-abc12345.js");
       vi.advanceTimersByTime(500);
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
     });
   });
 });

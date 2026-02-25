@@ -1,7 +1,6 @@
 import { staticAssetRecoveryKey } from "./constants";
-import { isInFallbackMode } from "./fallbackState";
 import { getOptions } from "./options";
-import { attemptReload } from "./reload";
+import { triggerRetry } from "./retryOrchestrator";
 
 interface StaticAssetRecoveryState {
   failedAssets: Set<string>;
@@ -25,9 +24,6 @@ export const handleStaticAssetFailure = (url: string): void => {
   if (globalThis.window === undefined) {
     return;
   }
-  if (isInFallbackMode()) {
-    return;
-  }
 
   const state = getState();
   state.failedAssets.add(url);
@@ -44,12 +40,9 @@ export const handleStaticAssetFailure = (url: string): void => {
     s.recoveryTimer = null;
     const assets = [...s.failedAssets];
     s.failedAssets = new Set();
-    if (isInFallbackMode()) {
-      return;
-    }
 
     const error = new Error(`Static asset load failed: ${assets.join(", ")}`);
-    attemptReload(error, { cacheBust: true });
+    triggerRetry({ cacheBust: true, error, source: "static-asset-error" });
   }, delay);
 };
 

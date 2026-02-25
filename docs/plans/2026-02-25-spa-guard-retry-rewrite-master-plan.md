@@ -87,9 +87,9 @@ No sentinel semantics in core state.
 - [x] Keep beacon behavior explicit and independent from scheduling internals.
 
 ### Task 4: Refactor static asset recovery integration
-- [ ] `staticAssetRecovery` triggers orchestrator with `source=static-asset-error`.
-- [ ] Preserve burst coalescing and cache-bust behavior via orchestrator input.
-- [ ] Ensure storms do not schedule multiple retries.
+- [x] `staticAssetRecovery` triggers orchestrator with `source=static-asset-error`.
+- [x] Preserve burst coalescing and cache-bust behavior via orchestrator input.
+- [x] Ensure storms do not schedule multiple retries.
 
 ### Task 5: Refactor fallback rendering contract
 - [ ] Remove lifecycle mutations from rendering helpers.
