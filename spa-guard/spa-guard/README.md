@@ -22,6 +22,36 @@ const cleanup = recommendedSetup();
 // optionally call cleanup() to stop background checks
 ```
 
+`recommendedSetup` is idempotent. Repeated calls return the same cleanup function and do not re-run setup side effects.
+
+By default, `recommendedSetup` uses `healthyBoot: "auto"`:
+
+- if retry params exist in the URL, it waits a dynamic grace period and calls `markRetryHealthyBoot()` only when the orchestrator phase is still `idle`.
+- if no retry params exist, it does nothing.
+
+Auto grace period formula:
+
+- `max(5000, max(reloadDelays)+1000, sum(lazyRetry.retryDelays)+1000)`
+
+If you want strict control, switch to manual healthy-boot mode and call `markRetryHealthyBoot()` yourself.
+
+```ts
+import { markRetryHealthyBoot } from "@ovineko/spa-guard";
+import { recommendedSetup } from "@ovineko/spa-guard/runtime";
+
+recommendedSetup();
+
+await Promise.all([import("./routes/Home"), import("./routes/Checkout")]);
+
+markRetryHealthyBoot();
+```
+
+Disable auto healthy boot:
+
+```ts
+recommendedSetup({ healthyBoot: "manual" });
+```
+
 Disable version checking:
 
 ```ts
@@ -72,7 +102,23 @@ If enough time has passed since the last reload (configurable via `minTimeBetwee
 
 ### Healthy boot
 
-After a successful app boot following a retry reload, call `markRetryHealthyBoot()`. This clears retry URL params, cancels any pending timer, and resets orchestrator state.
+After a successful app boot following a retry reload, `markRetryHealthyBoot()` clears retry URL params, cancels any pending timer, and resets orchestrator state.
+
+Default behavior in `recommendedSetup`: auto healthy-boot after a grace period (`healthyBoot: "auto"`).
+Manual override: set `healthyBoot: "manual"` and call `markRetryHealthyBoot()` yourself once critical boot is confirmed.
+
+### Avoid false retry loops from app errors
+
+By default, regular `unhandledrejection` events also trigger `triggerRetry()` (`handleUnhandledRejections.retry: true`). If your app has non-chunk unhandled rejections, this can look like retry looping even though chunks are healthy. In that case, disable reload-on-unhandled-rejection:
+
+```ts
+window.__SPA_GUARD_OPTIONS__ = {
+  handleUnhandledRejections: {
+    retry: false,
+    sendBeacon: true,
+  },
+};
+```
 
 ### Static asset burst coalescing
 
@@ -108,8 +154,9 @@ Only `retryOrchestrator.ts` may schedule reloads, advance retry state, or transi
 
 ### `@ovineko/spa-guard/runtime`
 
-- `recommendedSetup(options?)` — enable recommended runtime features; returns cleanup function
-- `RecommendedSetupOptions` — `{ versionCheck?: boolean }`
+- `recommendedSetup(options?)` — enable recommended runtime features; idempotent and returns cleanup function
+- `RecommendedSetupOptions` — `{ versionCheck?: boolean; healthyBoot?: "auto" | "manual" | "off" | false | { mode?: "auto"; graceMs?: number } }`
+  - `healthyBoot.graceMs` acts as a lower bound override for auto mode (`max(computedGraceMs, graceMs)`)
 - `startVersionCheck` / `stopVersionCheck` — manual version check control
 - `getState` / `subscribeToState` — runtime state access
 - `SpaGuardState` — state type

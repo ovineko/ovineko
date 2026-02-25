@@ -398,6 +398,7 @@ Key architecture notes:
 - Configuration flows from `spaGuardVitePlugin()` → injected as `window.__SPA_GUARD_OPTIONS__` at build time; all runtime code reads options exclusively from this global via `getOptions()`
 - Two-level retry strategy: `lazyWithRetry` (in spa-guard-react) retries the individual module import first (`lazyRetry.retryDelays`), then falls back to full page reload via `triggerRetry()` in `retryOrchestrator.ts` (`reloadDelays`)
 - **Retry orchestrator — single retry owner** (`src/common/retryOrchestrator.ts`): All reload scheduling, deduplication, and fallback transitions go through `triggerRetry(input)`. The orchestrator owns an explicit state machine stored on `window[Symbol.for(...)]` with three phases — `idle | scheduled | fallback` — and fields `attempt`, `retryId`, and `timer`. Once phase is `scheduled`, concurrent calls are deduplicated (first trigger wins). Once phase is `fallback`, all further triggers return immediately without scheduling a reload. The public API is: `triggerRetry(input): TriggerResult`, `markRetryHealthyBoot(): void`, `getRetrySnapshot(): RetrySnapshot`, `resetRetryOrchestratorForTests(): void`. The retry ownership rule: **only the orchestrator may advance retry state, schedule reloads, or transition to fallback — no other module may do this directly**.
+- **`recommendedSetup()` is idempotent with auto healthy-boot** (`src/runtime/recommendedSetup.ts`): repeated calls return the same cleanup and do not duplicate side effects. Default `healthyBoot: "auto"` schedules `markRetryHealthyBoot()` only when retry params are present and orchestrator remains `idle` through a dynamic grace window: `max(5000, max(reloadDelays)+1000, sum(lazyRetry.retryDelays)+1000)`. Use `healthyBoot: "manual"` or `"off"` to disable auto behavior.
 - **Fallback mode guard**: `isInFallbackMode()` / `setFallbackMode()` / `resetFallbackMode()` in `src/common/fallbackState.ts` use the window-singleton pattern (`fallbackModeKey` from `constants.ts`) to share a one-way boolean latch across all module instances. `setFallbackMode()` is called exclusively by `retryOrchestrator.ts` as part of the fallback transition — no other module sets it. Once fallback UI is shown, subsequent calls to `triggerRetry()` check `isInFallbackMode()` and return `{ status: "fallback" }` immediately, preventing an infinite reload loop from 404'd static assets. `isInFallbackMode` and `resetFallbackMode` are exported from the public `common` index.
 - `src/common/retryImport.ts` (in core) is framework-agnostic retry logic; `src/react/lazyWithRetry.tsx` (in spa-guard-react) wraps it for `React.lazy` compatibility
 - **Listener responsibilities are classification-only** (`src/common/listen/internal.ts`): Event handlers classify browser events (chunk error, unhandled rejection, vite:preloadError, static asset failure, CSP violation) and call `triggerRetry()` or `handleStaticAssetFailure()`. They do not schedule retries, manage timers, or own lifecycle state.
@@ -502,6 +503,14 @@ The orchestrator transitions phase to `scheduled` before any async work. If an e
 ### URL retry params are stripped by markRetryHealthyBoot
 
 After a successful boot following a retry reload, call `markRetryHealthyBoot()`. This clears the `RETRY_ATTEMPT_PARAM`, `RETRY_ID_PARAM`, and `CACHE_BUST_PARAM` from the URL, resets orchestrator state, and clears `lastReloadTime`. Failing to call it leaves stale params in the URL.
+
+### markRetryHealthyBoot timing can cause retry loops
+
+Do not call `markRetryHealthyBoot()` during early app startup (for example immediately in runtime setup) before critical lazy chunks/routes load. If a chunk error occurs after that premature call, retry params are cleared and the next cycle restarts from attempt 0, which can prevent transition to fallback.
+
+### Non-chunk unhandledrejection can look like retry loops
+
+`handleUnhandledRejections.retry` defaults to `true`. This means regular app-level unhandled promise rejections (not only chunk errors) can trigger reload attempts. If a project has known non-chunk rejections, set `handleUnhandledRejections.retry = false` to avoid reload-loop-like behavior.
 
 <!-- Add corrections here as you encounter issues -->
 
