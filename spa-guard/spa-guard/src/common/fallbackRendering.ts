@@ -4,6 +4,64 @@ import { getOptions } from "./options";
 import { getRetryStateFromUrl } from "./retryState";
 
 /**
+ * Renders the loading UI into the DOM during a retry delay before reload.
+ *
+ * Fail-safe: if loading content is not configured or the target element is not
+ * found, returns silently with no log, no event, and no side effects.
+ * All DOM access is wrapped in try/catch.
+ */
+export const showLoadingUI = (attempt: number): void => {
+  const options = getOptions();
+  const loadingHtml = options.html?.loading?.content;
+
+  if (!loadingHtml) {
+    return;
+  }
+
+  const selector = options.html?.fallback?.selector ?? "body";
+
+  try {
+    const targetElement = document.querySelector(selector);
+    if (!targetElement) {
+      return;
+    }
+
+    const container = document.createElement("div");
+    container.innerHTML = loadingHtml;
+
+    const t = getI18n();
+    if (t) {
+      applyI18n(container, t);
+    }
+
+    targetElement.innerHTML = container.innerHTML;
+
+    const retrySection = targetElement.querySelector('[data-spa-guard-section="retrying"]');
+    if (retrySection) {
+      (retrySection as HTMLElement).style.display = "";
+      (retrySection as HTMLElement).style.visibility = "visible";
+    }
+
+    const attemptElements = targetElement.querySelectorAll('[data-spa-guard-content="attempt"]');
+    for (const el of attemptElements) {
+      el.textContent = String(attempt);
+    }
+
+    const spinnerEl = targetElement.querySelector("[data-spa-guard-spinner]");
+    if (spinnerEl) {
+      const spinnerOptions = options.html?.spinner;
+      if (spinnerOptions?.disabled) {
+        (spinnerEl as HTMLElement).style.display = "none";
+      } else if (spinnerOptions?.content) {
+        spinnerEl.innerHTML = spinnerOptions.content;
+      }
+    }
+  } catch {
+    // fail-safe: swallow DOM errors silently
+  }
+};
+
+/**
  * Renders the fallback UI into the DOM.
  *
  * This is a pure rendering helper. It has no lifecycle side effects:
