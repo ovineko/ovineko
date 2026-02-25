@@ -123,6 +123,21 @@ describe("staticAssetRecovery", () => {
       expect(mockAttemptReload).not.toHaveBeenCalled();
     });
 
+    it("allows a new recovery timer after fallback mode fires mid-flight then is reset", () => {
+      mockIsInFallbackMode.mockReturnValue(false);
+      handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
+      // Fallback mode activates before the timer fires
+      mockIsInFallbackMode.mockReturnValue(true);
+      vi.advanceTimersByTime(500);
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+
+      // Consumer resets fallback mode — recovery should work again
+      mockIsInFallbackMode.mockReturnValue(false);
+      handleStaticAssetFailure("https://example.com/assets/vendor-abc12345.js");
+      vi.advanceTimersByTime(500);
+      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+    });
+
     it("is a no-op when window is undefined (SSR)", () => {
       const originalWindow = globalThis.window;
       Object.defineProperty(globalThis, "window", {

@@ -40,13 +40,13 @@ export const handleStaticAssetFailure = (url: string): void => {
   const delay = options.staticAssets?.recoveryDelay ?? 500;
 
   state.recoveryTimer = setTimeout(() => {
+    const s = getState();
+    s.recoveryTimer = null;
     if (isInFallbackMode()) {
       return;
     }
-    const s = getState();
     const assets = [...s.failedAssets];
     s.failedAssets = new Set();
-    s.recoveryTimer = null;
 
     const error = new Error(`Static asset load failed: ${assets.join(", ")}`);
     attemptReload(error, { cacheBust: true });
