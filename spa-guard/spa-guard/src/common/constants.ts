@@ -23,3 +23,5 @@ export const inMemoryLastReloadKey = Symbol.for(`${name}:in-memory-last-reload`)
 export const staticAssetRecoveryKey = Symbol.for(`${name}:static-asset-recovery`);
 
 export const debugSyncErrorEventType = "spa-guard:debug-sync-error";
+
+export const spinnerStateWindowKey = Symbol.for(`${name}:spinner-state`);

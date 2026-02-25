@@ -1,3 +1,4 @@
+import { spinnerStateWindowKey } from "./constants";
 import { defaultSpinnerHtml } from "./html.generated";
 import { getOptions } from "./options";
 
@@ -5,7 +6,16 @@ export const SPINNER_ID = "__spa-guard-spinner";
 
 export const defaultSpinnerSvg = defaultSpinnerHtml;
 
-let savedOverflow: null | string = null;
+interface SpinnerState {
+  savedOverflow: null | string;
+}
+
+const getState = (): SpinnerState => {
+  if (!(globalThis.window as any)[spinnerStateWindowKey]) {
+    (globalThis.window as any)[spinnerStateWindowKey] = { savedOverflow: null } as SpinnerState;
+  }
+  return (globalThis.window as any)[spinnerStateWindowKey] as SpinnerState;
+};
 
 export function dismissSpinner(): void {
   if (typeof document === "undefined") {
@@ -15,9 +25,10 @@ export function dismissSpinner(): void {
   if (el) {
     el.remove();
   }
-  if (savedOverflow !== null) {
-    document.body.style.overflow = savedOverflow;
-    savedOverflow = null;
+  const state = getState();
+  if (state.savedOverflow !== null) {
+    document.body.style.overflow = state.savedOverflow;
+    state.savedOverflow = null;
   } else if (el) {
     // Only reset to "" if we actually removed a spinner element
     // (e.g. vite-injected spinner where showSpinner was never called)
@@ -67,7 +78,7 @@ export function showSpinner(options?: { background?: string }): () => void {
   const overlay = wrapper.firstElementChild as HTMLElement;
 
   if (!existing) {
-    savedOverflow = document.body.style.overflow;
+    getState().savedOverflow = document.body.style.overflow;
   }
   document.body.style.overflow = "hidden";
   document.body.append(overlay);

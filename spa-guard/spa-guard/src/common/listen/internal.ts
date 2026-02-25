@@ -67,6 +67,9 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
     (event) => {
       if (isStaticAssetError(event) && isLikely404()) {
         const assetUrl = getAssetUrl(event);
+        if (shouldIgnoreMessages([assetUrl, event.message])) {
+          return;
+        }
         event.preventDefault();
         emitEvent({ name: "static-asset-load-failed", url: assetUrl });
         if (options.staticAssets?.autoRecover !== false) {
