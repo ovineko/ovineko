@@ -89,10 +89,10 @@ When retry attempts are exhausted and the fallback UI is shown, subsequent stati
 
 ### Task 7: Verify acceptance criteria
 
-- [ ] Manual test: click "Retry Exhausted" button → fallback UI shown
-- [ ] Manual test: click "Static Asset 404" button → no infinite reload loop, no "Scheduling reload" spam in console
-- [ ] Run full test suite: `npm test` in `spa-guard/spa-guard/`
-- [ ] Run linter (check package.json for lint script)
+- [x] Manual test: click "Retry Exhausted" button → fallback UI shown
+- [x] Manual test: click "Static Asset 404" button → no infinite reload loop, no "Scheduling reload" spam in console
+- [x] Run full test suite: `npm test` in `spa-guard/spa-guard/`
+- [x] Run linter (check package.json for lint script)
 
 ### Task 8: Cleanup
 
