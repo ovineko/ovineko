@@ -50,10 +50,10 @@ When retry attempts are exhausted and the fallback UI is shown, subsequent stati
 **Files:**
 - Create: `spa-guard/spa-guard/src/common/fallbackState.test.ts`
 
-- [ ] Test `isInFallbackMode()` returns false by default
-- [ ] Test `setFallbackMode()` makes `isInFallbackMode()` return true
-- [ ] Test `resetFallbackMode()` makes `isInFallbackMode()` return false after set
-- [ ] Run `npm test` in spa-guard — must pass
+- [x] Test `isInFallbackMode()` returns false by default
+- [x] Test `setFallbackMode()` makes `isInFallbackMode()` return true
+- [x] Test `resetFallbackMode()` makes `isInFallbackMode()` return false after set
+- [x] Run `npm test` in spa-guard — must pass
 
 ### Task 4: Guard handleStaticAssetFailure with fallback mode check
 
