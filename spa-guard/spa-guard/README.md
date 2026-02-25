@@ -92,6 +92,8 @@ The orchestrator serializes state into URL params for cross-reload continuity:
 
 When `options.html.loading.content` is configured, `showLoadingUI(attempt)` is called before the reload timer fires. It injects the loading HTML into the target element (selector from `options.html.fallback.selector`, defaulting to `body`), reveals the `data-spa-guard-section="retrying"` element, fills attempt numbers into `[data-spa-guard-content="attempt"]` elements, applies i18n via `applyI18n`/`getI18n`, and optionally hides or replaces the spinner based on `options.html.spinner`. If loading content is not configured or the target element is not found, `showLoadingUI` returns silently — the retry still proceeds normally.
 
+Default fallback/loading templates are theme-aware: they set `color-scheme: light dark` and apply neutral dark colors automatically via `@media (prefers-color-scheme: dark)`.
+
 ### Unhandledrejection serialization
 
 `serializeError` handles `PromiseRejectionEvent` with strict redaction guardrails. For HTTP-like errors it extracts only safe metadata: `status`, `statusText`, `url`, `method`, `response.type`, and `X-Request-ID` from response headers when present. Response body, request/response payload, and the full headers object are **never** included in serialized output. For request wrappers (`reason.request` / `reason.config`) only `method`, `url`, and `baseURL` are extracted. Deep object traversal is bounded by `MAX_DEPTH=4`, `MAX_KEYS=20`, and `MAX_STRING_LEN=500` to prevent oversized beacons. Circular references are handled via a `WeakSet` visited tracker. The output also includes `isTrusted`, `timeStamp` from the event, and runtime context (`pageUrl`, `constructorName`).

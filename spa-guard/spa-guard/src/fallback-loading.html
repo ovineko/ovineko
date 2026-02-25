@@ -1,24 +1,41 @@
-<div
-  style="
+<style>
+  .spa-guard-loading-root {
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
     padding: 2rem;
     font-family: system-ui, sans-serif;
-  "
->
+    background: #fff;
+    color: #1a1a1a;
+    color-scheme: light dark;
+  }
+  .spa-guard-loading-muted {
+    color: #999;
+  }
+  @media (prefers-color-scheme: dark) {
+    .spa-guard-loading-root {
+      background: #111318;
+      color: #e7eaf0;
+    }
+    .spa-guard-loading-muted {
+      color: #8b95a7;
+    }
+  }
+</style>
+<div class="spa-guard-loading-root">
   <div style="text-align: center">
     <div data-spa-guard-spinner style="margin-bottom: 1.25rem"></div>
     <h2
       data-spa-guard-content="loading"
-      style="font-size: 1.125rem; font-weight: 600; margin: 0 0 0.25rem; color: #1a1a1a"
+      style="font-size: 1.125rem; font-weight: 600; margin: 0 0 0.25rem"
     >
       Loading...
     </h2>
     <p
       data-spa-guard-section="retrying"
-      style="display: none; font-size: 0.8125rem; color: #999; margin: 0.5rem 0 0"
+      class="spa-guard-loading-muted"
+      style="display: none; font-size: 0.8125rem; margin: 0.5rem 0 0"
     >
       <span data-spa-guard-content="retrying">Retry attempt</span>
       <span data-spa-guard-content="attempt"></span>
