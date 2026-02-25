@@ -70,10 +70,10 @@ No sentinel semantics in core state.
 ## Implementation Tasks
 
 ### Task 1: Build retryOrchestrator from scratch
-- [ ] Create orchestrator state machine and public functions.
-- [ ] Implement dedupe: first trigger wins, concurrent triggers are ignored/logged.
-- [ ] Implement retry progression, delay scheduling, and reload URL building.
-- [ ] Implement fallback transition and lock behavior.
+- [x] Create orchestrator state machine and public functions.
+- [x] Implement dedupe: first trigger wins, concurrent triggers are ignored/logged.
+- [x] Implement retry progression, delay scheduling, and reload URL building.
+- [x] Implement fallback transition and lock behavior.
 
 ### Task 2: Move URL state behind orchestrator
 - [ ] Keep URL as serialization layer only.
