@@ -90,6 +90,201 @@ describe("serializeError", () => {
     });
   });
 
+  describe("PromiseRejectionEvent - serialization and redaction", () => {
+    it("serializes ResponseError with response status/statusText/url/method/type", () => {
+      const event = {
+        promise: Promise.resolve(),
+        reason: {
+          response: {
+            method: "GET",
+            status: 404,
+            statusText: "Not Found",
+            type: "cors",
+            url: "https://api.example.com/resource",
+          },
+        },
+      };
+      const result = parse(serializeError(event));
+      expect(result.type).toBe("PromiseRejectionEvent");
+      expect(result.reason.type).toBe("HttpError");
+      expect(result.reason.status).toBe(404);
+      expect(result.reason.statusText).toBe("Not Found");
+      expect(result.reason.url).toBe("https://api.example.com/resource");
+      expect(result.reason.method).toBe("GET");
+      expect(result.reason.responseType).toBe("cors");
+    });
+
+    it("includes X-Request-ID when present in response.headers", () => {
+      const event = {
+        promise: Promise.resolve(),
+        reason: {
+          response: {
+            headers: { Authorization: "Bearer secret", "X-Request-ID": "req-abc-123" },
+            status: 500,
+          },
+        },
+      };
+      const result = parse(serializeError(event));
+      expect(result.reason.xRequestId).toBe("req-abc-123");
+    });
+
+    it("includes X-Request-ID via headers.get() when present", () => {
+      const event = {
+        promise: Promise.resolve(),
+        reason: {
+          response: {
+            headers: {
+              get: (key: string) => ({ "X-Request-ID": "req-get-456" })[key] ?? null,
+            },
+            status: 503,
+          },
+        },
+      };
+      const result = parse(serializeError(event));
+      expect(result.reason.xRequestId).toBe("req-get-456");
+    });
+
+    it("does not include response body in serialized output", () => {
+      const event = {
+        promise: Promise.resolve(),
+        reason: {
+          response: {
+            body: "sensitive body content",
+            status: 400,
+          },
+        },
+      };
+      const result = parse(serializeError(event));
+      expect(result.reason.type).toBe("HttpError");
+      expect(result.reason.body).toBeUndefined();
+    });
+
+    it("does not include request payload or data in serialized output", () => {
+      const event = {
+        promise: Promise.resolve(),
+        reason: {
+          request: {
+            body: "request body",
+            data: "sensitive data",
+            method: "POST",
+            payload: "sensitive payload",
+            url: "https://api.example.com/submit",
+          },
+          response: { status: 422 },
+        },
+      };
+      const result = parse(serializeError(event));
+      expect(result.reason.request).toBeDefined();
+      expect(result.reason.request.method).toBe("POST");
+      expect(result.reason.request.url).toBe("https://api.example.com/submit");
+      expect(result.reason.request.payload).toBeUndefined();
+      expect(result.reason.request.data).toBeUndefined();
+      expect(result.reason.request.body).toBeUndefined();
+    });
+
+    it("does not include full headers object beyond X-Request-ID", () => {
+      const event = {
+        promise: Promise.resolve(),
+        reason: {
+          response: {
+            headers: {
+              Authorization: "Bearer supersecret",
+              "Content-Type": "application/json",
+              "X-Request-ID": "req-hdr-789",
+            },
+            status: 403,
+          },
+        },
+      };
+      const result = parse(serializeError(event));
+      expect(result.reason.headers).toBeUndefined();
+      expect(result.reason.xRequestId).toBe("req-hdr-789");
+    });
+
+    it("preserves cause.name, cause.message, cause.stack in Error cause chain", () => {
+      const innerError = new Error("root cause");
+      const outerError = new Error("wrapper error", { cause: innerError });
+      const event = { promise: Promise.resolve(), reason: outerError };
+      const result = parse(serializeError(event));
+      expect(result.reason.name).toBe("Error");
+      expect(result.reason.message).toBe("wrapper error");
+      expect(result.reason.cause).toBeDefined();
+      expect(result.reason.cause.name).toBe("Error");
+      expect(result.reason.cause.message).toBe("root cause");
+      expect(result.reason.cause.stack).toBeDefined();
+    });
+
+    it("preserves primitive string reason as-is", () => {
+      const event = { promise: Promise.resolve(), reason: "oops" };
+      const result = parse(serializeError(event));
+      expect(result.type).toBe("PromiseRejectionEvent");
+      expect(result.reason.type).toBe("string");
+      expect(result.reason.value).toBe("oops");
+    });
+
+    it("includes AggregateError bounded nested error previews (first 3 only)", () => {
+      const errors = [
+        new Error("e1"),
+        new Error("e2"),
+        new Error("e3"),
+        new Error("e4"),
+        new Error("e5"),
+      ];
+      const aggErr = new AggregateError(errors, "aggregate failure");
+      const event = { promise: Promise.resolve(), reason: aggErr };
+      const result = parse(serializeError(event));
+      expect(result.reason.name).toBe("AggregateError");
+      expect(result.reason.message).toBe("aggregate failure");
+      expect(Array.isArray(result.reason.errors)).toBe(true);
+      expect(result.reason.errors.length).toBe(3);
+      expect(result.reason.errors[0].message).toBe("e1");
+      expect(result.reason.errors[1].message).toBe("e2");
+      expect(result.reason.errors[2].message).toBe("e3");
+    });
+
+    it("does not crash on circular object structure", () => {
+      const circular: any = { name: "circular-test" };
+      circular.self = circular;
+      const event = { promise: Promise.resolve(), reason: circular };
+      expect(() => serializeError(event)).not.toThrow();
+      const result = parse(serializeError(event));
+      expect(result.type).toBe("PromiseRejectionEvent");
+    });
+
+    it("truncates large string reason values to MAX_STRING_LEN", () => {
+      const longStr = "x".repeat(600);
+      const event = { promise: Promise.resolve(), reason: longStr };
+      const result = parse(serializeError(event));
+      expect(result.reason.type).toBe("string");
+      // truncated to 500 chars + ellipsis character
+      expect(result.reason.value.length).toBeLessThanOrEqual(501);
+    });
+
+    it("bounds object with more than MAX_KEYS keys", () => {
+      const bigObj: Record<string, number> = {};
+      for (let i = 0; i < 25; i++) {
+        bigObj[`key${i}`] = i;
+      }
+      const event = { promise: Promise.resolve(), reason: bigObj };
+      const result = parse(serializeError(event));
+      expect(result.reason.type).toBe("object");
+      expect(Object.keys(result.reason.value).length).toBeLessThanOrEqual(20);
+    });
+
+    it("includes isTrusted and timeStamp from PromiseRejectionEvent", () => {
+      const event = {
+        isTrusted: true,
+        promise: Promise.resolve(),
+        reason: new Error("trusted rejection"),
+        timeStamp: 98_765,
+      };
+      const result = parse(serializeError(event));
+      expect(result.type).toBe("PromiseRejectionEvent");
+      expect(result.isTrusted).toBe(true);
+      expect(result.timeStamp).toBe(98_765);
+    });
+  });
+
   describe("ErrorEvent-like objects", () => {
     it("serializes object with error, message, and filename", () => {
       const event = {

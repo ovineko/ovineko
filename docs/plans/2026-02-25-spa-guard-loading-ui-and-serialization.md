@@ -112,19 +112,19 @@ Two independent improvements from TODO.md:
 **Files:**
 - Modify: `spa-guard/spa-guard/src/common/serializeError.test.ts`
 
-- [ ] Test: ResponseError with response containing status/statusText/url/method/type is serialized correctly
-- [ ] Test: X-Request-ID header IS serialized when present in response.headers
-- [ ] Test: response body is NOT present in serialized output
-- [ ] Test: request/response payload is NOT present in serialized output
-- [ ] Test: full headers object (beyond X-Request-ID) is NOT present in serialized output
-- [ ] Test: Error with cause chain preserves cause.name/message/stack
-- [ ] Test: `Promise.reject("oops")` - primitive reason preserved as-is
-- [ ] Test: AggregateError includes bounded nested error previews (first 3)
-- [ ] Test: circular object structure does not crash serialization
-- [ ] Test: large string values are truncated to MAX_STRING_LEN
-- [ ] Test: object with >MAX_KEYS keys is bounded
-- [ ] Test: PromiseRejectionEvent output includes isTrusted, timeStamp fields
-- [ ] Run tests: `pnpm test src/common/serializeError.test.ts` - must pass before task 7
+- [x] Test: ResponseError with response containing status/statusText/url/method/type is serialized correctly
+- [x] Test: X-Request-ID header IS serialized when present in response.headers
+- [x] Test: response body is NOT present in serialized output
+- [x] Test: request/response payload is NOT present in serialized output
+- [x] Test: full headers object (beyond X-Request-ID) is NOT present in serialized output
+- [x] Test: Error with cause chain preserves cause.name/message/stack
+- [x] Test: `Promise.reject("oops")` - primitive reason preserved as-is
+- [x] Test: AggregateError includes bounded nested error previews (first 3)
+- [x] Test: circular object structure does not crash serialization
+- [x] Test: large string values are truncated to MAX_STRING_LEN
+- [x] Test: object with >MAX_KEYS keys is bounded
+- [x] Test: PromiseRejectionEvent output includes isTrusted, timeStamp fields
+- [x] Run tests: `pnpm test src/common/serializeError.test.ts` - must pass before task 7
 
 ### Task 7: Update docs
 
