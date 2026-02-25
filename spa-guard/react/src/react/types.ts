@@ -10,8 +10,7 @@
  */
 export interface LazyRetryOptions {
   /**
-   * Call attemptReload() after all retry attempts are exhausted.
-   * If true, triggers page reload logic after all retries fail.
+   * If true, triggers a full page reload via triggerRetry() after all retry attempts are exhausted.
    * If false, only throws the error to the error boundary without reload.
    * Overrides the global `window.__SPA_GUARD_OPTIONS__.lazyRetry.callReloadOnFailure`.
    *

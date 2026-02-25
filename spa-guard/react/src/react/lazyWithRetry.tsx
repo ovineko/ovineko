@@ -10,7 +10,7 @@ export type { LazyRetryOptions } from "./types";
  * Creates a lazy-loaded React component with automatic retry on chunk load failures.
  *
  * On import failure, retries with configurable delays before falling back to
- * `attemptReload()` for a full page reload.
+ * `triggerRetry()` for a full page reload.
  *
  * @param importFn - Function that performs the dynamic import
  * @param options - Per-import options that override global lazyRetry options

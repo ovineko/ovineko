@@ -38,6 +38,7 @@ export type TriggerResult =
   | { reason: string; status: "deduped" }
   | { status: "accepted" }
   | { status: "fallback" }
+  | { status: "internal-error" }
   | { status: "retry-disabled" };
 
 interface OrchestratorState {
@@ -277,7 +278,7 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
   } catch (error) {
     getLogger()?.error("triggerRetry internal error", error);
     setState({ lastSource: undefined, lastTriggerTime: undefined, phase: "idle" });
-    return { reason: "internal-error", status: "deduped" };
+    return { status: "internal-error" };
   }
 };
 
