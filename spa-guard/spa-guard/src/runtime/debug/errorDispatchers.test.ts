@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { debugSyncErrorEventType } from "../../common/constants";
 import { FORCE_RETRY_MAGIC, ForceRetryError } from "../../common/errors/ForceRetryError";
+import { resetFallbackMode } from "../../common/fallbackState";
 import { isChunkError } from "../../common/isChunkError";
 import { shouldForceRetry } from "../../common/shouldIgnore";
 import {
@@ -387,6 +388,7 @@ describe("dispatchRetryExhausted", () => {
   afterEach(() => {
     unsub?.();
     unsub = undefined;
+    resetFallbackMode();
     // Clean up any custom options set during tests
     delete (globalThis.window as any).__SPA_GUARD_OPTIONS__;
   });

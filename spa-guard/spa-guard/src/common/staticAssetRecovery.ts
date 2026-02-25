@@ -42,11 +42,11 @@ export const handleStaticAssetFailure = (url: string): void => {
   state.recoveryTimer = setTimeout(() => {
     const s = getState();
     s.recoveryTimer = null;
+    const assets = [...s.failedAssets];
+    s.failedAssets = new Set();
     if (isInFallbackMode()) {
       return;
     }
-    const assets = [...s.failedAssets];
-    s.failedAssets = new Set();
 
     const error = new Error(`Static asset load failed: ${assets.join(", ")}`);
     attemptReload(error, { cacheBust: true });

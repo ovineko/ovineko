@@ -277,6 +277,9 @@ const showLoadingUI = (attempt: number): void => {
 };
 
 export const showFallbackUI = (): void => {
+  if (isInFallbackMode()) {
+    return;
+  }
   setFallbackMode();
   const options = getOptions();
   const fallbackHtml = options.html?.fallback?.content;
