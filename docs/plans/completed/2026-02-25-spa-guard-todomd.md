@@ -58,8 +58,8 @@ Then delete TODO.md.
 **Files:**
 - Delete: `spa-guard/TODO.md`
 
-- [ ] Delete `spa-guard/TODO.md`
-- [ ] Run full test suite: `pnpm test` (or equivalent)
-- [ ] Run linter
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Delete `spa-guard/TODO.md`
+- [x] Run full test suite: `pnpm test` (or equivalent)
+- [x] Run linter
+- [x] Move this plan to `docs/plans/completed/`
 ---
