@@ -5,6 +5,7 @@ import {
   RETRY_ID_PARAM,
 } from "./constants";
 import { emitEvent, getLogger, isDefaultRetryEnabled } from "./events/internal";
+import { showFallbackUI } from "./fallbackRendering";
 import { isInFallbackMode, setFallbackMode } from "./fallbackState";
 import { applyI18n, getI18n } from "./i18n";
 import {
@@ -168,6 +169,7 @@ export const attemptReload = (error: unknown, opts?: { cacheBust?: boolean }): v
       }
 
       reloadState.scheduled = false;
+      setFallbackMode();
       showFallbackUI();
       return;
     }
@@ -261,61 +263,5 @@ const showLoadingUI = (attempt: number): void => {
     targetElement.innerHTML = container.innerHTML;
   } catch {
     // Silently fail — loading UI is best-effort
-  }
-};
-
-export const showFallbackUI = (): void => {
-  if (isInFallbackMode()) {
-    return;
-  }
-  setFallbackMode();
-  const options = getOptions();
-  const fallbackHtml = options.html?.fallback?.content;
-  const selector = options.html?.fallback?.selector ?? "body";
-
-  if (!fallbackHtml) {
-    getLogger()?.noFallbackConfigured();
-    return;
-  }
-
-  try {
-    const targetElement = document.querySelector(selector);
-    if (!targetElement) {
-      getLogger()?.fallbackTargetNotFound(selector);
-      return;
-    }
-    const container = document.createElement("div");
-    container.innerHTML = fallbackHtml;
-
-    const t = getI18n();
-    if (t) {
-      applyI18n(container, t);
-    }
-
-    targetElement.innerHTML = container.innerHTML;
-
-    const useRetryId = options.useRetryId ?? true;
-    const retryState = getRetryStateFromUrl();
-    if (!useRetryId && !retryState) {
-      clearRetryAttemptFromUrl();
-    }
-
-    const reloadBtn = targetElement.querySelector('[data-spa-guard-action="reload"]');
-    if (reloadBtn) {
-      reloadBtn.addEventListener("click", () => location.reload());
-    }
-
-    if (retryState) {
-      const retryIdElements = document.getElementsByClassName("spa-guard-retry-id");
-      for (const element of retryIdElements) {
-        element.textContent = retryState.retryId;
-      }
-    }
-
-    emitEvent({
-      name: "fallback-ui-shown",
-    });
-  } catch (error) {
-    getLogger()?.fallbackInjectFailed(error);
   }
 };

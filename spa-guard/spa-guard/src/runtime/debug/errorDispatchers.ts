@@ -12,8 +12,8 @@
 import { debugSyncErrorEventType } from "../../common/constants";
 import { ForceRetryError } from "../../common/errors/ForceRetryError";
 import { emitEvent } from "../../common/events/internal";
+import { showFallbackUI } from "../../common/fallbackRendering";
 import { getOptions } from "../../common/options";
-import { showFallbackUI } from "../../common/reload";
 
 /**
  * Dispatches an async runtime error via setTimeout.

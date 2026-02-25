@@ -92,9 +92,9 @@ No sentinel semantics in core state.
 - [x] Ensure storms do not schedule multiple retries.
 
 ### Task 5: Refactor fallback rendering contract
-- [ ] Remove lifecycle mutations from rendering helpers.
-- [ ] Ensure fallback lock cannot be set without a successful lifecycle transition.
-- [ ] Ensure misconfigured fallback UI fails safely (no silent deadlock).
+- [x] Remove lifecycle mutations from rendering helpers.
+- [x] Ensure fallback lock cannot be set without a successful lifecycle transition.
+- [x] Ensure misconfigured fallback UI fails safely (no silent deadlock).
 
 ### Task 6: Remove obsolete primitives
 - [ ] Delete or collapse no-longer-needed state keys/constants.

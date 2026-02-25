@@ -30,12 +30,17 @@ vi.mock("./shouldIgnore", () => ({
   shouldIgnoreMessages: vi.fn(),
 }));
 
+vi.mock("./fallbackRendering", () => ({
+  showFallbackUI: vi.fn(),
+}));
+
 vi.mock("./fallbackState", () => ({
   isInFallbackMode: vi.fn().mockReturnValue(false),
   setFallbackMode: vi.fn(),
 }));
 
 import { emitEvent, getLogger, isDefaultRetryEnabled } from "./events/internal";
+import { showFallbackUI } from "./fallbackRendering";
 import { isInFallbackMode, setFallbackMode } from "./fallbackState";
 import {
   clearLastReloadTime,
@@ -67,6 +72,7 @@ const mockGetOptions = vi.mocked(getOptions);
 const mockGenerateRetryId = vi.mocked(generateRetryId);
 const mockSendBeacon = vi.mocked(sendBeacon);
 const mockShouldIgnoreMessages = vi.mocked(shouldIgnoreMessages);
+const mockShowFallbackUI = vi.mocked(showFallbackUI);
 const mockIsInFallbackMode = vi.mocked(isInFallbackMode);
 const mockSetFallbackMode = vi.mocked(setFallbackMode);
 
@@ -362,6 +368,28 @@ describe("retryOrchestrator", () => {
       setupMockLocation("http://localhost/?spaGuardRetryId=id&spaGuardRetryAttempt=3");
       triggerRetry({ error: new Error("chunk error") });
       expect(mockSetFallbackMode).toHaveBeenCalled();
+    });
+
+    it("calls showFallbackUI when exhausted", () => {
+      setupMockLocation("http://localhost/?spaGuardRetryId=id&spaGuardRetryAttempt=3");
+      triggerRetry({ error: new Error("chunk error") });
+      expect(mockShowFallbackUI).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls showFallbackUI after setFallbackMode (lifecycle before rendering)", () => {
+      setupMockLocation("http://localhost/?spaGuardRetryId=id&spaGuardRetryAttempt=3");
+      const order: string[] = [];
+      mockSetFallbackMode.mockImplementation(() => order.push("setFallbackMode"));
+      mockShowFallbackUI.mockImplementation(() => order.push("showFallbackUI"));
+
+      triggerRetry({ error: new Error("chunk error") });
+
+      expect(order).toEqual(["setFallbackMode", "showFallbackUI"]);
+    });
+
+    it("does not call showFallbackUI on normal retry scheduling", () => {
+      triggerRetry({ error: new Error("chunk error") });
+      expect(mockShowFallbackUI).not.toHaveBeenCalled();
     });
 
     it("emits retry-exhausted event when exhausted", () => {
