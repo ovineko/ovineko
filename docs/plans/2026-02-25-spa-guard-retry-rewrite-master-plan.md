@@ -102,11 +102,11 @@ No sentinel semantics in core state.
 - [x] Update exports (`common/index.ts`, `_internal.ts`) to new API.
 
 ### Task 7: Test rewrite (mandatory)
-- [ ] Add orchestrator unit tests for all phase transitions.
-- [ ] Add concurrency tests: 20 rapid triggers => 1 schedule.
-- [ ] Add recovery tests: fallback lock, healthy re-arm.
-- [ ] Add malformed URL tests (`1foo`, `-1abc`, `1.5`, `1e2`).
-- [ ] Update listener tests to assert delegation, not hidden retry internals.
+- [x] Add orchestrator unit tests for all phase transitions.
+- [x] Add concurrency tests: 20 rapid triggers => 1 schedule.
+- [x] Add recovery tests: fallback lock, healthy re-arm.
+- [x] Add malformed URL tests (`1foo`, `-1abc`, `1.5`, `1e2`).
+- [x] Update listener tests to assert delegation, not hidden retry internals.
 
 ### Task 8: Documentation rewrite
 - [ ] Update `AGENTS.md` architecture notes and pitfalls.
