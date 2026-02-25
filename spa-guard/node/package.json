@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard-node",
-  "version": "0.0.1-alpha-27",
+  "version": "0.0.1-alpha-28",
   "description": "Server-side HTML cache with ETag/304, pre-compression, and i18n for spa-guard",
   "keywords": [
     "spa",

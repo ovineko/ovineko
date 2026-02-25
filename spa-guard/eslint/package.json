@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard-eslint",
-  "version": "0.0.1-alpha-27",
+  "version": "0.0.1-alpha-28",
   "description": "ESLint rules for spa-guard (no-direct-lazy, no-direct-error-boundary)",
   "keywords": [
     "spa",
