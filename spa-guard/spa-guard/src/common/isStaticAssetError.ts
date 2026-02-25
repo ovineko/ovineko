@@ -21,6 +21,9 @@ export const isStaticAssetError = (event: Event): boolean => {
 };
 
 const checkResourceStatus = (url: string): boolean => {
+  if (typeof performance === "undefined" || typeof performance.getEntriesByName !== "function") {
+    return true;
+  }
   const entries = performance.getEntriesByName(url, "resource") as PerformanceResourceTiming[];
   if (entries.length === 0) {
     return true;
@@ -36,11 +39,12 @@ const checkResourceStatus = (url: string): boolean => {
   return false;
 };
 
-export const isLikely404 = (url?: string, timeSinceNavMs: number = performance.now()): boolean => {
+export const isLikely404 = (url?: string, timeSinceNavMs?: number): boolean => {
   if (url !== undefined) {
     return checkResourceStatus(url);
   }
-  return timeSinceNavMs > 30_000;
+  const elapsed = timeSinceNavMs ?? (typeof performance === "undefined" ? 0 : performance.now());
+  return elapsed > 30_000;
 };
 
 export const getAssetUrl = (event: Event): string => {

@@ -225,6 +225,42 @@ describe("parseBeacon", () => {
     });
   });
 
+  describe("string length limits", () => {
+    it("throws when errorMessage exceeds 500 characters", () => {
+      expect(() => parseBeacon({ errorMessage: "a".repeat(501) })).toThrow(
+        "Beacon validation failed",
+      );
+    });
+
+    it("accepts errorMessage at exactly 500 characters", () => {
+      const result = parseBeacon({ errorMessage: "a".repeat(500) });
+      expect(result.errorMessage).toHaveLength(500);
+    });
+
+    it("throws when eventName exceeds 500 characters", () => {
+      expect(() => parseBeacon({ eventName: "e".repeat(501) })).toThrow("Beacon validation failed");
+    });
+
+    it("throws when retryId exceeds 500 characters", () => {
+      expect(() => parseBeacon({ retryId: "r".repeat(501) })).toThrow("Beacon validation failed");
+    });
+
+    it("throws when serialized exceeds 10000 characters", () => {
+      expect(() => parseBeacon({ serialized: "x".repeat(10_001) })).toThrow(
+        "Beacon validation failed",
+      );
+    });
+
+    it("accepts serialized at exactly 10000 characters", () => {
+      const result = parseBeacon({ serialized: "x".repeat(10_000) });
+      expect(result.serialized).toHaveLength(10_000);
+    });
+
+    it("throws when url exceeds 500 characters", () => {
+      expect(() => parseBeacon({ url: "u".repeat(501) })).toThrow("Beacon validation failed");
+    });
+  });
+
   describe("edge cases", () => {
     it("throws on null input", () => {
       expect(() => parseBeacon(null)).toThrow();

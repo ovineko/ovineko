@@ -189,6 +189,16 @@ describe("isLikely404 (Resource Timing API path)", () => {
     expect(isLikely404(TEST_URL)).toBe(true);
     expect(performance.getEntriesByName).toHaveBeenCalledWith(TEST_URL, "resource");
   });
+
+  it("returns true (assumes 404) when performance.getEntriesByName is not a function", () => {
+    const saved = performance.getEntriesByName;
+    (performance as any).getEntriesByName = undefined;
+    try {
+      expect(isLikely404(TEST_URL)).toBe(true);
+    } finally {
+      performance.getEntriesByName = saved;
+    }
+  });
 });
 
 describe("getAssetUrl", () => {
