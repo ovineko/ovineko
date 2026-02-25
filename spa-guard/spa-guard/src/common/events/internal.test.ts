@@ -500,7 +500,6 @@ describe("common/events/internal", () => {
     const createMockLogger = (): Logger => ({
       beaconSendFailed: vi.fn(),
       capturedError: vi.fn(),
-      clearingRetryState: vi.fn(),
       error: vi.fn(),
       fallbackAlreadyShown: vi.fn(),
       fallbackInjectFailed: vi.fn(),
@@ -511,9 +510,7 @@ describe("common/events/internal", () => {
       noFallbackConfigured: vi.fn(),
       reloadAlreadyScheduled: vi.fn(),
       retryCycleStarting: vi.fn(),
-      retryLimitExceeded: vi.fn(),
       retrySchedulingReload: vi.fn(),
-      updatedRetryAttempt: vi.fn(),
       versionChangeDetected: vi.fn(),
       versionCheckAlreadyRunning: vi.fn(),
       versionCheckDisabled: vi.fn(),

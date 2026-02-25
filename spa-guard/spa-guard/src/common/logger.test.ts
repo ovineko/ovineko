@@ -25,13 +25,10 @@ describe("common/logger", () => {
 
       expect(typeof logger.logEvent).toBe("function");
       expect(typeof logger.capturedError).toBe("function");
-      expect(typeof logger.retryLimitExceeded).toBe("function");
-      expect(typeof logger.clearingRetryState).toBe("function");
       expect(typeof logger.fallbackAlreadyShown).toBe("function");
       expect(typeof logger.fallbackInjectFailed).toBe("function");
       expect(typeof logger.fallbackTargetNotFound).toBe("function");
       expect(typeof logger.noFallbackConfigured).toBe("function");
-      expect(typeof logger.updatedRetryAttempt).toBe("function");
       expect(typeof logger.beaconSendFailed).toBe("function");
       expect(typeof logger.noBeaconEndpoint).toBe("function");
       expect(typeof logger.log).toBe("function");
@@ -257,16 +254,6 @@ describe("common/logger", () => {
         "violated-directive",
       );
     });
-
-    it("retryLimitExceeded logs at log level", () => {
-      const logger = createLogger();
-
-      logger.retryLimitExceeded(3, 3);
-
-      expect(logSpy).toHaveBeenCalledWith(
-        "[spa-guard] Retry limit exceeded (3/3), marking as fallback shown",
-      );
-    });
   });
 
   describe("specific methods - reload.ts", () => {
@@ -297,26 +284,6 @@ describe("common/logger", () => {
 
       expect(errorSpy).toHaveBeenCalledWith(
         "[spa-guard] Target element not found for selector: #app",
-      );
-    });
-
-    it("clearingRetryState logs at log level", () => {
-      const logger = createLogger();
-
-      logger.clearingRetryState();
-
-      expect(logSpy).toHaveBeenCalledWith(
-        "[spa-guard] Clearing retry state from URL to allow clean reload attempt",
-      );
-    });
-
-    it("updatedRetryAttempt logs at log level with attempt number", () => {
-      const logger = createLogger();
-
-      logger.updatedRetryAttempt(3);
-
-      expect(logSpy).toHaveBeenCalledWith(
-        "[spa-guard] Updated retry attempt to 3 in URL for fallback UI",
       );
     });
 

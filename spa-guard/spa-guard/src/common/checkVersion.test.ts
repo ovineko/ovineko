@@ -16,7 +16,6 @@ const clearWindowOptions = () => {
 const createMockLogger = (): Logger => ({
   beaconSendFailed: vi.fn(),
   capturedError: vi.fn(),
-  clearingRetryState: vi.fn(),
   error: vi.fn(),
   fallbackAlreadyShown: vi.fn(),
   fallbackInjectFailed: vi.fn(),
@@ -27,9 +26,7 @@ const createMockLogger = (): Logger => ({
   noFallbackConfigured: vi.fn(),
   reloadAlreadyScheduled: vi.fn(),
   retryCycleStarting: vi.fn(),
-  retryLimitExceeded: vi.fn(),
   retrySchedulingReload: vi.fn(),
-  updatedRetryAttempt: vi.fn(),
   versionChangeDetected: vi.fn(),
   versionCheckAlreadyRunning: vi.fn(),
   versionCheckDisabled: vi.fn(),

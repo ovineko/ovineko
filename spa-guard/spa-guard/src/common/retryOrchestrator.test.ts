@@ -85,7 +85,6 @@ const mockSetFallbackMode = vi.mocked(setFallbackMode);
 const createMockLogger = () => ({
   beaconSendFailed: vi.fn(),
   capturedError: vi.fn(),
-  clearingRetryState: vi.fn(),
   error: vi.fn(),
   fallbackAlreadyShown: vi.fn(),
   fallbackInjectFailed: vi.fn(),
@@ -96,9 +95,7 @@ const createMockLogger = () => ({
   noFallbackConfigured: vi.fn(),
   reloadAlreadyScheduled: vi.fn(),
   retryCycleStarting: vi.fn(),
-  retryLimitExceeded: vi.fn(),
   retrySchedulingReload: vi.fn(),
-  updatedRetryAttempt: vi.fn(),
   versionChangeDetected: vi.fn(),
   versionCheckAlreadyRunning: vi.fn(),
   versionCheckDisabled: vi.fn(),

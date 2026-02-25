@@ -3,7 +3,6 @@ import type { SPAGuardEvent } from "./events/types";
 export interface Logger {
   beaconSendFailed(error: unknown): void;
   capturedError(type: string, ...args: unknown[]): void;
-  clearingRetryState(): void;
   error(msg: string, ...args: unknown[]): void;
   fallbackAlreadyShown(error: unknown): void;
   fallbackInjectFailed(error: unknown): void;
@@ -14,9 +13,7 @@ export interface Logger {
   noFallbackConfigured(): void;
   reloadAlreadyScheduled(error: unknown): void;
   retryCycleStarting(retryId: string, fromAttempt: number): void;
-  retryLimitExceeded(attempt: number, max: number): void;
   retrySchedulingReload(retryId: string, attempt: number, delay: number): void;
-  updatedRetryAttempt(attempt: number): void;
   versionChangeDetected(oldVersion: null | string, latestVersion: string): void;
   versionCheckAlreadyRunning(): void;
   versionCheckDisabled(): void;
@@ -95,9 +92,6 @@ export const createLogger = (): Logger => ({
   capturedError(type: string, ...args: unknown[]): void {
     console.error(`${PREFIX} ${type}:capture:`, ...args);
   },
-  clearingRetryState(): void {
-    console.log(`${PREFIX} Clearing retry state from URL to allow clean reload attempt`);
-  },
   error(msg: string, ...args: unknown[]): void {
     console.error(`${PREFIX} ${msg}`, ...args);
   },
@@ -141,16 +135,10 @@ export const createLogger = (): Logger => ({
   retryCycleStarting(retryId: string, fromAttempt: number): void {
     console.log(`${PREFIX} Retry cycle starting: retryId=${retryId}, fromAttempt=${fromAttempt}`);
   },
-  retryLimitExceeded(attempt: number, max: number): void {
-    console.log(`${PREFIX} Retry limit exceeded (${attempt}/${max}), marking as fallback shown`);
-  },
   retrySchedulingReload(retryId: string, attempt: number, delay: number): void {
     console.log(
       `${PREFIX} Scheduling reload: retryId=${retryId}, attempt=${attempt}, delay=${delay}ms`,
     );
-  },
-  updatedRetryAttempt(attempt: number): void {
-    console.log(`${PREFIX} Updated retry attempt to ${attempt} in URL for fallback UI`);
   },
   versionChangeDetected(oldVersion: null | string, latestVersion: string): void {
     console.warn(

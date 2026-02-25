@@ -5,3 +5,5 @@ export { disableDefaultRetry, enableDefaultRetry, isDefaultRetryEnabled } from "
 export { isInFallbackMode, resetFallbackMode } from "./fallbackState";
 export { listen } from "./listen";
 export * as options from "./options";
+export { getRetrySnapshot, markRetryHealthyBoot, triggerRetry } from "./retryOrchestrator";
+export type { RetryPhase, RetrySnapshot, TriggerInput, TriggerResult } from "./retryOrchestrator";
