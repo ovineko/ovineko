@@ -83,9 +83,9 @@ When retry attempts are exhausted and the fallback UI is shown, subsequent stati
 **Files:**
 - Modify: `spa-guard/spa-guard/src/common/index.ts`
 
-- [ ] Add export: `export { isInFallbackMode, resetFallbackMode } from "./fallbackState";`
-- [ ] Update `listen/internal.test.ts` if it needs resetting fallback state between tests
-- [ ] Run `npm test` in spa-guard — must pass
+- [x] Add export: `export { isInFallbackMode, resetFallbackMode } from "./fallbackState";`
+- [x] Update `listen/internal.test.ts` if it needs resetting fallback state between tests
+- [x] Run `npm test` in spa-guard — must pass
 
 ### Task 7: Verify acceptance criteria
 
