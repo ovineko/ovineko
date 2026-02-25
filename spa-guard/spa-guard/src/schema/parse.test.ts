@@ -81,6 +81,22 @@ describe("parseBeacon", () => {
       );
     });
 
+    it("throws when retryAttempt is NaN", () => {
+      expect(() => parseBeacon({ retryAttempt: NaN })).toThrow("Beacon validation failed");
+    });
+
+    it("throws when retryAttempt is Infinity", () => {
+      expect(() => parseBeacon({ retryAttempt: Infinity })).toThrow("Beacon validation failed");
+    });
+
+    it("throws when httpStatus is NaN", () => {
+      expect(() => parseBeacon({ httpStatus: NaN })).toThrow("Beacon validation failed");
+    });
+
+    it("throws when httpStatus is Infinity", () => {
+      expect(() => parseBeacon({ httpStatus: Infinity })).toThrow("Beacon validation failed");
+    });
+
     it("throws when retryId is a number instead of string", () => {
       expect(() => parseBeacon({ retryId: 12_345 })).toThrow("Beacon validation failed");
     });

@@ -37,8 +37,8 @@ export function parseBeacon(data: unknown): BeaconSchema {
 
   for (const field of ["retryAttempt", "httpStatus"] as const) {
     if (field in d) {
-      if (typeof d[field] !== "number") {
-        throw new TypeError(`Beacon validation failed: ${field} must be a number`);
+      if (typeof d[field] !== "number" || !Number.isFinite(d[field] as number)) {
+        throw new TypeError(`Beacon validation failed: ${field} must be a finite number`);
       }
       result[field] = d[field] as number;
     }
