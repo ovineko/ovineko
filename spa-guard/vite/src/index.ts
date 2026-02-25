@@ -1,7 +1,7 @@
 import type { HtmlTagDescriptor, Plugin, ViteDevServer } from "vite";
 
 import { type Options, optionsWindowKey } from "@ovineko/spa-guard/_internal";
-import { defaultSpinnerSvg, SPINNER_ID } from "@ovineko/spa-guard/_internal";
+import { defaultSpinnerSvg, sanitizeCssValue, SPINNER_ID } from "@ovineko/spa-guard/_internal";
 import { minify } from "html-minifier-terser";
 import crypto from "node:crypto";
 import fsPromise from "node:fs/promises";
@@ -155,7 +155,7 @@ export const spaGuardVitePlugin = (options: VitePluginOptions = {}): Plugin => {
         const tags: HtmlTagDescriptor[] = [mainTag];
 
         if (finalOptions.html?.spinner?.disabled !== true) {
-          const bg = finalOptions.html?.spinner?.background ?? "#fff";
+          const bg = sanitizeCssValue(finalOptions.html?.spinner?.background ?? "#fff");
           const spinnerContent = finalOptions.html?.spinner?.content ?? defaultSpinnerSvg;
 
           tags.push({

@@ -1,6 +1,11 @@
 import type { Options } from "@ovineko/spa-guard/_internal";
 
-import { defaultSpinnerSvg, optionsWindowKey, SPINNER_ID } from "@ovineko/spa-guard/_internal";
+import {
+  defaultSpinnerSvg,
+  optionsWindowKey,
+  sanitizeCssValue,
+  SPINNER_ID,
+} from "@ovineko/spa-guard/_internal";
 import { minify } from "html-minifier-terser";
 import crypto from "node:crypto";
 import fsPromise from "node:fs/promises";
@@ -124,7 +129,7 @@ const buildSpinnerTags = (
     return [];
   }
 
-  const bg = finalOptions.html?.spinner?.background ?? "#fff";
+  const bg = sanitizeCssValue(finalOptions.html?.spinner?.background ?? "#fff");
   const spinnerContent = finalOptions.html?.spinner?.content ?? defaultSpinnerSvg;
 
   const tags: HtmlTagDescriptor[] = [

@@ -41,6 +41,8 @@ const getState = (): VersionCheckState => {
   );
 };
 
+const FETCH_TIMEOUT_MS = 30_000;
+
 const fetchJsonVersion = async (): Promise<null | string> => {
   const endpoint = getOptions().checkVersion?.endpoint;
   if (!endpoint) {
@@ -48,42 +50,57 @@ const fetchJsonVersion = async (): Promise<null | string> => {
     return null;
   }
 
-  const response = await fetch(endpoint, {
-    cache: getOptions().checkVersion?.cache ?? "no-store",
-    headers: { Accept: "application/json" },
-  });
-  if (!response.ok) {
-    getLogger()?.versionCheckHttpError(response.status);
-    return null;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(endpoint, {
+      cache: getOptions().checkVersion?.cache ?? "no-store",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      getLogger()?.versionCheckHttpError(response.status);
+      return null;
+    }
+    const data: unknown = await response.json();
+    if (typeof data !== "object" || data === null) {
+      return null;
+    }
+    return "version" in data && typeof data.version === "string" ? data.version : null;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  const data: unknown = await response.json();
-  if (typeof data !== "object" || data === null) {
-    return null;
-  }
-  return "version" in data && typeof data.version === "string" ? data.version : null;
 };
 
 const fetchHtmlVersion = async (): Promise<null | string> => {
   const url = new URL(globalThis.location.href);
   url.search = "";
   url.hash = "";
-  const response = await fetch(url.toString(), {
-    cache: getOptions().checkVersion?.cache ?? "no-store",
-    headers: { Accept: "text/html" },
-  });
-  if (!response.ok) {
-    getLogger()?.versionCheckHttpError(response.status);
-    return null;
-  }
-  const html = await response.text();
-  const version = extractVersionFromHtml(html);
 
-  if (!version) {
-    getLogger()?.versionCheckParseError();
-    return null;
-  }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(url.toString(), {
+      cache: getOptions().checkVersion?.cache ?? "no-store",
+      headers: { Accept: "text/html" },
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      getLogger()?.versionCheckHttpError(response.status);
+      return null;
+    }
+    const html = await response.text();
+    const version = extractVersionFromHtml(html);
 
-  return version;
+    if (!version) {
+      getLogger()?.versionCheckParseError();
+      return null;
+    }
+
+    return version;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 };
 
 export const fetchRemoteVersion = async (mode: "html" | "json"): Promise<null | string> => {

@@ -24,7 +24,7 @@ export { extractVersionFromHtml } from "./common/parseVersion";
 export { attemptReload } from "./common/reload";
 export { retryImport } from "./common/retryImport";
 export { serializeError } from "./common/serializeError";
-export { defaultSpinnerSvg, SPINNER_ID } from "./common/spinner";
+export { defaultSpinnerSvg, sanitizeCssValue, SPINNER_ID } from "./common/spinner";
 export {
   dispatchAsyncRuntimeError,
   dispatchChunkLoadError,

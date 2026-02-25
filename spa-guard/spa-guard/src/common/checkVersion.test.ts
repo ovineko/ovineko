@@ -627,6 +627,45 @@ describe("common/checkVersion", () => {
       await vi.advanceTimersByTimeAsync(1000);
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     });
+
+    it("unblocks checkInProgress after 30s fetch timeout so subsequent checks can run", async () => {
+      setWindowOptions({
+        checkVersion: { endpoint: "/api/version", interval: 1000, mode: "json" },
+        version: "1.0.0",
+      });
+
+      // First fetch hangs but responds to abort signal
+      globalThis.fetch = vi.fn().mockImplementation(
+        (_url: string, { signal }: RequestInit = {}) =>
+          new Promise((_resolve, reject) => {
+            signal?.addEventListener("abort", () =>
+              reject(new DOMException("Aborted", "AbortError")),
+            );
+          }),
+      );
+
+      mod.startVersionCheck();
+
+      // First interval tick - starts a hung fetch (checkInProgress becomes true)
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+      // Replace fetch with a resolving one for calls that come after the timeout
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        json: async () => ({ version: "1.0.0" }),
+        ok: true,
+      });
+
+      // Advance past the 30s abort timeout - AbortController fires → AbortError →
+      // checkInProgress is cleared in the finally block
+      await vi.advanceTimersByTimeAsync(30_000);
+
+      // One more interval tick after the lock is cleared - should call the new fetch
+      await vi.advanceTimersByTimeAsync(1000);
+
+      // After the timeout clears the lock, at least one new check should have run
+      expect(globalThis.fetch).toHaveBeenCalled();
+    });
   });
 
   describe("fetchRemoteVersion", () => {

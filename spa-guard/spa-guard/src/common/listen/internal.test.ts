@@ -15,6 +15,7 @@ vi.mock("../reload", () => ({
 }));
 
 vi.mock("../retryState", () => ({
+  clearRetryStateFromUrl: vi.fn(),
   getRetryInfoForBeacon: vi.fn(),
   getRetryStateFromUrl: vi.fn(),
   updateRetryStateInUrl: vi.fn(),
@@ -52,7 +53,12 @@ import { isChunkError } from "../isChunkError";
 import { getAssetUrl, isLikely404, isStaticAssetError } from "../isStaticAssetError";
 import { getOptions } from "../options";
 import { attemptReload } from "../reload";
-import { getRetryInfoForBeacon, getRetryStateFromUrl, updateRetryStateInUrl } from "../retryState";
+import {
+  clearRetryStateFromUrl,
+  getRetryInfoForBeacon,
+  getRetryStateFromUrl,
+  updateRetryStateInUrl,
+} from "../retryState";
 import { sendBeacon } from "../sendBeacon";
 import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
 import { handleStaticAssetFailure } from "../staticAssetRecovery";
@@ -71,6 +77,7 @@ const mockAttemptReload = vi.mocked(attemptReload);
 const mockGetRetryInfoForBeacon = vi.mocked(getRetryInfoForBeacon);
 const mockGetRetryStateFromUrl = vi.mocked(getRetryStateFromUrl);
 const mockUpdateRetryStateInUrl = vi.mocked(updateRetryStateInUrl);
+const mockClearRetryStateFromUrl = vi.mocked(clearRetryStateFromUrl);
 const mockSendBeacon = vi.mocked(sendBeacon);
 const mockShouldForceRetry = vi.mocked(shouldForceRetry);
 const mockShouldIgnoreMessages = vi.mocked(shouldIgnoreMessages);
@@ -201,6 +208,78 @@ describe("listenInternal", () => {
       mockGetRetryStateFromUrl.mockReturnValue(null);
       captureListeners();
       expect(mockUpdateRetryStateInUrl).not.toHaveBeenCalled();
+    });
+
+    it("clears -1 retry state from URL when page loads without a chunk error", () => {
+      // First call in listenInternal init: exhausted state → marks URL as -1
+      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: 3, retryId: "test-id" });
+      // Second call inside the load event handler: state is still -1 (no chunk error cleared it)
+      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "test-id" });
+
+      listenInternal(vi.fn());
+
+      // Simulate the page loading successfully without any chunk error
+      globalThis.dispatchEvent(new Event("load"));
+
+      expect(mockClearRetryStateFromUrl).toHaveBeenCalled();
+    });
+
+    it("does not clear retry state on load when it was already cleared by a chunk error", () => {
+      // First call in listenInternal init: exhausted state
+      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: 3, retryId: "test-id" });
+      // Second call inside the load event handler: state was already cleared (null)
+      mockGetRetryStateFromUrl.mockReturnValueOnce(null);
+
+      listenInternal(vi.fn());
+
+      globalThis.dispatchEvent(new Event("load"));
+
+      expect(mockClearRetryStateFromUrl).not.toHaveBeenCalled();
+    });
+
+    it("does not register a load listener when retry state is not exhausted", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 1, retryId: "test-id" });
+
+      listenInternal(vi.fn());
+
+      globalThis.dispatchEvent(new Event("load"));
+
+      // clearRetryStateFromUrl should NOT be called since no load listener was registered
+      expect(mockClearRetryStateFromUrl).not.toHaveBeenCalled();
+    });
+
+    it("clears stale -1 retry state from URL when page loads without a chunk error", () => {
+      // URL already has -1 from a previous session where cleanup did not run
+      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
+      // Second call inside the load event handler: state is still -1
+      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
+
+      listenInternal(vi.fn());
+
+      // Simulate the page loading successfully without any chunk error
+      globalThis.dispatchEvent(new Event("load"));
+
+      expect(mockClearRetryStateFromUrl).toHaveBeenCalled();
+    });
+
+    it("does not call updateRetryStateInUrl when retryAttempt is already -1", () => {
+      // stale -1 should not be re-written; only the cleanup listener is installed
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "stale-id" });
+      captureListeners();
+      expect(mockUpdateRetryStateInUrl).not.toHaveBeenCalled();
+    });
+
+    it("does not clear stale -1 on load when chunk error cleared it first", () => {
+      // URL already has -1 from a previous session
+      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
+      // A chunk error fired and cleared the state before load event
+      mockGetRetryStateFromUrl.mockReturnValueOnce(null);
+
+      listenInternal(vi.fn());
+
+      globalThis.dispatchEvent(new Event("load"));
+
+      expect(mockClearRetryStateFromUrl).not.toHaveBeenCalled();
     });
 
     it("registers exactly 4 event listeners", () => {

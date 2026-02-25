@@ -25,6 +25,11 @@ export function dismissSpinner(): void {
   }
 }
 
+// Strip characters that could break out of an HTML attribute value, close an
+// HTML tag, or break out of a CSS rule block when the background string is
+// interpolated into raw HTML/CSS (e.g. <style> tag content).
+export const sanitizeCssValue = (value: string): string => value.replaceAll(/["'<>\\{};\n]/g, "");
+
 export function getSpinnerHtml(backgroundOverride?: string): string {
   const opts = getOptions();
   if (opts.html?.spinner?.disabled) {
@@ -32,7 +37,7 @@ export function getSpinnerHtml(backgroundOverride?: string): string {
   }
 
   const spinnerContent = opts.html?.spinner?.content ?? defaultSpinnerSvg;
-  const bg = backgroundOverride ?? opts.html?.spinner?.background ?? "#fff";
+  const bg = sanitizeCssValue(backgroundOverride ?? opts.html?.spinner?.background ?? "#fff");
 
   return `<div id="${SPINNER_ID}" style="position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:var(--spa-guard-spinner-bg,${bg})">${spinnerContent}</div>`;
 }

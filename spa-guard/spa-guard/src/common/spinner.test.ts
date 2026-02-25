@@ -9,6 +9,7 @@ import {
   defaultSpinnerSvg,
   dismissSpinner,
   getSpinnerHtml,
+  sanitizeCssValue,
   showSpinner,
   SPINNER_ID,
 } from "./spinner";
@@ -36,6 +37,47 @@ describe("spinner", () => {
     vi.clearAllMocks();
     document.body.innerHTML = "";
     document.body.style.overflow = "";
+  });
+
+  describe("sanitizeCssValue", () => {
+    it("passes through safe CSS color values unchanged", () => {
+      expect(sanitizeCssValue("#fff")).toBe("#fff");
+      expect(sanitizeCssValue("rgba(0,0,0,0.5)")).toBe("rgba(0,0,0,0.5)");
+      expect(sanitizeCssValue("red")).toBe("red");
+    });
+
+    it("strips double-quote characters to prevent attribute breakout", () => {
+      expect(sanitizeCssValue('red" onmouseover="alert(1)')).toBe("red onmouseover=alert(1)");
+    });
+
+    it("strips single-quote characters", () => {
+      expect(sanitizeCssValue("red' onmouseover='alert(1)'")).toBe("red onmouseover=alert(1)");
+    });
+
+    it("strips angle brackets to prevent HTML tag injection", () => {
+      // Both < and > are removed; slashes and text content remain
+      expect(sanitizeCssValue("red</style><script>bad</script>")).toBe("red/stylescriptbad/script");
+    });
+
+    it("strips backslash characters", () => {
+      expect(sanitizeCssValue("red\\00003c")).toBe("red00003c");
+    });
+
+    it("strips closing brace to prevent CSS rule breakout in <style> tag content", () => {
+      expect(sanitizeCssValue("red}body{display:none")).toBe("redbodydisplay:none");
+    });
+
+    it("strips opening brace to prevent CSS rule injection", () => {
+      expect(sanitizeCssValue("red{color:blue")).toBe("redcolor:blue");
+    });
+
+    it("strips semicolon to prevent CSS property injection in style attributes", () => {
+      expect(sanitizeCssValue("red;display:none")).toBe("reddisplay:none");
+    });
+
+    it("strips full CSS breakout payload", () => {
+      expect(sanitizeCssValue("#fff}body{display:none/*")).toBe("#fffbodydisplay:none/*");
+    });
   });
 
   describe("constants", () => {
