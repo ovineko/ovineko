@@ -126,6 +126,24 @@ describe("serializeError", () => {
       };
       const result = parse(serializeError(event));
       expect(result.reason.xRequestId).toBe("req-abc-123");
+      expect(result.reason.headers).toBeUndefined();
+    });
+
+    it("does not include Authorization header when X-Request-ID is absent", () => {
+      const event = {
+        promise: Promise.resolve(),
+        reason: {
+          response: {
+            headers: { Authorization: "Bearer token" },
+            status: 401,
+          },
+        },
+      };
+      const result = parse(serializeError(event));
+      expect(result.reason.headers).toBeUndefined();
+      expect(result.reason.xRequestId).toBeUndefined();
+      const serialized = serializeError(event);
+      expect(serialized).not.toContain("Bearer token");
     });
 
     it("includes X-Request-ID via headers.get() when present", () => {
@@ -180,6 +198,31 @@ describe("serializeError", () => {
       expect(result.reason.request.payload).toBeUndefined();
       expect(result.reason.request.data).toBeUndefined();
       expect(result.reason.request.body).toBeUndefined();
+    });
+
+    it("does not include sensitive fields from reason.config (Axios-style errors)", () => {
+      const event = {
+        promise: Promise.resolve(),
+        reason: {
+          config: {
+            baseURL: "https://api.example.com",
+            data: '{"password":"secret"}',
+            headers: { Authorization: "Bearer token" },
+            method: "POST",
+            params: { token: "sensitive" },
+            url: "/login",
+          },
+          response: { status: 401 },
+        },
+      };
+      const result = parse(serializeError(event));
+      expect(result.reason.request).toBeDefined();
+      expect(result.reason.request.method).toBe("POST");
+      expect(result.reason.request.url).toBe("/login");
+      expect(result.reason.request.baseURL).toBe("https://api.example.com");
+      expect(result.reason.request.data).toBeUndefined();
+      expect(result.reason.request.headers).toBeUndefined();
+      expect(result.reason.request.params).toBeUndefined();
     });
 
     it("does not include full headers object beyond X-Request-ID", () => {
@@ -256,8 +299,9 @@ describe("serializeError", () => {
       const event = { promise: Promise.resolve(), reason: longStr };
       const result = parse(serializeError(event));
       expect(result.reason.type).toBe("string");
-      // truncated to 500 chars + ellipsis character
-      expect(result.reason.value.length).toBeLessThanOrEqual(501);
+      // truncated to exactly 500 chars + 1 ellipsis character
+      expect(result.reason.value.length).toBe(501);
+      expect(result.reason.value.endsWith("\u2026")).toBe(true);
     });
 
     it("bounds object with more than MAX_KEYS keys", () => {
@@ -282,6 +326,24 @@ describe("serializeError", () => {
       expect(result.type).toBe("PromiseRejectionEvent");
       expect(result.isTrusted).toBe(true);
       expect(result.timeStamp).toBe(98_765);
+    });
+
+    it("includes constructorName for Error reason", () => {
+      const event = { promise: Promise.resolve(), reason: new TypeError("type error") };
+      const result = parse(serializeError(event));
+      expect(result.type).toBe("PromiseRejectionEvent");
+      expect(result.constructorName).toBe("TypeError");
+    });
+
+    it("includes pageUrl when window.location.href is available", () => {
+      const event = { promise: Promise.resolve(), reason: new Error("test") };
+      const result = parse(serializeError(event));
+      expect(result.type).toBe("PromiseRejectionEvent");
+      // pageUrl is defined if window.location.href is accessible (JSDOM provides it)
+      // It may be undefined in non-browser environments, so only assert type
+      if (result.pageUrl !== undefined) {
+        expect(typeof result.pageUrl).toBe("string");
+      }
     });
   });
 

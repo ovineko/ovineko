@@ -458,6 +458,7 @@ describe("retryOrchestrator", () => {
     it("calls showLoadingUI with correct nextAttempt when URL retry state exists", () => {
       setupMockLocation("http://localhost/?spaGuardRetryId=existing-id&spaGuardRetryAttempt=1");
       triggerRetry({ error: new Error("chunk error") });
+      expect(mockShowLoadingUI).toHaveBeenCalledTimes(1);
       expect(mockShowLoadingUI).toHaveBeenCalledWith(2);
     });
 
@@ -521,6 +522,7 @@ describe("retryOrchestrator", () => {
         expect.objectContaining({ attempt: 1, name: "retry-attempt", retryId: "new-retry-id" }),
         { silent: false },
       );
+      expect(mockShowLoadingUI).toHaveBeenCalledWith(1);
     });
 
     it("calls clearLastReloadTime on reset", () => {

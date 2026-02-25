@@ -430,7 +430,7 @@ describe("showLoadingUI", () => {
 
     showLoadingUI(1);
 
-    expect(targetEl.innerHTML).toContain("data-spa-guard-section");
+    expect(targetEl.querySelector('[data-spa-guard-section="retrying"]')).not.toBeNull();
   });
 
   it("sets attempt number in elements with [data-spa-guard-content='attempt']", () => {
@@ -453,6 +453,7 @@ describe("showLoadingUI", () => {
       '[data-spa-guard-section="retrying"]',
     ) as HTMLElement;
     expect(retrySection?.style.visibility).toBe("visible");
+    expect(retrySection?.style.display).toBe("");
   });
 
   it("hides spinner when spinner.disabled is true", () => {
@@ -470,6 +471,23 @@ describe("showLoadingUI", () => {
 
     const spinnerEl = targetEl.querySelector("[data-spa-guard-spinner]") as HTMLElement;
     expect(spinnerEl?.style.display).toBe("none");
+  });
+
+  it("replaces spinner content when spinner.content is set", () => {
+    mockGetOptions.mockReturnValue({
+      html: {
+        fallback: { selector: "body" },
+        loading: { content: loadingTemplate },
+        spinner: { content: "<svg>custom-spinner</svg>" },
+      },
+    });
+    const targetEl = document.createElement("div");
+    vi.spyOn(document, "querySelector").mockReturnValue(targetEl as unknown as Element);
+
+    showLoadingUI(1);
+
+    const spinnerEl = targetEl.querySelector("[data-spa-guard-spinner]") as HTMLElement;
+    expect(spinnerEl?.innerHTML).toBe("<svg>custom-spinner</svg>");
   });
 
   it("applies i18n when i18n is configured", () => {

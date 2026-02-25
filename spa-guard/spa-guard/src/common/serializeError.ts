@@ -30,7 +30,7 @@ const serializeErrorInternal = (error: unknown): any => {
     return {
       message: error.message,
       name: error.name,
-      stack: error.stack,
+      stack: error.stack ? truncate(error.stack) : undefined,
       type: "Error",
       ...extractErrorProperties(error),
     };
@@ -262,11 +262,21 @@ const extractBoundedObject = (
 
 const extractErrorProperties = (error: Error): Record<string, any> => {
   const props: Record<string, any> = {};
+  let keyCount = 0;
   for (const key of Object.getOwnPropertyNames(error)) {
+    if (keyCount >= MAX_KEYS) {
+      break;
+    }
     if (!["message", "name", "stack"].includes(key)) {
       try {
-        props[key] = (error as any)[key];
+        const value = (error as any)[key];
+        if (value === null || value === undefined || typeof value !== "object") {
+          props[key] = typeof value === "string" ? truncate(value) : value;
+        } else {
+          props[key] = "[object]";
+        }
       } catch {}
+      keyCount++;
     }
   }
   return props;
@@ -290,11 +300,20 @@ const extractEventTarget = (target: EventTarget | null): any => {
 
 const extractOwnProperties = (obj: any): Record<string, any> => {
   const props: Record<string, any> = {};
+  let keyCount = 0;
   for (const key of Object.keys(obj)) {
+    if (keyCount >= MAX_KEYS) {
+      break;
+    }
     try {
       const value = obj[key];
-      props[key] = typeof value === "object" ? String(value) : value;
+      if (value === null || value === undefined || typeof value !== "object") {
+        props[key] = typeof value === "string" ? truncate(value) : value;
+      } else {
+        props[key] = "[object]";
+      }
     } catch {}
+    keyCount++;
   }
   return props;
 };

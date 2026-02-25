@@ -38,8 +38,9 @@ export const showLoadingUI = (attempt: number): void => {
 
     const retrySection = targetElement.querySelector('[data-spa-guard-section="retrying"]');
     if (retrySection) {
-      (retrySection as HTMLElement).style.display = "";
-      (retrySection as HTMLElement).style.visibility = "visible";
+      const retrySectionEl = retrySection as HTMLElement;
+      retrySectionEl.style.display = "";
+      retrySectionEl.style.visibility = "visible";
     }
 
     const attemptElements = targetElement.querySelectorAll('[data-spa-guard-content="attempt"]');

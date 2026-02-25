@@ -269,7 +269,7 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
         globalThis.window.location.href = reloadUrl;
       } catch (navError) {
         getLogger()?.error("triggerRetry navigation failed", navError);
-        setState({ phase: "idle" });
+        setState({ phase: "idle", timer: null });
       }
     }, delay);
 
