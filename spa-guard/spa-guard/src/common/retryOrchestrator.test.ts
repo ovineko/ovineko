@@ -43,7 +43,7 @@ vi.mock("./fallbackState", () => ({
 }));
 
 import { emitEvent, getLogger, isDefaultRetryEnabled } from "./events/internal";
-import { showFallbackUI } from "./fallbackRendering";
+import { showFallbackUI, showLoadingUI } from "./fallbackRendering";
 import { isInFallbackMode, resetFallbackMode, setFallbackMode } from "./fallbackState";
 import {
   clearLastReloadTime,
@@ -79,6 +79,7 @@ const mockGenerateRetryId = vi.mocked(generateRetryId);
 const mockSendBeacon = vi.mocked(sendBeacon);
 const mockShouldIgnoreMessages = vi.mocked(shouldIgnoreMessages);
 const mockShowFallbackUI = vi.mocked(showFallbackUI);
+const mockShowLoadingUI = vi.mocked(showLoadingUI);
 const mockIsInFallbackMode = vi.mocked(isInFallbackMode);
 const mockResetFallbackMode = vi.mocked(resetFallbackMode);
 const mockSetFallbackMode = vi.mocked(setFallbackMode);
@@ -444,6 +445,40 @@ describe("retryOrchestrator", () => {
       mockIsInFallbackMode.mockReturnValue(true);
       const result = triggerRetry({ error: new Error("chunk error 2") });
       expect(result).toEqual({ status: "fallback" });
+    });
+  });
+
+  describe("triggerRetry - showLoadingUI", () => {
+    it("calls showLoadingUI(1) on first attempt with no URL retry state", () => {
+      triggerRetry({ error: new Error("chunk error") });
+      expect(mockShowLoadingUI).toHaveBeenCalledTimes(1);
+      expect(mockShowLoadingUI).toHaveBeenCalledWith(1);
+    });
+
+    it("calls showLoadingUI with correct nextAttempt when URL retry state exists", () => {
+      setupMockLocation("http://localhost/?spaGuardRetryId=existing-id&spaGuardRetryAttempt=1");
+      triggerRetry({ error: new Error("chunk error") });
+      expect(mockShowLoadingUI).toHaveBeenCalledWith(2);
+    });
+
+    it("does not call showLoadingUI when retry is deduped (phase=scheduled)", () => {
+      triggerRetry({ error: new Error("first") });
+      mockShowLoadingUI.mockClear();
+      triggerRetry({ error: new Error("second") });
+      expect(mockShowLoadingUI).not.toHaveBeenCalled();
+    });
+
+    it("does not call showLoadingUI when fallback phase is reached (exhausted)", () => {
+      setupMockLocation("http://localhost/?spaGuardRetryId=id&spaGuardRetryAttempt=3");
+      triggerRetry({ error: new Error("chunk error") });
+      expect(mockShowLoadingUI).not.toHaveBeenCalled();
+    });
+
+    it("calls showFallbackUI (not showLoadingUI) on retry exhaustion", () => {
+      setupMockLocation("http://localhost/?spaGuardRetryId=id&spaGuardRetryAttempt=3");
+      triggerRetry({ error: new Error("chunk error") });
+      expect(mockShowFallbackUI).toHaveBeenCalledTimes(1);
+      expect(mockShowLoadingUI).not.toHaveBeenCalled();
     });
   });
 

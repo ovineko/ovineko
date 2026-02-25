@@ -78,13 +78,13 @@ Two independent improvements from TODO.md:
 **Files:**
 - Modify: `spa-guard/spa-guard/src/common/retryOrchestrator.test.ts`
 
-- [ ] Add `showLoadingUI` to the fallbackRendering mock (already mocked as module, add the fn)
-- [ ] Test: assert `showLoadingUI(1)` is called when triggerRetry is invoked on first attempt (no URL state)
-- [ ] Test: assert `showLoadingUI(nextAttempt)` uses correct attempt number when URL retry state exists
-- [ ] Test: assert `showLoadingUI` is NOT called when retry is deduped (phase=scheduled)
-- [ ] Test: assert `showLoadingUI` is NOT called when fallback phase is reached (exhausted)
-- [ ] Test: assert `showFallbackUI` is still called on retry exhaustion (compatibility preserved)
-- [ ] Run tests: `pnpm test src/common/retryOrchestrator.test.ts` - must pass before task 5
+- [x] Add `showLoadingUI` to the fallbackRendering mock (already mocked as module, add the fn)
+- [x] Test: assert `showLoadingUI(1)` is called when triggerRetry is invoked on first attempt (no URL state)
+- [x] Test: assert `showLoadingUI(nextAttempt)` uses correct attempt number when URL retry state exists
+- [x] Test: assert `showLoadingUI` is NOT called when retry is deduped (phase=scheduled)
+- [x] Test: assert `showLoadingUI` is NOT called when fallback phase is reached (exhausted)
+- [x] Test: assert `showFallbackUI` is still called on retry exhaustion (compatibility preserved)
+- [x] Run tests: `pnpm test src/common/retryOrchestrator.test.ts` - must pass before task 5
 
 ### Task 5: Improve unhandledrejection serialization in serializeError.ts
 
