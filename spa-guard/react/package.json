@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard-react",
-  "version": "0.0.2-alpha-0",
+  "version": "0.0.2-alpha-1",
   "description": "React hooks, components, and error boundaries for spa-guard",
   "keywords": [
     "spa",
