@@ -1,7 +1,7 @@
 import { name } from "../../package.json";
 import { CACHE_BUST_PARAM, RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
 import { emitEvent, getLogger, isDefaultRetryEnabled } from "./events/internal";
-import { showFallbackUI } from "./fallbackRendering";
+import { showFallbackUI, showLoadingUI } from "./fallbackRendering";
 import { isInFallbackMode, resetFallbackMode, setFallbackMode } from "./fallbackState";
 import {
   clearLastReloadTime,
@@ -258,6 +258,7 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
     getLogger()?.retrySchedulingReload(retryId, nextAttempt, delay);
 
     setState({ attempt: nextAttempt, retryId });
+    showLoadingUI(nextAttempt);
 
     const timer = setTimeout(() => {
       try {

@@ -33,6 +33,7 @@ vi.mock("./shouldIgnore", () => ({
 
 vi.mock("./fallbackRendering", () => ({
   showFallbackUI: vi.fn(),
+  showLoadingUI: vi.fn(),
 }));
 
 vi.mock("./fallbackState", () => ({

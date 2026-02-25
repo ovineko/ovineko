@@ -68,10 +68,10 @@ Two independent improvements from TODO.md:
 **Files:**
 - Modify: `spa-guard/spa-guard/src/common/retryOrchestrator.ts`
 
-- [ ] Import `showLoadingUI` from `./fallbackRendering`
-- [ ] In the successful retry scheduling path (after setState for nextAttempt, before setTimeout), call `showLoadingUI(nextAttempt)`
-- [ ] Verify showFallbackUI behavior for exhausted retries is unchanged
-- [ ] Run tests: `pnpm test src/common/retryOrchestrator.test.ts` - must pass
+- [x] Import `showLoadingUI` from `./fallbackRendering`
+- [x] In the successful retry scheduling path (after setState for nextAttempt, before setTimeout), call `showLoadingUI(nextAttempt)`
+- [x] Verify showFallbackUI behavior for exhausted retries is unchanged
+- [x] Run tests: `pnpm test src/common/retryOrchestrator.test.ts` - must pass
 
 ### Task 4: Add showLoadingUI call assertions to retryOrchestrator.test.ts
 
