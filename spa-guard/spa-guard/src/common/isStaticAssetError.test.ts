@@ -138,6 +138,7 @@ describe("isLikely404 (Resource Timing API path)", () => {
   it("returns true when no resource timing entry found (Safari / failed load)", () => {
     vi.mocked(performance.getEntriesByName).mockReturnValue([]);
     expect(isLikely404(TEST_URL)).toBe(true);
+    expect(performance.getEntriesByName).toHaveBeenCalledWith(TEST_URL, "resource");
   });
 
   it("returns true when responseStatus >= 400", () => {
@@ -145,6 +146,15 @@ describe("isLikely404 (Resource Timing API path)", () => {
       { decodedBodySize: 0, responseStatus: 404, transferSize: 0 } as any,
     ]);
     expect(isLikely404(TEST_URL)).toBe(true);
+    expect(performance.getEntriesByName).toHaveBeenCalledWith(TEST_URL, "resource");
+  });
+
+  it("returns true when responseStatus is exactly 400", () => {
+    vi.mocked(performance.getEntriesByName).mockReturnValue([
+      { decodedBodySize: 1234, responseStatus: 400, transferSize: 500 } as any,
+    ]);
+    expect(isLikely404(TEST_URL)).toBe(true);
+    expect(performance.getEntriesByName).toHaveBeenCalledWith(TEST_URL, "resource");
   });
 
   it("returns true when transferSize and decodedBodySize are both 0 (blocked/failed)", () => {
@@ -152,6 +162,7 @@ describe("isLikely404 (Resource Timing API path)", () => {
       { decodedBodySize: 0, responseStatus: 0, transferSize: 0 } as any,
     ]);
     expect(isLikely404(TEST_URL)).toBe(true);
+    expect(performance.getEntriesByName).toHaveBeenCalledWith(TEST_URL, "resource");
   });
 
   it("returns false for a successful load (responseStatus 200, non-zero body)", () => {
@@ -159,6 +170,7 @@ describe("isLikely404 (Resource Timing API path)", () => {
       { decodedBodySize: 5678, responseStatus: 200, transferSize: 1234 } as any,
     ]);
     expect(isLikely404(TEST_URL)).toBe(false);
+    expect(performance.getEntriesByName).toHaveBeenCalledWith(TEST_URL, "resource");
   });
 
   it("returns false for a cached resource (transferSize 0 but decodedBodySize non-zero)", () => {
@@ -166,6 +178,7 @@ describe("isLikely404 (Resource Timing API path)", () => {
       { decodedBodySize: 5678, responseStatus: 200, transferSize: 0 } as any,
     ]);
     expect(isLikely404(TEST_URL)).toBe(false);
+    expect(performance.getEntriesByName).toHaveBeenCalledWith(TEST_URL, "resource");
   });
 
   it("uses the last entry when multiple entries exist", () => {
@@ -174,6 +187,7 @@ describe("isLikely404 (Resource Timing API path)", () => {
       { decodedBodySize: 0, responseStatus: 404, transferSize: 0 } as any,
     ]);
     expect(isLikely404(TEST_URL)).toBe(true);
+    expect(performance.getEntriesByName).toHaveBeenCalledWith(TEST_URL, "resource");
   });
 });
 

@@ -76,7 +76,7 @@ export function dispatchNetworkTimeout(delayMs = 3000): void {
  */
 export function dispatchRetryExhausted(): void {
   const options = getOptions();
-  const reloadDelays = options.reloadDelays ?? [1000, 2000, 5000];
+  const reloadDelays = options.reloadDelays ?? [];
 
   emitEvent({
     finalAttempt: reloadDelays.length,
@@ -94,9 +94,12 @@ export function dispatchRetryExhausted(): void {
  * the Resource Timing API-based isLikely404 check.
  */
 export function dispatchStaticAsset404(): void {
-  const hash = crypto.randomUUID().replaceAll("-", "").slice(0, 8);
+  const hash = crypto.randomUUID().slice(0, 8);
   const script = document.createElement("script");
   script.src = `/assets/index-${hash}.js`;
+  script.addEventListener("error", () => {
+    script.remove();
+  });
   document.head.append(script);
 }
 

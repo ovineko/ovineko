@@ -36,10 +36,7 @@ const checkResourceStatus = (url: string): boolean => {
   return false;
 };
 
-export const isLikely404 = (
-  url?: string,
-  timeSinceNavMs: number = typeof performance === "undefined" ? 0 : performance.now(),
-): boolean => {
+export const isLikely404 = (url?: string, timeSinceNavMs: number = performance.now()): boolean => {
   if (url !== undefined) {
     return checkResourceStatus(url);
   }

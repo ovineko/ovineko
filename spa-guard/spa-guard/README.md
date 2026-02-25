@@ -60,7 +60,19 @@ Built-in translation strings.
 
 ### `@ovineko/spa-guard/runtime/debug`
 
-Debug helpers for testing error scenarios.
+Debug helpers for testing error scenarios. Use `createDebugger()` to mount an in-page panel with buttons for each scenario.
+
+Available error scenarios:
+
+- `dispatchChunkLoadError` — unhandled ChunkLoadError rejection
+- `dispatchNetworkTimeout` — unhandled network timeout after a delay
+- `dispatchSyncRuntimeError` — sync error thrown during React render
+- `dispatchAsyncRuntimeError` — uncaught error via setTimeout
+- `dispatchFinallyError` — unhandled rejection from Promise.finally
+- `dispatchForceRetryError` — ForceRetryError to exercise the force-retry path
+- `dispatchUnhandledRejection` — generic unhandled promise rejection
+- `dispatchRetryExhausted` — simulates retry-exhausted state and renders fallback UI
+- `dispatchStaticAsset404` — appends a hashed `<script>` that 404s, exercising the Resource Timing API-based static asset detection path
 
 ## Related packages
 

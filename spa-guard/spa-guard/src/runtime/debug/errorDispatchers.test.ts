@@ -337,10 +337,19 @@ describe("dispatchFinallyError", () => {
 });
 
 describe("dispatchStaticAsset404", () => {
+  let appendSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    appendSpy = vi.spyOn(document.head, "append");
+  });
+
   afterEach(() => {
-    // Remove any script elements added by the dispatcher
-    for (const el of document.head.querySelectorAll("script[src^='/assets/index-']")) {
-      el.remove();
+    appendSpy.mockRestore();
+    // Safety-net cleanup for any scripts that were not removed by onerror
+    for (const el of document.head.querySelectorAll("script")) {
+      if ((el as HTMLScriptElement).src.includes("/assets/index-")) {
+        el.remove();
+      }
     }
   });
 
@@ -350,29 +359,25 @@ describe("dispatchStaticAsset404", () => {
   });
 
   it("appends a script element to document.head", () => {
-    const before = document.head.querySelectorAll("script").length;
     dispatchStaticAsset404();
-    const after = document.head.querySelectorAll("script").length;
-    expect(after).toBe(before + 1);
+    expect(appendSpy).toHaveBeenCalledOnce();
+    const appended = appendSpy.mock.calls[0]![0] as HTMLScriptElement;
+    expect(appended).toBeInstanceOf(HTMLScriptElement);
   });
 
   it("appended script has a hashed URL matching /assets/index-<hash>.js pattern", () => {
     dispatchStaticAsset404();
-    const scripts = [
-      ...document.head.querySelectorAll<HTMLScriptElement>("script[src^='/assets/index-']"),
-    ];
-    expect(scripts.length).toBeGreaterThan(0);
-    const src = scripts.at(-1)!.src;
-    expect(src).toMatch(/\/assets\/index-[a-z0-9]+\.js$/);
+    const appended = appendSpy.mock.calls[0]![0] as HTMLScriptElement;
+    expect(appended.src).toMatch(/\/assets\/index-[a-z0-9]{8}\.js$/);
   });
 
   it("each call appends a script with a unique URL", () => {
     dispatchStaticAsset404();
     dispatchStaticAsset404();
-    const scripts = document.head.querySelectorAll("script[src^='/assets/index-']");
-    const srcs = [...scripts].map((s) => (s as HTMLScriptElement).src);
+    expect(appendSpy).toHaveBeenCalledTimes(2);
+    const srcs = appendSpy.mock.calls.map((call) => (call[0] as HTMLScriptElement).src);
     const uniqueSrcs = new Set(srcs);
-    expect(uniqueSrcs.size).toBe(srcs.length);
+    expect(uniqueSrcs.size).toBe(2);
   });
 });
 
