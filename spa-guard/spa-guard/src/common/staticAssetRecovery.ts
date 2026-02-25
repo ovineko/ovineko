@@ -1,4 +1,5 @@
 import { staticAssetRecoveryKey } from "./constants";
+import { isInFallbackMode } from "./fallbackState";
 import { getOptions } from "./options";
 import { attemptReload } from "./reload";
 
@@ -21,6 +22,10 @@ const getState = (): StaticAssetRecoveryState => {
 };
 
 export const handleStaticAssetFailure = (url: string): void => {
+  if (isInFallbackMode()) {
+    return;
+  }
+
   const state = getState();
   state.failedAssets.add(url);
 

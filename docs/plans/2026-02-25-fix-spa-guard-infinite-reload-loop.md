@@ -60,10 +60,10 @@ When retry attempts are exhausted and the fallback UI is shown, subsequent stati
 **Files:**
 - Modify: `spa-guard/spa-guard/src/common/staticAssetRecovery.ts`
 
-- [ ] Import `isInFallbackMode` from `./fallbackState`
-- [ ] Add early return at top of `handleStaticAssetFailure()` if `isInFallbackMode()` returns true
-- [ ] Update `staticAssetRecovery.test.ts`: mock `./fallbackState`, add test asserting no reload when in fallback mode
-- [ ] Run `npm test` in spa-guard — must pass
+- [x] Import `isInFallbackMode` from `./fallbackState`
+- [x] Add early return at top of `handleStaticAssetFailure()` if `isInFallbackMode()` returns true
+- [x] Update `staticAssetRecovery.test.ts`: mock `./fallbackState`, add test asserting no reload when in fallback mode
+- [x] Run `npm test` in spa-guard — must pass
 
 ### Task 5: Guard and set fallback mode in reload.ts
 

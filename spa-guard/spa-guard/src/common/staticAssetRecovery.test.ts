@@ -8,12 +8,18 @@ vi.mock("./reload", () => ({
   attemptReload: vi.fn(),
 }));
 
+vi.mock("./fallbackState", () => ({
+  isInFallbackMode: vi.fn(),
+}));
+
+import { isInFallbackMode } from "./fallbackState";
 import { getOptions } from "./options";
 import { attemptReload } from "./reload";
 import { handleStaticAssetFailure, resetStaticAssetRecovery } from "./staticAssetRecovery";
 
 const mockGetOptions = vi.mocked(getOptions);
 const mockAttemptReload = vi.mocked(attemptReload);
+const mockIsInFallbackMode = vi.mocked(isInFallbackMode);
 
 describe("staticAssetRecovery", () => {
   beforeEach(() => {
@@ -24,6 +30,7 @@ describe("staticAssetRecovery", () => {
         recoveryDelay: 500,
       },
     });
+    mockIsInFallbackMode.mockReturnValue(false);
     resetStaticAssetRecovery();
   });
 
@@ -98,6 +105,13 @@ describe("staticAssetRecovery", () => {
       handleStaticAssetFailure("https://example.com/assets/vendor-abc12345.js");
       vi.advanceTimersByTime(500);
       expect(mockAttemptReload).toHaveBeenCalledTimes(2);
+    });
+
+    it("does not call attemptReload when in fallback mode", () => {
+      mockIsInFallbackMode.mockReturnValue(true);
+      handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
+      vi.advanceTimersByTime(500);
+      expect(mockAttemptReload).not.toHaveBeenCalled();
     });
   });
 
