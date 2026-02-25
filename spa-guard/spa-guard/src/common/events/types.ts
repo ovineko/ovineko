@@ -49,7 +49,7 @@ export interface SPAGuardEventLazyRetryExhausted {
   name: "lazy-retry-exhausted";
   /** Total number of attempts that were made (delays.length + 1). */
   totalAttempts: number;
-  /** Whether attemptReload() will be called after this event. */
+  /** Whether triggerRetry() will be called after this event. */
   willReload: boolean;
 }
 

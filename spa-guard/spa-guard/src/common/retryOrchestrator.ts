@@ -137,7 +137,7 @@ const clearRetryFromUrl = (): void => {
     url.searchParams.delete(CACHE_BUST_PARAM);
     globalThis.window.history.replaceState(null, "", url.toString());
   } catch (error) {
-    getLogger()?.fallbackInjectFailed(error);
+    getLogger()?.error("clearRetryFromUrl failed", error);
   }
 };
 
@@ -270,7 +270,8 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
     setState({ timer });
 
     return { status: "accepted" };
-  } catch {
+  } catch (error) {
+    getLogger()?.error("triggerRetry internal error", error);
     setState({ lastSource: undefined, lastTriggerTime: undefined, phase: "idle" });
     return { reason: "internal-error", status: "deduped" };
   }

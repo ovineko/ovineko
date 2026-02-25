@@ -49,7 +49,7 @@ export const handleErrorWithSpaGuard = (error: unknown, options: HandleErrorOpti
   const isForceRetry = shouldForceRetry([errorMessage]);
 
   if ((isChunk || isForceRetry) && autoRetryChunkErrors) {
-    triggerRetry({ error });
+    triggerRetry({ error, source: "error-boundary" });
   } else if (sendBeaconOnError) {
     sendBeacon({
       errorMessage: error instanceof Error ? error.message : String(error),

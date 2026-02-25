@@ -178,7 +178,7 @@ export interface Options {
    */
   lazyRetry?: {
     /**
-     * Call attemptReload() after all retry attempts for dynamic imports are exhausted.
+     * Call triggerRetry() after all retry attempts for dynamic imports are exhausted.
      * If true, triggers page reload logic after all retryDelays fail.
      * If false, only throws the error to the error boundary without a reload.
      * @default true

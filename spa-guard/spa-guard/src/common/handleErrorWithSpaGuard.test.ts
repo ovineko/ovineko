@@ -64,7 +64,7 @@ describe("handleErrorWithSpaGuard", () => {
       handleErrorWithSpaGuard(error, { eventName: "test-event" });
 
       expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
-      expect(mockTriggerRetry).toHaveBeenCalledWith({ error });
+      expect(mockTriggerRetry).toHaveBeenCalledWith({ error, source: "error-boundary" });
     });
 
     it("calls triggerRetry when isChunkError=true and autoRetryChunkErrors=true (explicit)", () => {
@@ -74,7 +74,7 @@ describe("handleErrorWithSpaGuard", () => {
       handleErrorWithSpaGuard(error, { autoRetryChunkErrors: true, eventName: "test-event" });
 
       expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
-      expect(mockTriggerRetry).toHaveBeenCalledWith({ error });
+      expect(mockTriggerRetry).toHaveBeenCalledWith({ error, source: "error-boundary" });
     });
 
     it("does not call sendBeacon when chunk error triggers reload", () => {
@@ -92,7 +92,7 @@ describe("handleErrorWithSpaGuard", () => {
 
       handleErrorWithSpaGuard(error, { eventName: "test-event" });
 
-      expect(mockTriggerRetry).toHaveBeenCalledWith({ error });
+      expect(mockTriggerRetry).toHaveBeenCalledWith({ error, source: "error-boundary" });
       expect(mockTriggerRetry.mock.calls[0]![0]!.error).toBe(error);
     });
   });
@@ -387,7 +387,7 @@ describe("handleErrorWithSpaGuard", () => {
 
       expect(onError).toHaveBeenCalledTimes(1);
       expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
-      expect(mockTriggerRetry).toHaveBeenCalledWith({ error });
+      expect(mockTriggerRetry).toHaveBeenCalledWith({ error, source: "error-boundary" });
     });
   });
 
@@ -513,7 +513,7 @@ describe("handleErrorWithSpaGuard", () => {
       handleErrorWithSpaGuard(error, { eventName: "test-event" });
 
       expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
-      expect(mockTriggerRetry).toHaveBeenCalledWith({ error });
+      expect(mockTriggerRetry).toHaveBeenCalledWith({ error, source: "error-boundary" });
     });
 
     it("does not call sendBeacon when forceRetry triggers reload", () => {
