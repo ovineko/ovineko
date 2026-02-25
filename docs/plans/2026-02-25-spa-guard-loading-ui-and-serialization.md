@@ -91,21 +91,21 @@ Two independent improvements from TODO.md:
 **Files:**
 - Modify: `spa-guard/spa-guard/src/common/serializeError.ts`
 
-- [ ] Add guardrail constants: MAX_DEPTH=4, MAX_KEYS=20, MAX_STRING_LEN=500
-- [ ] Add circular reference protection using a WeakSet visited tracker
-- [ ] Update PromiseRejectionEvent branch: expand `reason` deeply with strict redaction
-- [ ] For Error reason: extract only `name`, `message`, `stack`, `cause` (recursively, bounded by MAX_DEPTH)
-- [ ] For AggregateError reason: include bounded `errors[]` preview (first 3 items, same safe fields)
-- [ ] For DOMException reason: extract `name`, `message`, `code`
-- [ ] For HTTP-like errors with `reason.response`: extract ONLY `status`, `statusText`, `url`, `method`, `response.type`; extract `X-Request-ID` from response headers ONLY if present - NO body, NO payload, NO full headers
-- [ ] For request wrappers (`reason.request` / `reason.config`): extract ONLY `method`, `url`, `baseURL` - NO body, NO payload, NO headers
-- [ ] For non-Error reason (string/number/object): preserve primitive as-is or safe bounded object preview
-- [ ] Add `isTrusted` and `timeStamp` from the PromiseRejectionEvent to output
-- [ ] Add runtime context: `pageUrl` (window.location.href if available), `constructorName` (reason?.constructor?.name)
-- [ ] Ensure string values are truncated to MAX_STRING_LEN
-- [ ] Ensure recursive object extraction respects MAX_DEPTH and MAX_KEYS
-- [ ] Keep backward compatibility: existing fields in `type: "Error"` and `type: "PromiseRejectionEvent"` remain present
-- [ ] Run tests: `pnpm test src/common/serializeError.test.ts` - must pass
+- [x] Add guardrail constants: MAX_DEPTH=4, MAX_KEYS=20, MAX_STRING_LEN=500
+- [x] Add circular reference protection using a WeakSet visited tracker
+- [x] Update PromiseRejectionEvent branch: expand `reason` deeply with strict redaction
+- [x] For Error reason: extract only `name`, `message`, `stack`, `cause` (recursively, bounded by MAX_DEPTH)
+- [x] For AggregateError reason: include bounded `errors[]` preview (first 3 items, same safe fields)
+- [x] For DOMException reason: extract `name`, `message`, `code`
+- [x] For HTTP-like errors with `reason.response`: extract ONLY `status`, `statusText`, `url`, `method`, `response.type`; extract `X-Request-ID` from response headers ONLY if present - NO body, NO payload, NO full headers
+- [x] For request wrappers (`reason.request` / `reason.config`): extract ONLY `method`, `url`, `baseURL` - NO body, NO payload, NO headers
+- [x] For non-Error reason (string/number/object): preserve primitive as-is or safe bounded object preview
+- [x] Add `isTrusted` and `timeStamp` from the PromiseRejectionEvent to output
+- [x] Add runtime context: `pageUrl` (window.location.href if available), `constructorName` (reason?.constructor?.name)
+- [x] Ensure string values are truncated to MAX_STRING_LEN
+- [x] Ensure recursive object extraction respects MAX_DEPTH and MAX_KEYS
+- [x] Keep backward compatibility: existing fields in `type: "Error"` and `type: "PromiseRejectionEvent"` remain present
+- [x] Run tests: `pnpm test src/common/serializeError.test.ts` - must pass
 
 ### Task 6: Add serialization and redaction tests to serializeError.test.ts
 
