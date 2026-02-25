@@ -40,10 +40,10 @@ When retry attempts are exhausted and the fallback UI is shown, subsequent stati
 **Files:**
 - Create: `spa-guard/spa-guard/src/common/fallbackState.ts`
 
-- [ ] Implement `isInFallbackMode(): boolean` — reads from `(globalThis.window as any)[fallbackModeKey]`
-- [ ] Implement `setFallbackMode(): void` — sets flag to true on window
-- [ ] Implement `resetFallbackMode(): void` — sets flag to false on window (used in tests)
-- [ ] Follow same guard pattern as `getState()` in `staticAssetRecovery.ts` for SSR safety
+- [x] Implement `isInFallbackMode(): boolean` — reads from `(globalThis.window as any)[fallbackModeKey]`
+- [x] Implement `setFallbackMode(): void` — sets flag to true on window
+- [x] Implement `resetFallbackMode(): void` — sets flag to false on window (used in tests)
+- [x] Follow same guard pattern as `getState()` in `staticAssetRecovery.ts` for SSR safety
 
 ### Task 3: Create unit tests for fallbackState
 
