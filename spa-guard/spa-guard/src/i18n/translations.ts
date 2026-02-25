@@ -4,7 +4,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   ar: {
     heading: "حدث خطأ ما",
     loading: "...جارٍ التحميل",
-    message: "يرجى تحديث الصفحة للمتابعة.",
+    message: "يرجى تحديث الصفحة للمتابعة",
     reload: "إعادة تحميل",
     retrying: "محاولة إعادة",
     rtl: true,
@@ -13,7 +13,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   az: {
     heading: "Nəsə səhv getdi",
     loading: "Yüklənir...",
-    message: "Davam etmək üçün səhifəni yeniləyin.",
+    message: "Davam etmək üçün səhifəni yeniləyin",
     reload: "Səhifəni yenidən yüklə",
     retrying: "Yenidən cəhd",
     tryAgain: "Yenidən cərəb edin",
@@ -21,7 +21,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   ca: {
     heading: "Alguna cosa ha anat malament",
     loading: "Carregant...",
-    message: "Si us plau, actualitzeu la pàgina per continuar.",
+    message: "Si us plau, actualitzeu la pàgina per continuar",
     reload: "Recarrega la pàgina",
     retrying: "Intent de reintent",
     tryAgain: "Torna-ho a provar",
@@ -29,7 +29,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   cs: {
     heading: "Něco se pokazilo",
     loading: "Načítání...",
-    message: "Obnovte stránku prosím pro pokračování.",
+    message: "Obnovte stránku prosím pro pokračování",
     reload: "Znovu načíst stránku",
     retrying: "Pokus o opakování",
     tryAgain: "Zkusit znovu",
@@ -37,7 +37,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   da: {
     heading: "Noget gik galt",
     loading: "Indlæser...",
-    message: "Opdater venligst siden for at fortsætte.",
+    message: "Opdater venligst siden for at fortsætte",
     reload: "Genindlæs side",
     retrying: "Forsøg igen",
     tryAgain: "Prøv igen",
@@ -45,7 +45,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   de: {
     heading: "Etwas ist schief gelaufen",
     loading: "Lädt...",
-    message: "Bitte aktualisieren Sie die Seite, um fortzufahren.",
+    message: "Bitte aktualisieren Sie die Seite, um fortzufahren",
     reload: "Seite neu laden",
     retrying: "Wiederholungsversuch",
     tryAgain: "Erneut versuchen",
@@ -53,7 +53,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   el: {
     heading: "Κάτι πήγε στραβά",
     loading: "Φόρτωση...",
-    message: "Παρακαλώ ανανεώστε τη σελίδα για να συνεχίσετε.",
+    message: "Παρακαλώ ανανεώστε τη σελίδα για να συνεχίσετε",
     reload: "Επαναφόρτωση σελίδας",
     retrying: "Προσπάθεια επανάληψης",
     tryAgain: "Δοκιμάστε ξανά",
@@ -61,7 +61,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   en: {
     heading: "Something went wrong",
     loading: "Loading...",
-    message: "Please refresh the page to continue.",
+    message: "Please refresh the page to continue",
     reload: "Reload page",
     retrying: "Retry attempt",
     tryAgain: "Try again",
@@ -69,7 +69,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   es: {
     heading: "Algo salió mal",
     loading: "Cargando...",
-    message: "Por favor, actualice la página para continuar.",
+    message: "Por favor, actualice la página para continuar",
     reload: "Recargar página",
     retrying: "Intento de reintento",
     tryAgain: "Intentar de nuevo",
@@ -77,7 +77,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   eu: {
     heading: "Zerbait gaizki joan da",
     loading: "Kargatzen...",
-    message: "Mesedez, freskatu orria jarraitzeko.",
+    message: "Mesedez, freskatu orria jarraitzeko",
     reload: "Orria berritu",
     retrying: "Saiakera berri",
     tryAgain: "Saiatu berriro",
@@ -85,7 +85,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   fa: {
     heading: "مشکلی پیش آمد",
     loading: "در حال بارگذاری...",
-    message: "لطفاً صفحه را برای ادامه تازه کنید.",
+    message: "لطفاً صفحه را برای ادامه تازه کنید",
     reload: "بارگذاری مجدد",
     retrying: "تلاش دوباره",
     rtl: true,
@@ -94,7 +94,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   fi: {
     heading: "Jokin meni pieleen",
     loading: "Ladataan...",
-    message: "Päivitä sivu jatkaaksesi.",
+    message: "Päivitä sivu jatkaaksesi",
     reload: "Lataa sivu uudelleen",
     retrying: "Uudelleenyritys",
     tryAgain: "Yritä uudelleen",
@@ -102,7 +102,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   fr: {
     heading: "Quelque chose s'est mal passé",
     loading: "Chargement...",
-    message: "Veuillez actualiser la page pour continuer.",
+    message: "Veuillez actualiser la page pour continuer",
     reload: "Recharger la page",
     retrying: "Tentative de nouvel essai",
     tryAgain: "Réessayer",
@@ -110,7 +110,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   he: {
     heading: "משהו השתבש",
     loading: "...טוען",
-    message: "אנא רענן את הדף כדי להמשיך.",
+    message: "אנא רענן את הדף כדי להמשיך",
     reload: "טען מחדש",
     retrying: "ניסיון חוזר",
     rtl: true,
@@ -119,7 +119,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   hr: {
     heading: "Nešto je pošlo po zlu",
     loading: "Učitavanje...",
-    message: "Molimo osvježite stranicu da biste nastavili.",
+    message: "Molimo osvježite stranicu da biste nastavili",
     reload: "Ponovno učitaj stranicu",
     retrying: "Pokušaj ponovnog pokušaja",
     tryAgain: "Pokušaj ponovo",
@@ -127,7 +127,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   hu: {
     heading: "Valami hiba történt",
     loading: "Betöltés...",
-    message: "Kérjük, frissítse az oldalt a folytatáshoz.",
+    message: "Kérjük, frissítse az oldalt a folytatáshoz",
     reload: "Oldal újratöltése",
     retrying: "Újrapróbálkozási kísérlet",
     tryAgain: "Próbálja újra",
@@ -135,7 +135,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   id: {
     heading: "Terjadi kesalahan",
     loading: "Memuat...",
-    message: "Silakan segarkan halaman untuk melanjutkan.",
+    message: "Silakan segarkan halaman untuk melanjutkan",
     reload: "Muat ulang halaman",
     retrying: "Percobaan ulang",
     tryAgain: "Coba lagi",
@@ -143,7 +143,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   it: {
     heading: "Qualcosa è andato storto",
     loading: "Caricamento...",
-    message: "Aggiorna la pagina per continuare.",
+    message: "Aggiorna la pagina per continuare",
     reload: "Ricarica pagina",
     retrying: "Tentativo di ripetizione",
     tryAgain: "Riprova",
@@ -151,7 +151,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   ja: {
     heading: "問題が発生しました",
     loading: "読み込み中...",
-    message: "ページを更新してください。",
+    message: "ページを更新してください",
     reload: "再読み込み",
     retrying: "リトライ",
     tryAgain: "もう一度試す",
@@ -159,7 +159,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   ka: {
     heading: "რაღაც არასწორად მოხდა",
     loading: "იტვირთება...",
-    message: "გთხოვთ განაახლოთ გვერდი გასაგრძელებლად.",
+    message: "გთხოვთ განაახლოთ გვერდი გასაგრძელებლად",
     reload: "გვერდის გადატვირთვა",
     retrying: "გამეორების მცდელობა",
     tryAgain: "კიდევ სცადეთ",
@@ -167,7 +167,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   kk: {
     heading: "Бірдеңе дұрыс болмады",
     loading: "Жүктелуде...",
-    message: "Жалғастыру үшін бетті жаңартыңыз.",
+    message: "Жалғастыру үшін бетті жаңартыңыз",
     reload: "Бетті қайта жүктеу",
     retrying: "Қайталау әрекеті",
     tryAgain: "Қайталап көріңіз",
@@ -175,7 +175,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   ko: {
     heading: "문제가 발생했습니다",
     loading: "로딩 중...",
-    message: "페이지를 새로고침해 주세요.",
+    message: "페이지를 새로고침해 주세요",
     reload: "새로고침",
     retrying: "재시도",
     tryAgain: "다시 시도",
@@ -183,7 +183,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   ky: {
     heading: "Бир нерсе туура эмес болду",
     loading: "Жүктөлүүдө...",
-    message: "Улантуу үчүн баракты жаңыртыңыз.",
+    message: "Улантуу үчүн баракты жаңыртыңыз",
     reload: "Баракты кайра жүктөө",
     retrying: "Кайталоо аракети",
     tryAgain: "Кайра аракет кылыңыз",
@@ -191,7 +191,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   lt: {
     heading: "Kažkas nutiko ne taip",
     loading: "Įkeliama...",
-    message: "Prašome atnaujinti puslapį, kad tęstumėte.",
+    message: "Prašome atnaujinti puslapį, kad tęstumėte",
     reload: "Iš naujo įkelti puslapį",
     retrying: "Pakartotinis bandymas",
     tryAgain: "Bandyti dar kartą",
@@ -199,7 +199,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   lv: {
     heading: "Kaut kas nogāja greizi",
     loading: "Ielādē...",
-    message: "Lūdzu, atsvaidziniet lapu, lai turpinātu.",
+    message: "Lūdzu, atsvaidziniet lapu, lai turpinātu",
     reload: "Pārlādēt lapu",
     retrying: "Atkārtots mēģinājums",
     tryAgain: "Mēģiniet vēlreiz",
@@ -207,7 +207,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   nl: {
     heading: "Er is iets misgegaan",
     loading: "Laden...",
-    message: "Ververs de pagina om door te gaan.",
+    message: "Ververs de pagina om door te gaan",
     reload: "Pagina herladen",
     retrying: "Opnieuw proberen",
     tryAgain: "Probeer opnieuw",
@@ -215,7 +215,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   no: {
     heading: "Noe gikk galt",
     loading: "Laster...",
-    message: "Vennligst oppdater siden for å fortsette.",
+    message: "Vennligst oppdater siden for å fortsette",
     reload: "Last inn siden på nytt",
     retrying: "Nytt forsøk",
     tryAgain: "Prøv igjen",
@@ -223,7 +223,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   pl: {
     heading: "Coś poszło nie tak",
     loading: "Ładowanie...",
-    message: "Odśwież stronę, aby kontynuować.",
+    message: "Odśwież stronę, aby kontynuować",
     reload: "Przeładuj stronę",
     retrying: "Próba ponowienia",
     tryAgain: "Spróbuj ponownie",
@@ -231,7 +231,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   pt: {
     heading: "Algo deu errado",
     loading: "Carregando...",
-    message: "Por favor, atualize a página para continuar.",
+    message: "Por favor, atualize a página para continuar",
     reload: "Recarregar página",
     retrying: "Tentativa de nova tentativa",
     tryAgain: "Tentar novamente",
@@ -239,7 +239,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   ro: {
     heading: "Ceva nu a mers bine",
     loading: "Se încarcă...",
-    message: "Vă rugăm să reîmprospătați pagina pentru a continua.",
+    message: "Vă rugăm să reîmprospătați pagina pentru a continua",
     reload: "Reîncarcă pagina",
     retrying: "Încercare de reîncercare",
     tryAgain: "Încearcă din nou",
@@ -247,7 +247,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   ru: {
     heading: "Что-то пошло не так",
     loading: "Загрузка...",
-    message: "Пожалуйста, обновите страницу, чтобы продолжить.",
+    message: "Пожалуйста, обновите страницу, чтобы продолжить",
     reload: "Перезагрузить страницу",
     retrying: "Повторная попытка",
     tryAgain: "Попробовать снова",
@@ -255,7 +255,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   sk: {
     heading: "Niečo sa pokazilo",
     loading: "Načítava sa...",
-    message: "Obnovte stránku prosím pre pokračovanie.",
+    message: "Obnovte stránku prosím pre pokračovanie",
     reload: "Znovu načítať stránku",
     retrying: "Pokus o opakovanie",
     tryAgain: "Skúsiť znova",
@@ -263,7 +263,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   sl: {
     heading: "Nekaj je šlo narobe",
     loading: "Nalaganje...",
-    message: "Prosimo, osvežite stran za nadaljevanje.",
+    message: "Prosimo, osvežite stran za nadaljevanje",
     reload: "Ponovno naloži stran",
     retrying: "Poskus ponovnega poskusa",
     tryAgain: "Poskusi znova",
@@ -271,7 +271,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   sv: {
     heading: "Något gick fel",
     loading: "Laddar...",
-    message: "Uppdatera sidan för att fortsätta.",
+    message: "Uppdatera sidan för att fortsätta",
     reload: "Ladda om sidan",
     retrying: "Nytt försök",
     tryAgain: "Försök igen",
@@ -287,7 +287,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   tr: {
     heading: "Bir şeyler ters gitti",
     loading: "Yükleniyor...",
-    message: "Devam etmek için lütfen sayfayı yenileyin.",
+    message: "Devam etmek için lütfen sayfayı yenileyin",
     reload: "Sayfayı yeniden yükle",
     retrying: "Yeniden deneme girişimi",
     tryAgain: "Tekrar dene",
@@ -295,7 +295,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   uk: {
     heading: "Щось пішло не так",
     loading: "Завантаження...",
-    message: "Будь ласка, оновіть сторінку, щоб продовжити.",
+    message: "Будь ласка, оновіть сторінку, щоб продовжити",
     reload: "Перезавантажити сторінку",
     retrying: "Повторна спроба",
     tryAgain: "Спробувати знову",
@@ -303,7 +303,7 @@ export const translations: Record<string, SpaGuardTranslations> = {
   zh: {
     heading: "出了点问题",
     loading: "加载中...",
-    message: "请刷新页面以继续。",
+    message: "请刷新页面以继续",
     reload: "重新加载",
     retrying: "重试次数",
     tryAgain: "重试",
