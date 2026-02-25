@@ -145,7 +145,6 @@ export const attemptReload = (error: unknown, opts?: { cacheBust?: boolean }): v
         getLogger()?.fallbackAlreadyShown(error);
       }
       reloadState.scheduled = false;
-      setFallbackMode();
       showFallbackUI();
       return;
     }
@@ -179,7 +178,6 @@ export const attemptReload = (error: unknown, opts?: { cacheBust?: boolean }): v
       }
 
       reloadState.scheduled = false;
-      setFallbackMode();
       showFallbackUI();
       return;
     }
