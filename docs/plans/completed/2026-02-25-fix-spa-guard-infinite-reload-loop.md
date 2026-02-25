@@ -96,6 +96,6 @@ When retry attempts are exhausted and the fallback UI is shown, subsequent stati
 
 ### Task 8: Cleanup
 
-- [ ] Delete `TODO.md` from repo root
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Delete `TODO.md` from repo root
+- [x] Move this plan to `docs/plans/completed/`
 ---
