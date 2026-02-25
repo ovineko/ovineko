@@ -136,6 +136,9 @@ describe("staticAssetRecovery", () => {
       handleStaticAssetFailure("https://example.com/assets/vendor-abc12345.js");
       vi.advanceTimersByTime(500);
       expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      const errorArg = mockAttemptReload.mock.calls[0]![0] as Error;
+      expect(errorArg.message).toContain("vendor-abc12345.js");
+      expect(errorArg.message).not.toContain("index-Bd0Ef7jk.js");
     });
 
     it("is a no-op when window is undefined (SSR)", () => {

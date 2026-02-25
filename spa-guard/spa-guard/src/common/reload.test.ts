@@ -1380,6 +1380,15 @@ describe("attemptReload", () => {
       expect(mockSetFallbackMode).toHaveBeenCalled();
     });
 
+    it("showFallbackUI returns early without calling setFallbackMode when already in fallback mode", () => {
+      mockIsInFallbackMode.mockReturnValue(true);
+
+      showFallbackUI();
+
+      expect(mockSetFallbackMode).not.toHaveBeenCalled();
+      expect(mockEmitEvent).not.toHaveBeenCalled();
+    });
+
     it("does not call setFallbackMode during a normal retry (no fallback shown)", () => {
       const error = new Error("chunk error");
 

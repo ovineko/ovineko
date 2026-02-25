@@ -24,7 +24,7 @@ describe("isInFallbackMode", () => {
   });
 
   afterEach(() => {
-    resetFallbackMode();
+    setupMockWindow();
   });
 
   it("returns false by default", () => {
@@ -55,7 +55,7 @@ describe("setFallbackMode", () => {
   });
 
   afterEach(() => {
-    resetFallbackMode();
+    setupMockWindow();
   });
 
   it("makes isInFallbackMode return true", () => {
@@ -83,7 +83,7 @@ describe("resetFallbackMode", () => {
   });
 
   afterEach(() => {
-    resetFallbackMode();
+    setupMockWindow();
   });
 
   it("makes isInFallbackMode return false after set", () => {

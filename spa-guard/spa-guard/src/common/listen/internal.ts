@@ -48,16 +48,20 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
     // If the page loads without a chunk error the -1 sentinel must be removed,
     // otherwise any future chunk error will skip retries entirely.
     // This also handles stale -1 state already present in the URL at startup.
-    globalThis.window.addEventListener(
-      "load",
-      () => {
-        const current = getRetryStateFromUrl();
-        if (current?.retryAttempt === -1) {
-          clearRetryStateFromUrl();
-        }
-      },
-      { once: true },
-    );
+    const cleanupSentinel = () => {
+      const current = getRetryStateFromUrl();
+      if (current?.retryAttempt === -1) {
+        clearRetryStateFromUrl();
+      }
+    };
+
+    if (globalThis.window.document?.readyState === "complete") {
+      // Page already loaded (late initialization) — clean up immediately instead
+      // of registering a load listener that will never fire.
+      cleanupSentinel();
+    } else {
+      globalThis.window.addEventListener("load", cleanupSentinel, { once: true });
+    }
   }
 
   const wa = globalThis.window.addEventListener.bind(globalThis.window);

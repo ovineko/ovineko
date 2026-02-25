@@ -269,6 +269,49 @@ describe("listenInternal", () => {
       expect(mockUpdateRetryStateInUrl).not.toHaveBeenCalled();
     });
 
+    it("immediately clears stale -1 sentinel without load listener when document is already complete", () => {
+      // happy-dom defaults to readyState 'complete', so cleanup should run immediately
+      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
+      mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
+
+      const spy = vi.spyOn(globalThis, "addEventListener");
+      listenInternal(vi.fn());
+
+      // Should have cleared immediately (no load event needed)
+      expect(mockClearRetryStateFromUrl).toHaveBeenCalled();
+      // Should NOT have registered a load listener
+      const loadListenerCalls = spy.mock.calls.filter(([type]) => type === "load");
+      spy.mockRestore();
+      expect(loadListenerCalls).toHaveLength(0);
+    });
+
+    it("registers load listener for sentinel cleanup when document is not yet loaded", () => {
+      Object.defineProperty(document, "readyState", {
+        configurable: true,
+        value: "loading",
+      });
+
+      try {
+        mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
+        mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
+
+        listenInternal(vi.fn());
+
+        // Should NOT have cleared immediately (page not yet loaded)
+        expect(mockClearRetryStateFromUrl).not.toHaveBeenCalled();
+
+        // Simulate the load event firing after initialization
+        globalThis.dispatchEvent(new Event("load"));
+
+        expect(mockClearRetryStateFromUrl).toHaveBeenCalled();
+      } finally {
+        Object.defineProperty(document, "readyState", {
+          configurable: true,
+          value: "complete",
+        });
+      }
+    });
+
     it("does not clear stale -1 on load when chunk error cleared it first", () => {
       // URL already has -1 from a previous session
       mockGetRetryStateFromUrl.mockReturnValueOnce({ retryAttempt: -1, retryId: "stale-id" });
