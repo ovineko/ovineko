@@ -65,8 +65,8 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
   wa(
     "error",
     (event) => {
-      if (isStaticAssetError(event) && isLikely404()) {
-        const assetUrl = getAssetUrl(event);
+      const assetUrl = getAssetUrl(event);
+      if (isStaticAssetError(event) && isLikely404(assetUrl)) {
         if (shouldIgnoreMessages([assetUrl, event.message])) {
           return;
         }

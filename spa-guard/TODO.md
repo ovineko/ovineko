@@ -197,3 +197,45 @@ if (isStaticAssetError(event) && isLikely404(assetUrl)) {
 - [Handle version skew after new deployment with Vite and Vue Router](https://paulau.dev/blog/handle-version-skew-after-new-deployment-with-vite-and-vue-router/)
 - [ResourceTiming in Practice - NicJ.net](https://nicj.net/resourcetiming-in-practice/)
 - [Window: error event - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/error_event)
+
+---
+
+# Debugger: Кнопка "Static Asset 404"
+
+## Задача
+
+Добавить кнопку в debugger panel для симуляции 404 ошибки статических ресурсов.
+
+## Текущая ситуация
+
+- Debugger panel содержит 8 кнопок для симуляции различных ошибок
+- Нет кнопки для тестирования обработки 404 статических ресурсов (JS/CSS файлов)
+- Проблема: `isLikely404()` проверяет `performance.now() > 30_000`, что требует ждать 30+ секунд
+
+## Решение
+
+Добавить 9-ю кнопку "Static Asset 404" которая:
+
+1. Создаёт реальный `<script>` элемент с несуществующим хешированным URL
+2. Автоматически рассчитывает необходимую задержку для прохождения проверки `isLikely404()`
+3. Триггерит полный путь обработки: `isStaticAssetError()` → `isLikely404()` → `handleStaticAssetFailure()`
+
+## Реализация
+
+**Файлы для изменения:**
+
+- `spa-guard/src/runtime/debug/errorDispatchers.ts` - добавить `dispatchStaticAsset404()`
+- `spa-guard/src/runtime/debug/index.ts` - импорт и добавление в SCENARIOS
+- `spa-guard/src/runtime/debug/errorDispatchers.test.ts` - unit тесты
+
+**Workaround:**
+
+Функция включает автоматическую задержку для обхода текущей проверки `isLikely404()` (>30s):
+
+```typescript
+const delay = timeSinceNav < 30_000 ? 30_000 - timeSinceNav + 100 : 0;
+```
+
+## Следующее улучшение
+
+После реализации Resource Timing API подхода (см. выше), убрать задержку из `dispatchStaticAsset404()`, так как `isLikely404(url)` будет работать мгновенно.

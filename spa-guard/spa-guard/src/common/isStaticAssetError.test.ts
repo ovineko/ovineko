@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getAssetUrl, isLikely404, isStaticAssetError } from "./isStaticAssetError";
 
@@ -100,27 +100,80 @@ describe("isStaticAssetError", () => {
   });
 });
 
-describe("isLikely404", () => {
+describe("isLikely404 (time-based fallback)", () => {
   it("returns false for a very recent page load (0ms)", () => {
-    expect(isLikely404(0)).toBe(false);
+    expect(isLikely404(undefined, 0)).toBe(false);
   });
 
   it("returns false for a recent page load under 30s", () => {
-    expect(isLikely404(5000)).toBe(false);
-    expect(isLikely404(29_999)).toBe(false);
+    expect(isLikely404(undefined, 5000)).toBe(false);
+    expect(isLikely404(undefined, 29_999)).toBe(false);
   });
 
   it("returns false at exactly 30s boundary", () => {
-    expect(isLikely404(30_000)).toBe(false);
+    expect(isLikely404(undefined, 30_000)).toBe(false);
   });
 
   it("returns true just past the 30s threshold", () => {
-    expect(isLikely404(30_001)).toBe(true);
+    expect(isLikely404(undefined, 30_001)).toBe(true);
   });
 
   it("returns true for a long-running tab (several minutes)", () => {
-    expect(isLikely404(300_000)).toBe(true);
-    expect(isLikely404(3_600_000)).toBe(true);
+    expect(isLikely404(undefined, 300_000)).toBe(true);
+    expect(isLikely404(undefined, 3_600_000)).toBe(true);
+  });
+});
+
+describe("isLikely404 (Resource Timing API path)", () => {
+  const TEST_URL = "https://example.com/assets/index-Bd0Ef7jk.js";
+
+  beforeEach(() => {
+    vi.spyOn(performance, "getEntriesByName");
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("returns true when no resource timing entry found (Safari / failed load)", () => {
+    vi.mocked(performance.getEntriesByName).mockReturnValue([]);
+    expect(isLikely404(TEST_URL)).toBe(true);
+  });
+
+  it("returns true when responseStatus >= 400", () => {
+    vi.mocked(performance.getEntriesByName).mockReturnValue([
+      { decodedBodySize: 0, responseStatus: 404, transferSize: 0 } as any,
+    ]);
+    expect(isLikely404(TEST_URL)).toBe(true);
+  });
+
+  it("returns true when transferSize and decodedBodySize are both 0 (blocked/failed)", () => {
+    vi.mocked(performance.getEntriesByName).mockReturnValue([
+      { decodedBodySize: 0, responseStatus: 0, transferSize: 0 } as any,
+    ]);
+    expect(isLikely404(TEST_URL)).toBe(true);
+  });
+
+  it("returns false for a successful load (responseStatus 200, non-zero body)", () => {
+    vi.mocked(performance.getEntriesByName).mockReturnValue([
+      { decodedBodySize: 5678, responseStatus: 200, transferSize: 1234 } as any,
+    ]);
+    expect(isLikely404(TEST_URL)).toBe(false);
+  });
+
+  it("returns false for a cached resource (transferSize 0 but decodedBodySize non-zero)", () => {
+    vi.mocked(performance.getEntriesByName).mockReturnValue([
+      { decodedBodySize: 5678, responseStatus: 200, transferSize: 0 } as any,
+    ]);
+    expect(isLikely404(TEST_URL)).toBe(false);
+  });
+
+  it("uses the last entry when multiple entries exist", () => {
+    vi.mocked(performance.getEntriesByName).mockReturnValue([
+      { decodedBodySize: 5678, responseStatus: 200, transferSize: 1234 } as any,
+      { decodedBodySize: 0, responseStatus: 404, transferSize: 0 } as any,
+    ]);
+    expect(isLikely404(TEST_URL)).toBe(true);
   });
 });
 

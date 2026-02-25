@@ -20,9 +20,29 @@ export const isStaticAssetError = (event: Event): boolean => {
   return false;
 };
 
+const checkResourceStatus = (url: string): boolean => {
+  const entries = performance.getEntriesByName(url, "resource") as PerformanceResourceTiming[];
+  if (entries.length === 0) {
+    return true;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const entry = entries.at(-1)!;
+  if ((entry as any).responseStatus >= 400) {
+    return true;
+  }
+  if (entry.transferSize === 0 && entry.decodedBodySize === 0) {
+    return true;
+  }
+  return false;
+};
+
 export const isLikely404 = (
+  url?: string,
   timeSinceNavMs: number = typeof performance === "undefined" ? 0 : performance.now(),
 ): boolean => {
+  if (url !== undefined) {
+    return checkResourceStatus(url);
+  }
   return timeSinceNavMs > 30_000;
 };
 
