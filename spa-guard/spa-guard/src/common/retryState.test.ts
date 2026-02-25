@@ -122,12 +122,19 @@ describe("getRetryStateFromUrl", () => {
     expect(getRetryStateFromUrl()).toBeNull();
   });
 
-  it("returns null when retryAttempt exceeds upper bound (> 100)", () => {
-    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=abc123&${RETRY_ATTEMPT_PARAM}=101`);
+  it("returns null for an astronomically large digit string that parseInt renders as Infinity", () => {
+    const huge = "9".repeat(400);
+    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=abc123&${RETRY_ATTEMPT_PARAM}=${huge}`);
     expect(getRetryStateFromUrl()).toBeNull();
   });
 
-  it("accepts retryAttempt at upper bound (100)", () => {
+  it("accepts retryAttempt=101 (no arbitrary upper bound)", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=abc123&${RETRY_ATTEMPT_PARAM}=101`);
+    const state = getRetryStateFromUrl();
+    expect(state?.retryAttempt).toBe(101);
+  });
+
+  it("accepts retryAttempt=100", () => {
     setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=abc123&${RETRY_ATTEMPT_PARAM}=100`);
     const state = getRetryStateFromUrl();
     expect(state?.retryAttempt).toBe(100);
@@ -221,9 +228,15 @@ describe("getRetryAttemptFromUrl", () => {
     expect(getRetryAttemptFromUrl()).toBeNull();
   });
 
-  it("returns null when retryAttempt exceeds upper bound (> 100)", () => {
-    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=101`);
+  it("returns null for an astronomically large digit string that parseInt renders as Infinity", () => {
+    const huge = "9".repeat(400);
+    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=${huge}`);
     expect(getRetryAttemptFromUrl()).toBeNull();
+  });
+
+  it("accepts retryAttempt=101 (no arbitrary upper bound)", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=101`);
+    expect(getRetryAttemptFromUrl()).toBe(101);
   });
 
   it("handles URL with path and other params", () => {

@@ -9,6 +9,7 @@ export interface InternalConfig {
 
 export type SPAGuardEvent =
   | (SPAGuardEventChunkError & { name: "chunk-error" })
+  | (SPAGuardEventFallbackUINotRendered & { name: "fallback-ui-not-rendered" })
   | (SPAGuardEventFallbackUIShown & { name: "fallback-ui-shown" })
   | (SPAGuardEventLazyRetryAttempt & { name: "lazy-retry-attempt" })
   | (SPAGuardEventLazyRetryExhausted & { name: "lazy-retry-exhausted" })
@@ -23,6 +24,12 @@ export interface SPAGuardEventChunkError {
   error: unknown;
   isRetrying: boolean;
   name: "chunk-error";
+}
+
+export interface SPAGuardEventFallbackUINotRendered {
+  name: "fallback-ui-not-rendered";
+  reason: "no-html-configured" | "target-not-found";
+  selector?: string;
 }
 
 export interface SPAGuardEventFallbackUIShown {

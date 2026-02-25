@@ -22,6 +22,7 @@ export const showFallbackUI = (): void => {
 
   if (!fallbackHtml) {
     getLogger()?.noFallbackConfigured();
+    emitEvent({ name: "fallback-ui-not-rendered", reason: "no-html-configured" });
     return;
   }
 
@@ -29,6 +30,7 @@ export const showFallbackUI = (): void => {
     const targetElement = document.querySelector(selector);
     if (!targetElement) {
       getLogger()?.fallbackTargetNotFound(selector);
+      emitEvent({ name: "fallback-ui-not-rendered", reason: "target-not-found", selector });
       return;
     }
 

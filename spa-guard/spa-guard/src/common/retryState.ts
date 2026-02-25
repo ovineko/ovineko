@@ -5,8 +5,6 @@ export interface RetryState {
   retryId: string;
 }
 
-const MAX_RETRY_ATTEMPT = 100;
-
 export const getRetryStateFromUrl = (): null | RetryState => {
   try {
     const params = new URLSearchParams(globalThis.window.location.search);
@@ -19,7 +17,7 @@ export const getRetryStateFromUrl = (): null | RetryState => {
         return null;
       }
       const parsed = parseInt(retryAttempt, 10);
-      if (Number.isNaN(parsed) || parsed < 0 || parsed > MAX_RETRY_ATTEMPT) {
+      if (Number.isNaN(parsed) || !Number.isFinite(parsed) || parsed < 0) {
         return null;
       }
       return {
@@ -59,7 +57,7 @@ export const getRetryAttemptFromUrl = (): null | number => {
         return null;
       }
       const parsed = parseInt(retryAttempt, 10);
-      if (Number.isNaN(parsed) || parsed < 0 || parsed > MAX_RETRY_ATTEMPT) {
+      if (Number.isNaN(parsed) || !Number.isFinite(parsed) || parsed < 0) {
         return null;
       }
       return parsed;

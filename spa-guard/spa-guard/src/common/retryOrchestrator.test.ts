@@ -57,6 +57,7 @@ import {
   getRetrySnapshot,
   markRetryHealthyBoot,
   resetRetryOrchestratorForTests,
+  setFallbackStateForDebug,
   triggerRetry,
 } from "./retryOrchestrator";
 import { generateRetryId } from "./retryState";
@@ -618,11 +619,35 @@ describe("retryOrchestrator", () => {
       );
     });
 
+    it("treats attempt=101 as exhausted (not restarted) when reloadDelays has 3 entries", () => {
+      // Previously MAX_RETRY_ATTEMPT=100 cap would cause 101 to parse as null,
+      // resetting currentAttempt to 0 and restarting the cycle instead of exhausting.
+      setupMockLocation("http://localhost/?spaGuardRetryId=id&spaGuardRetryAttempt=101");
+      const result = triggerRetry({ error: new Error("chunk error") });
+      expect(result).toEqual({ status: "fallback" });
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ finalAttempt: 101, name: "retry-exhausted" }),
+        { silent: false },
+      );
+    });
+
     it("accepts '2' as valid attempt=2", () => {
       setupMockLocation("http://localhost/?spaGuardRetryId=id&spaGuardRetryAttempt=2");
       triggerRetry({ error: new Error("chunk error") });
       expect(mockEmitEvent).toHaveBeenCalledWith(
         expect.objectContaining({ attempt: 3, delay: 5000, name: "retry-attempt" }),
+        { silent: false },
+      );
+    });
+
+    it("treats an astronomically large digit string (parseInt => Infinity) as null attempt", () => {
+      const huge = "9".repeat(400);
+      setupMockLocation(`http://localhost/?spaGuardRetryId=id&spaGuardRetryAttempt=${huge}`);
+      // Infinity > reloadDelays.length=3, but we should reject non-finite values before
+      // reaching exhaust logic; after rejection currentAttempt=0 => schedules retry
+      triggerRetry({ error: new Error("chunk error") });
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ attempt: 1, name: "retry-attempt" }),
         { silent: false },
       );
     });
@@ -896,6 +921,38 @@ describe("retryOrchestrator", () => {
       setupMockLocation("http://localhost/?spaGuardRetryId=id&spaGuardRetryAttempt=3");
       triggerRetry({ error: new Error("chunk error") });
       expect(getRetrySnapshot().phase).toBe("fallback");
+    });
+  });
+
+  describe("setFallbackStateForDebug", () => {
+    it("sets phase to fallback", () => {
+      setFallbackStateForDebug();
+      expect(getRetrySnapshot().phase).toBe("fallback");
+    });
+
+    it("calls setFallbackMode", () => {
+      setFallbackStateForDebug();
+      expect(mockSetFallbackMode).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls showFallbackUI", () => {
+      setFallbackStateForDebug();
+      expect(mockShowFallbackUI).toHaveBeenCalledTimes(1);
+    });
+
+    it("cancels a pending scheduled reload timer so it does not navigate after fallback", () => {
+      triggerRetry({ error: new Error("chunk error") });
+      expect(getRetrySnapshot().phase).toBe("scheduled");
+      setFallbackStateForDebug();
+      vi.advanceTimersByTime(10_000);
+      // Navigation should NOT have happened (URL stays at initial value)
+      expect(mockLocationHref).toBe("http://localhost/");
+    });
+
+    it("does not navigate when called with no pending timer", () => {
+      setFallbackStateForDebug();
+      vi.advanceTimersByTime(10_000);
+      expect(mockLocationHref).toBe("http://localhost/");
     });
   });
 

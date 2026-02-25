@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { debugSyncErrorEventType } from "../../common/constants";
 import { FORCE_RETRY_MAGIC, ForceRetryError } from "../../common/errors/ForceRetryError";
-import { resetFallbackMode } from "../../common/fallbackState";
 import { isChunkError } from "../../common/isChunkError";
+import { getRetrySnapshot, resetRetryOrchestratorForTests } from "../../common/retryOrchestrator";
 import { shouldForceRetry } from "../../common/shouldIgnore";
 import {
   dispatchAsyncRuntimeError,
@@ -388,7 +388,7 @@ describe("dispatchRetryExhausted", () => {
   afterEach(() => {
     unsub?.();
     unsub = undefined;
-    resetFallbackMode();
+    resetRetryOrchestratorForTests();
     // Clean up any custom options set during tests
     delete (globalThis.window as any).__SPA_GUARD_OPTIONS__;
   });
@@ -426,6 +426,11 @@ describe("dispatchRetryExhausted", () => {
         name: "fallback-ui-shown",
       }),
     );
+  });
+
+  it("sets orchestrator phase to fallback so getRetrySnapshot reflects consistent state", () => {
+    dispatchRetryExhausted();
+    expect(getRetrySnapshot().phase).toBe("fallback");
   });
 
   it("uses configured reloadDelays length as finalAttempt", async () => {

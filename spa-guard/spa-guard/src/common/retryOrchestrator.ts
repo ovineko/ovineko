@@ -97,8 +97,6 @@ const buildReloadUrl = (
   return url.toString();
 };
 
-const MAX_RETRY_ATTEMPT = 100;
-
 const parseAttemptFromUrl = (): null | number => {
   try {
     const params = new URLSearchParams(globalThis.window.location.search);
@@ -111,7 +109,7 @@ const parseAttemptFromUrl = (): null | number => {
       return null;
     }
     const parsed = parseInt(raw, 10);
-    if (Number.isNaN(parsed) || parsed < 0 || parsed > MAX_RETRY_ATTEMPT) {
+    if (Number.isNaN(parsed) || !Number.isFinite(parsed) || parsed < 0) {
       return null;
     }
     return parsed;
@@ -303,6 +301,21 @@ export const getRetrySnapshot = (): RetrySnapshot => {
     phase: state.phase,
     retryId: state.retryId,
   };
+};
+
+/**
+ * Sets orchestrator state to fallback and renders the fallback UI.
+ * For use in debug/simulation contexts only — bypasses retry scheduling
+ * while keeping the orchestrator snapshot consistent with fallback mode.
+ */
+export const setFallbackStateForDebug = (): void => {
+  const state = getState();
+  if (state.timer !== null) {
+    clearTimeout(state.timer);
+  }
+  setState({ phase: "fallback", timer: null });
+  setFallbackMode();
+  showFallbackUI();
 };
 
 export const resetRetryOrchestratorForTests = (): void => {

@@ -269,14 +269,29 @@ describe("showFallbackUI", () => {
       expect(mockLogger.noFallbackConfigured).toHaveBeenCalledTimes(1);
     });
 
-    it("does not emit any events when HTML is missing", () => {
+    it("emits fallback-ui-not-rendered with reason no-html-configured when HTML is missing", () => {
       mockGetOptions.mockReturnValue({
         html: { fallback: { selector: "body" } },
       });
 
       showFallbackUI();
 
-      expect(mockEmitEvent).not.toHaveBeenCalled();
+      expect(mockEmitEvent).toHaveBeenCalledWith({
+        name: "fallback-ui-not-rendered",
+        reason: "no-html-configured",
+      });
+    });
+
+    it("does not emit fallback-ui-shown when HTML is missing", () => {
+      mockGetOptions.mockReturnValue({
+        html: { fallback: { selector: "body" } },
+      });
+
+      showFallbackUI();
+
+      expect(mockEmitEvent).not.toHaveBeenCalledWith(
+        expect.objectContaining({ name: "fallback-ui-shown" }),
+      );
     });
   });
 
@@ -312,6 +327,33 @@ describe("showFallbackUI", () => {
       showFallbackUI();
 
       expect(mockLogger.fallbackTargetNotFound).toHaveBeenCalledWith("#app");
+    });
+
+    it("emits fallback-ui-not-rendered with reason target-not-found when element is missing", () => {
+      vi.spyOn(document, "querySelector").mockReturnValue(null);
+
+      showFallbackUI();
+
+      expect(mockEmitEvent).toHaveBeenCalledWith({
+        name: "fallback-ui-not-rendered",
+        reason: "target-not-found",
+        selector: "body",
+      });
+    });
+
+    it("emits fallback-ui-not-rendered with the configured selector when element is missing", () => {
+      mockGetOptions.mockReturnValue({
+        html: { fallback: { content: "<div>Fallback</div>", selector: "#app" } },
+      });
+      vi.spyOn(document, "querySelector").mockReturnValue(null);
+
+      showFallbackUI();
+
+      expect(mockEmitEvent).toHaveBeenCalledWith({
+        name: "fallback-ui-not-rendered",
+        reason: "target-not-found",
+        selector: "#app",
+      });
     });
   });
 

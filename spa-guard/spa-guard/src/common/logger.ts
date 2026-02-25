@@ -36,6 +36,7 @@ const PREFIX = "[spa-guard]";
 
 const eventLogConfig: Record<SPAGuardEvent["name"], "error" | "log" | "warn"> = {
   "chunk-error": "error",
+  "fallback-ui-not-rendered": "error",
   "fallback-ui-shown": "warn",
   "lazy-retry-attempt": "warn",
   "lazy-retry-exhausted": "error",
@@ -51,6 +52,10 @@ const formatEvent = (event: SPAGuardEvent): string => {
   switch (event.name) {
     case "chunk-error": {
       return `${PREFIX} chunk-error: isRetrying=${event.isRetrying}`;
+    }
+    case "fallback-ui-not-rendered": {
+      const selectorPart = event.selector ? ` selector=${event.selector}` : "";
+      return `${PREFIX} fallback-ui-not-rendered: reason=${event.reason}${selectorPart}`;
     }
     case "fallback-ui-shown": {
       return `${PREFIX} fallback-ui-shown`;
