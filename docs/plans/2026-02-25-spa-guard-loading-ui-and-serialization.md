@@ -132,10 +132,10 @@ Two independent improvements from TODO.md:
 - Modify: `spa-guard/spa-guard/README.md`
 - Modify: `AGENTS.md`
 
-- [ ] README.md: add note in retry flow section that loading UI (`html.loading.content`) is rendered during retry delay before reload
-- [ ] README.md: add note in unhandledrejection section about serialization behavior and strict redaction policy (no bodies, no payloads, no full headers - only safe metadata and X-Request-ID)
-- [ ] AGENTS.md: add note that loading UI rendering is a dedicated helper (`showLoadingUI`) invoked by orchestrator before reload setTimeout
-- [ ] AGENTS.md: add note about unhandledrejection serialization guardrails and redaction constraints
+- [x] README.md: add note in retry flow section that loading UI (`html.loading.content`) is rendered during retry delay before reload
+- [x] README.md: add note in unhandledrejection section about serialization behavior and strict redaction policy (no bodies, no payloads, no full headers - only safe metadata and X-Request-ID)
+- [x] AGENTS.md: add note that loading UI rendering is a dedicated helper (`showLoadingUI`) invoked by orchestrator before reload setTimeout
+- [x] AGENTS.md: add note about unhandledrejection serialization guardrails and redaction constraints
 
 ### Task 8: Verify acceptance criteria
 

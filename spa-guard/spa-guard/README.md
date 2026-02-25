@@ -47,7 +47,7 @@ When a recoverable error occurs (chunk load error, unhandled rejection, `vite:pr
 1. Event listener classifies the event and calls `triggerRetry({ source, error })`.
 2. Orchestrator checks phase — if already `scheduled` or `fallback`, returns immediately without scheduling another reload.
 3. On first trigger: reads `RETRY_ATTEMPT_PARAM` from URL to restore attempt count after a reload.
-4. If attempts remain: increments attempt, sets a timer for `reloadDelays[currentAttempt]`, encodes `retryId` and attempt count into the reload URL, then navigates.
+4. If attempts remain: increments attempt, calls `showLoadingUI(nextAttempt)` to render the loading UI immediately (before the timer fires), sets a timer for `reloadDelays[currentAttempt]`, encodes `retryId` and attempt count into the reload URL, then navigates. Requires `options.html.loading.content` to be configured; if absent, `showLoadingUI` returns silently and the retry still proceeds.
 5. If attempts are exhausted: transitions to `fallback`, calls `setFallbackMode()`, sends a beacon, and renders fallback UI.
 
 ### URL params
@@ -57,6 +57,14 @@ The orchestrator serializes state into URL params for cross-reload continuity:
 - `RETRY_ATTEMPT_PARAM` — current attempt count (strict non-negative integer; malformed values are ignored)
 - `RETRY_ID_PARAM` — unique ID for this retry session
 - `CACHE_BUST_PARAM` — timestamp for cache busting (set when `cacheBust: true` is passed, e.g. for static asset errors)
+
+### Loading UI during retry delay
+
+When `options.html.loading.content` is configured, `showLoadingUI(attempt)` is called before the reload timer fires. It injects the loading HTML into the target element (selector from `options.html.fallback.selector`, defaulting to `body`), reveals the `data-spa-guard-section="retrying"` element, fills attempt numbers into `[data-spa-guard-content="attempt"]` elements, applies i18n via `applyI18n`/`getI18n`, and optionally hides or replaces the spinner based on `options.html.spinner`. If loading content is not configured or the target element is not found, `showLoadingUI` returns silently — the retry still proceeds normally.
+
+### Unhandledrejection serialization
+
+`serializeError` handles `PromiseRejectionEvent` with strict redaction guardrails. For HTTP-like errors it extracts only safe metadata: `status`, `statusText`, `url`, `method`, `response.type`, and `X-Request-ID` from response headers when present. Response body, request/response payload, and the full headers object are **never** included in serialized output. For request wrappers (`reason.request` / `reason.config`) only `method`, `url`, and `baseURL` are extracted. Deep object traversal is bounded by `MAX_DEPTH=4`, `MAX_KEYS=20`, and `MAX_STRING_LEN=500` to prevent oversized beacons. Circular references are handled via a `WeakSet` visited tracker. The output also includes `isTrusted`, `timeStamp` from the event, and runtime context (`pageUrl`, `constructorName`).
 
 ### Retry reset
 
