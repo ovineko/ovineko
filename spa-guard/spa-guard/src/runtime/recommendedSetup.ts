@@ -23,6 +23,8 @@ export const recommendedSetup = (overrides?: RecommendedSetupOptions): (() => vo
   }
 
   return () => {
-    stopVersionCheck();
+    if (options.versionCheck) {
+      stopVersionCheck();
+    }
   };
 };

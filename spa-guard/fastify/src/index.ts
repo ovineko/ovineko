@@ -67,7 +67,7 @@ const handleBeaconRequest = async (params: {
   options: Pick<FastifySPAGuardOptions, "onBeacon" | "onUnknownBeacon">;
   reply: FastifyReply;
   request: FastifyRequest;
-}) => {
+}): Promise<boolean> => {
   const { body, options, reply, request } = params;
 
   let beacon: BeaconSchema;
@@ -83,7 +83,7 @@ const handleBeaconRequest = async (params: {
     } else {
       request.log.warn({ bodyType: typeof body }, logMessage("Unknown beacon format"));
     }
-    return;
+    return false;
   }
 
   const logPayload = {
@@ -103,6 +103,8 @@ const handleBeaconRequest = async (params: {
   } else {
     request.log.info(logPayload, logMessage("Beacon received"));
   }
+
+  return true;
 };
 
 /**
@@ -163,9 +165,16 @@ const fastifySPAGuardPlugin: FastifyPluginAsync<FastifySPAGuardOptions> = async 
     }
 
     const body = parseStringBody(request.body);
-    await handleBeaconRequest({ body, options: { onBeacon, onUnknownBeacon }, reply, request });
+    const success = await handleBeaconRequest({
+      body,
+      options: { onBeacon, onUnknownBeacon },
+      reply,
+      request,
+    });
     if (!reply.sent) {
-      return reply.status(200).send({ success: true });
+      return reply
+        .status(success ? 200 : 400)
+        .send(success ? { success: true } : { error: "Invalid beacon format" });
     }
     return reply;
   });

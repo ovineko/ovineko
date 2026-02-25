@@ -223,7 +223,7 @@ describe("fastifySPAGuard", () => {
       await app.close();
     });
 
-    it("returns 200 success when onUnknownBeacon does not send a reply", async () => {
+    it("returns 400 when onUnknownBeacon does not send a reply (invalid beacon format)", async () => {
       const app = await buildApp({
         onUnknownBeacon: vi.fn(),
         path: "/api/beacon",
@@ -236,8 +236,8 @@ describe("fastifySPAGuard", () => {
         url: "/api/beacon",
       });
 
-      expect(response.statusCode).toBe(200);
-      expect(JSON.parse(response.body)).toEqual({ success: true });
+      expect(response.statusCode).toBe(400);
+      expect(JSON.parse(response.body)).toEqual({ error: "Invalid beacon format" });
       await app.close();
     });
   });
@@ -512,7 +512,7 @@ describe("fastifySPAGuard", () => {
         url: "/api/beacon",
       });
 
-      expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toBe(400);
       await app.close();
     });
 
@@ -544,7 +544,7 @@ describe("fastifySPAGuard", () => {
         url: "/api/beacon",
       });
 
-      expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toBe(400);
       await app.close();
     });
 
@@ -582,7 +582,7 @@ describe("fastifySPAGuard", () => {
         url: "/api/beacon",
       });
 
-      expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toBe(400);
       await app.close();
     });
   });

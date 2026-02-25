@@ -44,10 +44,10 @@ describe("recommendedSetup", () => {
     expect(stopVersionCheck).toHaveBeenCalledOnce();
   });
 
-  it("cleanup calls stopVersionCheck even when versionCheck was false", () => {
+  it("cleanup does not call stopVersionCheck when versionCheck was false", () => {
     const cleanup = recommendedSetup({ versionCheck: false });
     cleanup();
-    expect(stopVersionCheck).toHaveBeenCalledOnce();
+    expect(stopVersionCheck).not.toHaveBeenCalled();
   });
 
   it("accepts empty overrides object", () => {

@@ -452,6 +452,39 @@ describe("attemptReload", () => {
     });
   });
 
+  describe("cacheBust option", () => {
+    it("appends spaGuardCacheBust query param to reload URL when cacheBust=true", () => {
+      const error = new Error("chunk error");
+
+      attemptReload(error, { cacheBust: true });
+
+      vi.advanceTimersByTime(1000);
+
+      expect(mockLocationHref).toContain("spaGuardCacheBust=");
+      expect(mockLocationHref).toContain("spaGuardRetryAttempt=1");
+    });
+
+    it("does not append spaGuardCacheBust when cacheBust is not set", () => {
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      vi.advanceTimersByTime(1000);
+
+      expect(mockLocationHref).not.toContain("spaGuardCacheBust");
+    });
+
+    it("does not append spaGuardCacheBust when cacheBust=false", () => {
+      const error = new Error("chunk error");
+
+      attemptReload(error, { cacheBust: false });
+
+      vi.advanceTimersByTime(1000);
+
+      expect(mockLocationHref).not.toContain("spaGuardCacheBust");
+    });
+  });
+
   describe("max attempts exceeded → fallback shown", () => {
     it("emits retry-exhausted event when attempt >= reloadDelays.length", () => {
       mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });

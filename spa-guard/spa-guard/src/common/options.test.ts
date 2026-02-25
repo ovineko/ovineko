@@ -208,4 +208,33 @@ describe("getOptions", () => {
       expect(result.html?.spinner?.disabled).toBe(false);
     });
   });
+
+  describe("staticAssets namespace", () => {
+    it("returns staticAssets defaults when no window options are set", () => {
+      const result = getOptions();
+
+      expect(result.staticAssets).toEqual({
+        autoRecover: true,
+        recoveryDelay: 500,
+      });
+    });
+
+    it("merges staticAssets.autoRecover override while retaining recoveryDelay default", () => {
+      setWindowOptions({ staticAssets: { autoRecover: false } });
+
+      const result = getOptions();
+
+      expect(result.staticAssets.autoRecover).toBe(false);
+      expect(result.staticAssets.recoveryDelay).toBe(500);
+    });
+
+    it("merges staticAssets.recoveryDelay override while retaining autoRecover default", () => {
+      setWindowOptions({ staticAssets: { recoveryDelay: 2000 } });
+
+      const result = getOptions();
+
+      expect(result.staticAssets.autoRecover).toBe(true);
+      expect(result.staticAssets.recoveryDelay).toBe(2000);
+    });
+  });
 });
