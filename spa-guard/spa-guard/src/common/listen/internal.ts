@@ -27,8 +27,6 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
 
   markInitialized();
 
-  const options = getOptions();
-
   const wa = globalThis.window.addEventListener.bind(globalThis.window);
 
   wa(
@@ -41,7 +39,7 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
         }
         event.preventDefault();
         emitEvent({ name: "static-asset-load-failed", url: assetUrl });
-        if (options.staticAssets?.autoRecover !== false) {
+        if (getOptions().staticAssets?.autoRecover !== false) {
           handleStaticAssetFailure(assetUrl);
         }
         return;
@@ -97,7 +95,7 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
       return;
     }
 
-    const rejectionConfig = options.handleUnhandledRejections;
+    const rejectionConfig = getOptions().handleUnhandledRejections;
 
     if (rejectionConfig?.sendBeacon !== false) {
       const serialized = serializeError(event);

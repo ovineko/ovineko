@@ -235,7 +235,7 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
 
       setState({ attempt: currentAttempt, phase: "fallback", retryId });
       setFallbackMode();
-      showFallbackUI();
+      showFallbackUI({ retryId });
       return { status: "fallback" };
     }
 
@@ -315,7 +315,7 @@ export const setFallbackStateForDebug = (): void => {
   }
   setState({ phase: "fallback", timer: null });
   setFallbackMode();
-  showFallbackUI();
+  showFallbackUI({ retryId: state.retryId ?? undefined });
 };
 
 export const resetRetryOrchestratorForTests = (): void => {

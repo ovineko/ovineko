@@ -15,7 +15,7 @@ import { getRetryStateFromUrl } from "./retryState";
  * Fails safely: if fallback HTML is not configured or the target element
  * is not found, logs a warning and returns without side effects or errors.
  */
-export const showFallbackUI = (): void => {
+export const showFallbackUI = (override?: { retryId?: string }): void => {
   const options = getOptions();
   const fallbackHtml = options.html?.fallback?.content;
   const selector = options.html?.fallback?.selector ?? "body";
@@ -49,11 +49,11 @@ export const showFallbackUI = (): void => {
       reloadBtn.addEventListener("click", () => globalThis.window.location.reload());
     }
 
-    const retryState = getRetryStateFromUrl();
-    if (retryState) {
+    const retryId = override?.retryId ?? getRetryStateFromUrl()?.retryId;
+    if (retryId) {
       const retryIdElements = document.getElementsByClassName("spa-guard-retry-id");
       for (const element of retryIdElements) {
-        element.textContent = retryState.retryId;
+        element.textContent = retryId;
       }
     }
 

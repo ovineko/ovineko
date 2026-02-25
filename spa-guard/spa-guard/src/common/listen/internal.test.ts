@@ -157,9 +157,9 @@ describe("listenInternal", () => {
   });
 
   describe("initialization", () => {
-    it("calls getOptions on initialization", () => {
+    it("does not call getOptions on initialization - reads options at event time", () => {
       captureListeners();
-      expect(mockGetOptions).toHaveBeenCalled();
+      expect(mockGetOptions).not.toHaveBeenCalled();
     });
 
     it("registers exactly 4 event listeners", () => {
