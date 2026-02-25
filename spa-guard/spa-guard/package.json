@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard",
-  "version": "0.0.1-alpha-30",
+  "version": "0.0.1-alpha-31",
   "description": "Chunk load error handling for SPAs — core runtime, error handling, schema, i18n",
   "keywords": [
     "spa",
