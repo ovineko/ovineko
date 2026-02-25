@@ -5,6 +5,7 @@ import { showFallbackUI } from "./fallbackRendering";
 import { isInFallbackMode, resetFallbackMode, setFallbackMode } from "./fallbackState";
 import {
   clearLastReloadTime,
+  clearLastRetryResetInfo,
   getLastReloadTime,
   setLastReloadTime,
   setLastRetryResetInfo,
@@ -176,12 +177,6 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
 
     getLogger()?.retryCycleStarting(retryId, currentAttempt);
 
-    emitEvent({
-      error: input.error,
-      isRetrying: currentAttempt < reloadDelays.length,
-      name: "chunk-error",
-    });
-
     // Check whether the retry cycle should be reset due to enough time passing
     if (enableRetryReset && urlRetryId && urlAttempt !== null && urlAttempt > 0) {
       const retryStateForReset = { retryAttempt: urlAttempt, retryId: urlRetryId };
@@ -208,6 +203,13 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
         retryId = generateRetryId();
       }
     }
+
+    // Emit chunk-error after reset resolution so isRetrying reflects the final attempt count
+    emitEvent({
+      error: input.error,
+      isRetrying: currentAttempt < reloadDelays.length,
+      name: "chunk-error",
+    });
 
     // Attempts exhausted — transition to fallback
     if (currentAttempt >= reloadDelays.length) {
@@ -269,7 +271,7 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
 
     return { status: "accepted" };
   } catch {
-    setState({ phase: "idle" });
+    setState({ lastSource: undefined, lastTriggerTime: undefined, phase: "idle" });
     return { reason: "internal-error", status: "deduped" };
   }
 };
@@ -281,6 +283,7 @@ export const markRetryHealthyBoot = (): void => {
   }
   clearRetryFromUrl();
   clearLastReloadTime();
+  clearLastRetryResetInfo();
   setState(createFreshState());
   resetFallbackMode();
 };

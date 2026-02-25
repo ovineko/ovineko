@@ -8,6 +8,7 @@ vi.mock("./events/internal", () => ({
 
 vi.mock("./lastReloadTime", () => ({
   clearLastReloadTime: vi.fn(),
+  clearLastRetryResetInfo: vi.fn(),
   getLastReloadTime: vi.fn(),
   setLastReloadTime: vi.fn(),
   setLastRetryResetInfo: vi.fn(),
@@ -45,6 +46,7 @@ import { showFallbackUI } from "./fallbackRendering";
 import { isInFallbackMode, resetFallbackMode, setFallbackMode } from "./fallbackState";
 import {
   clearLastReloadTime,
+  clearLastRetryResetInfo,
   getLastReloadTime,
   setLastReloadTime,
   setLastRetryResetInfo,
@@ -65,6 +67,7 @@ const mockEmitEvent = vi.mocked(emitEvent);
 const mockGetLogger = vi.mocked(getLogger);
 const mockIsDefaultRetryEnabled = vi.mocked(isDefaultRetryEnabled);
 const mockClearLastReloadTime = vi.mocked(clearLastReloadTime);
+const mockClearLastRetryResetInfo = vi.mocked(clearLastRetryResetInfo);
 const mockGetLastReloadTime = vi.mocked(getLastReloadTime);
 const mockSetLastReloadTime = vi.mocked(setLastReloadTime);
 const mockSetLastRetryResetInfo = vi.mocked(setLastRetryResetInfo);
@@ -685,6 +688,23 @@ describe("retryOrchestrator", () => {
         silent: true,
       });
     });
+
+    it("emits chunk-error with isRetrying=true when reset resets attempt to 0", () => {
+      // urlAttempt=3 would be exhausted (>= reloadDelays.length=3) without reset,
+      // but reset brings it back to 0, so isRetrying should be true
+      setupMockLocation("http://localhost/?spaGuardRetryId=old-id&spaGuardRetryAttempt=3");
+      mockShouldResetRetryCycle.mockReturnValue(true);
+      mockGetLastReloadTime.mockReturnValue({
+        attemptNumber: 3,
+        retryId: "old-id",
+        timestamp: Date.now() - 40_000,
+      });
+      mockGenerateRetryId.mockReturnValue("new-retry-id");
+      triggerRetry({ error: new Error("chunk error") });
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ isRetrying: true, name: "chunk-error" }),
+      );
+    });
   });
 
   describe("triggerRetry - logger calls", () => {
@@ -807,6 +827,13 @@ describe("retryOrchestrator", () => {
       mockClearLastReloadTime.mockClear();
       markRetryHealthyBoot();
       expect(mockClearLastReloadTime).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls clearLastRetryResetInfo to prevent stale reset guard after healthy boot", () => {
+      triggerRetry({ error: new Error("chunk error") });
+      mockClearLastRetryResetInfo.mockClear();
+      markRetryHealthyBoot();
+      expect(mockClearLastRetryResetInfo).toHaveBeenCalledTimes(1);
     });
 
     it("allows new trigger after healthy boot", () => {
