@@ -5,6 +5,7 @@ import {
   RETRY_ID_PARAM,
 } from "./constants";
 import { emitEvent, getLogger, isDefaultRetryEnabled } from "./events/internal";
+import { isInFallbackMode, setFallbackMode } from "./fallbackState";
 import { applyI18n, getI18n } from "./i18n";
 import {
   clearLastReloadTime,
@@ -61,6 +62,11 @@ export const resetReloadScheduled = (): void => {
 };
 
 export const attemptReload = (error: unknown, opts?: { cacheBust?: boolean }): void => {
+  if (isInFallbackMode()) {
+    getLogger()?.fallbackAlreadyShown(error);
+    return;
+  }
+
   const reloadState = getReloadState();
 
   if (reloadState.scheduled) {
@@ -139,6 +145,7 @@ export const attemptReload = (error: unknown, opts?: { cacheBust?: boolean }): v
         getLogger()?.fallbackAlreadyShown(error);
       }
       reloadState.scheduled = false;
+      setFallbackMode();
       showFallbackUI();
       return;
     }
@@ -172,6 +179,7 @@ export const attemptReload = (error: unknown, opts?: { cacheBust?: boolean }): v
       }
 
       reloadState.scheduled = false;
+      setFallbackMode();
       showFallbackUI();
       return;
     }
@@ -269,6 +277,7 @@ const showLoadingUI = (attempt: number): void => {
 };
 
 export const showFallbackUI = (): void => {
+  setFallbackMode();
   const options = getOptions();
   const fallbackHtml = options.html?.fallback?.content;
   const selector = options.html?.fallback?.selector ?? "body";

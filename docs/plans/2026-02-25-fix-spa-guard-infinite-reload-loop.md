@@ -70,13 +70,13 @@ When retry attempts are exhausted and the fallback UI is shown, subsequent stati
 **Files:**
 - Modify: `spa-guard/spa-guard/src/common/reload.ts`
 
-- [ ] Import `isInFallbackMode`, `setFallbackMode` from `./fallbackState`
-- [ ] Add guard at entry of `attemptReload()`: if `isInFallbackMode()`, log and return early
-- [ ] Call `setFallbackMode()` in the `currentAttempt === -1` branch (before `showFallbackUI()`)
-- [ ] Call `setFallbackMode()` in the retry-exhausted branch (before `showFallbackUI()`)
-- [ ] Call `setFallbackMode()` at start of `showFallbackUI()` (defensive: covers direct calls)
-- [ ] Update `reload.test.ts`: mock `./fallbackState`, add tests for each new setFallbackMode call site and the entry guard
-- [ ] Run `npm test` in spa-guard — must pass
+- [x] Import `isInFallbackMode`, `setFallbackMode` from `./fallbackState`
+- [x] Add guard at entry of `attemptReload()`: if `isInFallbackMode()`, log and return early
+- [x] Call `setFallbackMode()` in the `currentAttempt === -1` branch (before `showFallbackUI()`)
+- [x] Call `setFallbackMode()` in the retry-exhausted branch (before `showFallbackUI()`)
+- [x] Call `setFallbackMode()` at start of `showFallbackUI()` (defensive: covers direct calls)
+- [x] Update `reload.test.ts`: mock `./fallbackState`, add tests for each new setFallbackMode call site and the entry guard
+- [x] Run `npm test` in spa-guard — must pass
 
 ### Task 6: Export isInFallbackMode and resetFallbackMode from index
 

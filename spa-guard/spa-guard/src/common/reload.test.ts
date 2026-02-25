@@ -36,7 +36,13 @@ vi.mock("./shouldIgnore", () => ({
   shouldIgnoreMessages: vi.fn(),
 }));
 
+vi.mock("./fallbackState", () => ({
+  isInFallbackMode: vi.fn().mockReturnValue(false),
+  setFallbackMode: vi.fn(),
+}));
+
 import { emitEvent, getLogger } from "./events/internal";
+import { isInFallbackMode, setFallbackMode } from "./fallbackState";
 import {
   clearLastReloadTime,
   getLastReloadTime,
@@ -45,7 +51,7 @@ import {
   shouldResetRetryCycle,
 } from "./lastReloadTime";
 import { getOptions } from "./options";
-import { attemptReload, resetReloadScheduled } from "./reload";
+import { attemptReload, resetReloadScheduled, showFallbackUI } from "./reload";
 import {
   clearRetryAttemptFromUrl,
   clearRetryStateFromUrl,
@@ -73,6 +79,8 @@ const mockGetRetryStateFromUrl = vi.mocked(getRetryStateFromUrl);
 const mockUpdateRetryStateInUrl = vi.mocked(updateRetryStateInUrl);
 const mockSendBeacon = vi.mocked(sendBeacon);
 const mockShouldIgnoreMessages = vi.mocked(shouldIgnoreMessages);
+const mockIsInFallbackMode = vi.mocked(isInFallbackMode);
+const mockSetFallbackMode = vi.mocked(setFallbackMode);
 
 const createMockLogger = () => ({
   beaconSendFailed: vi.fn(),
@@ -165,6 +173,7 @@ describe("attemptReload", () => {
     mockShouldResetRetryCycle.mockReturnValue(false);
     mockGetLastReloadTime.mockReturnValue(null);
     mockShouldIgnoreMessages.mockReturnValue(false);
+    mockIsInFallbackMode.mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -1309,6 +1318,74 @@ describe("attemptReload", () => {
       attemptReload(new Error("second error"));
 
       expect(mockEmitEvent).toHaveBeenCalled();
+    });
+  });
+
+  describe("fallback mode guard", () => {
+    it("returns early without emitting events when isInFallbackMode returns true", () => {
+      mockIsInFallbackMode.mockReturnValue(true);
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      expect(mockEmitEvent).not.toHaveBeenCalled();
+    });
+
+    it("does not schedule a reload when isInFallbackMode returns true", () => {
+      mockIsInFallbackMode.mockReturnValue(true);
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      vi.advanceTimersByTime(10_000);
+
+      expect(mockLocationHref).toBe("http://localhost/");
+    });
+
+    it("calls fallbackAlreadyShown logger when isInFallbackMode returns true", () => {
+      mockIsInFallbackMode.mockReturnValue(true);
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      expect(mockLogger.fallbackAlreadyShown).toHaveBeenCalledWith(error);
+    });
+
+    it("calls setFallbackMode when currentAttempt=-1 (fallback already shown path)", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: -1, retryId: "r1" });
+      const mockEl = { innerHTML: "", querySelector: () => null };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+
+      attemptReload(new Error("chunk error"));
+
+      expect(mockSetFallbackMode).toHaveBeenCalled();
+    });
+
+    it("calls setFallbackMode when retries are exhausted", () => {
+      mockGetRetryStateFromUrl.mockReturnValue({ retryAttempt: 3, retryId: "r1" });
+      const mockEl = { innerHTML: "", querySelector: () => null };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+
+      attemptReload(new Error("chunk error"));
+
+      expect(mockSetFallbackMode).toHaveBeenCalled();
+    });
+
+    it("calls setFallbackMode inside showFallbackUI (defensive call)", () => {
+      const mockEl = { innerHTML: "", querySelector: () => null };
+      vi.spyOn(document, "querySelector").mockReturnValue(mockEl as unknown as Element);
+
+      showFallbackUI();
+
+      expect(mockSetFallbackMode).toHaveBeenCalled();
+    });
+
+    it("does not call setFallbackMode during a normal retry (no fallback shown)", () => {
+      const error = new Error("chunk error");
+
+      attemptReload(error);
+
+      expect(mockSetFallbackMode).not.toHaveBeenCalled();
     });
   });
 
