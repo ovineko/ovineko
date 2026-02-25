@@ -78,13 +78,16 @@ export function dispatchRetryExhausted(): void {
   const options = getOptions();
   const reloadDelays = options.reloadDelays ?? [];
 
+  // Set orchestrator state to "fallback" and render the fallback UI before
+  // emitting "retry-exhausted" so that subscribers reading getRetrySnapshot()
+  // observe phase: "fallback" rather than phase: "idle".
+  setFallbackStateForDebug();
+
   emitEvent({
     finalAttempt: reloadDelays.length,
     name: "retry-exhausted",
     retryId: "",
   });
-
-  setFallbackStateForDebug();
 }
 
 /**

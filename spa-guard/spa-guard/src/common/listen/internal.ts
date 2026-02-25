@@ -17,6 +17,10 @@ import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
 import { handleStaticAssetFailure } from "../staticAssetRecovery";
 
 export const listenInternal = (serializeError: (error: unknown) => string, logger?: Logger) => {
+  if (globalThis.window === undefined) {
+    return;
+  }
+
   if (isInitialized()) {
     return;
   }

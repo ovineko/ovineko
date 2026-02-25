@@ -235,6 +235,7 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
 
       setState({ attempt: currentAttempt, phase: "fallback", retryId });
       setFallbackMode();
+      clearRetryFromUrl();
       showFallbackUI({ retryId });
       return { status: "fallback" };
     }
