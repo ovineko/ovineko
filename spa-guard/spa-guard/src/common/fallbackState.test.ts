@@ -10,6 +10,14 @@ const setupMockWindow = (): void => {
   });
 };
 
+const removeWindow = (): void => {
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: undefined,
+    writable: true,
+  });
+};
+
 describe("isInFallbackMode", () => {
   beforeEach(() => {
     setupMockWindow();
@@ -33,6 +41,12 @@ describe("isInFallbackMode", () => {
     resetFallbackMode();
     expect(isInFallbackMode()).toBe(false);
   });
+
+  it("returns false when window is undefined (SSR)", () => {
+    removeWindow();
+    expect(isInFallbackMode()).toBe(false);
+    setupMockWindow();
+  });
 });
 
 describe("setFallbackMode", () => {
@@ -54,11 +68,22 @@ describe("setFallbackMode", () => {
     setFallbackMode();
     expect(isInFallbackMode()).toBe(true);
   });
+
+  it("is a no-op when window is undefined (SSR)", () => {
+    removeWindow();
+    expect(() => setFallbackMode()).not.toThrow();
+    setupMockWindow();
+    expect(isInFallbackMode()).toBe(false);
+  });
 });
 
 describe("resetFallbackMode", () => {
   beforeEach(() => {
     setupMockWindow();
+  });
+
+  afterEach(() => {
+    resetFallbackMode();
   });
 
   it("makes isInFallbackMode return false after set", () => {
@@ -69,5 +94,11 @@ describe("resetFallbackMode", () => {
 
   it("does not throw when called without prior setFallbackMode", () => {
     expect(() => resetFallbackMode()).not.toThrow();
+  });
+
+  it("is a no-op when window is undefined (SSR)", () => {
+    removeWindow();
+    expect(() => resetFallbackMode()).not.toThrow();
+    setupMockWindow();
   });
 });

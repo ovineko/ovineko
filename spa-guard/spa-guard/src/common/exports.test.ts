@@ -33,4 +33,14 @@ describe("common/index exports", () => {
     expect(typeof mod.enableDefaultRetry).toBe("function");
     expect(typeof mod.isDefaultRetryEnabled).toBe("function");
   });
+
+  it("exports isInFallbackMode", async () => {
+    const mod = await import("./index");
+    expect(typeof mod.isInFallbackMode).toBe("function");
+  });
+
+  it("exports resetFallbackMode", async () => {
+    const mod = await import("./index");
+    expect(typeof mod.resetFallbackMode).toBe("function");
+  });
 });

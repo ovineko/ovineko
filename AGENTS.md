@@ -397,6 +397,7 @@ Key architecture notes:
 
 - Configuration flows from `spaGuardVitePlugin()` → injected as `window.__SPA_GUARD_OPTIONS__` at build time; all runtime code reads options exclusively from this global via `getOptions()`
 - Two-level retry strategy: `lazyWithRetry` (in spa-guard-react) retries the individual module import first (`lazyRetry.retryDelays`), then falls back to full page reload via `attemptReload()` (`reloadDelays`)
+- **Fallback mode guard**: `isInFallbackMode()` / `setFallbackMode()` / `resetFallbackMode()` in `src/common/fallbackState.ts` use the window-singleton pattern (`fallbackModeKey` from `constants.ts`) to share a one-way boolean latch across all module instances. Once fallback UI is shown, `setFallbackMode()` is called; subsequent calls to `attemptReload()` and `handleStaticAssetFailure()` check `isInFallbackMode()` and return early, preventing an infinite reload loop from 404'd static assets. `isInFallbackMode` and `resetFallbackMode` are exported from the public `common` index.
 - `src/common/retryImport.ts` (in core) is framework-agnostic retry logic; `src/react/lazyWithRetry.tsx` (in spa-guard-react) wraps it for `React.lazy` compatibility
 - Event system uses `name` field as the discriminant (not `type`) in both internal `emitEvent()` calls and the public `events.subscribe()` API
 - Schema validation uses plain TypeScript (no TypeBox or other schema library dependency)

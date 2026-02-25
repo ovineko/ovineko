@@ -36,6 +36,8 @@ const cleanup = recommendedSetup({ versionCheck: false });
 - `events` — event type constants
 - `options` — runtime options helpers
 - `disableDefaultRetry` / `enableDefaultRetry` / `isDefaultRetryEnabled` — control default retry behaviour
+- `isInFallbackMode` — returns `true` when fallback UI is active (retries exhausted)
+- `resetFallbackMode` — clears the fallback flag; use in tests or programmatic recovery flows
 - `BeaconError` — error class for beacon failures
 - `ForceRetryError` — error class to force a retry
 

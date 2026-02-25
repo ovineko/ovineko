@@ -107,11 +107,42 @@ describe("staticAssetRecovery", () => {
       expect(mockAttemptReload).toHaveBeenCalledTimes(2);
     });
 
-    it("does not call attemptReload when in fallback mode", () => {
+    it("does not call attemptReload when in fallback mode at entry", () => {
       mockIsInFallbackMode.mockReturnValue(true);
       handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
       vi.advanceTimersByTime(500);
       expect(mockAttemptReload).not.toHaveBeenCalled();
+    });
+
+    it("does not call attemptReload when fallback mode is set after timer is registered", () => {
+      mockIsInFallbackMode.mockReturnValue(false);
+      handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js");
+      // Fallback mode activates during the delay window
+      mockIsInFallbackMode.mockReturnValue(true);
+      vi.advanceTimersByTime(500);
+      expect(mockAttemptReload).not.toHaveBeenCalled();
+    });
+
+    it("is a no-op when window is undefined (SSR)", () => {
+      const originalWindow = globalThis.window;
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        value: undefined,
+        writable: true,
+      });
+      try {
+        expect(() =>
+          handleStaticAssetFailure("https://example.com/assets/index-Bd0Ef7jk.js"),
+        ).not.toThrow();
+        vi.advanceTimersByTime(500);
+        expect(mockAttemptReload).not.toHaveBeenCalled();
+      } finally {
+        Object.defineProperty(globalThis, "window", {
+          configurable: true,
+          value: originalWindow,
+          writable: true,
+        });
+      }
     });
   });
 

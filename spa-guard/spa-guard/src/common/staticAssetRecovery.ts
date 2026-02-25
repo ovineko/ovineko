@@ -22,6 +22,9 @@ const getState = (): StaticAssetRecoveryState => {
 };
 
 export const handleStaticAssetFailure = (url: string): void => {
+  if (globalThis.window === undefined) {
+    return;
+  }
   if (isInFallbackMode()) {
     return;
   }
@@ -37,6 +40,9 @@ export const handleStaticAssetFailure = (url: string): void => {
   const delay = options.staticAssets?.recoveryDelay ?? 500;
 
   state.recoveryTimer = setTimeout(() => {
+    if (isInFallbackMode()) {
+      return;
+    }
     const s = getState();
     const assets = [...s.failedAssets];
     s.failedAssets = new Set();
