@@ -107,6 +107,32 @@ describe("getRetryStateFromUrl", () => {
     expect(getRetryStateFromUrl()).toBeNull();
   });
 
+  it("returns null for lax integer with trailing text (1foo)", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=abc123&${RETRY_ATTEMPT_PARAM}=1foo`);
+    expect(getRetryStateFromUrl()).toBeNull();
+  });
+
+  it("returns null for float-looking integer (1.5)", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=abc123&${RETRY_ATTEMPT_PARAM}=1.5`);
+    expect(getRetryStateFromUrl()).toBeNull();
+  });
+
+  it("returns null for exponential notation (1e2)", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=abc123&${RETRY_ATTEMPT_PARAM}=1e2`);
+    expect(getRetryStateFromUrl()).toBeNull();
+  });
+
+  it("returns null when retryAttempt exceeds upper bound (> 100)", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=abc123&${RETRY_ATTEMPT_PARAM}=101`);
+    expect(getRetryStateFromUrl()).toBeNull();
+  });
+
+  it("accepts retryAttempt at upper bound (100)", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=abc123&${RETRY_ATTEMPT_PARAM}=100`);
+    const state = getRetryStateFromUrl();
+    expect(state?.retryAttempt).toBe(100);
+  });
+
   it("preserves the retryId string exactly", () => {
     const retryId = "550e8400-e29b-41d4-a716-446655440000";
     setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=${retryId}&${RETRY_ATTEMPT_PARAM}=3`);
@@ -182,6 +208,21 @@ describe("getRetryAttemptFromUrl", () => {
 
   it("returns null when retryAttempt is empty string", () => {
     setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=`);
+    expect(getRetryAttemptFromUrl()).toBeNull();
+  });
+
+  it("returns null for lax integer with trailing text (1foo)", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=1foo`);
+    expect(getRetryAttemptFromUrl()).toBeNull();
+  });
+
+  it("returns null for float-looking integer (1.5)", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=1.5`);
+    expect(getRetryAttemptFromUrl()).toBeNull();
+  });
+
+  it("returns null when retryAttempt exceeds upper bound (> 100)", () => {
+    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=101`);
     expect(getRetryAttemptFromUrl()).toBeNull();
   });
 

@@ -44,7 +44,7 @@ export const showFallbackUI = (): void => {
 
     const reloadBtn = targetElement.querySelector('[data-spa-guard-action="reload"]');
     if (reloadBtn) {
-      reloadBtn.addEventListener("click", () => location.reload());
+      reloadBtn.addEventListener("click", () => globalThis.window.location.reload());
     }
 
     const retryState = getRetryStateFromUrl();

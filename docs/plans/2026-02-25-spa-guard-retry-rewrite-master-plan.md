@@ -1,4 +1,5 @@
 ---
+status: completed
 # SPA Guard Retry Rewrite (Single Master Plan)
 
 ## Intent

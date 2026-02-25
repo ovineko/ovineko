@@ -36,12 +36,13 @@ vi.mock("./fallbackRendering", () => ({
 
 vi.mock("./fallbackState", () => ({
   isInFallbackMode: vi.fn().mockReturnValue(false),
+  resetFallbackMode: vi.fn(),
   setFallbackMode: vi.fn(),
 }));
 
 import { emitEvent, getLogger, isDefaultRetryEnabled } from "./events/internal";
 import { showFallbackUI } from "./fallbackRendering";
-import { isInFallbackMode, setFallbackMode } from "./fallbackState";
+import { isInFallbackMode, resetFallbackMode, setFallbackMode } from "./fallbackState";
 import {
   clearLastReloadTime,
   getLastReloadTime,
@@ -74,6 +75,7 @@ const mockSendBeacon = vi.mocked(sendBeacon);
 const mockShouldIgnoreMessages = vi.mocked(shouldIgnoreMessages);
 const mockShowFallbackUI = vi.mocked(showFallbackUI);
 const mockIsInFallbackMode = vi.mocked(isInFallbackMode);
+const mockResetFallbackMode = vi.mocked(resetFallbackMode);
 const mockSetFallbackMode = vi.mocked(setFallbackMode);
 
 const createMockLogger = () => ({
@@ -629,7 +631,7 @@ describe("retryOrchestrator", () => {
       triggerRetry({ error: new Error("chunk error") });
       vi.advanceTimersByTime(1000);
       expect(mockLocationHref).toContain("spaGuardRetryAttempt=1");
-      expect(mockLocationHref).toContain("spaGuardRetryId="); // still uses generated one internally
+      expect(mockLocationHref).not.toContain("spaGuardRetryId=");
     });
 
     it("does not call setLastReloadTime when useRetryId=false", () => {
@@ -813,6 +815,25 @@ describe("retryOrchestrator", () => {
       const result = triggerRetry({ error: new Error("new error") });
       expect(result).toEqual({ status: "accepted" });
     });
+
+    it("calls resetFallbackMode to clear fallback state flag", () => {
+      triggerRetry({ error: new Error("chunk error") });
+      mockResetFallbackMode.mockClear();
+      markRetryHealthyBoot();
+      expect(mockResetFallbackMode).toHaveBeenCalledTimes(1);
+    });
+
+    it("resets retryId to null in snapshot", () => {
+      triggerRetry({ error: new Error("chunk error") });
+      markRetryHealthyBoot();
+      expect(getRetrySnapshot().retryId).toBe(null);
+    });
+
+    it("resets lastSource to undefined in snapshot", () => {
+      triggerRetry({ error: new Error("chunk error"), source: "chunk-error" });
+      markRetryHealthyBoot();
+      expect(getRetrySnapshot().lastSource).toBeUndefined();
+    });
   });
 
   describe("getRetrySnapshot", () => {
@@ -870,6 +891,13 @@ describe("retryOrchestrator", () => {
       resetRetryOrchestratorForTests();
       const result = triggerRetry({ error: new Error("second") });
       expect(result).toEqual({ status: "accepted" });
+    });
+
+    it("calls resetFallbackMode to clear fallback state flag", () => {
+      triggerRetry({ error: new Error("first") });
+      mockResetFallbackMode.mockClear();
+      resetRetryOrchestratorForTests();
+      expect(mockResetFallbackMode).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -5,6 +5,8 @@ export interface RetryState {
   retryId: string;
 }
 
+const MAX_RETRY_ATTEMPT = 100;
+
 export const getRetryStateFromUrl = (): null | RetryState => {
   try {
     const params = new URLSearchParams(globalThis.window.location.search);
@@ -12,8 +14,12 @@ export const getRetryStateFromUrl = (): null | RetryState => {
     const retryAttempt = params.get(RETRY_ATTEMPT_PARAM);
 
     if (retryId && retryAttempt) {
+      // Strict parse: only accept non-negative integers (reject "1.5", "1foo", "-1", etc.)
+      if (!/^\d+$/.test(retryAttempt)) {
+        return null;
+      }
       const parsed = parseInt(retryAttempt, 10);
-      if (Number.isNaN(parsed) || parsed < 0) {
+      if (Number.isNaN(parsed) || parsed < 0 || parsed > MAX_RETRY_ATTEMPT) {
         return null;
       }
       return {
@@ -35,7 +41,7 @@ export const generateRetryId = (): string => {
   if (typeof crypto !== "undefined" && crypto.getRandomValues) {
     const array = new Uint32Array(2);
     crypto.getRandomValues(array);
-    return `${Date.now()}-${array[0]!.toString(36)}${array[1]!.toString(36)}`;
+    return `${Date.now()}-${array[0]!.toString(36)}-${array[1]!.toString(36)}`;
   }
 
   // eslint-disable-next-line sonarjs/pseudo-random -- Last resort fallback for insecure contexts (HTTP) where crypto is unavailable
@@ -48,8 +54,12 @@ export const getRetryAttemptFromUrl = (): null | number => {
     const retryAttempt = params.get(RETRY_ATTEMPT_PARAM);
 
     if (retryAttempt) {
+      // Strict parse: only accept non-negative integers (reject "1.5", "1foo", "-1", etc.)
+      if (!/^\d+$/.test(retryAttempt)) {
+        return null;
+      }
       const parsed = parseInt(retryAttempt, 10);
-      if (Number.isNaN(parsed) || parsed < 0) {
+      if (Number.isNaN(parsed) || parsed < 0 || parsed > MAX_RETRY_ATTEMPT) {
         return null;
       }
       return parsed;

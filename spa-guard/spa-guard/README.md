@@ -87,6 +87,17 @@ Only `retryOrchestrator.ts` may schedule reloads, advance retry state, or transi
 - `BeaconError` — error class for beacon failures
 - `ForceRetryError` — error class to force a retry
 
+**Retry orchestrator (single owner of retry lifecycle):**
+
+- `triggerRetry(input?)` — trigger a retry from any source; returns `TriggerResult`:
+  - `{ status: "accepted" }` — reload scheduled
+  - `{ status: "deduped", reason: string }` — ignored because another retry is already scheduled or an internal error occurred
+  - `{ status: "fallback" }` — already in fallback mode; no retry scheduled
+  - `{ status: "retry-disabled" }` — retry is disabled via `disableDefaultRetry()`
+- `markRetryHealthyBoot()` — call after a successful boot following a retry reload; clears URL params, cancels timers, resets orchestrator state and fallback flag
+- `getRetrySnapshot()` — returns current orchestrator state: `{ phase, attempt, retryId, lastSource, lastTriggerTime }`
+- `resetRetryOrchestratorForTests()` — resets all orchestrator state including fallback flag; use in test teardown
+
 ### `@ovineko/spa-guard/runtime`
 
 - `recommendedSetup(options?)` — enable recommended runtime features; returns cleanup function
@@ -119,7 +130,7 @@ Available error scenarios:
 - `dispatchFinallyError` — unhandled rejection from Promise.finally
 - `dispatchForceRetryError` — ForceRetryError to exercise the force-retry path
 - `dispatchUnhandledRejection` — generic unhandled promise rejection
-- `dispatchRetryExhausted` — simulates retry-exhausted state and renders fallback UI
+- `dispatchRetryExhausted` — renders fallback UI directly (bypasses orchestrator; orchestrator phase remains `idle`)
 - `dispatchStaticAsset404` — appends a hashed `<script>` that 404s, exercising the Resource Timing API-based static asset detection path
 
 ## Related packages

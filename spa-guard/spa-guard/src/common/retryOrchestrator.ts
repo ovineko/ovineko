@@ -2,7 +2,7 @@ import { name } from "../../package.json";
 import { CACHE_BUST_PARAM, RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
 import { emitEvent, getLogger, isDefaultRetryEnabled } from "./events/internal";
 import { showFallbackUI } from "./fallbackRendering";
-import { isInFallbackMode, setFallbackMode } from "./fallbackState";
+import { isInFallbackMode, resetFallbackMode, setFallbackMode } from "./fallbackState";
 import {
   clearLastReloadTime,
   getLastReloadTime,
@@ -50,6 +50,8 @@ interface OrchestratorState {
 
 const createFreshState = (): OrchestratorState => ({
   attempt: 0,
+  lastSource: undefined,
+  lastTriggerTime: undefined,
   phase: "idle",
   retryId: null,
   timer: null,
@@ -77,9 +79,16 @@ const setState = (updates: Partial<OrchestratorState>): void => {
   Object.assign(w[retryOrchestratorKey], updates);
 };
 
-const buildReloadUrl = (retryId: string, attempt: number, cacheBust?: boolean): string => {
+const buildReloadUrl = (
+  retryId: string,
+  attempt: number,
+  cacheBust?: boolean,
+  includeRetryId = true,
+): string => {
   const url = new URL(globalThis.window.location.href);
-  url.searchParams.set(RETRY_ID_PARAM, retryId);
+  if (includeRetryId) {
+    url.searchParams.set(RETRY_ID_PARAM, retryId);
+  }
   url.searchParams.set(RETRY_ATTEMPT_PARAM, String(attempt));
   if (cacheBust) {
     url.searchParams.set(CACHE_BUST_PARAM, String(Date.now()));
@@ -121,7 +130,9 @@ const clearRetryFromUrl = (): void => {
     url.searchParams.delete(RETRY_ATTEMPT_PARAM);
     url.searchParams.delete(CACHE_BUST_PARAM);
     globalThis.window.history.replaceState(null, "", url.toString());
-  } catch {}
+  } catch (error) {
+    getLogger()?.fallbackInjectFailed(error);
+  }
 };
 
 export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
@@ -162,7 +173,7 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
 
     emitEvent({
       error: input.error,
-      isRetrying: currentAttempt >= 0 && currentAttempt < reloadDelays.length,
+      isRetrying: currentAttempt < reloadDelays.length,
       name: "chunk-error",
     });
 
@@ -245,7 +256,7 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
       if (useRetryId && enableRetryReset) {
         setLastReloadTime(retryId, nextAttempt);
       }
-      const reloadUrl = buildReloadUrl(retryId, nextAttempt, input.cacheBust);
+      const reloadUrl = buildReloadUrl(retryId, nextAttempt, input.cacheBust, useRetryId);
       globalThis.window.location.href = reloadUrl;
     }, delay);
 
@@ -266,6 +277,7 @@ export const markRetryHealthyBoot = (): void => {
   clearRetryFromUrl();
   clearLastReloadTime();
   setState(createFreshState());
+  resetFallbackMode();
 };
 
 export const getRetrySnapshot = (): RetrySnapshot => {
@@ -287,4 +299,5 @@ export const resetRetryOrchestratorForTests = (): void => {
   if (globalThis.window !== undefined) {
     (globalThis.window as any)[retryOrchestratorKey] = createFreshState();
   }
+  resetFallbackMode();
 };
