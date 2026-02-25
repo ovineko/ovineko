@@ -1,6 +1,6 @@
 import { emitEvent, isDefaultRetryEnabled } from "./events/internal";
 import { isChunkError } from "./isChunkError";
-import { attemptReload } from "./reload";
+import { triggerRetry } from "./retryOrchestrator";
 
 const wait = (ms: number, signal?: AbortSignal): Promise<void> =>
   new Promise((resolve, reject) => {
@@ -27,7 +27,7 @@ const wait = (ms: number, signal?: AbortSignal): Promise<void> =>
  */
 export interface RetryImportOptions {
   /**
-   * If true and all retries fail with a chunk error, calls attemptReload before rethrowing.
+   * If true and all retries fail with a chunk error, triggers a page reload via the orchestrator before rethrowing.
    * @default true (when used via lazyWithRetry)
    */
   callReloadOnFailure?: boolean;
@@ -116,7 +116,7 @@ export const retryImport = async <T>(
   emitEvent({ error: lastError, name: "lazy-retry-exhausted", totalAttempts, willReload });
 
   if (willReload) {
-    attemptReload(lastError);
+    triggerRetry({ error: lastError, source: "lazy-import-failure" });
   }
 
   throw lastError;

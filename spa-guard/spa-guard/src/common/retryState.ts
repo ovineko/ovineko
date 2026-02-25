@@ -1,4 +1,4 @@
-import { CACHE_BUST_PARAM, RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
+import { RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
 
 export interface RetryState {
   retryAttempt: number;
@@ -25,25 +25,6 @@ export const getRetryStateFromUrl = (): null | RetryState => {
   } catch {
     return null;
   }
-};
-
-export const clearRetryStateFromUrl = (): void => {
-  try {
-    const url = new URL(globalThis.window.location.href);
-    url.searchParams.delete(RETRY_ID_PARAM);
-    url.searchParams.delete(RETRY_ATTEMPT_PARAM);
-    url.searchParams.delete(CACHE_BUST_PARAM);
-    globalThis.window.history.replaceState(null, "", url.toString());
-  } catch {}
-};
-
-export const updateRetryStateInUrl = (retryId: string, retryAttempt: number): void => {
-  try {
-    const url = new URL(globalThis.window.location.href);
-    url.searchParams.set(RETRY_ID_PARAM, retryId);
-    url.searchParams.set(RETRY_ATTEMPT_PARAM, String(retryAttempt));
-    globalThis.window.history.replaceState(null, "", url.toString());
-  } catch {}
 };
 
 export const generateRetryId = (): string => {
@@ -77,14 +58,6 @@ export const getRetryAttemptFromUrl = (): null | number => {
   } catch {
     return null;
   }
-};
-
-export const clearRetryAttemptFromUrl = (): void => {
-  try {
-    const url = new URL(globalThis.window.location.href);
-    url.searchParams.delete(RETRY_ATTEMPT_PARAM);
-    globalThis.window.history.replaceState(null, "", url.toString());
-  } catch {}
 };
 
 export const getRetryInfoForBeacon = (): { retryAttempt?: number; retryId?: string } => {

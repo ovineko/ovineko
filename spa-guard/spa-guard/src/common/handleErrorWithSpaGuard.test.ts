@@ -4,8 +4,8 @@ vi.mock("./isChunkError", () => ({
   isChunkError: vi.fn(),
 }));
 
-vi.mock("./reload", () => ({
-  attemptReload: vi.fn(),
+vi.mock("./retryOrchestrator", () => ({
+  triggerRetry: vi.fn(),
 }));
 
 vi.mock("./retryState", () => ({
@@ -27,14 +27,14 @@ vi.mock("./shouldIgnore", () => ({
 
 import { handleErrorWithSpaGuard } from "./handleErrorWithSpaGuard";
 import { isChunkError } from "./isChunkError";
-import { attemptReload } from "./reload";
+import { triggerRetry } from "./retryOrchestrator";
 import { getRetryInfoForBeacon } from "./retryState";
 import { sendBeacon } from "./sendBeacon";
 import { serializeError } from "./serializeError";
 import { shouldForceRetry, shouldIgnoreMessages } from "./shouldIgnore";
 
 const mockIsChunkError = vi.mocked(isChunkError);
-const mockAttemptReload = vi.mocked(attemptReload);
+const mockTriggerRetry = vi.mocked(triggerRetry);
 const mockGetRetryInfoForBeacon = vi.mocked(getRetryInfoForBeacon);
 const mockSendBeacon = vi.mocked(sendBeacon);
 const mockSerializeError = vi.mocked(serializeError);
@@ -46,7 +46,7 @@ describe("handleErrorWithSpaGuard", () => {
     mockIsChunkError.mockReturnValue(false);
     mockShouldForceRetry.mockReturnValue(false);
     mockShouldIgnoreMessages.mockReturnValue(false);
-    mockAttemptReload.mockReset();
+    mockTriggerRetry.mockReset();
     mockGetRetryInfoForBeacon.mockReturnValue({});
     mockSendBeacon.mockReset();
     mockSerializeError.mockReturnValue('{"serialized":"error"}');
@@ -56,25 +56,25 @@ describe("handleErrorWithSpaGuard", () => {
     vi.clearAllMocks();
   });
 
-  describe("chunk error → attemptReload path", () => {
-    it("calls attemptReload when isChunkError returns true and autoRetryChunkErrors is true (default)", () => {
+  describe("chunk error → triggerRetry path", () => {
+    it("calls triggerRetry when isChunkError returns true and autoRetryChunkErrors is true (default)", () => {
       mockIsChunkError.mockReturnValue(true);
       const error = new Error("Failed to fetch dynamically imported module");
 
       handleErrorWithSpaGuard(error, { eventName: "test-event" });
 
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
-      expect(mockAttemptReload).toHaveBeenCalledWith(error);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledWith({ error });
     });
 
-    it("calls attemptReload when isChunkError=true and autoRetryChunkErrors=true (explicit)", () => {
+    it("calls triggerRetry when isChunkError=true and autoRetryChunkErrors=true (explicit)", () => {
       mockIsChunkError.mockReturnValue(true);
       const error = new Error("ChunkLoadError");
 
       handleErrorWithSpaGuard(error, { autoRetryChunkErrors: true, eventName: "test-event" });
 
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
-      expect(mockAttemptReload).toHaveBeenCalledWith(error);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledWith({ error });
     });
 
     it("does not call sendBeacon when chunk error triggers reload", () => {
@@ -86,14 +86,14 @@ describe("handleErrorWithSpaGuard", () => {
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
-    it("calls attemptReload with the original error object (not a copy)", () => {
+    it("calls triggerRetry with the original error object (not a copy)", () => {
       mockIsChunkError.mockReturnValue(true);
       const error = new Error("chunk error");
 
       handleErrorWithSpaGuard(error, { eventName: "test-event" });
 
-      expect(mockAttemptReload).toHaveBeenCalledWith(error);
-      expect(mockAttemptReload.mock.calls[0]![0]).toBe(error);
+      expect(mockTriggerRetry).toHaveBeenCalledWith({ error });
+      expect(mockTriggerRetry.mock.calls[0]![0]!.error).toBe(error);
     });
   });
 
@@ -107,13 +107,13 @@ describe("handleErrorWithSpaGuard", () => {
       expect(mockSendBeacon).toHaveBeenCalledTimes(1);
     });
 
-    it("does not call attemptReload for non-chunk errors", () => {
+    it("does not call triggerRetry for non-chunk errors", () => {
       mockIsChunkError.mockReturnValue(false);
       const error = new Error("Regular error");
 
       handleErrorWithSpaGuard(error, { eventName: "test-event" });
 
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
     });
 
     it("passes eventName to sendBeacon", () => {
@@ -167,23 +167,23 @@ describe("handleErrorWithSpaGuard", () => {
 
       handleErrorWithSpaGuard(error, { autoRetryChunkErrors: false, eventName: "test-event" });
 
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
       expect(mockSendBeacon).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("ignored errors → no action taken", () => {
-    it("does not call attemptReload or sendBeacon when sendBeaconOnError=false and not a chunk error", () => {
+    it("does not call triggerRetry or sendBeacon when sendBeaconOnError=false and not a chunk error", () => {
       mockIsChunkError.mockReturnValue(false);
       const error = new Error("some error");
 
       handleErrorWithSpaGuard(error, { eventName: "test-event", sendBeaconOnError: false });
 
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
-    it("does not call attemptReload or sendBeacon when autoRetryChunkErrors=false and sendBeaconOnError=false", () => {
+    it("does not call triggerRetry or sendBeacon when autoRetryChunkErrors=false and sendBeaconOnError=false", () => {
       mockIsChunkError.mockReturnValue(true);
       const error = new Error("ChunkLoadError");
 
@@ -193,7 +193,7 @@ describe("handleErrorWithSpaGuard", () => {
         sendBeaconOnError: false,
       });
 
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
@@ -207,20 +207,20 @@ describe("handleErrorWithSpaGuard", () => {
         sendBeaconOnError: true,
       });
 
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
   });
 
   describe("shouldIgnoreMessages → early return (errors.ignore integration)", () => {
-    it("does not call attemptReload when shouldIgnoreMessages returns true for chunk error", () => {
+    it("does not call triggerRetry when shouldIgnoreMessages returns true for chunk error", () => {
       mockIsChunkError.mockReturnValue(true);
       mockShouldIgnoreMessages.mockReturnValue(true);
       const error = new Error("Failed to fetch dynamically imported module");
 
       handleErrorWithSpaGuard(error, { eventName: "test-event" });
 
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
     });
 
     it("does not call sendBeacon when shouldIgnoreMessages returns true", () => {
@@ -376,7 +376,7 @@ describe("handleErrorWithSpaGuard", () => {
       expect(mockSendBeacon).toHaveBeenCalledTimes(1);
     });
 
-    it("still calls attemptReload when onError callback throws on chunk error", () => {
+    it("still calls triggerRetry when onError callback throws on chunk error", () => {
       mockIsChunkError.mockReturnValue(true);
       const onError = vi.fn(() => {
         throw new Error("callback exploded");
@@ -386,8 +386,8 @@ describe("handleErrorWithSpaGuard", () => {
       handleErrorWithSpaGuard(error, { eventName: "test-event", onError });
 
       expect(onError).toHaveBeenCalledTimes(1);
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
-      expect(mockAttemptReload).toHaveBeenCalledWith(error);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledWith({ error });
     });
   });
 
@@ -505,15 +505,15 @@ describe("handleErrorWithSpaGuard", () => {
     });
   });
 
-  describe("forceRetry → attemptReload path", () => {
-    it("calls attemptReload when shouldForceRetry returns true", () => {
+  describe("forceRetry → triggerRetry path", () => {
+    it("calls triggerRetry when shouldForceRetry returns true", () => {
       mockShouldForceRetry.mockReturnValue(true);
       const error = new Error("StaleModule: component version mismatch");
 
       handleErrorWithSpaGuard(error, { eventName: "test-event" });
 
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
-      expect(mockAttemptReload).toHaveBeenCalledWith(error);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledWith({ error });
     });
 
     it("does not call sendBeacon when forceRetry triggers reload", () => {
@@ -525,13 +525,13 @@ describe("handleErrorWithSpaGuard", () => {
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
-    it("does not call attemptReload for forceRetry when autoRetryChunkErrors=false", () => {
+    it("does not call triggerRetry for forceRetry when autoRetryChunkErrors=false", () => {
       mockShouldForceRetry.mockReturnValue(true);
       const error = new Error("StaleModule error");
 
       handleErrorWithSpaGuard(error, { autoRetryChunkErrors: false, eventName: "test-event" });
 
-      expect(mockAttemptReload).not.toHaveBeenCalled();
+      expect(mockTriggerRetry).not.toHaveBeenCalled();
       expect(mockSendBeacon).toHaveBeenCalledTimes(1);
     });
 
@@ -556,7 +556,7 @@ describe("handleErrorWithSpaGuard", () => {
 
       handleErrorWithSpaGuard(error, { eventName: "test-event" });
 
-      expect(mockAttemptReload).toHaveBeenCalledTimes(1);
+      expect(mockTriggerRetry).toHaveBeenCalledTimes(1);
     });
   });
 });

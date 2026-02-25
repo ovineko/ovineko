@@ -16,8 +16,6 @@ export const CACHE_BUST_PARAM = "spaGuardCacheBust";
 
 export const versionCheckStateWindowKey = Symbol.for(`${name}:version-check-state`);
 
-export const reloadScheduledKey = Symbol.for(`${name}:reload-scheduled`);
-
 export const inMemoryLastReloadKey = Symbol.for(`${name}:in-memory-last-reload`);
 
 export const staticAssetRecoveryKey = Symbol.for(`${name}:static-asset-recovery`);

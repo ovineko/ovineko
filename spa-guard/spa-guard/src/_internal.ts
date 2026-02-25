@@ -21,8 +21,19 @@ export { createLogger } from "./common/logger";
 export { getOptions, optionsWindowKey } from "./common/options";
 export type { Options } from "./common/options";
 export { extractVersionFromHtml } from "./common/parseVersion";
-export { attemptReload } from "./common/reload";
 export { retryImport } from "./common/retryImport";
+export {
+  getRetrySnapshot,
+  markRetryHealthyBoot,
+  resetRetryOrchestratorForTests,
+  triggerRetry,
+} from "./common/retryOrchestrator";
+export type {
+  RetryPhase,
+  RetrySnapshot,
+  TriggerInput,
+  TriggerResult,
+} from "./common/retryOrchestrator";
 export { serializeError } from "./common/serializeError";
 export { defaultSpinnerSvg, sanitizeCssValue, SPINNER_ID } from "./common/spinner";
 export {

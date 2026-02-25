@@ -57,15 +57,6 @@ const getInitialStateFromUrl = (): SpaGuardState => {
       lastRetryResetTime: resetInfo?.timestamp,
     };
   }
-  if (retryState.retryAttempt === -1) {
-    return {
-      currentAttempt: 0,
-      isFallbackShown: true,
-      isWaiting: false,
-      lastResetRetryId: resetInfo?.previousRetryId,
-      lastRetryResetTime: resetInfo?.timestamp,
-    };
-  }
   return {
     currentAttempt: retryState.retryAttempt,
     isFallbackShown: false,

@@ -1,14 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CACHE_BUST_PARAM, RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
+import { RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
 import {
-  clearRetryAttemptFromUrl,
-  clearRetryStateFromUrl,
   generateRetryId,
   getRetryAttemptFromUrl,
   getRetryInfoForBeacon,
   getRetryStateFromUrl,
-  updateRetryStateInUrl,
 } from "./retryState";
 
 let mockLocationHref: string;
@@ -139,102 +136,6 @@ describe("getRetryStateFromUrl", () => {
   });
 });
 
-describe("updateRetryStateInUrl", () => {
-  beforeEach(() => {
-    setupMockLocation();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("sets retryId and retryAttempt in URL via history.replaceState", () => {
-    updateRetryStateInUrl("test-id", 1);
-    expect(mockHistoryReplaceState).toHaveBeenCalledOnce();
-    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
-    expect(calledUrl.searchParams.get(RETRY_ID_PARAM)).toBe("test-id");
-    expect(calledUrl.searchParams.get(RETRY_ATTEMPT_PARAM)).toBe("1");
-  });
-
-  it("stores retryAttempt=0", () => {
-    updateRetryStateInUrl("my-id", 0);
-    expect(mockHistoryReplaceState).toHaveBeenCalledOnce();
-    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
-    expect(calledUrl.searchParams.get(RETRY_ATTEMPT_PARAM)).toBe("0");
-  });
-
-  it("preserves existing URL params", () => {
-    setupMockLocation("http://localhost/?foo=bar&baz=qux");
-    updateRetryStateInUrl("id", 2);
-    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
-    expect(calledUrl.searchParams.get("foo")).toBe("bar");
-    expect(calledUrl.searchParams.get("baz")).toBe("qux");
-  });
-
-  it("overwrites existing retry params", () => {
-    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=old-id&${RETRY_ATTEMPT_PARAM}=1`);
-    updateRetryStateInUrl("new-id", 2);
-    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
-    expect(calledUrl.searchParams.get(RETRY_ID_PARAM)).toBe("new-id");
-    expect(calledUrl.searchParams.get(RETRY_ATTEMPT_PARAM)).toBe("2");
-  });
-
-  it("does not throw when window.history.replaceState throws", () => {
-    mockHistoryReplaceState.mockImplementation(() => {
-      throw new Error("replaceState unavailable");
-    });
-    expect(() => updateRetryStateInUrl("id", 1)).not.toThrow();
-  });
-});
-
-describe("clearRetryStateFromUrl", () => {
-  beforeEach(() => {
-    setupMockLocation();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("removes retryId and retryAttempt params from URL", () => {
-    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=test-id&${RETRY_ATTEMPT_PARAM}=2`);
-    clearRetryStateFromUrl();
-    expect(mockHistoryReplaceState).toHaveBeenCalledOnce();
-    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
-    expect(calledUrl.searchParams.has(RETRY_ID_PARAM)).toBe(false);
-    expect(calledUrl.searchParams.has(RETRY_ATTEMPT_PARAM)).toBe(false);
-  });
-
-  it("removes spaGuardCacheBust param from URL", () => {
-    setupMockLocation(`http://localhost/?${CACHE_BUST_PARAM}=1234567890`);
-    clearRetryStateFromUrl();
-    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
-    expect(calledUrl.searchParams.has(CACHE_BUST_PARAM)).toBe(false);
-  });
-
-  it("preserves other URL params when clearing", () => {
-    setupMockLocation(
-      `http://localhost/?foo=bar&${RETRY_ID_PARAM}=id&${RETRY_ATTEMPT_PARAM}=1&baz=qux`,
-    );
-    clearRetryStateFromUrl();
-    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
-    expect(calledUrl.searchParams.get("foo")).toBe("bar");
-    expect(calledUrl.searchParams.get("baz")).toBe("qux");
-  });
-
-  it("does not throw when there are no retry params to remove", () => {
-    setupMockLocation("http://localhost/");
-    expect(() => clearRetryStateFromUrl()).not.toThrow();
-  });
-
-  it("does not throw when window.history.replaceState throws", () => {
-    mockHistoryReplaceState.mockImplementation(() => {
-      throw new Error("replaceState unavailable");
-    });
-    expect(() => clearRetryStateFromUrl()).not.toThrow();
-  });
-});
-
 describe("getRetryAttemptFromUrl", () => {
   beforeEach(() => {
     setupMockLocation();
@@ -297,53 +198,6 @@ describe("getRetryAttemptFromUrl", () => {
       },
     });
     expect(getRetryAttemptFromUrl()).toBeNull();
-  });
-});
-
-describe("clearRetryAttemptFromUrl", () => {
-  beforeEach(() => {
-    setupMockLocation();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("removes only retryAttempt param from URL, preserves retryId", () => {
-    setupMockLocation(`http://localhost/?${RETRY_ID_PARAM}=test-id&${RETRY_ATTEMPT_PARAM}=2`);
-    clearRetryAttemptFromUrl();
-    expect(mockHistoryReplaceState).toHaveBeenCalledOnce();
-    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
-    expect(calledUrl.searchParams.has(RETRY_ATTEMPT_PARAM)).toBe(false);
-    expect(calledUrl.searchParams.get(RETRY_ID_PARAM)).toBe("test-id");
-  });
-
-  it("removes retryAttempt when it is the only param", () => {
-    setupMockLocation(`http://localhost/?${RETRY_ATTEMPT_PARAM}=3`);
-    clearRetryAttemptFromUrl();
-    expect(mockHistoryReplaceState).toHaveBeenCalledOnce();
-    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
-    expect(calledUrl.searchParams.has(RETRY_ATTEMPT_PARAM)).toBe(false);
-  });
-
-  it("preserves other URL params when clearing", () => {
-    setupMockLocation(`http://localhost/?foo=bar&${RETRY_ATTEMPT_PARAM}=1&baz=qux`);
-    clearRetryAttemptFromUrl();
-    const calledUrl = new URL(mockHistoryReplaceState.mock.calls[0][2] as string);
-    expect(calledUrl.searchParams.get("foo")).toBe("bar");
-    expect(calledUrl.searchParams.get("baz")).toBe("qux");
-  });
-
-  it("does not throw when there is no retry attempt param to remove", () => {
-    setupMockLocation("http://localhost/");
-    expect(() => clearRetryAttemptFromUrl()).not.toThrow();
-  });
-
-  it("does not throw when window.history.replaceState throws", () => {
-    mockHistoryReplaceState.mockImplementation(() => {
-      throw new Error("replaceState unavailable");
-    });
-    expect(() => clearRetryAttemptFromUrl()).not.toThrow();
   });
 });
 

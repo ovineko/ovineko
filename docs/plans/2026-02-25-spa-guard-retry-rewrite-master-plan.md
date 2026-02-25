@@ -97,9 +97,9 @@ No sentinel semantics in core state.
 - [x] Ensure misconfigured fallback UI fails safely (no silent deadlock).
 
 ### Task 6: Remove obsolete primitives
-- [ ] Delete or collapse no-longer-needed state keys/constants.
-- [ ] Remove stale modules/branches tied to sentinel cleanup behavior.
-- [ ] Update exports (`common/index.ts`, `_internal.ts`) to new API.
+- [x] Delete or collapse no-longer-needed state keys/constants.
+- [x] Remove stale modules/branches tied to sentinel cleanup behavior.
+- [x] Update exports (`common/index.ts`, `_internal.ts`) to new API.
 
 ### Task 7: Test rewrite (mandatory)
 - [ ] Add orchestrator unit tests for all phase transitions.

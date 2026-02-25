@@ -66,26 +66,6 @@ describe("runtime/state", () => {
       expect(state.isWaiting).toBe(false);
     });
 
-    it("sets isFallbackShown=true when URL retry attempt is -1 (fallback state)", async () => {
-      vi.doMock("../common/retryState", () => ({
-        getRetryAttemptFromUrl: vi.fn().mockReturnValue(null),
-        getRetryStateFromUrl: vi.fn().mockReturnValue({
-          retryAttempt: -1,
-          retryId: "test-retry-id",
-        }),
-      }));
-      vi.doMock("../common/lastReloadTime", () => ({
-        getLastRetryResetInfo: vi.fn().mockReturnValue(null),
-      }));
-
-      const { getState } = await import("./state");
-      const state = getState();
-
-      expect(state.isFallbackShown).toBe(true);
-      expect(state.currentAttempt).toBe(0);
-      expect(state.isWaiting).toBe(false);
-    });
-
     it("includes reset info from storage when previous retry cycle was reset", async () => {
       const resetInfo = {
         previousRetryId: "old-retry-id-abc",
