@@ -146,6 +146,6 @@ Two independent improvements from TODO.md:
 
 ### Task 9: Cleanup
 
-- [ ] move this plan to `docs/plans/completed/`
-- [ ] delete `TODO.md` from repo root
+- [x] move this plan to `docs/plans/completed/`
+- [x] delete `TODO.md` from repo root
 ---
