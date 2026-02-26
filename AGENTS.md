@@ -381,6 +381,10 @@ When modifying a package, always run its tests and ensure the build succeeds bef
 
 - Requires React Router v7 as peer dependency
 - URL params validated at runtime with valibot
+- `GuardedRoute` component provides declarative route guards at the routing config level (complements `useRedirect` hook)
+- Guards use async data checks via custom hooks that return `GuardResult` (allowed, isLoading, redirectTo)
+- Default behavior (no `loadingFallback`) renders `<Outlet />` during loading to allow parallel lazy loading
+- Always uses `replace` for guard redirects (guards are access checks, not navigation)
 
 ### @ovineko/spa-guard (package family)
 
