@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/spa-guard-vite",
-  "version": "0.0.2-alpha-1",
+  "version": "0.0.3-alpha-0",
   "description": "Vite plugin and inline scripts for spa-guard",
   "keywords": [
     "spa",
@@ -51,7 +51,7 @@
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
     "@ovineko/spa-guard": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
+    "@shibanet0/datamitsu-config": "0.0.2-alpha-1",
     "@types/html-minifier-terser": "7.0.2",
     "@vitest/coverage-v8": "4.0.18",
     "terser": "5.46.0",

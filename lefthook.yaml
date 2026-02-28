@@ -13,11 +13,8 @@ pre-commit:
       run: pnpm turbo run build:lib
     datamitsu-fix:
       priority: 1
-      run: pnpm datamitsu fix --file-scoped
+      run: pnpm datamitsu check --file-scoped
       stage_fixed: true
-    datamitsu-lint:
-      priority: 2
-      run: pnpm datamitsu lint --file-scoped
     test:
       priority: 4
       run: pnpm turbo run test
