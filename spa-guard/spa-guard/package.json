@@ -1,0 +1,99 @@
+{
+  "name": "@ovineko/spa-guard",
+  "version": "0.0.3-alpha-0",
+  "description": "Chunk load error handling for SPAs — core runtime, error handling, schema, i18n",
+  "keywords": [
+    "spa",
+    "chunk-load-error",
+    "error-handling",
+    "beacon",
+    "monitoring",
+    "chunk",
+    "preload",
+    "dynamic-import"
+  ],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/spa-guard/spa-guard",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "spa-guard/spa-guard"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "sideEffects": [
+    "./dist/chunk-*.js"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/common/index.d.ts",
+      "default": "./dist/common/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./runtime/debug": {
+      "types": "./dist/runtime/debug/index.d.ts",
+      "default": "./dist/runtime/debug/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema/index.d.ts",
+      "default": "./dist/schema/index.js"
+    },
+    "./schema/parse": {
+      "types": "./dist/schema/parse.d.ts",
+      "default": "./dist/schema/parse.js"
+    },
+    "./i18n": {
+      "types": "./dist/i18n/index.d.ts",
+      "default": "./dist/i18n/index.js"
+    },
+    "./_internal": {
+      "types": "./dist/_internal.d.ts",
+      "default": "./dist/_internal.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:lib": "pnpm generate:fallback",
+    "fix": "datamitsu fix",
+    "generate:fallback": "tsx scripts/generate-fallback.ts",
+    "lint": "datamitsu lint",
+    "prepack": "clean-pkg-json clean",
+    "postpack": "clean-pkg-json restore",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:debug": "DEBUG=1 vitest run",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@ovineko/clean-pkg-json": "workspace:*",
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.2-alpha-2",
+    "@types/html-minifier-terser": "7.0.2",
+    "@vitest/coverage-v8": "4.0.18",
+    "@vitest/ui": "4.0.18",
+    "happy-dom": "20.7.0",
+    "html-minifier-terser": "7.2.0",
+    "tsup": "8.5.1",
+    "vitest": "4.0.18"
+  },
+  "packageManager": "pnpm@10.29.3",
+  "engines": {
+    "node": ">=22.15.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

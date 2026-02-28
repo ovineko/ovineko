@@ -11,7 +11,7 @@ describe("validation", () => {
     });
 
     it("should decode complex UTF-8 sequences", () => {
-      expect(safeDecodeURIComponent("%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82")).toBe("привет");
+      expect(safeDecodeURIComponent("%E4%B8%96%E7%95%8C")).toBe("世界");
       expect(safeDecodeURIComponent("%F0%9F%98%80")).toBe("😀");
     });
 

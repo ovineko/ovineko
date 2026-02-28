@@ -4,11 +4,23 @@
   "tasks": {
     "build": {
       "dependsOn": ["build:lib", "^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": [
+        "dist/**",
+        "dist-inline/**",
+        "dist-inline-trace/**",
+        ".next/**",
+        "!.next/cache/**"
+      ]
     },
     "build:lib": {
       "dependsOn": ["^build:lib"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": [
+        "dist/**",
+        "dist-inline/**",
+        "dist-inline-trace/**",
+        ".next/**",
+        "!.next/cache/**"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]

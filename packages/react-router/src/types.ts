@@ -2,6 +2,15 @@ import type { LinkProps as LinkPropsLib, NavigateOptions } from "react-router";
 
 import type * as v from "valibot";
 
+export interface GuardResult {
+  /** Whether the user is allowed to access this route */
+  allowed: boolean;
+  /** Whether the guard data is still loading */
+  isLoading: boolean;
+  /** Where to redirect when !allowed && !isLoading */
+  redirectTo: string;
+}
+
 export type InferSearchParams<T> = T extends v.GenericSchema ? v.InferOutput<T> : undefined;
 
 export interface LinkPropsWithoutParams<SearchParams> extends Omit<LinkPropsLib, "to"> {

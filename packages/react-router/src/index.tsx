@@ -33,7 +33,11 @@ import {
   searchParamsToString,
 } from "./utils";
 
+// eslint-disable-next-line react-refresh/only-export-components
+export { GuardedRoute } from "./GuardedRoute";
+export type { GuardedRouteProps } from "./GuardedRoute";
 export type {
+  GuardResult,
   RouteBase,
   RouteWithoutParams,
   RouteWithParams,
@@ -43,6 +47,7 @@ export type {
 } from "./types";
 // eslint-disable-next-line react-refresh/only-export-components
 export { optionalSearchParams } from "./utils";
+
 // eslint-disable-next-line react-refresh/only-export-components
 export { URLParseError } from "./validation";
 

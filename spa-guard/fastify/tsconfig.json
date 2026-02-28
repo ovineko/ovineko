@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./node_modules/@shibanet0/datamitsu-config/tsconfig/react-library.json",
+  "compilerOptions": {
+    "types": [],
+    "outDir": "dist",
+    "sourceMap": false,
+    "declarationMap": false
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx*"]
+}
