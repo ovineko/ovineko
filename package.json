@@ -17,7 +17,7 @@
   "devDependencies": {
     "@changesets/cli": "2.29.8",
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.2-alpha-1",
+    "@shibanet0/datamitsu-config": "0.0.2-alpha-2",
     "react": "19",
     "turbo": "2.8.1"
   },

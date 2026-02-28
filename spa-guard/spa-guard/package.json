@@ -80,7 +80,7 @@
   "devDependencies": {
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.2-alpha-1",
+    "@shibanet0/datamitsu-config": "0.0.2-alpha-2",
     "@types/html-minifier-terser": "7.0.2",
     "@vitest/coverage-v8": "4.0.18",
     "@vitest/ui": "4.0.18",
