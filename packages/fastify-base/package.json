@@ -1,6 +1,7 @@
 {
   "name": "@ovineko/fastify-base",
   "version": "0.0.0",
+  "private": true,
   "description": "Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, and healthcheck integrations",
   "keywords": [
     "fastify",
@@ -42,10 +43,10 @@
   },
   "devDependencies": {
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.1-alpha-34"
+    "@shibanet0/datamitsu-config": "0.0.2-alpha-2"
   },
   "packageManager": "pnpm@10.29.3",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }

@@ -1,0 +1,344 @@
+export type { SpaGuardTranslations } from "@ovineko/spa-guard/i18n";
+export { matchLang, translations } from "@ovineko/spa-guard/i18n";
+
+import { negotiate } from "@fastify/accept-negotiator";
+
+import type { SpaGuardTranslations } from "@ovineko/spa-guard/i18n";
+
+import { extractVersionFromHtml } from "@ovineko/spa-guard/_internal";
+import { matchLang, translations } from "@ovineko/spa-guard/i18n";
+import { createHash } from "node:crypto";
+import { promisify } from "node:util";
+import { brotliCompress, gzip, zstdCompress } from "node:zlib";
+import { type DefaultTreeAdapterTypes, parse, html as parse5Html, serialize } from "parse5";
+
+const gzipAsync = promisify(gzip);
+const brotliAsync = promisify(brotliCompress);
+const zstdAsync = promisify(zstdCompress);
+
+export interface CreateHtmlCacheOptions {
+  /** The HTML string to cache */
+  html: string;
+  /** Languages to pre-generate (defaults to all keys from built-in + custom translations) */
+  languages?: string[];
+  /** Custom translations (deep-merged per-language with built-ins) */
+  translations?: Record<string, Partial<SpaGuardTranslations>>;
+}
+
+export interface HtmlCache {
+  get(options: {
+    acceptEncoding?: string;
+    acceptLanguage?: string;
+    ifNoneMatch?: string;
+    lang?: string;
+  }): HtmlCacheResponse;
+}
+
+export interface HtmlCacheResponse {
+  body: Buffer | string;
+  headers: Record<string, string>;
+  statusCode: 200 | 304;
+}
+
+export type HTMLCacheStoreInput<K extends string> =
+  | (() => Promise<HTMLCacheStoreMap<K>>)
+  | HTMLCacheStoreMap<K>;
+
+export type HTMLCacheStoreMap<K extends string> = Record<K, (() => Promise<string>) | string>;
+
+export interface PatchHtmlI18nOptions {
+  /** Raw Accept-Language header value */
+  acceptLanguage?: string;
+  /** The HTML string to patch */
+  html: string;
+  /** Explicit language override (takes priority over acceptLanguage) */
+  lang?: string;
+  /** Custom translations (deep-merged per-language with built-ins) */
+  translations?: Record<string, Partial<SpaGuardTranslations>>;
+}
+
+interface CacheEntry {
+  br: Buffer;
+  etag: string;
+  gzip: Buffer;
+  identity: Buffer;
+  lang: string;
+  zstd: Buffer;
+}
+
+/**
+ * Create a pre-computed HTML cache with compressed variants for all languages.
+ *
+ * At startup, generates all language variants via patchHtmlI18n and
+ * pre-compresses each with gzip, brotli, and zstd. ETag is derived from
+ * `__SPA_GUARD_VERSION__` in the HTML (falls back to sha256 prefix).
+ *
+ * The returned cache's `get()` method resolves language via `matchLang`
+ * and negotiates encoding via Accept-Encoding, returning a ready-to-use
+ * response with body and headers.
+ */
+export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<HtmlCache> {
+  const { html, translations: customTranslations } = options;
+
+  const merged = mergeTranslations(customTranslations);
+  const mergedKeys = new Set(Object.keys(merged));
+  // Filter out language codes not present in merged translations to prevent
+  // Content-Language header mismatching the actual body language
+  const languages = (options.languages ?? Object.keys(merged)).filter((lang) =>
+    mergedKeys.has(lang),
+  );
+
+  if (languages.length === 0) {
+    throw new Error("createHtmlCache requires at least one language");
+  }
+
+  // Extract version for ETag base
+  const version = extractVersionFromHtml(html);
+  const sha256Prefix = version
+    ? null
+    : createHash("sha256").update(html).digest("hex").slice(0, 16);
+
+  // Pre-generate and compress all language variants
+  const entries = new Map<string, CacheEntry>();
+
+  await Promise.all(
+    languages.map(async (lang) => {
+      const patched = patchHtmlI18n({ html, lang, translations: customTranslations });
+      const buf = Buffer.from(patched, "utf8");
+      const etag = version ? `"${version}-${lang}"` : `"${sha256Prefix}-${lang}"`;
+
+      const [gzipped, brotli, zstdBuf] = await Promise.all([
+        gzipAsync(buf),
+        brotliAsync(buf),
+        zstdAsync(buf),
+      ]);
+
+      entries.set(lang, {
+        br: brotli,
+        etag,
+        gzip: gzipped,
+        identity: buf,
+        lang,
+        zstd: zstdBuf,
+      });
+    }),
+  );
+
+  return {
+    get({ acceptEncoding, acceptLanguage, ifNoneMatch, lang: langOverride }) {
+      const resolvedLang = matchLang(langOverride ?? acceptLanguage, languages);
+      const entry = entries.get(resolvedLang) ?? entries.get(languages[0]!)!;
+
+      const headers: Record<string, string> = {
+        "Content-Language": entry.lang,
+        "Content-Type": "text/html; charset=utf-8",
+        ETag: entry.etag,
+        Vary: "Accept-Language, Accept-Encoding",
+      };
+
+      if (ifNoneMatch && etagWeakMatch(ifNoneMatch, entry.etag)) {
+        return { body: "", headers, statusCode: 304 as const };
+      }
+
+      if (!acceptEncoding) {
+        return { body: entry.identity, headers, statusCode: 200 as const };
+      }
+
+      const encoding = negotiate(acceptEncoding, ["br", "zstd", "gzip"]);
+
+      if (!encoding) {
+        return { body: entry.identity, headers, statusCode: 200 as const };
+      }
+
+      headers["Content-Encoding"] = encoding;
+
+      const bodyMap: Record<string, Buffer> = {
+        br: entry.br,
+        gzip: entry.gzip,
+        zstd: entry.zstd,
+      };
+
+      return { body: bodyMap[encoding]!, headers, statusCode: 200 as const };
+    },
+  };
+}
+
+/**
+ * Create a store managing multiple named HtmlCache instances.
+ *
+ * Accepts either a static map of HTML strings (or async getters) keyed by name,
+ * or an async factory that returns such a map. Call `load()` once at startup to
+ * build all caches sequentially (each key calls `createHtmlCache`, which
+ * parallelizes language variants internally). After loading, retrieve individual
+ * caches via `getCache(key)`.
+ */
+export const createHTMLCacheStore = <K extends string>(
+  input: HTMLCacheStoreInput<K>,
+  languages?: string[],
+): {
+  getCache: (key: K) => HtmlCache;
+  isLoaded: () => boolean;
+  load: () => Promise<void>;
+} => {
+  let loaded = false;
+  let loadPromise: Promise<void> | undefined;
+  const cacheMap = new Map<K, HtmlCache>();
+
+  const load = async (): Promise<void> => {
+    if (loaded) {
+      return;
+    }
+
+    // Deduplicate concurrent load() calls via a single in-flight promise.
+    // Clear on rejection so a later call can retry.
+    loadPromise ??= (async () => {
+      const htmlMap = typeof input === "function" ? await input() : input;
+
+      // Build into a temporary map so cacheMap is committed atomically
+      const pending = new Map<K, HtmlCache>();
+      for (const key of Object.keys(htmlMap) as K[]) {
+        const htmlOrFn: (() => Promise<string>) | string = htmlMap[key];
+        const html = typeof htmlOrFn === "function" ? await htmlOrFn() : htmlOrFn;
+        const cache = await createHtmlCache({ html, languages });
+        pending.set(key, cache);
+      }
+
+      // Atomic commit: only update shared state after full success
+      for (const [key, cache] of pending) {
+        cacheMap.set(key, cache);
+      }
+      loaded = true;
+    })().catch((error: unknown) => {
+      loadPromise = undefined;
+      throw error;
+    });
+
+    return loadPromise;
+  };
+
+  const getCache = (key: K): HtmlCache => {
+    if (!loaded) {
+      throw new Error(
+        "HTMLCacheStore is not loaded yet. Call load() first before accessing caches.",
+      );
+    }
+    const cache = cacheMap.get(key);
+    if (!cache) {
+      const availableKeys = [...cacheMap.keys()].join(", ");
+      throw new Error(`Cache not found for key: ${String(key)}. Available keys: ${availableKeys}`);
+    }
+    return cache;
+  };
+
+  const isLoaded = (): boolean => loaded;
+
+  return { getCache, isLoaded, load };
+};
+
+/**
+ * Server-side HTML patching for i18n.
+ *
+ * Resolves language from `lang` (explicit) or `acceptLanguage` (header),
+ * merges translations, and injects a `<meta name="spa-guard-i18n">` tag
+ * into `<head>`. Also updates `<html lang="...">`.
+ *
+ * English without custom translations is a no-op (returns unchanged HTML).
+ */
+export function patchHtmlI18n(options: PatchHtmlI18nOptions): string {
+  const { acceptLanguage, html, lang: langOverride, translations: customTranslations } = options;
+
+  const merged = mergeTranslations(customTranslations);
+  const available = Object.keys(merged);
+  const input = langOverride ?? acceptLanguage;
+  const resolvedLang = matchLang(input, available);
+  const t = merged[resolvedLang];
+
+  // English without custom translations is a no-op — the HTML already contains
+  // English defaults, so parsing and serializing would be unnecessary work.
+  if (resolvedLang === "en" && !customTranslations?.en) {
+    return html;
+  }
+
+  if (!t) {
+    return html;
+  }
+
+  const doc = parse(html);
+
+  // Find <html> and <head>
+  const htmlEl = doc.childNodes.find(
+    (n): n is DefaultTreeAdapterTypes.Element => n.nodeName === "html",
+  );
+  if (!htmlEl) {
+    return html;
+  }
+
+  // Set <html lang>
+  const langAttr = htmlEl.attrs.find((a) => a.name === "lang");
+  if (langAttr) {
+    langAttr.value = resolvedLang;
+  } else {
+    htmlEl.attrs.push({ name: "lang", value: resolvedLang });
+  }
+
+  const headEl = htmlEl.childNodes.find(
+    (n): n is DefaultTreeAdapterTypes.Element => n.nodeName === "head",
+  );
+  if (!headEl) {
+    return html;
+  }
+
+  // Inject <meta name="spa-guard-i18n"> to <head>
+  const meta: DefaultTreeAdapterTypes.Element = {
+    attrs: [
+      { name: "name", value: "spa-guard-i18n" },
+      { name: "content", value: JSON.stringify(t) },
+    ],
+    childNodes: [],
+    namespaceURI: parse5Html.NS.HTML,
+    nodeName: "meta",
+    parentNode: headEl,
+    tagName: "meta",
+  };
+
+  headEl.childNodes.unshift(meta);
+
+  return serialize(doc);
+}
+
+/**
+ * RFC 7232 weak comparison for If-None-Match.
+ * Supports wildcard (*), comma-separated entity-tags, and W/ weak prefix.
+ * Weak comparison: two entity-tags are equivalent if their opaque-tags match,
+ * regardless of either or both being tagged as "weak".
+ */
+function etagWeakMatch(ifNoneMatch: string, etag: string): boolean {
+  const trimmed = ifNoneMatch.trim();
+  if (trimmed === "*") {
+    return true;
+  }
+
+  const opaqueTag = etag.replace(/^W\//, "");
+
+  for (const raw of trimmed.split(",")) {
+    const candidate = raw.trim().replace(/^W\//, "");
+    if (candidate === opaqueTag) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function mergeTranslations(
+  customTranslations?: Record<string, Partial<SpaGuardTranslations>>,
+): Record<string, SpaGuardTranslations> {
+  const merged: Record<string, SpaGuardTranslations> = { ...translations };
+  if (customTranslations) {
+    for (const [key, partial] of Object.entries(customTranslations)) {
+      const base = merged[key];
+      merged[key] = { ...(base ?? translations.en), ...partial } as SpaGuardTranslations;
+    }
+  }
+  return merged;
+}

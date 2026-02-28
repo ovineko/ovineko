@@ -8,5 +8,6 @@ overrides:
 packages:
   - apps/*
   - packages/*
+  - spa-guard/*
 resolutionMode: lowest-direct
 verifyDepsBeforeRun: install

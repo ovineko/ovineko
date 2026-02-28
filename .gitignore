@@ -2,6 +2,8 @@
 **/.next/
 **/build/
 **/dist/
+**/dist-inline/
+**/dist-inline-trace/
 **/out/
 **/.turbo/
 **/.vercel/
@@ -121,3 +123,6 @@
 
 # Symbolic links
 CLAUDE.md
+
+# ralphex progress logs
+.ralphex/progress/

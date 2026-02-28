@@ -1,0 +1,231 @@
+import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
+
+import type { CreateHtmlCacheOptions, HtmlCache } from "@ovineko/spa-guard-node";
+import type { BeaconSchema } from "@ovineko/spa-guard/schema";
+
+import { createHtmlCache } from "@ovineko/spa-guard-node";
+import fp from "fastify-plugin";
+
+export { BeaconError } from "@ovineko/spa-guard";
+
+import { logMessage } from "@ovineko/spa-guard/_internal";
+import { parseBeacon } from "@ovineko/spa-guard/schema/parse";
+
+import { name } from "../package.json";
+
+const parseStringBody = (body: string): unknown => {
+  try {
+    return JSON.parse(body);
+  } catch {
+    return body;
+  }
+};
+
+export interface BeaconHandlerResult {
+  /**
+   * If true, skips default logging behavior
+   */
+  skipDefaultLog?: boolean;
+}
+
+export interface FastifySPAGuardOptions {
+  /**
+   * Custom handler for beacon data
+   * @param beacon - Parsed beacon data
+   * @param request - Fastify request object
+   * @param reply - Fastify reply object
+   * @returns Object with options to control default behavior
+   */
+  onBeacon?: (
+    beacon: BeaconSchema,
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ) => BeaconHandlerResult | Promise<BeaconHandlerResult | void> | void;
+
+  /**
+   * Custom handler for invalid/unknown beacon data
+   * @param body - Raw body data
+   * @param request - Fastify request object
+   * @param reply - Fastify reply object
+   * @returns Object with options to control default behavior
+   */
+  onUnknownBeacon?: (
+    body: unknown,
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ) => BeaconHandlerResult | Promise<BeaconHandlerResult | void> | void;
+
+  /**
+   * The route path for the beacon endpoint
+   * @example "/api/beacon"
+   */
+  path: string;
+}
+
+const handleBeaconRequest = async (params: {
+  body: unknown;
+  options: Pick<FastifySPAGuardOptions, "onBeacon" | "onUnknownBeacon">;
+  reply: FastifyReply;
+  request: FastifyRequest;
+}): Promise<boolean> => {
+  const { body, options, reply, request } = params;
+
+  let beacon: BeaconSchema;
+  try {
+    beacon = parseBeacon(body);
+  } catch {
+    if (options.onUnknownBeacon) {
+      const result = await options.onUnknownBeacon(body, request, reply);
+
+      if (!result?.skipDefaultLog) {
+        request.log.warn({ bodyType: typeof body }, logMessage("Unknown beacon format"));
+      }
+    } else {
+      request.log.warn({ bodyType: typeof body }, logMessage("Unknown beacon format"));
+    }
+    return false;
+  }
+
+  const logPayload = {
+    ...(beacon.appName && { appName: beacon.appName }),
+    errorMessage: beacon.errorMessage,
+    eventMessage: beacon.eventMessage,
+    eventName: beacon.eventName,
+    serialized: beacon.serialized,
+  };
+
+  if (options.onBeacon) {
+    const result = await options.onBeacon(beacon, request, reply);
+
+    if (!result?.skipDefaultLog) {
+      request.log.info(logPayload, logMessage("Beacon received"));
+    }
+  } else {
+    request.log.info(logPayload, logMessage("Beacon received"));
+  }
+
+  return true;
+};
+
+/**
+ * SPA Guard plugin for Fastify
+ * Registers a POST endpoint to receive beacon data from the client
+ *
+ * @example
+ * ```ts
+ * import { fastifySPAGuard } from '@ovineko/spa-guard/fastify';
+ *
+ * app.register(fastifySPAGuard, {
+ *   path: '/api/beacon',
+ *   onBeacon: async (beacon, request, reply) => {
+ *     // Handle beacon data (e.g., log to Sentry)
+ *     const error = new Error(beacon.errorMessage || 'Unknown error');
+ *     Sentry.captureException(error, {
+ *       extra: {
+ *         eventName: beacon.eventName,
+ *         eventMessage: beacon.eventMessage,
+ *         serialized: beacon.serialized,
+ *       },
+ *     });
+ *
+ *     // Skip default logging if you want to handle it yourself
+ *     return { skipDefaultLog: true };
+ *   },
+ * });
+ * ```
+ */
+const fastifySPAGuardPlugin: FastifyPluginAsync<FastifySPAGuardOptions> = async (
+  fastify,
+  options,
+) => {
+  const { onBeacon, onUnknownBeacon, path } = options;
+
+  fastify.post(path, async (request, reply) => {
+    if (typeof request.body !== "string") {
+      if (onUnknownBeacon) {
+        const result = await onUnknownBeacon(request.body, request, reply);
+
+        if (!result?.skipDefaultLog) {
+          request.log.warn(
+            { bodyType: typeof request.body },
+            logMessage("Invalid beacon body type, expected string"),
+          );
+        }
+      } else {
+        request.log.warn(
+          { bodyType: typeof request.body },
+          logMessage("Invalid beacon body type, expected string"),
+        );
+      }
+
+      if (!reply.sent) {
+        return reply.status(400).send({ error: "Invalid body type" });
+      }
+      return reply;
+    }
+
+    const body = parseStringBody(request.body);
+    const success = await handleBeaconRequest({
+      body,
+      options: { onBeacon, onUnknownBeacon },
+      reply,
+      request,
+    });
+    if (!reply.sent) {
+      return reply
+        .status(success ? 200 : 400)
+        .send(success ? { success: true } : { error: "Invalid beacon format" });
+    }
+    return reply;
+  });
+};
+
+export const fastifySPAGuard = fp(fastifySPAGuardPlugin, {
+  fastify: "5.x || 4.x",
+  name: `${name}/fastify`,
+});
+
+export interface SpaGuardHandlerOptions {
+  /** @internal Promise used to deduplicate concurrent lazy cache creation */
+  _cachePromise?: Promise<HtmlCache>;
+  cache?: HtmlCache;
+  getHtml?: (() => CreateHtmlCacheOptions) | (() => Promise<CreateHtmlCacheOptions>);
+}
+
+export async function spaGuardFastifyHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  options: SpaGuardHandlerOptions,
+): Promise<FastifyReply> {
+  const { getHtml } = options;
+
+  if (!options.cache && !getHtml) {
+    throw new Error("spaGuardFastifyHandler requires either 'cache' or 'getHtml' option");
+  }
+
+  if (!options.cache && getHtml) {
+    // Wrap in IIFE so the promise is stored synchronously before any await yields.
+    // Clear on rejection so subsequent requests can retry initialization.
+    options._cachePromise ??= (async () => createHtmlCache(await getHtml()))().catch(
+      (error: unknown) => {
+        options._cachePromise = undefined;
+        throw error;
+      },
+    );
+    options.cache = await options._cachePromise;
+  }
+
+  const cache = options.cache!;
+
+  const acceptEncoding = request.headers["accept-encoding"] as string | undefined;
+  const acceptLanguage = request.headers["accept-language"] as string | undefined;
+  const ifNoneMatch = request.headers["if-none-match"] as string | undefined;
+
+  const response = cache.get({ acceptEncoding, acceptLanguage, ifNoneMatch });
+
+  for (const [key, value] of Object.entries(response.headers)) {
+    reply.header(key, value);
+  }
+
+  return reply.status(response.statusCode).send(response.body);
+}

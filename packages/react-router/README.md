@@ -250,6 +250,94 @@ function UserProfile() {
 }
 ```
 
+#### `GuardedRoute`
+
+Declarative route guard wrapper for React Router v7 route configs. Makes route protection visible at the routing config level instead of hidden inside page components.
+
+**Props:**
+
+- `useGuard: () => GuardResult` - A React hook that returns guard state
+- `loadingFallback?: React.ReactNode` - Optional loading UI (blocks child rendering)
+
+**GuardResult interface:**
+
+```tsx
+interface GuardResult {
+  allowed: boolean; // Whether the user is allowed to access this route
+  isLoading: boolean; // Whether the guard data is still loading
+  redirectTo: string; // Where to redirect when !allowed && !isLoading
+}
+```
+
+**Behavior:**
+
+- **Default (no `loadingFallback`):** Renders `<Outlet />` immediately while `isLoading` is true. This allows the child page's lazy import to start in parallel with the guard's data fetching.
+- **With `loadingFallback`:** Renders the fallback instead of `<Outlet />` while `isLoading` is true. Use this when you need to block child rendering until the guard resolves.
+- **Redirect:** When `isLoading` is false and `allowed` is false, redirects to `redirectTo` using `replace` (guards are access checks, not navigation).
+
+**Example - Extracting Guard from Data Hook:**
+
+A page has a `useOrderData` hook that fetches data. Without a guard, a user can navigate directly to `/orders/123/checkout` even when the order doesn't exist — the redirect logic is buried inside the data hook and invisible from the route config.
+
+```tsx
+import { GuardedRoute } from "@ovineko/react-router";
+import type { GuardResult } from "@ovineko/react-router";
+
+// ✅ Guard hook — extracted, visible in route config
+function useOrderGuard(): GuardResult {
+  const { orderId } = useParams<{ orderId: string }>();
+  const { data, isLoading } = useSWR(`/api/orders/${orderId}`);
+
+  return {
+    allowed: Boolean(data?.order),
+    isLoading,
+    redirectTo: "/orders",
+  };
+}
+
+// ✅ Data hook — pure, no redirects
+function useOrderData() {
+  const { orderId } = useParams<{ orderId: string }>();
+  const { data, isLoading } = useSWR(`/api/orders/${orderId}`);
+  return { order: data?.order, isLoading };
+}
+
+function Checkout() {
+  const { order, isLoading } = useOrderData();
+  // No guard logic here — GuardedRoute already handled it
+  if (isLoading) return <Spinner />;
+  return <div>Checkout for order {order.id}</div>;
+}
+
+// ✅ Route config — protection is visible and declarative
+const routes: RouteObject[] = [
+  {
+    element: <GuardedRoute useGuard={useOrderGuard} />,
+    children: [{ path: "orders/:orderId/checkout", element: <Checkout /> }],
+  },
+];
+```
+
+**Example - With `loadingFallback`:**
+
+When you need to block child rendering until the guard resolves:
+
+```tsx
+const protectedRoutes: RouteObject[] = [
+  {
+    element: <GuardedRoute useGuard={useAuthGuard} loadingFallback={<Spinner />} />,
+    children: [{ path: "dashboard", element: <Dashboard /> }],
+  },
+];
+```
+
+**Comparison with `useRedirect`:**
+
+- `useRedirect` - Hook-level conditional redirect (used inside components)
+- `GuardedRoute` - Config-level declarative guard (used in route definitions)
+
+Both complement each other: `GuardedRoute` makes route protection explicit in the config, while `useRedirect` handles component-level conditional navigation.
+
 #### `optionalSearchParams(entries)`
 
 Utility to make all search param fields optional automatically, avoiding repetitive `v.optional()` calls.
