@@ -5,9 +5,18 @@ ignorePatchFailures: false
 optimisticRepeatInstall: true
 overrides:
   vite: npm:rolldown-vite@7.2.5
+packageExtensions:
+  # Required for @docusaurus/theme-mermaid -> mermaid -> langium (missing peer deps)
+  langium:
+    dependencies:
+      "@chevrotain/regexp-to-ast": "*"
+      vscode-jsonrpc: "*"
+      vscode-languageserver-protocol: "*"
+      vscode-languageserver-types: "*"
 packages:
   - apps/*
   - packages/*
+  - website
   - spa-guard/*
 resolutionMode: lowest-direct
 verifyDepsBeforeRun: install

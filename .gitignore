@@ -2,13 +2,13 @@
 **/.next/
 **/build/
 **/dist/
-**/dist-inline/
-**/dist-inline-trace/
 **/out/
 **/.turbo/
 **/.vercel/
 **/.output/
 **/public/build/
+**/dist-inline/
+**/dist-inline-trace/
 
 # Cache & temporary files
 **/tsconfig.tsbuildinfo
@@ -120,9 +120,6 @@
 **/.nyc_output/
 **/e2e/screenshots/
 **/e2e/videos/
-
-# Symbolic links
-CLAUDE.md
 
 # ralphex progress logs
 .ralphex/progress/

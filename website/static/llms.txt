@@ -1,0 +1,42 @@
+# Ovineko
+
+> A collection of tools born from friction. Solutions that stay. Tools for React and SPA development that exist because once upon a time, weeks were spent solving problems you never wanted to rebuild.
+
+Ovineko is a quiet guardian at the threshold — a monorepo of opinionated TypeScript packages that preserve proven solutions. Every package here exists because it solved a real problem that shouldn't need solving again. The core offering is spa-guard, a family of 7 packages that handle chunk-loading errors, automatic retry with cache busting, error reporting via beacons, and fallback UI rendering. Additional packages provide type-safe React Router wrappers, pre-configured Fastify servers, and shared tooling configuration.
+
+All packages target React 19 and are published as ESM-only with full TypeScript type declarations.
+
+## Packages
+
+### spa-guard
+
+- [spa-guard Overview](https://ovineko.com/docs/spa-guard/overview): Architecture and concepts for the spa-guard package family
+- [spa-guard Core](https://ovineko.com/docs/spa-guard/core): Runtime error handling, automatic retry with cache busting, schema validation, i18n
+- [spa-guard React](https://ovineko.com/docs/spa-guard/react): React hooks, components (lazyWithRetry, Spinner), error boundaries
+- [spa-guard React Router](https://ovineko.com/docs/spa-guard/react-router): React Router v7 error boundary integration
+- [spa-guard Vite](https://ovineko.com/docs/spa-guard/vite): Vite plugin for build-time script injection
+- [spa-guard Node](https://ovineko.com/docs/spa-guard/node): Server-side HTML cache with ETag/304, pre-compression, i18n
+- [spa-guard Fastify](https://ovineko.com/docs/spa-guard/fastify): Fastify plugin for beacon endpoint and HTML cache handler
+- [spa-guard ESLint](https://ovineko.com/docs/spa-guard/eslint): ESLint rules (no-direct-lazy, no-direct-error-boundary)
+
+### Other Packages
+
+- [react-router](https://ovineko.com/docs/packages/react-router): Type-safe wrapper for React Router v7 with valibot schema validation
+- [fastify-base](https://ovineko.com/docs/packages/fastify-base): Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry
+- [clean-pkg-json](https://ovineko.com/docs/packages/clean-pkg-json): Zero-config tool to clean package.json before publishing
+- [datamitsu-config](https://ovineko.com/docs/packages/datamitsu-config): Shared configuration for datamitsu linting and formatting tooling
+
+## Resources
+
+- [Getting Started](https://ovineko.com/docs/intro): Introduction to the project
+- [Philosophy](https://ovineko.com/docs/philosophy): Why ovineko exists and what it stands for
+- [Installation](https://ovineko.com/docs/getting-started/installation): Setup instructions
+- [Quick Start](https://ovineko.com/docs/getting-started/quick-start): Minimal usage examples
+- [Contributing Guidelines](https://ovineko.com/docs/contributing/guidelines): How to contribute
+
+## Optional
+
+- [Development Guide](https://ovineko.com/docs/contributing/development): Local development workflow and tooling
+- [Packages Overview](https://ovineko.com/docs/packages/overview): Summary of all utility packages
+- [GitHub Repository](https://github.com/ovineko/ovineko): Source code and issues
+- [npm Organization](https://www.npmjs.com/org/ovineko): Published packages on npm
