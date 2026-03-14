@@ -7,7 +7,6 @@
   "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
   "type": "module",
   "scripts": {
-    "datamitsu:setup": "datamitsu setup --config datamitsu.ts",
     "fix": "datamitsu fix",
     "preinstall": "npx only-allow@1.2.2 pnpm",
     "lint": "datamitsu lint",
@@ -17,13 +16,13 @@
   "devDependencies": {
     "@changesets/cli": "2.29.8",
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.2-alpha-2",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-8",
     "react": "19",
     "turbo": "2.8.1"
   },
-  "packageManager": "pnpm@10.29.3",
+  "packageManager": "pnpm@10.31.0",
   "engines": {
-    "node": ">=24.11.0",
-    "pnpm": ">=10.25.0"
+    "node": ">=24.14.0",
+    "pnpm": ">=10.31.0"
   }
 }

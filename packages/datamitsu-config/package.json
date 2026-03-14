@@ -43,11 +43,7 @@
     "lint": "datamitsu lint"
   },
   "devDependencies": {
-    "@shibanet0/datamitsu-config": "0.0.2-alpha-2",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-8",
     "react": "19"
-  },
-  "packageManager": "pnpm@10.29.3",
-  "engines": {
-    "node": ">=22"
   }
 }

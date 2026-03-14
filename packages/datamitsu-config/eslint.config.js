@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { defineConfig } from "./eslint-override-config.js";
 import packageJSON from "./package.json" with { type: "json" };
 
-export { globalIgnores } from "@shibanet0/datamitsu-config/eslint";
+export * from "./eslint-override-config.js";
 
 export default defineConfig(
   /** @type {import('@shibanet0/datamitsu-config/type-fest').PackageJson} */ (packageJSON),

@@ -44,9 +44,6 @@
     "@docusaurus/tsconfig": "3.9.2",
     "@docusaurus/types": "3.9.2",
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.2-alpha-2"
-  },
-  "engines": {
-    "node": ">=24.11.0"
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-8"
   }
 }

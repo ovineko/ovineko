@@ -4,7 +4,7 @@ import { join } from "node:path";
 import packageJSON from "./package.json" with { type: "json" };
 
 const config = await defineConfig(
-  /** @type {import("@shibanet0/datamitsu-config/type-fest").PackageJson} */ (packageJSON),
+  /** @type {import('@shibanet0/datamitsu-config/type-fest').PackageJson} */ (packageJSON),
   undefined,
   {
     plugins: {
