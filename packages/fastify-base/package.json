@@ -43,10 +43,6 @@
   },
   "devDependencies": {
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.2-alpha-2"
-  },
-  "packageManager": "pnpm@10.29.3",
-  "engines": {
-    "node": ">=22"
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-8"
   }
 }

@@ -4,5 +4,5 @@
   "compilerOptions": {
     "rootDir": "."
   },
-  "include": ["datamitsu.ts"]
+  "include": ["datamitsu.config.ts"]
 }

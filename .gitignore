@@ -2,15 +2,16 @@
 **/.next/
 **/build/
 **/dist/
-**/dist-inline/
-**/dist-inline-trace/
 **/out/
 **/.turbo/
 **/.vercel/
 **/.output/
 **/public/build/
+**/dist-inline/
+**/dist-inline-trace/
 
 # Cache & temporary files
+.datamitsu/
 **/tsconfig.tsbuildinfo
 **/.eslintcache
 **/.prettiercache
@@ -24,6 +25,9 @@
 **/.temp/
 **/.tmp/
 **/package.json.backup
+
+# Claude Code project files
+.claude/
 
 # Dependencies
 **/node_modules/
@@ -110,6 +114,7 @@
 # Testing
 **/coverage/
 **/*.cov
+**/coverage.out
 **/.cover/
 **/storybook-static/
 **/playwright-report/
@@ -121,8 +126,11 @@
 **/e2e/screenshots/
 **/e2e/videos/
 
-# Symbolic links
-CLAUDE.md
-
 # ralphex progress logs
 .ralphex/progress/
+**/progress.txt
+**/progress-*.txt
+.ralphex/worktrees/
+
+# Symbolic links
+CLAUDE.md

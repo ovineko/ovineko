@@ -9,6 +9,7 @@
 **/public/build/
 
 # Cache & temporary files
+.datamitsu/
 **/tsconfig.tsbuildinfo
 **/.eslintcache
 **/.prettiercache
@@ -21,6 +22,9 @@
 **/.parcel-cache/
 **/.temp/
 **/.tmp/
+
+# Claude Code project files
+.claude/
 
 # Dependencies
 **/node_modules/
@@ -107,6 +111,7 @@
 # Testing
 **/coverage/
 **/*.cov
+**/coverage.out
 **/.cover/
 **/storybook-static/
 **/playwright-report/
@@ -117,3 +122,9 @@
 **/.nyc_output/
 **/e2e/screenshots/
 **/e2e/videos/
+
+# ralphex progress logs
+.ralphex/progress/
+**/progress.txt
+**/progress-*.txt
+.ralphex/worktrees/
