@@ -51,7 +51,7 @@
     "@ovineko/datamitsu-config": "workspace:*",
     "@ovineko/spa-guard": "workspace:*",
     "@ovineko/spa-guard-node": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.2-alpha-2",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-8",
     "@vitest/coverage-v8": "4.0.18",
     "tsup": "8.5.1",
     "vitest": "4.0.18"
@@ -61,10 +61,6 @@
     "@ovineko/spa-guard-node": "workspace:*",
     "fastify": "^5 || ^4",
     "fastify-plugin": "^5 || ^4"
-  },
-  "packageManager": "pnpm@10.29.3",
-  "engines": {
-    "node": ">=22.15.0"
   },
   "publishConfig": {
     "access": "public"

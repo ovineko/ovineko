@@ -1,6 +1,6 @@
-import { defineConfig as defineConfigLib } from "@shibanet0/datamitsu-config/eslint";
+import { defineConfig as defineConfigLib } from "../../.datamitsu/eslint.config.js";
 
-export { globalIgnores } from "@shibanet0/datamitsu-config/eslint";
+export { globalIgnores } from "../../.datamitsu/eslint.config.js";
 
 /**
  * @type {typeof defineConfigLib}

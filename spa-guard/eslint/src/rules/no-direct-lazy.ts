@@ -38,7 +38,7 @@ function isReplaceShadowed(
     if (ref.identifier === skipIdentifier) {
       continue;
     }
-    let s: any = sourceCode.getScope(ref.identifier);
+    let s: any = sourceCode.getScope(ref.identifier as any);
     while (s && s.type !== "module" && s.type !== "global") {
       if (s.variables.some((sv: any) => sv.name === replaceName)) {
         return true;

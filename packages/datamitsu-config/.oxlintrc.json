@@ -1,6 +1,6 @@
 {
-  "$schema": "./node_modules/@shibanet0/datamitsu-config/oxlint_configuration_schema.json",
-  "extends": ["./node_modules/@shibanet0/datamitsu-config/.oxlintrc.json"],
+  "$schema": "../../.datamitsu/oxlint_configuration_schema.json",
+  "extends": ["../../.datamitsu/.oxlintrc.json"],
   "rules": {
     "new-cap": "off",
     "max-statements": "off",

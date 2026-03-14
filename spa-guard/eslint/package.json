@@ -45,17 +45,14 @@
   "devDependencies": {
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.2-alpha-2",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-8",
     "@vitest/coverage-v8": "4.0.18",
+    "eslint": "10.0.3",
     "tsup": "8.5.1",
     "vitest": "4.0.18"
   },
   "peerDependencies": {
-    "eslint": "^9 || ^10"
-  },
-  "packageManager": "pnpm@10.29.3",
-  "engines": {
-    "node": ">=22.15.0"
+    "eslint": "^10.0.3"
   },
   "publishConfig": {
     "access": "public"
