@@ -15,12 +15,12 @@ const koTranslations: SpaGuardTranslations = {
 
 const arTranslations: SpaGuardTranslations = {
   heading: "حدث خطأ ما",
-  loading: "...جارٍ التحميل",
-  message: "يرجى تحديث الصفحة للمتابعة.",
-  reload: "إعادة تحميل",
-  retrying: "محاولة إعادة",
+  loading: "...جارٍ التحميل", // cspell:disable-line
+  message: "يرجى تحديث الصفحة للمتابعة.", // cspell:disable-line
+  reload: "إعادة تحميل", // cspell:disable-line
+  retrying: "محاولة إعادة", // cspell:disable-line
   rtl: true,
-  tryAgain: "حاول مرة أخرى",
+  tryAgain: "حاول مرة أخرى", // cspell:disable-line
 };
 
 describe("common/i18n", () => {

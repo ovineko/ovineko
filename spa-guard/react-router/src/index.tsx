@@ -62,7 +62,7 @@ export const ErrorBoundaryReactRouter: React.FC<ErrorBoundaryReactRouterProps> =
     handleErrorWithSpaGuard(routeError, {
       autoRetryChunkErrors,
       eventName: "react-router-error",
-      onError,
+      ...(onError !== undefined && { onError }),
       sendBeaconOnError: shouldSendBeacon,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

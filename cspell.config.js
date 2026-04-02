@@ -1,0 +1,30 @@
+import { config } from "./.datamitsu/cspell.config.js";
+
+export default {
+  ...config,
+  words: [
+    ...config.words,
+    "postpack",
+    "uncompilable",
+    "misrouted",
+    "zstd",
+    "deduplification",
+    "unsub",
+    "behaviour",
+    "Consolas",
+    "Menlo",
+    "metas",
+    "CHUNKLOADERROR",
+    "unstub",
+    "chunkloaderror",
+    "stylescriptbad",
+    "redbodydisplay",
+    "redcolor",
+    "reddisplay",
+    "fffbodydisplay",
+    "srcs",
+    "dedup",
+    "unsubscribers",
+    "normalise",
+  ],
+};

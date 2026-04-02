@@ -92,7 +92,8 @@ const buildRawScript = async (finalOptions: BuildScriptOptions): Promise<string>
     .readFile(path.join(import.meta.dirname, `../${buildDir}/index.js`), "utf8")
     .then((r) => r.trim());
 
-  const processedOptions: BuildScriptOptions = { ...finalOptions, trace: undefined };
+  const processedOptions: BuildScriptOptions = { ...finalOptions };
+  delete processedOptions.trace;
 
   if (processedOptions.html?.fallback?.content) {
     processedOptions.html = {

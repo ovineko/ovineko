@@ -31,8 +31,6 @@
   ],
   "scripts": {
     "build": "tsup",
-    "fix": "datamitsu fix",
-    "lint": "datamitsu lint",
     "prepack": "clean-pkg-json clean",
     "postpack": "clean-pkg-json restore",
     "prepublishOnly": "pnpm build",
@@ -45,14 +43,15 @@
   "devDependencies": {
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-8",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-19",
+    "@types/node": "24.10.12",
     "@vitest/coverage-v8": "4.0.18",
-    "eslint": "10.0.3",
+    "eslint": "10.1.0",
     "tsup": "8.5.1",
     "vitest": "4.0.18"
   },
   "peerDependencies": {
-    "eslint": "^10.0.3"
+    "eslint": "^9 || ^10"
   },
   "publishConfig": {
     "access": "public"

@@ -17,6 +17,13 @@
   ],
   "versionGroups": [
     {
+      "dependencies": ["eslint"],
+      "dependencyTypes": ["peer"],
+      "label": "spa-guard-eslint supports eslint v9 and v10",
+      "packages": ["@ovineko/spa-guard-eslint"],
+      "pinVersion": "^9 || ^10"
+    },
+    {
       "dependencies": ["$LOCAL"],
       "dependencyTypes": ["!local"],
       "label": "use workspace protocol for local packages",

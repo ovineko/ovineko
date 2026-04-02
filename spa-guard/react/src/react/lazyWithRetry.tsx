@@ -46,6 +46,9 @@ export const lazyWithRetry = <T extends ComponentType<any>>(
       options?.callReloadOnFailure ?? globalLazyRetry.callReloadOnFailure ?? true;
     const signal = options?.signal;
 
-    return retryImport(importFn, retryDelays, { callReloadOnFailure, signal });
+    return retryImport(importFn, retryDelays, {
+      callReloadOnFailure,
+      ...(signal !== undefined && { signal }),
+    });
   });
 };

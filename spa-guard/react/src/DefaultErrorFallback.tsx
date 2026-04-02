@@ -107,6 +107,7 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
 
     if (isRetrying) {
       const loadingTemplate = opts.html?.loading?.content ?? defaultLoadingFallbackHtml;
+      const spinnerContent = opts.html?.spinner?.content;
       return buildHtml(loadingTemplate, {
         content: {
           attempt: String(spaGuardState.currentAttempt),
@@ -114,7 +115,7 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
         sections: {
           retrying: true,
         },
-        spinnerHtml: opts.html?.spinner?.content,
+        ...(spinnerContent !== undefined && { spinnerHtml: spinnerContent }),
       });
     }
 

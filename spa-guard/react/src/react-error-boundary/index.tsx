@@ -62,11 +62,11 @@ class ErrorBoundaryImpl extends Component<
     const { autoRetryChunkErrors, onError, sendBeaconOnError } = this.props;
 
     handleErrorWithSpaGuard(error, {
-      autoRetryChunkErrors,
+      ...(autoRetryChunkErrors !== undefined && { autoRetryChunkErrors }),
       errorInfo,
       eventName: "react-error-boundary",
       onError: () => onError?.(error, errorInfo),
-      sendBeaconOnError,
+      ...(sendBeaconOnError !== undefined && { sendBeaconOnError }),
     });
   }
 

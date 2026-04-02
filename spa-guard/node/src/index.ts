@@ -103,7 +103,11 @@ export async function createHtmlCache(options: CreateHtmlCacheOptions): Promise<
 
   await Promise.all(
     languages.map(async (lang) => {
-      const patched = patchHtmlI18n({ html, lang, translations: customTranslations });
+      const patched = patchHtmlI18n({
+        html,
+        lang,
+        ...(customTranslations !== undefined && { translations: customTranslations }),
+      });
       const buf = Buffer.from(patched, "utf8");
       const etag = version ? `"${version}-${lang}"` : `"${sha256Prefix}-${lang}"`;
 
@@ -199,7 +203,10 @@ export const createHTMLCacheStore = <K extends string>(
       for (const key of Object.keys(htmlMap) as K[]) {
         const htmlOrFn: (() => Promise<string>) | string = htmlMap[key];
         const html = typeof htmlOrFn === "function" ? await htmlOrFn() : htmlOrFn;
-        const cache = await createHtmlCache({ html, languages });
+        const cache = await createHtmlCache({
+          html,
+          ...(languages !== undefined && { languages }),
+        });
         pending.set(key, cache);
       }
 

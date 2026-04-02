@@ -1,11 +1,18 @@
 {
   "$schema": "../../.datamitsu/oxlint_configuration_schema.json",
-  "extends": ["../../.datamitsu/.oxlintrc.json"],
+  "categories": {
+    "correctness": "error",
+    "pedantic": "error",
+    "perf": "error",
+    "style": "warn",
+    "suspicious": "error"
+  },
   "rules": {
     "new-cap": "off",
     "max-statements": "off",
     "no-duplicate-imports": "off",
     "unicorn/prefer-top-level-await": "off",
     "typescript/no-extraneous-class": "off"
-  }
+  },
+  "extends": ["../../.datamitsu/.oxlintrc.json"]
 }

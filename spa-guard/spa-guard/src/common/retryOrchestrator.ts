@@ -52,8 +52,6 @@ interface OrchestratorState {
 
 const createFreshState = (): OrchestratorState => ({
   attempt: 0,
-  lastSource: undefined,
-  lastTriggerTime: undefined,
   phase: "idle",
   retryId: null,
   timer: null,
@@ -158,7 +156,11 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
   }
 
   // Set phase early to prevent re-entrant triggers
-  setState({ lastSource: input.source, lastTriggerTime: Date.now(), phase: "scheduled" });
+  setState({
+    ...(input.source !== undefined && { lastSource: input.source }),
+    lastTriggerTime: Date.now(),
+    phase: "scheduled",
+  });
 
   try {
     const options = getOptions();
@@ -278,7 +280,7 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
     return { status: "accepted" };
   } catch (error) {
     getLogger()?.error("triggerRetry internal error", error);
-    setState({ lastSource: undefined, lastTriggerTime: undefined, phase: "idle" });
+    setState({ phase: "idle" });
     return { status: "internal-error" };
   }
 };
@@ -291,7 +293,9 @@ export const markRetryHealthyBoot = (): void => {
   clearRetryFromUrl();
   clearLastReloadTime();
   clearLastRetryResetInfo();
-  setState(createFreshState());
+  if (globalThis.window !== undefined) {
+    (globalThis.window as any)[retryOrchestratorKey] = createFreshState();
+  }
   resetFallbackMode();
 };
 
@@ -299,8 +303,8 @@ export const getRetrySnapshot = (): RetrySnapshot => {
   const state = getState();
   return {
     attempt: state.attempt,
-    lastSource: state.lastSource,
-    lastTriggerTime: state.lastTriggerTime,
+    ...(state.lastSource !== undefined && { lastSource: state.lastSource }),
+    ...(state.lastTriggerTime !== undefined && { lastTriggerTime: state.lastTriggerTime }),
     phase: state.phase,
     retryId: state.retryId,
   };
@@ -318,7 +322,7 @@ export const setFallbackStateForDebug = (): void => {
   }
   setState({ phase: "fallback", timer: null });
   setFallbackMode();
-  showFallbackUI({ retryId: state.retryId ?? undefined });
+  showFallbackUI({ ...(state.retryId !== null && { retryId: state.retryId }) });
 };
 
 export const resetRetryOrchestratorForTests = (): void => {

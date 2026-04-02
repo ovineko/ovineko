@@ -210,17 +210,15 @@ describe("ErrorBoundary", () => {
   });
 
   describe("autoRetryChunkErrors option", () => {
-    it("passes autoRetryChunkErrors=undefined by default", () => {
+    it("does not pass autoRetryChunkErrors when not specified", () => {
       render(
         <ErrorBoundary fallback={SimpleFallback}>
           <ThrowingComponent />
         </ErrorBoundary>,
       );
 
-      expect(mockHandleErrorWithSpaGuard).toHaveBeenCalledWith(
-        expect.any(Error),
-        expect.objectContaining({ autoRetryChunkErrors: undefined }),
-      );
+      const [, options] = mockHandleErrorWithSpaGuard.mock.calls[0]!;
+      expect(options).not.toHaveProperty("autoRetryChunkErrors");
     });
 
     it("passes autoRetryChunkErrors=false to handleErrorWithSpaGuard when disabled", () => {
@@ -555,17 +553,15 @@ describe("ErrorBoundary", () => {
       );
     });
 
-    it("passes sendBeaconOnError=undefined when not specified", () => {
+    it("does not pass sendBeaconOnError when not specified", () => {
       render(
         <ErrorBoundary fallback={SimpleFallback}>
           <ThrowingComponent />
         </ErrorBoundary>,
       );
 
-      expect(mockHandleErrorWithSpaGuard).toHaveBeenCalledWith(
-        expect.any(Error),
-        expect.objectContaining({ sendBeaconOnError: undefined }),
-      );
+      const [, options] = mockHandleErrorWithSpaGuard.mock.calls[0]!;
+      expect(options).not.toHaveProperty("sendBeaconOnError");
     });
   });
 

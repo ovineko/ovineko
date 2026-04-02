@@ -1,4 +1,4 @@
-import { config } from "@shibanet0/datamitsu-config/knip";
+import { config } from "./.datamitsu/knip.config.js";
 
 const internalConfig = { ...config };
 
