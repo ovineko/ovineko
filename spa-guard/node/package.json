@@ -44,8 +44,6 @@
   "scripts": {
     "build": "tsup",
     "build:inline": "tsup --config tsup.inline.config.ts && tsup --config tsup.inline.trace.config.ts",
-    "fix": "datamitsu fix",
-    "lint": "datamitsu lint",
     "prepack": "clean-pkg-json clean",
     "postpack": "clean-pkg-json restore",
     "prepublishOnly": "pnpm build:inline && pnpm build",
@@ -63,7 +61,7 @@
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
     "@ovineko/spa-guard": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-8",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-19",
     "@types/html-minifier-terser": "7.0.2",
     "@types/node": "24.10.12",
     "@vitest/coverage-v8": "4.0.18",

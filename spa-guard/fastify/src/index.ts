@@ -167,7 +167,10 @@ const fastifySPAGuardPlugin: FastifyPluginAsync<FastifySPAGuardOptions> = async 
     const body = parseStringBody(request.body);
     const success = await handleBeaconRequest({
       body,
-      options: { onBeacon, onUnknownBeacon },
+      options: {
+        ...(onBeacon !== undefined && { onBeacon }),
+        ...(onUnknownBeacon !== undefined && { onUnknownBeacon }),
+      },
       reply,
       request,
     });
@@ -208,7 +211,7 @@ export async function spaGuardFastifyHandler(
     // Clear on rejection so subsequent requests can retry initialization.
     options._cachePromise ??= (async () => createHtmlCache(await getHtml()))().catch(
       (error: unknown) => {
-        options._cachePromise = undefined;
+        delete options._cachePromise;
         throw error;
       },
     );
@@ -221,7 +224,11 @@ export async function spaGuardFastifyHandler(
   const acceptLanguage = request.headers["accept-language"] as string | undefined;
   const ifNoneMatch = request.headers["if-none-match"] as string | undefined;
 
-  const response = cache.get({ acceptEncoding, acceptLanguage, ifNoneMatch });
+  const response = cache.get({
+    ...(acceptEncoding !== undefined && { acceptEncoding }),
+    ...(acceptLanguage !== undefined && { acceptLanguage }),
+    ...(ifNoneMatch !== undefined && { ifNoneMatch }),
+  });
 
   for (const [key, value] of Object.entries(response.headers)) {
     reply.header(key, value);

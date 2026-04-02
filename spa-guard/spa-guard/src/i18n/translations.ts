@@ -1,3 +1,5 @@
+// spell-checker:disable
+
 import type { SpaGuardTranslations } from "./index";
 
 export const translations: Record<string, SpaGuardTranslations> = {

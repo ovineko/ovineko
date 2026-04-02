@@ -59,44 +59,68 @@ function getConfig(config: config.Config) {
     },
     ".syncpackrc.json": {
       ...config.init?.[".syncpackrc.json"],
-      content: () =>
-        JSON.stringify({
-          semverGroups: [
-            {
-              dependencies: ["**"],
-              dependencyTypes: ["peer"],
-              label: "use caret range for all peerDependencies",
-              packages: ["**"],
-              range: "^",
-            },
-            {
-              dependencies: ["**"],
-              dependencyTypes: ["!peer", "!local"],
-              label: "use exact versions for regular dependencies",
-              packages: ["**"],
-              range: "",
-            },
-          ],
-          versionGroups: [
-            {
-              dependencies: ["$LOCAL"],
-              dependencyTypes: ["!local"],
-              label: "use workspace protocol for local packages",
-              pinVersion: "workspace:*",
-            },
-            {
-              dependencies: ["react", "react-dom", "@types/react", "@types/react-dom"],
-              isIgnored: true,
-              label: "allow website to use its own React version",
-              packages: ["website"],
-            },
-          ],
-        }) + "\n",
+      content: (context) => {
+        const previousConfig = JSON.parse(context.existingContent || "");
+
+        return (
+          JSON.stringify({
+            ...previousConfig,
+            semverGroups: [
+              {
+                dependencies: ["**"],
+                dependencyTypes: ["peer"],
+                label: "use caret range for all peerDependencies",
+                packages: ["**"],
+                range: "^",
+              },
+              {
+                dependencies: ["**"],
+                dependencyTypes: ["!peer", "!local"],
+                label: "use exact versions for regular dependencies",
+                packages: ["**"],
+                range: "",
+              },
+            ],
+            versionGroups: [
+              {
+                dependencies: ["eslint"],
+                dependencyTypes: ["peer"],
+                label: "spa-guard-eslint supports eslint v9 and v10",
+                packages: ["@ovineko/spa-guard-eslint"],
+                pinVersion: "^9 || ^10",
+              },
+              {
+                dependencies: ["$LOCAL"],
+                dependencyTypes: ["!local"],
+                label: "use workspace protocol for local packages",
+                pinVersion: "workspace:*",
+              },
+              {
+                dependencies: ["react", "react-dom", "@types/react", "@types/react-dom"],
+                isIgnored: true,
+                label: "allow website to use its own React version",
+                packages: ["website"],
+              },
+            ],
+          }) + "\n"
+        );
+      },
     },
     "eslint.config.js": {
       ...config.init?.["eslint.config.js"],
       content: (context: config.ConfigContext) => {
         const relativePath = tools.Path.rel(context.cwdPath, context.rootPath);
+
+        const filepath = tools.Path.join(relativePath, "eslint.config.js");
+
+        tools.Hash.assert({
+          content: context.existingContent ?? "",
+          file: filepath,
+          hash:
+            filepath === "packages/datamitsu-config/eslint.config.js"
+              ? "ed1fb85f639a7c87a9fccbd5d77ddf209f84288561f51baf5c561d46ee8d4c5e"
+              : "6c6bed46f1b4d9a154ec0dd71b52647942dac500a63b17cf0ca0d1e6bb27dbfd",
+        });
 
         if (relativePath === "packages/datamitsu-config") {
           return `import { join } from "node:path";
@@ -144,10 +168,16 @@ export default config;
     },
     "pnpm-workspace.yaml": {
       ...config.init?.["pnpm-workspace.yaml"],
-      content: () => `packages:
+      content: (context) => {
+        tools.Hash.assert({
+          content: context.existingContent ?? "",
+          file: "pnpm-workspace.yaml",
+          hash: "963a81f680556bacf5a353cfa9845b99cc463654d63947c15f7113a81c1052cd",
+        });
+
+        return `packages:
   - apps/*
   - packages/*
-  - website
   - spa-guard/*
 enableGlobalVirtualStore: true
 enablePrePostScripts: false
@@ -158,15 +188,8 @@ resolutionMode: lowest-direct
 verifyDepsBeforeRun: install
 overrides:
   vite: npm:rolldown-vite@7.2.5
-packageExtensions:
-  # Required for @docusaurus/theme-mermaid -> mermaid -> langium (missing peer deps)
-  langium:
-    dependencies:
-      "@chevrotain/regexp-to-ast": "*"
-      vscode-jsonrpc: "*"
-      vscode-languageserver-protocol: "*"
-      vscode-languageserver-types: "*"
-`,
+`;
+      },
     },
   };
 
@@ -180,3 +203,7 @@ packageExtensions:
 }
 
 globalThis.getConfig = getConfig;
+
+const getMinVersion = () => "0.0.0";
+
+globalThis.getMinVersion = getMinVersion;
