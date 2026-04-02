@@ -22,16 +22,10 @@
         "!.next/cache/**"
       ]
     },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
     "test": {
       "dependsOn": ["^build:lib"],
       "outputs": ["coverage/**"],
       "cache": false
-    },
-    "fix": {
-      "dependsOn": ["^fix"]
     }
   },
   "globalEnv": ["TZ", "PORT", "CI"]

@@ -25,13 +25,19 @@ type StateSubscriber = (state: SpaGuardState) => void;
 const getInitialStateFromUrl = (): SpaGuardState => {
   const resetInfo = getLastRetryResetInfo();
 
+  const resetInfoSpread = {
+    ...(resetInfo?.previousRetryId !== undefined && {
+      lastResetRetryId: resetInfo.previousRetryId,
+    }),
+    ...(resetInfo?.timestamp !== undefined && { lastRetryResetTime: resetInfo.timestamp }),
+  };
+
   if (globalThis.window === undefined) {
     return {
       currentAttempt: 0,
       isFallbackShown: false,
       isWaiting: false,
-      lastResetRetryId: resetInfo?.previousRetryId,
-      lastRetryResetTime: resetInfo?.timestamp,
+      ...resetInfoSpread,
     };
   }
 
@@ -45,24 +51,21 @@ const getInitialStateFromUrl = (): SpaGuardState => {
         currentAttempt: attempt,
         isFallbackShown: false,
         isWaiting: false,
-        lastResetRetryId: resetInfo?.previousRetryId,
-        lastRetryResetTime: resetInfo?.timestamp,
+        ...resetInfoSpread,
       };
     }
     return {
       currentAttempt: 0,
       isFallbackShown: false,
       isWaiting: false,
-      lastResetRetryId: resetInfo?.previousRetryId,
-      lastRetryResetTime: resetInfo?.timestamp,
+      ...resetInfoSpread,
     };
   }
   return {
     currentAttempt: retryState.retryAttempt,
     isFallbackShown: false,
     isWaiting: false,
-    lastResetRetryId: resetInfo?.previousRetryId,
-    lastRetryResetTime: resetInfo?.timestamp,
+    ...resetInfoSpread,
   };
 };
 

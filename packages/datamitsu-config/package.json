@@ -38,12 +38,9 @@
       "default": "./prettier.config.js"
     }
   },
-  "scripts": {
-    "fix": "datamitsu fix",
-    "lint": "datamitsu lint"
-  },
+  "scripts": {},
   "devDependencies": {
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-8",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-19",
     "react": "19"
   }
 }

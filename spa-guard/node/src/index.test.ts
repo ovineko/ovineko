@@ -87,17 +87,17 @@ describe("node", () => {
         lang: "th",
         translations: {
           th: {
-            heading: "เกิดข้อผิดพลาด",
-            loading: "กำลังโหลด...",
-            message: "กรุณารีเฟรชหน้า",
-            reload: "โหลดใหม่",
-            retrying: "ลองใหม่ครั้งที่",
-            tryAgain: "ลองอีกครั้ง",
+            heading: "เกิดข้อผิดพลาด", // cspell:disable-line
+            loading: "กำลังโหลด...", // cspell:disable-line
+            message: "กรุณารีเฟรชหน้า", // cspell:disable-line
+            reload: "โหลดใหม่", // cspell:disable-line
+            retrying: "ลองใหม่ครั้งที่", // cspell:disable-line
+            tryAgain: "ลองอีกครั้ง", // cspell:disable-line
           },
         },
       });
       expect(result).toContain('lang="th"');
-      expect(result).toContain("เกิดข้อผิดพลาด");
+      expect(result).toContain("เกิดข้อผิดพลาด"); // cspell:disable-line
     });
 
     it("includes RTL flag in meta for Arabic", () => {
@@ -110,7 +110,7 @@ describe("node", () => {
       const result = patchHtmlI18n({ html: sampleHtml, lang: "de" });
       expect(result).toContain('lang="de"');
       expect(result).toContain('<meta name="spa-guard-i18n"');
-      expect(result).toContain("Etwas ist schief gelaufen");
+      expect(result).toContain("Etwas ist schief gelaufen"); // cspell:disable-line
     });
 
     it("works with new languages - Russian", () => {
@@ -123,14 +123,14 @@ describe("node", () => {
     it("works with new languages - Spanish", () => {
       const result = patchHtmlI18n({ html: sampleHtml, lang: "es" });
       expect(result).toContain('lang="es"');
-      expect(result).toContain("Algo salió mal");
+      expect(result).toContain("Algo salió mal"); // cspell:disable-line
     });
 
     it("includes RTL flag for Persian (fa)", () => {
       const result = patchHtmlI18n({ html: sampleHtml, lang: "fa" });
       expect(result).toContain('lang="fa"');
       expect(result).toContain("&quot;rtl&quot;:true");
-      expect(result).toContain("مشکلی پیش آمد");
+      expect(result).toContain("مشکلی پیش آمد"); // cspell:disable-line
     });
 
     it("handles HTML with custom English translations", () => {
