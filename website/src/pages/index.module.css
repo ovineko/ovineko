@@ -23,8 +23,7 @@
 }
 
 .heroLogo {
-  width: 50%;
-  max-width: 30rem;
+  max-height: calc(100vh - var(--ifm-navbar-height) - 450px);
   margin-bottom: 2rem;
 }
 
