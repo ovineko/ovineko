@@ -33,5 +33,6 @@ export default {
     "langium",
     "neko",
     "ovis",
+    "opengraph",
   ],
 };

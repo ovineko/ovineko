@@ -7,7 +7,9 @@ import { themes as prismThemes } from "prism-react-renderer";
 
 const config: Config = {
   baseUrl: "/",
+  deploymentBranch: "gh-pages",
   favicon: "img/favicon.ico",
+
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
@@ -24,11 +26,9 @@ const config: Config = {
     },
     mermaid: true,
   },
-
   onBrokenAnchors: "throw",
   onBrokenLinks: "throw",
   organizationName: "ovineko",
-
   presets: [
     [
       "classic",
@@ -44,7 +44,18 @@ const config: Config = {
       } satisfies Preset.Options,
     ],
   ],
+
   projectName: "ovineko",
+  scripts:
+    process.env.NODE_ENV === "production"
+      ? [
+          {
+            async: true,
+            "data-website-id": "2e3e97b4-82bf-4af6-aaad-8942d5ddf522",
+            src: "https://a.shibanet0.com/pzjlkgj6ujcurpo",
+          },
+        ]
+      : [],
 
   tagline: "Tools born from friction. Solutions that stay.",
 
@@ -88,6 +99,7 @@ const config: Config = {
       ],
       style: "dark",
     },
+    image: "img/opengraph.png",
     mermaid: {
       theme: { dark: "dark", light: "neutral" },
     },
@@ -107,7 +119,7 @@ const config: Config = {
       ],
       logo: {
         alt: "Ovineko Logo",
-        src: "img/logo.svg",
+        src: "img/icon.png",
       },
       title: "Ovineko",
     },
@@ -120,6 +132,8 @@ const config: Config = {
   themes: ["@docusaurus/theme-mermaid"],
 
   title: "Ovineko",
+
+  trailingSlash: false,
 
   // Set the production url of your site here
   url: "https://ovineko.com",

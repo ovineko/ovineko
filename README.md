@@ -1,5 +1,9 @@
 # ovineko
 
+<p align="center">
+  <img src="website/static/img/logo.png" alt="ovineko" width="180" />
+</p>
+
 **A quiet guardian at the threshold.**
 
 ovineko is a collection of tools born from friction.

@@ -9,6 +9,9 @@
   position: relative;
   overflow: hidden;
   background: linear-gradient(180deg, #faf6ef 0%, #f5efe0 100%);
+  min-height: calc(100vh - var(--ifm-navbar-height));
+  display: flex;
+  align-items: center;
 }
 
 [data-theme='dark'] .heroBanner {
@@ -17,6 +20,12 @@
     var(--ifm-background-color) 0%,
     rgba(59, 47, 47, 0.1) 100%
   );
+}
+
+.heroLogo {
+  width: 50%;
+  max-width: 30rem;
+  margin-bottom: 2rem;
 }
 
 .heroBanner :global(.hero__title) {
@@ -28,21 +37,33 @@
 .heroBanner :global(.hero__subtitle) {
   font-size: 1.5rem;
   font-weight: 400;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
   color: var(--ifm-color-primary);
   font-style: italic;
 }
 
+.heroDivider {
+  width: 48px;
+  height: 2px;
+  background: #b88748;
+  border: none;
+  margin: 1.5rem auto;
+  opacity: 0.7;
+}
+
 .heroDescription {
-  font-size: 1.125rem;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 500;
   line-height: 1.8;
   max-width: 800px;
   margin: 0 auto 2.5rem;
-  color: var(--ifm-color-emphasis-700);
+  color: #b88748;
 }
 
 [data-theme='dark'] .heroDescription {
-  color: var(--ifm-color-emphasis-600);
+  color: #e0b06d;
 }
 
 @media screen and (max-width: 996px) {
