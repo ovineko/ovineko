@@ -41,7 +41,7 @@
     "@docusaurus/tsconfig": "3.9.2",
     "@docusaurus/types": "3.9.2",
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-19",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-23",
     "@types/node": "24.10.12",
     "@types/react": "19.2.14"
   }
