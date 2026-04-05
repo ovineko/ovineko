@@ -1,5 +1,7 @@
 # AGENTS.md
 
+Read and follow the shared rules in [.datamitsu/agents-docs-website.md](.datamitsu/agents-docs-website.md) before proceeding.
+
 This file provides guidance to AI agents (Claude, Cursor, Copilot, etc.) when working with code in this repository.
 
 ## Philosophy
@@ -300,16 +302,9 @@ const route = createRouteWithParams("/users/:id", {
 
 ### Testing Safety Rules
 
-> **CRITICAL:** Tests must NEVER modify workspace root or shared state
-
-- All tests MUST be isolated to their package scope
-- Never run tests that modify workspace root `node_modules`
 - Each package must be tested independently: `cd packages/<name> && pnpm test`
 - Test coverage threshold: 80% (lines/branches/functions/statements)
 - Use `vitest.workspace.ts` for multi-package test orchestration if needed
-- Clean test artifacts in `afterEach`/`afterAll` hooks
-- Mock external dependencies to prevent network calls or file system mutations
-- Never commit `.only` or `skip` in test files
 
 ### Build Configuration
 
@@ -318,35 +313,7 @@ const route = createRouteWithParams("/users/:id", {
 - **Output**: ESM format only (`"type": "module"`)
 - **TypeScript**: Separate declaration generation after bundling
 
-### Linting & Code Quality
-
-The project uses **datamitsu** as a unified linting orchestrator that runs:
-
-- **oxlint**: Fast Rust-based linter (primary linter)
-- **ESLint**: Additional rules with oxlint plugin integration
-- **Prettier**: Code formatting
-- **knip**: Unused exports/dependencies detection
-- **commitlint**: Conventional commit message validation
-- **editorconfig-checker**: EditorConfig compliance
-- **gitleaks**: Secret scanning
-- **syncpack**: Dependency version synchronization
-
-Configuration is centralized in `datamitsu.ts` with package-specific overrides.
-
-### Git Workflow
-
-Follow GitHub Flow with feature branches from main.
-
-**Commit message format** (Conventional Commits):
-
-- `feat:` new feature
-- `fix:` bug fix
-- `docs:` documentation
-- `refactor:` code refactoring
-- `test:` adding tests
-- `chore:` maintenance
-
-**Automated checks** (lefthook git hooks):
+### Git Hooks (lefthook)
 
 - **pre-commit**: Runs `datamitsu fix` and `datamitsu lint` on staged files only
 - **commit-msg**: Validates commit messages with commitlint
@@ -357,16 +324,6 @@ Follow GitHub Flow with feature branches from main.
 - **Node.js**: >= 24.11.0
 - **pnpm**: >= 10.25.0 (enforced by preinstall script)
 - **Package Manager**: Only pnpm is allowed (enforced via only-allow)
-- **Language policy**: **All documentation, READMEs, code comments, commit messages, and identifiers (function/variable/type names) MUST be written in English only. No exceptions.** Non-English text is allowed only in explicit localization assets (for example `i18n/translations.ts`) and tests that validate localized output.
-
-## Package Dependencies
-
-When adding dependencies:
-
-- Use workspace references (`workspace:*`) for internal packages
-- peer dependencies define required external packages (e.g., React 19, React Router 7)
-- Use `pnpm add -D` for devDependencies, `pnpm add` for runtime dependencies
-- Run `pnpm datamitsu fix` after adding dependencies to sync versions across packages
 
 ## Working with Individual Packages
 
@@ -450,44 +407,15 @@ Key architecture notes:
 
 **All user-facing documentation lives in the Docusaurus website (`website/docs/`). README.md files must remain minimal.**
 
-### Language Requirement
-
-**All documentation, READMEs, and code comments MUST be written in English only. No exceptions.**
-
 ### Documentation Requirements
 
-When implementing features or making changes, documentation MUST be updated in the same PR/commit. This includes:
+When implementing features or making changes, documentation MUST be updated in the same PR/commit:
 
 - **User-facing features** → update `website/docs/` with examples and guides
 - **API changes** → update corresponding page in `website/docs/packages/` or `website/docs/spa-guard/`
 - **Configuration options** → update `website/docs/` reference pages
 - **New examples** → add to appropriate `website/docs/` section
 - **Breaking changes** → document migration path in docs
-
-**Documentation is not optional - it is a required deliverable for every user-facing change.**
-
-### Visual Documentation
-
-For complex concepts and UI features:
-
-- **Add diagrams** for architectural concepts, data flows, and system interactions
-- **Use screenshots** for UI-related features and visual components
-- **Keep diagrams as code** (Mermaid, PlantUML) when possible for version control
-  - Mermaid is preferred for simple diagrams (embedded in Markdown)
-  - PlantUML for complex diagrams requiring more control
-- Store diagram source files in `website/static/diagrams/` if not embedded
-- Store screenshots in `website/static/img/` with descriptive names
-
-Example Mermaid diagram in docs:
-
-````markdown
-```mermaid
-graph TD
-    A[User Request] --> B[Vite Plugin]
-    B --> C[Inject Script]
-    C --> D[Runtime Handler]
-```
-````
 
 ### Link Maintenance
 
@@ -577,18 +505,6 @@ The website serves `/llms.txt` following the [llmstxt.org](https://llmstxt.org) 
 
 **Rationale:** Centralized documentation in Docusaurus provides better organization, search, navigation, and versioning. README is the landing page, not the manual.
 
-### AGENTS.md Maintenance
-
-**CRITICAL**: Keep AGENTS.md in sync with code changes.
-
-Whenever you make changes to the codebase, **immediately update AGENTS.md**:
-
-1. **Add to "Known Pitfalls"** if you encountered issues
-2. **Update commands** if scripts change
-3. **Add examples** for new patterns introduced
-4. **Update architecture notes** for significant refactoring
-5. **Update package-specific notes** when package behavior changes
-
 ### Documentation Update Triggers
 
 Update docs when you:
@@ -599,31 +515,6 @@ Update docs when you:
 - ✅ Add new dependencies or peer dependencies
 - ✅ Change build/test/lint workflows
 - ✅ Introduce new architectural patterns
-
-### Documentation Review Standards
-
-Documentation changes should be reviewed with the same rigor as code:
-
-- **Clarity**: Is the explanation clear and unambiguous?
-- **Accuracy**: Does it reflect the current implementation?
-- **Completeness**: Are all important details covered?
-- **Examples**: Are code examples tested and working?
-- **Links**: Do all internal and external links work?
-
-**Critical rule**: Test all code examples before merging. Examples that don't work erode user trust.
-
-### Quick Documentation Check
-
-Before finalizing any change:
-
-```bash
-# 1. Does website/docs/ have updated guide/reference for this change?
-# 2. Does AGENTS.md mention this pattern/pitfall?
-# 3. Is package README still minimal (just quick start + link to docs)?
-# 4. Do package.json keywords reflect new functionality?
-```
-
-**Golden Rule**: If you had to figure something out, document it so others (and future AI agents) don't have to.
 
 ## Known Pitfalls
 
@@ -660,14 +551,6 @@ Do not call `markRetryHealthyBoot()` during early app startup (for example immed
 In `src/common/serializeError.ts`, keep the `reason.response` (HttpError) branch before the generic `reason instanceof Error` branch inside `serializeRejectionReason()`. Many client libraries throw `Error` subclasses (for example `ResponseError`) that also carry `response`. If the Error branch runs first, `status`/`statusText`/`url`/`method` are lost from serialized beacons.
 
 <!-- Add corrections here as you encounter issues -->
-
-## Verification
-
-Before completing any task:
-
-1. Run the test suite if tests exist
-2. Run linter to check for issues
-3. Verify changes work as expected
 
 ---
 
