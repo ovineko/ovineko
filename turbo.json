@@ -12,6 +12,10 @@
         "!.next/cache/**"
       ]
     },
+    "website#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["build/**"]
+    },
     "build:lib": {
       "dependsOn": ["^build:lib"],
       "outputs": [

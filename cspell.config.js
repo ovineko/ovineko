@@ -26,5 +26,13 @@ export default {
     "dedup",
     "unsubscribers",
     "normalise",
+    "frontmatter",
+    "llms",
+    "npmx",
+    "llmstxt",
+    "langium",
+    "neko",
+    "ovis",
+    "opengraph",
   ],
 };

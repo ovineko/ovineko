@@ -95,6 +95,12 @@ function getConfig(config: config.Config) {
                 label: "use workspace protocol for local packages",
                 pinVersion: "workspace:*",
               },
+              {
+                dependencies: ["react", "react-dom", "@types/react", "@types/react-dom"],
+                isIgnored: true,
+                label: "allow website to use its own React version",
+                packages: ["website"],
+              },
             ],
           }) + "\n"
         );

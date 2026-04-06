@@ -7,63 +7,47 @@ ESLint plugin with rules that enforce spa-guard usage patterns: `no-direct-lazy`
 
 ## Install
 
-```sh
+**pnpm** (recommended):
+
+```bash
+pnpm add -D @ovineko/spa-guard-eslint eslint
+```
+
+**npm**:
+
+```bash
 npm install --save-dev @ovineko/spa-guard-eslint eslint
+```
+
+**yarn**:
+
+```bash
+yarn add -D @ovineko/spa-guard-eslint eslint
+```
+
+**bun**:
+
+```bash
+bun add -d @ovineko/spa-guard-eslint eslint
+```
+
+**deno**:
+
+```bash
+deno add npm:@ovineko/spa-guard-eslint npm:eslint
 ```
 
 ## Usage
 
-Add the recommended config to your `eslint.config.js` (flat config):
-
 ```js
 import spaGuard from "@ovineko/spa-guard-eslint";
 
-export default [
-  spaGuard.configs.recommended,
-  // ... your other configs
-];
+export default [spaGuard.configs.recommended];
 ```
 
-The recommended config enables both rules at `"error"` level with autofixes.
+## Documentation
 
-## Rules
-
-### `no-direct-lazy`
-
-Disallows importing `lazy` from `react`. Use `lazyWithRetry` from `@ovineko/spa-guard-react` instead.
-
-```ts
-// Bad - flagged by the rule
-import { lazy } from "react";
-
-// Good - autofix replaces it with:
-import { lazyWithRetry } from "@ovineko/spa-guard-react";
-```
-
-### `no-direct-error-boundary`
-
-Disallows importing from `react-error-boundary`. Use `@ovineko/spa-guard-react/error-boundary` instead.
-
-```ts
-// Bad - flagged by the rule
-import { ErrorBoundary } from "react-error-boundary";
-
-// Good - autofix replaces it with:
-import { ErrorBoundary } from "@ovineko/spa-guard-react/error-boundary";
-```
-
-Both rules provide autofixes and are fixable via `eslint --fix`.
-
-## API
-
-- `plugin` (default export) - ESLint plugin object with `rules` and `configs`
-- `configs` - Named export; `configs.recommended` is the flat config object
-- `rules` - Named export; object with `no-direct-lazy` and `no-direct-error-boundary`
-
-## Related packages
-
-- [@ovineko/spa-guard](../spa-guard/README.md) - Core package
-- [@ovineko/spa-guard-react](../react/README.md) - React integration (lazyWithRetry, ErrorBoundary)
+Full documentation: [ovineko.com/docs/spa-guard/eslint](https://ovineko.com/docs/spa-guard/eslint)
 
 ## License
 
