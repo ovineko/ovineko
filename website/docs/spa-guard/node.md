@@ -104,7 +104,7 @@ const patched = patchHtmlI18n({
 Use the builder API to generate the spa-guard runtime script outside of Vite (e.g., in a custom build step or SSR framework):
 
 ```ts
-import { buildSpaGuardScript, buildExternalScript } from "@ovineko/spa-guard-node";
+import { buildSpaGuardScript, buildExternalScript } from "@ovineko/spa-guard-node/builder";
 
 // Inline script — returns script content and HTML tag strings
 const { scriptContent, hash, html, tags } = await buildSpaGuardScript({

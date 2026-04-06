@@ -131,12 +131,12 @@ describe("getOptions", () => {
 
     it("merges handleUnhandledRejections overrides while retaining defaults", () => {
       setWindowOptions({
-        handleUnhandledRejections: { retry: false },
+        handleUnhandledRejections: { retry: true },
       });
 
       const result = getOptions();
 
-      expect(result.handleUnhandledRejections?.retry).toBe(false);
+      expect(result.handleUnhandledRejections?.retry).toBe(true);
       expect(result.handleUnhandledRejections?.sendBeacon).toBe(true);
     });
 

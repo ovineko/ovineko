@@ -139,18 +139,19 @@ After a successful app boot following a retry reload, `markRetryHealthyBoot()` c
 Default behavior in `recommendedSetup`: auto healthy-boot after a grace period (`healthyBoot: "auto"`).
 Manual override: set `healthyBoot: "manual"` and call `markRetryHealthyBoot()` yourself once critical boot is confirmed.
 
-### Avoid false retry loops from app errors
+### Retry on unhandled rejections
 
-By default, regular `unhandledrejection` events also trigger `triggerRetry()` (`handleUnhandledRejections.retry: true`). If your app has non-chunk unhandled rejections, this can look like retry looping even though chunks are healthy. In that case, disable reload-on-unhandled-rejection:
+By default, regular `unhandledrejection` events only send a beacon (`handleUnhandledRejections.retry: false`). To also trigger `triggerRetry()` on non-chunk rejections, enable it explicitly — but only if you're confident these rejections indicate stale chunks:
 
 ```ts
 window.__SPA_GUARD_OPTIONS__ = {
   handleUnhandledRejections: {
-    retry: false,
-    sendBeacon: true,
+    retry: true,
   },
 };
 ```
+
+Note: enabling `retry` for generic rejections can cause reload loops if your app has non-chunk unhandled rejections unrelated to stale assets.
 
 ### Static asset burst coalescing
 
