@@ -5,6 +5,8 @@
     "types": ["@testing-library/jest-dom/vitest"],
     "outDir": "dist",
     "sourceMap": false,
+    "noEmit": false,
+    "declaration": true,
     "declarationMap": false,
     "jsx": "react-jsx"
   },
