@@ -19,8 +19,8 @@ importers:
         specifier: workspace:*
         version: link:packages/datamitsu-config
       "@shibanet0/datamitsu-config":
-        specifier: 0.0.3-alpha-23
-        version: 0.0.3-alpha-23
+        specifier: 0.0.3-alpha-26
+        version: 0.0.3-alpha-26
       react:
         specifier: "19"
         version: 19.2.4
@@ -34,8 +34,8 @@ importers:
         specifier: workspace:*
         version: link:../datamitsu-config
       "@shibanet0/datamitsu-config":
-        specifier: 0.0.3-alpha-23
-        version: 0.0.3-alpha-23
+        specifier: 0.0.3-alpha-26
+        version: 0.0.3-alpha-26
       "@types/node":
         specifier: 24.10.12
         version: 24.10.12
@@ -49,8 +49,8 @@ importers:
   packages/datamitsu-config:
     devDependencies:
       "@shibanet0/datamitsu-config":
-        specifier: 0.0.3-alpha-23
-        version: 0.0.3-alpha-23
+        specifier: 0.0.3-alpha-26
+        version: 0.0.3-alpha-26
       react:
         specifier: "19"
         version: 19.2.4
@@ -61,8 +61,8 @@ importers:
         specifier: workspace:*
         version: link:../datamitsu-config
       "@shibanet0/datamitsu-config":
-        specifier: 0.0.3-alpha-23
-        version: 0.0.3-alpha-23
+        specifier: 0.0.3-alpha-26
+        version: 0.0.3-alpha-26
 
   packages/react-router:
     dependencies:
@@ -83,8 +83,8 @@ importers:
         specifier: workspace:*
         version: link:../datamitsu-config
       "@shibanet0/datamitsu-config":
-        specifier: 0.0.3-alpha-23
-        version: 0.0.3-alpha-23
+        specifier: 0.0.3-alpha-26
+        version: 0.0.3-alpha-26
       "@testing-library/dom":
         specifier: 10.4.1
         version: 10.4.1
@@ -128,8 +128,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/datamitsu-config
       "@shibanet0/datamitsu-config":
-        specifier: 0.0.3-alpha-23
-        version: 0.0.3-alpha-23
+        specifier: 0.0.3-alpha-26
+        version: 0.0.3-alpha-26
       "@types/node":
         specifier: 24.10.12
         version: 24.10.12
@@ -168,8 +168,8 @@ importers:
         specifier: workspace:*
         version: link:../node
       "@shibanet0/datamitsu-config":
-        specifier: 0.0.3-alpha-23
-        version: 0.0.3-alpha-23
+        specifier: 0.0.3-alpha-26
+        version: 0.0.3-alpha-26
       "@types/node":
         specifier: 24.10.12
         version: 24.10.12
@@ -205,8 +205,8 @@ importers:
         specifier: workspace:*
         version: link:../spa-guard
       "@shibanet0/datamitsu-config":
-        specifier: 0.0.3-alpha-23
-        version: 0.0.3-alpha-23
+        specifier: 0.0.3-alpha-26
+        version: 0.0.3-alpha-26
       "@types/html-minifier-terser":
         specifier: 7.0.2
         version: 7.0.2
@@ -242,8 +242,8 @@ importers:
         specifier: workspace:*
         version: link:../spa-guard
       "@shibanet0/datamitsu-config":
-        specifier: 0.0.3-alpha-23
-        version: 0.0.3-alpha-23
+        specifier: 0.0.3-alpha-26
+        version: 0.0.3-alpha-26
       "@testing-library/dom":
         specifier: 10.4.1
         version: 10.4.1
@@ -297,8 +297,8 @@ importers:
         specifier: workspace:*
         version: link:../react
       "@shibanet0/datamitsu-config":
-        specifier: 0.0.3-alpha-23
-        version: 0.0.3-alpha-23
+        specifier: 0.0.3-alpha-26
+        version: 0.0.3-alpha-26
       "@testing-library/dom":
         specifier: 10.4.1
         version: 10.4.1
@@ -336,8 +336,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/datamitsu-config
       "@shibanet0/datamitsu-config":
-        specifier: 0.0.3-alpha-23
-        version: 0.0.3-alpha-23
+        specifier: 0.0.3-alpha-26
+        version: 0.0.3-alpha-26
       "@types/html-minifier-terser":
         specifier: 7.0.2
         version: 7.0.2
@@ -382,8 +382,8 @@ importers:
         specifier: workspace:*
         version: link:../spa-guard
       "@shibanet0/datamitsu-config":
-        specifier: 0.0.3-alpha-23
-        version: 0.0.3-alpha-23
+        specifier: 0.0.3-alpha-26
+        version: 0.0.3-alpha-26
       "@types/html-minifier-terser":
         specifier: 7.0.2
         version: 7.0.2
@@ -443,8 +443,8 @@ importers:
         specifier: workspace:*
         version: link:../packages/datamitsu-config
       "@shibanet0/datamitsu-config":
-        specifier: 0.0.3-alpha-23
-        version: 0.0.3-alpha-23
+        specifier: 0.0.3-alpha-26
+        version: 0.0.3-alpha-26
       "@types/node":
         specifier: 24.10.12
         version: 24.10.12
@@ -2112,74 +2112,74 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  "@datamitsu/datamitsu-darwin-arm64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-darwin-arm64@0.0.3-alpha-29":
     resolution:
       {
-        integrity: sha512-DdZJR61FB++MawdYXCGVP1JvkfH+Eesns6tZNHgyissHIqNiv+WvFU/lSqv8/7NXjmOVTI06xWLd4OozACFKbQ==,
+        integrity: sha512-b2stjyyd7TtZ+njeQV3AZU9K78vKB+4N459l4AJcxBlIYE8J8bd/i1hElkDmYkoLY4OnhydYbz2mNC08k8wkyg==,
       }
     cpu: [arm64]
     os: [darwin]
 
-  "@datamitsu/datamitsu-darwin-x64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-darwin-x64@0.0.3-alpha-29":
     resolution:
       {
-        integrity: sha512-5ucR8PRCg5k9a3QwRO7Yezhu+Uti8aTZCL+Tlf3OBYSGNirXzQX6xZ5UpdCeeYDlhpOeQM05UAPWuChX0hRR4w==,
+        integrity: sha512-LSjcxUsqtLAqt+q0X6SOBm0GeI0/aXh08SRkShNATyMJ2ylVOb2dkrWw8M9nQhxKEQigOHjvmkGZLMcHs4B0zw==,
       }
     cpu: [x64]
     os: [darwin]
 
-  "@datamitsu/datamitsu-freebsd-arm64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-freebsd-arm64@0.0.3-alpha-29":
     resolution:
       {
-        integrity: sha512-OVTGSfNA6rbm2bEjK4EwfpLvA6I8o+Vepj2fq/Cjdh10FqyEkoP+orD+GV4dk2LnNreE7yby84jQk60KQHahtg==,
+        integrity: sha512-6gEAUynFP/iH6X06yyHcFJIVzGbdAM1Uu1kqX1odUWT3kMwIVcW6oEQYHecFNJaJ5j/67a7JGqthQRfRta3HXg==,
       }
     cpu: [arm64]
     os: [freebsd]
 
-  "@datamitsu/datamitsu-freebsd-x64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-freebsd-x64@0.0.3-alpha-29":
     resolution:
       {
-        integrity: sha512-0GDuN25ODRXL5QlH8eFrOlTheoBbMiz+P0Re+YvVwgr8t/azhwaAbLPH/JE3U9recSJDubtvC6G5JdBejJwf+g==,
+        integrity: sha512-ckhG/D65Wfv8lWhyiQJ/iSO58vw4vcpN3ka9OVGvXYMwTl5ESjwXj4PZ9Hs4AogAJubzF7fps5ukKIFjT2/PlQ==,
       }
     cpu: [x64]
     os: [freebsd]
 
-  "@datamitsu/datamitsu-linux-arm64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-linux-arm64@0.0.3-alpha-29":
     resolution:
       {
-        integrity: sha512-Tpeow0iBcgIJQ1LusYAgkBfyMUP5qdGy6Tj4CIvTiVbsOlCBaGrNGeaqVKnPggLp1Bzgi9gYRxCVUqAdjfOPag==,
+        integrity: sha512-W6d+rCO6hj0o8n1ZNR3CLtduQoVvJgVC9rGFjFXoNmJCPx0RJ4Q5Y87mkwXcpzTBDXVnH4WWzswDij/yEo36+A==,
       }
     cpu: [arm64]
     os: [linux]
 
-  "@datamitsu/datamitsu-linux-x64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-linux-x64@0.0.3-alpha-29":
     resolution:
       {
-        integrity: sha512-gzd16pVJHMwRwiUc5VYBlOxapKz7WuYxBlwpTXWPmLvRy+rFTsZ14EJonlZgQi5bQnV29663tZoZM1HDIMYqvA==,
+        integrity: sha512-A4iAJ3o4opmY8w0dnB8eqTW32JsCZu3155LY64FPwrk1P9VSYSHXTLtNshsmHth/HMjCgbfMG3Zd8u1RYuQjrg==,
       }
     cpu: [x64]
     os: [linux]
 
-  "@datamitsu/datamitsu-win32-arm64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-win32-arm64@0.0.3-alpha-29":
     resolution:
       {
-        integrity: sha512-NgFMyjXCgHZzz8yS9nH8dcK5j0WDoRQzDzWb/iBQ2vD2lTIwheTITqSc4b+k/mvxPXDdjfNfzgIat3Nv3TYfyw==,
+        integrity: sha512-kV/4SBgyCNMgTyThSm4XouMcCVZyiQQpMj0RKgsUgc16mlwIh9Ct/kgeNeAVrjj4/0uV55q0vTOTCDSwNsUqyw==,
       }
     cpu: [arm64]
     os: [win32]
 
-  "@datamitsu/datamitsu-win32-x64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-win32-x64@0.0.3-alpha-29":
     resolution:
       {
-        integrity: sha512-+Iawg7+bb0dkepCnPsVX0W+eJ+B8OZnDcLzq+x/tVwYG0aOjFxNPbBT0WTw71DaCsqDHYUsOaNEPfl9I3i2VNQ==,
+        integrity: sha512-2i0bBRu/dh+5l8Fgm0jWgw33cSlcRuW+g/K+PNqAxVkN4o8dawHj2gCFlIa97z1wLZRZlJNxuZgE8EhoQWZ/CA==,
       }
     cpu: [x64]
     os: [win32]
 
-  "@datamitsu/datamitsu@0.0.3-alpha-25":
+  "@datamitsu/datamitsu@0.0.3-alpha-29":
     resolution:
       {
-        integrity: sha512-gg8/E4Qfv9wKg89Hlk7gMLtrHz3mw8pnAirjFtH37ya/U+fsbpH1MtQ5V9BsY0vkPAizjLwxJLePlhFR6o/hcw==,
+        integrity: sha512-GPDFHNjanVnrS59mSkVYKrvOHeFhYEPFapzNRrfnj/ETXemkDq9Rpc6Sw0KqMMsQguQsmq6+4xLYCAF94qRZUg==,
       }
     hasBin: true
 
@@ -3687,10 +3687,10 @@ packages:
         integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==,
       }
 
-  "@shibanet0/datamitsu-config@0.0.3-alpha-23":
+  "@shibanet0/datamitsu-config@0.0.3-alpha-26":
     resolution:
       {
-        integrity: sha512-BC2KfJo7tqo3/nu1fCB4FcqlWY4QgqAEBVhuzOABLDGA4r5NB2nDzyf7OXGVxXMVkESOlxeVCatQQbTZQCk34Q==,
+        integrity: sha512-nOvBI3gkkUOyt7rH/ALuLiNh2ycGJlcMBJkdXaIn5O/2YZ44nShTDw16xgRm/nVi7yhSdz8XYS+fpgmeVHVJmg==,
       }
     engines: { node: ">=24.14.0", pnpm: ">=10.32.1" }
     hasBin: true
@@ -11711,6 +11711,13 @@ packages:
       }
     engines: { node: ">=18" }
 
+  tinyexec@1.1.1:
+    resolution:
+      {
+        integrity: sha512-VKS/ZaQhhkKFMANmAOhhXVoIfBXblQxGX1myCQ2faQrfmobMftXeJPcZGp0gS07ocvGJWDLZGyOZDadDBqYIJg==,
+      }
+    engines: { node: ">=18" }
+
   tinyglobby@0.2.15:
     resolution:
       {
@@ -13962,42 +13969,42 @@ snapshots:
     dependencies:
       postcss: 8.5.6
 
-  "@datamitsu/datamitsu-darwin-arm64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-darwin-arm64@0.0.3-alpha-29":
     optional: true
 
-  "@datamitsu/datamitsu-darwin-x64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-darwin-x64@0.0.3-alpha-29":
     optional: true
 
-  "@datamitsu/datamitsu-freebsd-arm64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-freebsd-arm64@0.0.3-alpha-29":
     optional: true
 
-  "@datamitsu/datamitsu-freebsd-x64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-freebsd-x64@0.0.3-alpha-29":
     optional: true
 
-  "@datamitsu/datamitsu-linux-arm64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-linux-arm64@0.0.3-alpha-29":
     optional: true
 
-  "@datamitsu/datamitsu-linux-x64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-linux-x64@0.0.3-alpha-29":
     optional: true
 
-  "@datamitsu/datamitsu-win32-arm64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-win32-arm64@0.0.3-alpha-29":
     optional: true
 
-  "@datamitsu/datamitsu-win32-x64@0.0.3-alpha-25":
+  "@datamitsu/datamitsu-win32-x64@0.0.3-alpha-29":
     optional: true
 
-  "@datamitsu/datamitsu@0.0.3-alpha-25":
+  "@datamitsu/datamitsu@0.0.3-alpha-29":
     dependencies:
-      execa: 9.6.1
+      tinyexec: 1.1.1
     optionalDependencies:
-      "@datamitsu/datamitsu-darwin-arm64": 0.0.3-alpha-25
-      "@datamitsu/datamitsu-darwin-x64": 0.0.3-alpha-25
-      "@datamitsu/datamitsu-freebsd-arm64": 0.0.3-alpha-25
-      "@datamitsu/datamitsu-freebsd-x64": 0.0.3-alpha-25
-      "@datamitsu/datamitsu-linux-arm64": 0.0.3-alpha-25
-      "@datamitsu/datamitsu-linux-x64": 0.0.3-alpha-25
-      "@datamitsu/datamitsu-win32-arm64": 0.0.3-alpha-25
-      "@datamitsu/datamitsu-win32-x64": 0.0.3-alpha-25
+      "@datamitsu/datamitsu-darwin-arm64": 0.0.3-alpha-29
+      "@datamitsu/datamitsu-darwin-x64": 0.0.3-alpha-29
+      "@datamitsu/datamitsu-freebsd-arm64": 0.0.3-alpha-29
+      "@datamitsu/datamitsu-freebsd-x64": 0.0.3-alpha-29
+      "@datamitsu/datamitsu-linux-arm64": 0.0.3-alpha-29
+      "@datamitsu/datamitsu-linux-x64": 0.0.3-alpha-29
+      "@datamitsu/datamitsu-win32-arm64": 0.0.3-alpha-29
+      "@datamitsu/datamitsu-win32-x64": 0.0.3-alpha-29
 
   "@discoveryjs/json-ext@0.5.7": {}
 
@@ -15463,10 +15470,10 @@ snapshots:
 
   "@sec-ant/readable-stream@0.4.1": {}
 
-  "@shibanet0/datamitsu-config@0.0.3-alpha-23":
+  "@shibanet0/datamitsu-config@0.0.3-alpha-26":
     dependencies:
       "@commander-js/extra-typings": 14.0.0(commander@14.0.3)
-      "@datamitsu/datamitsu": 0.0.3-alpha-25
+      "@datamitsu/datamitsu": 0.0.3-alpha-29
       commander: 14.0.3
       execa: 9.6.1
       fast-glob: 3.3.3
@@ -20814,6 +20821,8 @@ snapshots:
   tinyexec@0.3.2: {}
 
   tinyexec@1.0.2: {}
+
+  tinyexec@1.1.1: {}
 
   tinyglobby@0.2.15:
     dependencies:

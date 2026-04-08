@@ -49,7 +49,7 @@
     "@ovineko/datamitsu-config": "workspace:*",
     "@ovineko/spa-guard": "workspace:*",
     "@ovineko/spa-guard-node": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-23",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-26",
     "@types/node": "24.10.12",
     "@vitest/coverage-v8": "4.0.18",
     "tsup": "8.5.1",

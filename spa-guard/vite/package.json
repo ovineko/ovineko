@@ -49,7 +49,7 @@
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
     "@ovineko/spa-guard": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-23",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-26",
     "@types/html-minifier-terser": "7.0.2",
     "@types/node": "24.10.12",
     "@vitest/coverage-v8": "4.0.18",
