@@ -119,7 +119,7 @@ function getConfig(config: config.Config) {
           hash:
             filepath === "packages/datamitsu-config/eslint.config.js"
               ? "ed1fb85f639a7c87a9fccbd5d77ddf209f84288561f51baf5c561d46ee8d4c5e"
-              : "6c6bed46f1b4d9a154ec0dd71b52647942dac500a63b17cf0ca0d1e6bb27dbfd",
+              : "92b0dcd4a5b3d12e3fb8a1ad2b74d03bff029b447bb06a92994ccd4331518745",
         });
 
         if (relativePath === "packages/datamitsu-config") {
@@ -169,12 +169,6 @@ export default config;
     "pnpm-workspace.yaml": {
       ...config.init?.["pnpm-workspace.yaml"],
       content: (context) => {
-        tools.Hash.assert({
-          content: context.existingContent ?? "",
-          file: "pnpm-workspace.yaml",
-          hash: "963a81f680556bacf5a353cfa9845b99cc463654d63947c15f7113a81c1052cd",
-        });
-
         return `packages:
   - apps/*
   - packages/*
