@@ -6,6 +6,8 @@
     "types": [],
     "outDir": "dist",
     "sourceMap": false,
+    "noEmit": false,
+    "declaration": true,
     "declarationMap": false
   },
   "include": ["src"],
