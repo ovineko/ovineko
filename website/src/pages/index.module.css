@@ -1,0 +1,153 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+
+.heroBanner {
+  padding: 6rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #faf6ef 0%, #f5efe0 100%);
+  min-height: calc(100vh - var(--ifm-navbar-height));
+  display: flex;
+  align-items: center;
+}
+
+[data-theme='dark'] .heroBanner {
+  background: linear-gradient(
+    180deg,
+    var(--ifm-background-color) 0%,
+    rgba(59, 47, 47, 0.1) 100%
+  );
+}
+
+.heroLogo {
+  max-height: calc(100vh - var(--ifm-navbar-height) - 450px);
+  margin-bottom: 2rem;
+}
+
+.heroBanner :global(.hero__title) {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.heroBanner :global(.hero__subtitle) {
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin-bottom: 0;
+  color: var(--ifm-color-primary);
+  font-style: italic;
+}
+
+.heroDivider {
+  width: 48px;
+  height: 2px;
+  background: #b88748;
+  border: none;
+  margin: 1.5rem auto;
+  opacity: 0.7;
+}
+
+.heroDescription {
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 500;
+  line-height: 1.8;
+  max-width: 800px;
+  margin: 0 auto 2.5rem;
+  color: #b88748;
+}
+
+[data-theme='dark'] .heroDescription {
+  color: #e0b06d;
+}
+
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 3rem 1rem;
+  }
+
+  .heroBanner :global(.hero__title) {
+    font-size: 2.5rem;
+  }
+
+  .heroBanner :global(.hero__subtitle) {
+    font-size: 1.25rem;
+  }
+
+  .heroDescription {
+    font-size: 1rem;
+  }
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Philosophy Section */
+.philosophy {
+  padding: 5rem 0;
+  background: #f5efe0;
+}
+
+[data-theme='dark'] .philosophy {
+  background: rgba(212, 165, 116, 0.03);
+}
+
+.philosophyContent {
+  max-width: 800px;
+  margin: 0 auto;
+  font-size: 1.125rem;
+  line-height: 1.9;
+  color: var(--ifm-color-emphasis-800);
+}
+
+[data-theme='dark'] .philosophyContent {
+  color: var(--ifm-color-emphasis-700);
+}
+
+.philosophyContent p {
+  margin-bottom: 1.5rem;
+}
+
+.philosophyHighlight {
+  font-size: 1.25rem;
+  margin: 2.5rem 0 !important;
+  text-align: center;
+  color: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .philosophyHighlight {
+  color: var(--ifm-color-primary-light);
+}
+
+.etymology {
+  margin-top: 2.5rem !important;
+  font-style: italic;
+  color: var(--ifm-color-emphasis-600);
+  border-left: 3px solid var(--ifm-color-primary);
+  padding-left: 1.5rem;
+}
+
+[data-theme='dark'] .etymology {
+  border-left-color: var(--ifm-color-primary);
+}
+
+@media screen and (max-width: 996px) {
+  .philosophy {
+    padding: 3rem 1rem;
+  }
+
+  .philosophyContent {
+    font-size: 1rem;
+  }
+
+  .philosophyHighlight {
+    font-size: 1.125rem;
+  }
+}

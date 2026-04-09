@@ -10,6 +10,7 @@
   "rules": {
     "new-cap": "off",
     "max-statements": "off",
+    "no-shadow": "off",
     "no-duplicate-imports": "off",
     "unicorn/prefer-top-level-await": "off",
     "typescript/no-extraneous-class": "off"

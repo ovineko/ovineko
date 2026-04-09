@@ -43,7 +43,7 @@
   "devDependencies": {
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-19",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-26",
     "@types/node": "24.10.12",
     "@vitest/coverage-v8": "4.0.18",
     "eslint": "10.1.0",
