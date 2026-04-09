@@ -1,51 +1,93 @@
 # @ovineko/kubb
 
-Zero-config tool to clean `package.json` before publishing and restore it after.
+Opinionated [Kubb](https://kubb.dev/) wrapper with pre-configured defaults for TypeScript code generation from OpenAPI specs.
 
-Removes dev-only fields (`devDependencies`, `scripts`, `eslintConfig`, etc.) keeping only what's needed in the published package.
+Provides both a library API (`defineConfig`) and a CLI that proxies to `@kubb/cli`.
 
 ## Install
+
+**pnpm** (recommended):
 
 ```bash
 pnpm add -D @ovineko/kubb
 ```
 
-## Usage
+**npm**:
 
 ```bash
-kubb clean    # backup + clean
-kubb restore  # restore from backup
+npm install --save-dev @ovineko/kubb
 ```
 
-### With npm lifecycle hooks
+**yarn**:
 
-```json
-{
-  "scripts": {
-    "prepack": "kubb clean",
-    "postpack": "kubb restore"
-  }
-}
+```bash
+yarn add -D @ovineko/kubb
 ```
 
-## How it works
+**bun**:
 
-**`clean`** creates `package.json.backup`, then removes all fields not in the whitelist.
+```bash
+bun add -d @ovineko/kubb
+```
 
-**`restore`** replaces `package.json` from backup and deletes the backup file.
+**deno**:
 
-## Whitelisted fields
+```bash
+deno add npm:@ovineko/kubb
+```
 
-| Category     | Fields                                                                        |
-| ------------ | ----------------------------------------------------------------------------- |
-| Identity     | `name`, `version`, `description`, `keywords`, `author`, `license`             |
-| Entry points | `main`, `module`, `types`, `exports`, `bin`                                   |
-| Publishing   | `files`, `type`, `engines`, `publishConfig`, `repository`, `bugs`, `homepage` |
-| Dependencies | `dependencies`, `peerDependencies`, `optionalDependencies`                    |
+## Usage
 
-### Whitelisted scripts
+### Library API (kubb.config.ts)
 
-Only npm lifecycle hooks survive: `preinstall`, `install`, `postinstall`.
+```typescript
+import { defineConfig } from "@ovineko/kubb";
+
+export default defineConfig({
+  config: {
+    root: ".",
+    input: {
+      path: "./petstore.yaml",
+    },
+    output: {
+      path: "./src/gen",
+    },
+  },
+  plugins: {
+    // Optional plugins (disabled by default)
+    client: { enabled: true },
+    zod: { enabled: true },
+    msw: { enabled: true },
+    faker: { enabled: true },
+  },
+});
+```
+
+### CLI
+
+The CLI is a simple passthrough to `@kubb/cli`:
+
+```bash
+# Generate code
+kubb generate
+
+# Show help
+kubb --help
+
+# Show version
+kubb --version
+```
+
+## What's Included
+
+- **Pre-configured plugins**: OAS, TypeScript, and SWR enabled by default
+- **Consistent defaults**: Standardized output banners, ESLint rule disabling, and file organization
+- **Optional plugins**: Client, Zod, MSW, and Faker (opt-in via config)
+- **Customization**: Override defaults via `patch` option in config
+
+## Documentation
+
+Full documentation: [ovineko.com/docs/packages/kubb](https://ovineko.com/docs/packages/kubb)
 
 ## License
 

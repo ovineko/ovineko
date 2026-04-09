@@ -1,7 +1,7 @@
 {
   "name": "@ovineko/kubb",
   "version": "0.0.0",
-  "description": "",
+  "description": "Opinionated Kubb wrapper with TypeScript code generation defaults",
   "keywords": [],
   "homepage": "https://github.com/ovineko/ovineko/tree/main/packages/kubb",
   "bugs": {
@@ -26,8 +26,6 @@
   "scripts": {
     "build:lib": "tsup",
     "dev": "pnpm build:lib && kubb generate",
-    "prepack": "./bin/cli.js clean",
-    "postpack": "./bin/cli.js restore",
     "prepublishOnly": "pnpm build:lib",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -35,15 +33,15 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@kubb/cli": "4.23.0",
-    "@kubb/core": "4.23.0",
-    "@kubb/plugin-client": "4.23.0",
-    "@kubb/plugin-faker": "4.23.0",
-    "@kubb/plugin-msw": "4.23.0",
-    "@kubb/plugin-oas": "4.23.0",
-    "@kubb/plugin-swr": "4.23.0",
-    "@kubb/plugin-ts": "4.23.0",
-    "@kubb/plugin-zod": "4.23.0",
+    "@kubb/cli": "4.37.2",
+    "@kubb/core": "4.37.2",
+    "@kubb/plugin-client": "4.37.2",
+    "@kubb/plugin-faker": "4.37.2",
+    "@kubb/plugin-msw": "4.37.2",
+    "@kubb/plugin-oas": "4.37.2",
+    "@kubb/plugin-swr": "4.37.2",
+    "@kubb/plugin-ts": "4.37.2",
+    "@kubb/plugin-zod": "4.37.2",
     "change-case": "5.4.4"
   },
   "devDependencies": {
@@ -51,8 +49,8 @@
     "@ovineko/datamitsu-config": "workspace:*",
     "@shibanet0/datamitsu-config": "0.0.3-alpha-26",
     "@types/node": "24.10.12",
-    "msw": "2.12.10",
-    "swr": "2.4.0",
+    "msw": "2.13.2",
+    "swr": "2.4.1",
     "tsup": "8.5.1",
     "vitest": "4.0.18"
   },
