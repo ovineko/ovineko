@@ -130,30 +130,30 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 4: Implement core HTTP client
 
-- [ ] create `packages/kubb-client/src/core/client.ts`
-- [ ] implement `parseResponse<TData>()` helper (arraybuffer, blob, text, json)
-- [ ] implement `createClient()` factory function
-- [ ] add baseUrl merging logic (use URL constructor)
-- [ ] add headers merging logic (default + request headers)
-- [ ] integrate middleware orchestrator into request flow
-- [ ] implement Phase 1: prepare config (merge baseUrl, headers)
-- [ ] implement Phase 2: execute onRequest middleware
-- [ ] implement Phase 3: execute fetch with proper RequestInit
-- [ ] implement Phase 4: parse response based on responseType
-- [ ] implement Phase 5: execute onResponse middleware
-- [ ] implement Phase 6: execute onError middleware on exceptions
-- [ ] attach `_setup` API to client (use, remove, getConfig, setConfig)
-- [ ] handle early response from middleware (skip fetch)
-- [ ] handle error recovery from middleware (Response return)
-- [ ] write tests for successful GET request flow
-- [ ] write tests for POST request with JSON body
-- [ ] write tests for POST request with FormData
-- [ ] write tests for baseUrl + relative URL merging
-- [ ] write tests for header merging (default + request)
-- [ ] write tests for early middleware response bypass
-- [ ] write tests for fetch errors caught by onError
-- [ ] write tests for different responseType parsing
-- [ ] run tests - must pass before task 5
+- [x] create `packages/kubb-client/src/core/client.ts`
+- [x] implement `parseResponse<TData>()` helper (arraybuffer, blob, text, json)
+- [x] implement `createClient()` factory function
+- [x] add baseUrl merging logic (use URL constructor)
+- [x] add headers merging logic (default + request headers)
+- [x] integrate middleware orchestrator into request flow
+- [x] implement Phase 1: prepare config (merge baseUrl, headers)
+- [x] implement Phase 2: execute onRequest middleware
+- [x] implement Phase 3: execute fetch with proper RequestInit
+- [x] implement Phase 4: parse response based on responseType
+- [x] implement Phase 5: execute onResponse middleware
+- [x] implement Phase 6: execute onError middleware on exceptions
+- [x] attach `_setup` API to client (use, remove, getConfig, setConfig)
+- [x] handle early response from middleware (skip fetch)
+- [x] handle error recovery from middleware (Response return)
+- [x] write tests for successful GET request flow
+- [x] write tests for POST request with JSON body
+- [x] write tests for POST request with FormData
+- [x] write tests for baseUrl + relative URL merging
+- [x] write tests for header merging (default + request)
+- [x] write tests for early middleware response bypass
+- [x] write tests for fetch errors caught by onError
+- [x] write tests for different responseType parsing
+- [x] run tests - must pass before task 5
 
 ### Task 5: Implement global singleton management
 
