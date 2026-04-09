@@ -114,19 +114,19 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 3: Implement middleware system
 
-- [ ] create `packages/kubb-client/src/core/middleware.ts`
-- [ ] define `MiddlewareContext<TData, TVariables>` interface
-- [ ] define `Middleware` interface (name, onRequest, onResponse, onError hooks)
-- [ ] implement `MiddlewareOrchestrator` class with `use()` method
-- [ ] implement `MiddlewareOrchestrator.remove()` method
-- [ ] implement `MiddlewareOrchestrator.executeOnRequest()` with first→last order
-- [ ] implement `MiddlewareOrchestrator.executeOnResponse()` with last→first order
-- [ ] implement `MiddlewareOrchestrator.executeOnError()` with recovery support
-- [ ] write tests for middleware execution order (onRequest forward, onResponse reverse)
-- [ ] write tests for early response bypass in onRequest
-- [ ] write tests for error recovery in onError (Response return)
-- [ ] write tests for middleware add/remove functionality
-- [ ] run tests - must pass before task 4
+- [x] create `packages/kubb-client/src/core/middleware.ts`
+- [x] define `MiddlewareContext<TData, TVariables>` interface
+- [x] define `Middleware` interface (name, onRequest, onResponse, onError hooks)
+- [x] implement `MiddlewareOrchestrator` class with `use()` method
+- [x] implement `MiddlewareOrchestrator.remove()` method
+- [x] implement `MiddlewareOrchestrator.executeOnRequest()` with first→last order
+- [x] implement `MiddlewareOrchestrator.executeOnResponse()` with last→first order
+- [x] implement `MiddlewareOrchestrator.executeOnError()` with recovery support
+- [x] write tests for middleware execution order (onRequest forward, onResponse reverse)
+- [x] write tests for early response bypass in onRequest
+- [x] write tests for error recovery in onError (Response return)
+- [x] write tests for middleware add/remove functionality
+- [x] run tests - must pass before task 4
 
 ### Task 4: Implement core HTTP client
 
