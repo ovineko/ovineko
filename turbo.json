@@ -12,6 +12,10 @@
         "!.next/cache/**"
       ]
     },
+    "website#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["build/**"]
+    },
     "build:lib": {
       "dependsOn": ["^build:lib"],
       "outputs": [
@@ -23,7 +27,7 @@
       ]
     },
     "test": {
-      "dependsOn": ["^build:lib"],
+      "dependsOn": ["^build:lib", "^build"],
       "outputs": ["coverage/**"],
       "cache": false
     }

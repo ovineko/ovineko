@@ -43,6 +43,7 @@
 .env.test.local
 .env.production.local
 **/.env
+**/.env*.bak
 **/.env.local
 **/.env.*.local
 
@@ -93,10 +94,13 @@
 **/.pulumi/**/*.json.tmp
 **/.pulumi/**/*.yaml.tmp
 !**/.pulumi/**/*.enc.json
+!**/.pulumi/**/*.json.enc
 **/.pulumi/**/*.yaml
 !**/.pulumi/**/*.enc.yaml
+!**/.pulumi/**/*.yaml.enc
 **/.pulumi/**/*.yml
 !**/.pulumi/**/*.enc.yml
+!**/.pulumi/**/*.yml.enc
 
 # Security & Secrets
 **/*.key

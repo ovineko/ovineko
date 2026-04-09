@@ -1,20 +1,26 @@
 # AGENTS.md
 
+Read and follow the shared rules in [.datamitsu/agents-docs-website.md](.datamitsu/agents-docs-website.md) before proceeding.
+
 This file provides guidance to AI agents (Claude, Cursor, Copilot, etc.) when working with code in this repository.
 
 ## Philosophy
 
-**This is an opinionated monorepo.** The packages here reflect personal preferences and workflows that have proven effective across multiple projects (both personal and professional).
+**ovineko is a collection of tools born from friction.**
 
-The goal is NOT to create universally appealing tools that please everyone. Instead, this monorepo exists to:
+Every package here exists because once upon a time, weeks were spent solving something you never wanted to rebuild. Setting up a server properly. Working through edge cases. Developing an approach that works.
+
+When the solution is found — it stays here. Not in notes, not in an old project, not in your head. Here.
+
+**This is an opinionated monorepo** reflecting personal preferences and workflows. The goal is NOT to create universally appealing tools that please everyone. Instead, this monorepo exists to:
 
 - **Consolidate proven solutions**: Stop manually copying and syncing code between projects
 - **Maintain consistency**: Use the same patterns and utilities across all work
 - **Iterate faster**: Update once, benefit everywhere
 
-If these opinions align with your needs — great! If not, these packages might not be the right fit, and that's perfectly fine.
+The monorepo isn't an architectural decision. It's a psychological trick. When all libraries live together, they're constantly in view. Whether you want to or not — you maintain them.
 
-This follows the same philosophy as `@shibanet0/datamitsu-config` (opinionated configs) built on top of `@datamitsu/datamitsu` (universal core).
+If these opinions align with your needs — great! If not, these packages might not be the right fit, and that's perfectly fine.
 
 **Note on contributions**: Since this reflects personal workflows, pull requests may be declined if they don't align with the project's direction. Forks are encouraged for different approaches.
 
@@ -51,6 +57,7 @@ ovineko/
 │   ├── clean-pkg-json/         # Package.json cleanup tool for publishing
 │   ├── datamitsu-config/       # Shared config for datamitsu tooling
 │   └── fastify-base/           # Pre-configured Fastify server with observability
+├── website/                     # Documentation site (Docusaurus)
 ├── turbo.json                  # Turborepo build orchestration config
 ├── pnpm-workspace.yaml         # pnpm workspace configuration
 ├── datamitsu.ts                # Centralized linting/formatting config
@@ -295,16 +302,9 @@ const route = createRouteWithParams("/users/:id", {
 
 ### Testing Safety Rules
 
-> **CRITICAL:** Tests must NEVER modify workspace root or shared state
-
-- All tests MUST be isolated to their package scope
-- Never run tests that modify workspace root `node_modules`
 - Each package must be tested independently: `cd packages/<name> && pnpm test`
 - Test coverage threshold: 80% (lines/branches/functions/statements)
 - Use `vitest.workspace.ts` for multi-package test orchestration if needed
-- Clean test artifacts in `afterEach`/`afterAll` hooks
-- Mock external dependencies to prevent network calls or file system mutations
-- Never commit `.only` or `skip` in test files
 
 ### Build Configuration
 
@@ -313,35 +313,7 @@ const route = createRouteWithParams("/users/:id", {
 - **Output**: ESM format only (`"type": "module"`)
 - **TypeScript**: Separate declaration generation after bundling
 
-### Linting & Code Quality
-
-The project uses **datamitsu** as a unified linting orchestrator that runs:
-
-- **oxlint**: Fast Rust-based linter (primary linter)
-- **ESLint**: Additional rules with oxlint plugin integration
-- **Prettier**: Code formatting
-- **knip**: Unused exports/dependencies detection
-- **commitlint**: Conventional commit message validation
-- **editorconfig-checker**: EditorConfig compliance
-- **gitleaks**: Secret scanning
-- **syncpack**: Dependency version synchronization
-
-Configuration is centralized in `datamitsu.ts` with package-specific overrides.
-
-### Git Workflow
-
-Follow GitHub Flow with feature branches from main.
-
-**Commit message format** (Conventional Commits):
-
-- `feat:` new feature
-- `fix:` bug fix
-- `docs:` documentation
-- `refactor:` code refactoring
-- `test:` adding tests
-- `chore:` maintenance
-
-**Automated checks** (lefthook git hooks):
+### Git Hooks (lefthook)
 
 - **pre-commit**: Runs `datamitsu fix` and `datamitsu lint` on staged files only
 - **commit-msg**: Validates commit messages with commitlint
@@ -352,16 +324,6 @@ Follow GitHub Flow with feature branches from main.
 - **Node.js**: >= 24.11.0
 - **pnpm**: >= 10.25.0 (enforced by preinstall script)
 - **Package Manager**: Only pnpm is allowed (enforced via only-allow)
-- **Language policy**: Use English only for code comments, identifiers (function/variable/type names), and developer-facing docs. Non-English text is allowed only in explicit localization assets (for example `i18n/translations.ts`) and tests that validate localized output.
-
-## Package Dependencies
-
-When adding dependencies:
-
-- Use workspace references (`workspace:*`) for internal packages
-- peer dependencies define required external packages (e.g., React 19, React Router 7)
-- Use `pnpm add -D` for devDependencies, `pnpm add` for runtime dependencies
-- Run `pnpm datamitsu fix` after adding dependencies to sync versions across packages
 
 ## Working with Individual Packages
 
@@ -441,28 +403,107 @@ Key architecture notes:
 - Automatically runs via npm lifecycle hooks
 - No manual invocation needed
 
-## Documentation Maintenance
+## Documentation Policy
 
-**CRITICAL**: Keep documentation in sync with code changes.
+**All user-facing documentation lives in the Docusaurus website (`website/docs/`). README.md files must remain minimal.**
 
-Whenever you make changes to the codebase, **immediately update**:
+### Documentation Requirements
 
-1. **AGENTS.md** (this file)
-   - Add to "Known Pitfalls" if you encountered issues
-   - Update commands if scripts change
-   - Add examples for new patterns introduced
-   - Update architecture notes for significant refactoring
+When implementing features or making changes, documentation MUST be updated in the same PR/commit:
 
-2. **README.md** (package-level)
-   - Update usage examples when APIs change
-   - Add new features to feature list
-   - Update installation instructions if peer deps change
-   - Refresh code examples to match current implementation
+- **User-facing features** → update `website/docs/` with examples and guides
+- **API changes** → update corresponding page in `website/docs/packages/` or `website/docs/spa-guard/`
+- **Configuration options** → update `website/docs/` reference pages
+- **New examples** → add to appropriate `website/docs/` section
+- **Breaking changes** → document migration path in docs
 
-3. **package.json** metadata
-   - `description`: Keep concise but accurate (< 120 chars)
-   - `keywords`: Add relevant searchable terms (npm/GitHub discovery)
-   - Update both when package functionality expands
+### Link Maintenance
+
+- **Internal links**: Use relative paths in documentation (e.g., `./spa-guard/core.md`)
+- **External links**: Verify links are not broken before committing
+- **Cross-package links**: Use Docusaurus links to other documentation pages
+- Run link checker in CI to catch broken links early
+
+### Installation Examples Standard
+
+All installation examples must show multiple package managers in a consistent format.
+
+**Package manager order**: pnpm, npm, yarn, bun, deno (always in this order)
+
+**Docusaurus docs** (`website/docs/*.md`): Use Docusaurus `Tabs` and `TabItem` components (MDX)
+
+- Import `Tabs` from `@theme/Tabs` and `TabItem` from `@theme/TabItem` at the top of the file
+- Set `default` prop on the pnpm `TabItem`
+- See `docs/templates/installation-tabs-example.md` for canonical format
+
+**README files**: Use bold markdown headers with separate code blocks
+
+- Mark pnpm as `(recommended)`
+- See `docs/templates/installation-readme-example.md` for canonical format
+
+**Package manager commands**:
+| Manager | Install | Dev Install |
+|---------|---------|-------------|
+| pnpm | `pnpm add <pkg>` | `pnpm add -D <pkg>` |
+| npm | `npm install <pkg>` | `npm install --save-dev <pkg>` |
+| yarn | `yarn add <pkg>` | `yarn add -D <pkg>` |
+| bun | `bun add <pkg>` | `bun add -d <pkg>` |
+| deno | `deno add npm:<pkg>` | `deno add npm:<pkg>` |
+
+**Peer dependencies**: Include in the same install command (e.g., `pnpm add @ovineko/spa-guard-react react`)
+
+### Website URL Migration
+
+The website has migrated from GitHub Pages to a custom domain:
+
+- **Old URL**: `https://ovineko.github.io/ovineko/` (with `/ovineko/` baseUrl)
+- **New URL**: `https://ovineko.com/` (with `/` baseUrl)
+
+When updating documentation links:
+
+- Use `https://ovineko.com/docs/...` for all documentation references
+- Local dev server runs at `http://localhost:3000/` (no prefix)
+- Footer includes links to GitHub, npm, and npmx registries
+
+### llms.txt Maintenance
+
+The website serves `/llms.txt` following the [llmstxt.org](https://llmstxt.org) specification for LLM-friendly documentation access.
+
+**File location**: `website/static/llms.txt`
+
+**Update triggers** - update llms.txt when:
+
+- Adding new packages to the monorepo
+- Adding major new documentation sections
+- Changing documentation structure significantly
+- Adding important resources or guides
+
+**Format requirements**:
+
+- Follow llmstxt.org specification strictly
+- Use markdown format with H1 heading (project name)
+- Include blockquote summary at top
+- Organize links in H2-delimited sections
+- Use "Optional" section for secondary resources
+- Keep descriptions brief and informative
+
+### README.md Scope
+
+**Root README.md** and **package-level README.md** must be kept **minimal** and focused on:
+
+1. **What is this package** - One paragraph description
+2. **Quick install** - Single command
+3. **Basic usage** - Minimal example (3-5 lines of code)
+4. **Link to full documentation** - Point to Docusaurus website
+
+**Do NOT add to README.md:**
+
+- Detailed usage guides (belongs in `website/docs/`)
+- Configuration examples (belongs in `website/docs/`)
+- Architecture explanations (belongs in `website/docs/`)
+- API reference (belongs in `website/docs/`)
+
+**Rationale:** Centralized documentation in Docusaurus provides better organization, search, navigation, and versioning. README is the landing page, not the manual.
 
 ### Documentation Update Triggers
 
@@ -474,18 +515,6 @@ Update docs when you:
 - ✅ Add new dependencies or peer dependencies
 - ✅ Change build/test/lint workflows
 - ✅ Introduce new architectural patterns
-
-### Quick Documentation Check
-
-Before finalizing any change:
-
-```bash
-# 1. Does AGENTS.md mention this pattern/pitfall?
-# 2. Does package README show current usage?
-# 3. Do package.json keywords reflect new functionality?
-```
-
-**Golden Rule**: If you had to figure something out, document it so others (and future AI agents) don't have to.
 
 ## Known Pitfalls
 
@@ -522,14 +551,6 @@ Do not call `markRetryHealthyBoot()` during early app startup (for example immed
 In `src/common/serializeError.ts`, keep the `reason.response` (HttpError) branch before the generic `reason instanceof Error` branch inside `serializeRejectionReason()`. Many client libraries throw `Error` subclasses (for example `ResponseError`) that also carry `response`. If the Error branch runs first, `status`/`statusText`/`url`/`method` are lost from serialized beacons.
 
 <!-- Add corrections here as you encounter issues -->
-
-## Verification
-
-Before completing any task:
-
-1. Run the test suite if tests exist
-2. Run linter to check for issues
-3. Verify changes work as expected
 
 ---
 

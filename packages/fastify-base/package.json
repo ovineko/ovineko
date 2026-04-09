@@ -40,6 +40,6 @@
   "scripts": {},
   "devDependencies": {
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-19"
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-26"
   }
 }

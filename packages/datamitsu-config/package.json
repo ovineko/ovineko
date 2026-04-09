@@ -40,7 +40,7 @@
   },
   "scripts": {},
   "devDependencies": {
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-19",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-26",
     "react": "19"
   }
 }

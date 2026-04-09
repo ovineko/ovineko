@@ -16,7 +16,7 @@ const defaultOptions: Options = {
     ignore: [],
   },
   handleUnhandledRejections: {
-    retry: true,
+    retry: false,
     sendBeacon: true,
   },
   html: {
@@ -120,12 +120,12 @@ export interface Options {
   /**
    * Controls behavior for regular unhandled promise rejections
    * (those that are not chunk errors or ForceRetry errors).
-   * @default { retry: true, sendBeacon: true }
+   * @default { retry: false, sendBeacon: true }
    */
   handleUnhandledRejections?: {
     /**
      * Whether to attempt a page reload on unhandled rejections.
-     * @default true
+     * @default false
      */
     retry?: boolean;
     /**
