@@ -183,19 +183,19 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 7: Implement Auth middleware
 
-- [ ] create `packages/kubb-client/src/middleware/auth.ts`
-- [ ] define `AuthMiddlewareOptions` interface (getToken, prefix, skipPaths)
-- [ ] implement `createAuthMiddleware()` factory
-- [ ] implement path skipping logic (check skipPaths array)
-- [ ] implement token retrieval (support sync and async getToken)
-- [ ] implement Authorization header injection (Bearer prefix by default)
-- [ ] skip injection if no token available
-- [ ] write tests for Bearer token injection
-- [ ] write tests for custom prefix (e.g., "Token")
-- [ ] write tests for path skipping (/auth/login excluded)
-- [ ] write tests for null token (no injection)
-- [ ] write tests for async getToken
-- [ ] run tests - must pass before task 8
+- [x] create `packages/kubb-client/src/middleware/auth.ts`
+- [x] define `AuthMiddlewareOptions` interface (getToken, prefix, skipPaths)
+- [x] implement `createAuthMiddleware()` factory
+- [x] implement path skipping logic (check skipPaths array)
+- [x] implement token retrieval (support sync and async getToken)
+- [x] implement Authorization header injection (Bearer prefix by default)
+- [x] skip injection if no token available
+- [x] write tests for Bearer token injection
+- [x] write tests for custom prefix (e.g., "Token")
+- [x] write tests for path skipping (/auth/login excluded)
+- [x] write tests for null token (no injection)
+- [x] write tests for async getToken
+- [x] run tests - must pass before task 8
 
 ### Task 8: Implement Sentry middleware
 
