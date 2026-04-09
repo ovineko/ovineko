@@ -169,17 +169,17 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 6: Implement Request ID middleware
 
-- [ ] create `packages/kubb-client/src/middleware/requestId.ts`
-- [ ] implement `generateRequestId()` with crypto.randomUUID
-- [ ] add fallback for environments without crypto.randomUUID
-- [ ] implement `createRequestIdMiddleware()` factory
-- [ ] add X-Request-Id header injection in onRequest hook
-- [ ] skip injection if header already present
-- [ ] write tests for UUID generation (verify format)
-- [ ] write tests for fallback request ID generation
-- [ ] write tests for header injection (not present)
-- [ ] write tests for header skip (already present)
-- [ ] run tests - must pass before task 7
+- [x] create `packages/kubb-client/src/middleware/requestId.ts`
+- [x] implement `generateRequestId()` with crypto.randomUUID
+- [x] add fallback for environments without crypto.randomUUID
+- [x] implement `createRequestIdMiddleware()` factory
+- [x] add X-Request-Id header injection in onRequest hook
+- [x] skip injection if header already present
+- [x] write tests for UUID generation (verify format)
+- [x] write tests for fallback request ID generation
+- [x] write tests for header injection (not present)
+- [x] write tests for header skip (already present)
+- [x] run tests - must pass before task 7
 
 ### Task 7: Implement Auth middleware
 
