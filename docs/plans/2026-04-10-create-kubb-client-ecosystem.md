@@ -157,15 +157,15 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 5: Implement global singleton management
 
-- [ ] create `packages/kubb-client/src/core/singleton.ts`
-- [ ] implement `getGlobalClient()` with lazy initialization
-- [ ] implement `setGlobalClient()` for custom global client
-- [ ] implement `resetGlobalClient()` for testing
-- [ ] write tests for lazy initialization (first call creates client)
-- [ ] write tests for subsequent calls returning same instance
-- [ ] write tests for setGlobalClient override
-- [ ] write tests for resetGlobalClient cleanup
-- [ ] run tests - must pass before task 6
+- [x] create `packages/kubb-client/src/core/singleton.ts`
+- [x] implement `getGlobalClient()` with lazy initialization
+- [x] implement `setGlobalClient()` for custom global client
+- [x] implement `resetGlobalClient()` for testing
+- [x] write tests for lazy initialization (first call creates client)
+- [x] write tests for subsequent calls returning same instance
+- [x] write tests for setGlobalClient override
+- [x] write tests for resetGlobalClient cleanup
+- [x] run tests - must pass before task 6
 
 ### Task 6: Implement Request ID middleware
 
