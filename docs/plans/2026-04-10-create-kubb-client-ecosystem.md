@@ -101,16 +101,16 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 2: Implement core type definitions
 
-- [ ] create `packages/kubb-client/src/core/types.ts`
-- [ ] define `RequestConfig<TData>` interface (matches Kubb expectations)
-- [ ] define `ResponseConfig<TData>` interface
-- [ ] define `ResponseErrorConfig<TError>` type
-- [ ] define `Client` type signature (CRITICAL: must match Kubb's Client type exactly)
-- [ ] define `ClientConfiguration` interface (baseUrl, headers, middleware, timeout)
-- [ ] define `ClientSetup` interface (use, remove, getConfig, setConfig methods)
-- [ ] define `ClientWithSetup` interface extending Client with \_setup
-- [ ] write tests verifying type compatibility with Kubb interfaces
-- [ ] run tests - must pass before task 3
+- [x] create `packages/kubb-client/src/core/types.ts`
+- [x] define `RequestConfig<TData>` interface (matches Kubb expectations)
+- [x] define `ResponseConfig<TData>` interface
+- [x] define `ResponseErrorConfig<TError>` type
+- [x] define `Client` type signature (CRITICAL: must match Kubb's Client type exactly)
+- [x] define `ClientConfiguration` interface (baseUrl, headers, middleware, timeout)
+- [x] define `ClientSetup` interface (use, remove, getConfig, setConfig methods)
+- [x] define `ClientWithSetup` interface extending Client with \_setup
+- [x] write tests verifying type compatibility with Kubb interfaces
+- [x] run tests - must pass before task 3
 
 ### Task 3: Implement middleware system
 
