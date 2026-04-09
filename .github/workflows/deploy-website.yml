@@ -50,5 +50,4 @@ on:
   push:
     branches:
       - main
-      - feat/setup-docusaurus # TODO: remove after merging to main
   workflow_dispatch: {}
