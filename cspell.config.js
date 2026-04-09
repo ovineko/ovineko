@@ -39,5 +39,6 @@ export default {
     "petstore",
     "fehguy",
     "Palo",
+    "ufetch",
   ],
 };
