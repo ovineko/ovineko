@@ -119,7 +119,7 @@ function getConfig(config: config.Config) {
           hash:
             filepath === "packages/datamitsu-config/eslint.config.js"
               ? "ed1fb85f639a7c87a9fccbd5d77ddf209f84288561f51baf5c561d46ee8d4c5e"
-              : "92b0dcd4a5b3d12e3fb8a1ad2b74d03bff029b447bb06a92994ccd4331518745",
+              : "32a0e4e359a4b6e5bb8b177e1149c2c9f4759ed1337e6034fd2e10eb2da2665c",
         });
 
         if (relativePath === "packages/datamitsu-config") {

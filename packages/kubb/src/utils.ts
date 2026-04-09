@@ -4,7 +4,7 @@ import type { PluginOptions } from "./types";
 
 export const createPluginOptions = <T = unknown>(
   options: T,
-  optionsPlugin: PluginOptions<T> | undefined,
+  optionsPlugin?: PluginOptions<T>,
 ): T => {
   if (optionsPlugin?.createOptions) {
     return optionsPlugin.createOptions(options);
