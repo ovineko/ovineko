@@ -12,6 +12,7 @@ const config: Config = {
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
+    faster: true, // Enable Rspack/SWC/LightningCSS build system
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
   },
 
