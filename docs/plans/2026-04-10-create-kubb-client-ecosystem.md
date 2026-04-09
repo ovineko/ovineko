@@ -199,20 +199,20 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 8: Implement Sentry middleware
 
-- [ ] create `packages/kubb-client/src/middleware/sentry.ts`
-- [ ] define `SentryMiddlewareOptions` interface (Sentry, excludeUrls, maxBodySize, tags)
-- [ ] implement `createSentryMiddleware()` factory
-- [ ] add Sentry SDK availability check (console.warn if not found)
-- [ ] implement onRequest hook (add breadcrumb for request)
-- [ ] implement onResponse hook (add breadcrumb for response, level based on ok status)
-- [ ] implement onError hook (captureException with context)
-- [ ] add URL exclusion logic (check excludeUrls patterns)
-- [ ] write tests for no-op when Sentry not available
-- [ ] write tests for request breadcrumb creation
-- [ ] write tests for response breadcrumb (info for 2xx, warning for 4xx/5xx)
-- [ ] write tests for error capture with tags and context
-- [ ] write tests for URL exclusion (matched patterns)
-- [ ] run tests - must pass before task 9
+- [x] create `packages/kubb-client/src/middleware/sentry.ts`
+- [x] define `SentryMiddlewareOptions` interface (Sentry, excludeUrls, maxBodySize, tags)
+- [x] implement `createSentryMiddleware()` factory
+- [x] add Sentry SDK availability check (console.warn if not found)
+- [x] implement onRequest hook (add breadcrumb for request)
+- [x] implement onResponse hook (add breadcrumb for response, level based on ok status)
+- [x] implement onError hook (captureException with context)
+- [x] add URL exclusion logic (check excludeUrls patterns)
+- [x] write tests for no-op when Sentry not available
+- [x] write tests for request breadcrumb creation
+- [x] write tests for response breadcrumb (info for 2xx, warning for 4xx/5xx)
+- [x] write tests for error capture with tags and context
+- [x] write tests for URL exclusion (matched patterns)
+- [x] run tests - must pass before task 9
 
 ### Task 9: Create middleware index and main entry point
 
