@@ -30,7 +30,22 @@ export type {
 
 // Default export: global client instance for Kubb compatibility
 // Generated code does: import client from "@ovineko/kubb-client"
+// Uses a Proxy so that setGlobalClient() and resetGlobalClient() are reflected
+// in already-imported references.
+import type { ClientWithSetup } from "./core/types.js";
+
 import { getGlobalClient } from "./core/singleton.js";
 
-const client = getGlobalClient();
+const client: ClientWithSetup = new Proxy((() => {}) as unknown as ClientWithSetup, {
+  apply(_target, _thisArg, args) {
+    return Reflect.apply(
+      getGlobalClient() as unknown as (...a: unknown[]) => unknown,
+      undefined,
+      args,
+    );
+  },
+  get(_target, prop, receiver) {
+    return Reflect.get(getGlobalClient(), prop, receiver);
+  },
+});
 export default client;

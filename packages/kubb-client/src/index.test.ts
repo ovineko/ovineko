@@ -44,12 +44,27 @@ describe("default export", () => {
   });
 
   it("is a ClientWithSetup (has _setup with all methods)", () => {
-    // The default export is a global client created at module load.
-    // Verify it conforms to the ClientWithSetup interface.
     expect(typeof client._setup.getConfig).toBe("function");
     expect(typeof client._setup.setConfig).toBe("function");
     expect(typeof client._setup.use).toBe("function");
     expect(typeof client._setup.remove).toBe("function");
+  });
+
+  it("reflects setGlobalClient changes via proxy", () => {
+    const custom = createClient({ baseUrl: "https://custom.example.com" });
+    setGlobalClient(custom);
+
+    // The default export should now delegate to the custom client
+    expect(client._setup.getConfig().baseUrl).toBe("https://custom.example.com");
+  });
+
+  it("reflects resetGlobalClient changes via proxy", () => {
+    client._setup.setConfig({ baseUrl: "https://first.example.com" });
+    expect(client._setup.getConfig().baseUrl).toBe("https://first.example.com");
+
+    // After reset, the default export should delegate to a fresh client
+    resetGlobalClient();
+    expect(client._setup.getConfig().baseUrl).toBeUndefined();
   });
 });
 
