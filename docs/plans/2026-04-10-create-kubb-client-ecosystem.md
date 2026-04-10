@@ -231,14 +231,14 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 10: Implement React integration
 
-- [ ] create `packages/kubb-client/src/react.ts`
-- [ ] create `ApiClientContext` with React.createContext
-- [ ] implement `useApiClient()` hook (context or global fallback)
-- [ ] implement `ApiClientProvider` component
-- [ ] write tests for useApiClient (returns context client)
-- [ ] write tests for useApiClient (returns global client when no context)
-- [ ] write tests for ApiClientProvider (provides client to children)
-- [ ] run tests - must pass before task 11
+- [x] create `packages/kubb-client/src/react.ts`
+- [x] create `ApiClientContext` with React.createContext
+- [x] implement `useApiClient()` hook (context or global fallback)
+- [x] implement `ApiClientProvider` component
+- [x] write tests for useApiClient (returns context client)
+- [x] write tests for useApiClient (returns global client when no context)
+- [x] write tests for ApiClientProvider (provides client to children)
+- [x] run tests - must pass before task 11
 
 ### Task 11: Create README documentation
 
