@@ -242,15 +242,15 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 11: Create README documentation
 
-- [ ] create `packages/kubb-client/README.md`
-- [ ] add package description and key features
-- [ ] add installation section (all 5 package managers: pnpm, npm, yarn, bun, deno)
-- [ ] add basic setup example (configure baseUrl, middleware)
-- [ ] add usage example with Kubb generated code
-- [ ] add per-request override example (custom client)
-- [ ] add React integration example (ApiClientProvider, useApiClient)
-- [ ] add link to full documentation (ovineko.com)
-- [ ] add MIT license notice
+- [x] create `packages/kubb-client/README.md`
+- [x] add package description and key features
+- [x] add installation section (all 5 package managers: pnpm, npm, yarn, bun, deno)
+- [x] add basic setup example (configure baseUrl, middleware)
+- [x] add usage example with Kubb generated code
+- [x] add per-request override example (custom client)
+- [x] add React integration example (ApiClientProvider, useApiClient)
+- [x] add link to full documentation (ovineko.com)
+- [x] add MIT license notice
 
 ### Task 12: Update @ovineko/kubb wrapper for client integration
 
