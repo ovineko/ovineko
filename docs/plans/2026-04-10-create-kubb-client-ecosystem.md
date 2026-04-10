@@ -254,15 +254,15 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 12: Update @ovineko/kubb wrapper for client integration
 
-- [ ] update `packages/kubb/src/types.ts`
-- [ ] add `useOvinekoClient?: boolean` to client plugin options in ConfigOptions
-- [ ] update `packages/kubb/src/index.ts`
-- [ ] compute `clientImportPath` based on `useOvinekoClient` flag
-- [ ] pass `importPath: clientImportPath` to pluginClient configuration
-- [ ] pass `importPath: clientImportPath` to pluginSwr client configuration
-- [ ] write tests for defineConfig with useOvinekoClient=true (verify importPath set)
-- [ ] write tests for defineConfig with useOvinekoClient=false (verify no importPath)
-- [ ] run tests - must pass before task 13
+- [x] update `packages/kubb/src/types.ts`
+- [x] add `useOvinekoClient?: boolean` to client plugin options in ConfigOptions
+- [x] update `packages/kubb/src/index.ts`
+- [x] compute `clientImportPath` based on `useOvinekoClient` flag
+- [x] pass `importPath: clientImportPath` to pluginClient configuration
+- [x] pass `importPath: clientImportPath` to pluginSwr client configuration
+- [x] write tests for defineConfig with useOvinekoClient=true (verify importPath set)
+- [x] write tests for defineConfig with useOvinekoClient=false (verify no importPath)
+- [x] run tests - must pass before task 13
 
 ### Task 13: Build and verify packages
 

@@ -25,6 +25,7 @@ export interface ConfigOptions {
     ts?: PluginOptionsDisabled<PluginTsOptions>;
     zod?: PluginOptionsEnabled<PluginZodOptions>;
   };
+  useOvinekoClient?: boolean;
 }
 export type PluginClientOptions = Required<Parameters<typeof pluginClient>>[0];
 export type PluginFakerOptions = Required<Parameters<typeof pluginFaker>>[0];

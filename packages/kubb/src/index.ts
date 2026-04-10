@@ -40,6 +40,8 @@ export const defineConfig = (options: ConfigOptions): ReturnType<typeof defineCo
   const barrelType: BarrelType | false =
     options.barrelType === undefined ? false : options.barrelType;
 
+  const clientImportPath = options.useOvinekoClient ? "@ovineko/kubb-client" : undefined;
+
   return defineConfigLib({
     ...options.config,
     output: {
@@ -81,7 +83,9 @@ export const defineConfig = (options: ConfigOptions): ReturnType<typeof defineCo
         pluginClient(
           createPluginOptions(
             {
-              client: "fetch",
+              ...(clientImportPath
+                ? { importPath: clientImportPath }
+                : { client: "fetch" as const }),
               dataReturnType: "full",
               exclude: [
                 // {
@@ -118,7 +122,7 @@ export const defineConfig = (options: ConfigOptions): ReturnType<typeof defineCo
             {
               client: {
                 dataReturnType: "full",
-                importPath: "@kubb/plugin-client/clients/fetch",
+                importPath: clientImportPath ?? "@kubb/plugin-client/clients/fetch",
               },
               group: {
                 name: fixGroupName({ plugin: "swr", suffix: "Hooks" }),
