@@ -216,18 +216,18 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 9: Create middleware index and main entry point
 
-- [ ] create `packages/kubb-client/src/middleware/index.ts`
-- [ ] export all middleware factories (createRequestIdMiddleware, createAuthMiddleware, createSentryMiddleware)
-- [ ] export all middleware option types
-- [ ] create `packages/kubb-client/src/index.ts`
-- [ ] call `getGlobalClient()` and export as default (for Kubb)
-- [ ] export all singleton functions (createClient, getGlobalClient, setGlobalClient, resetGlobalClient)
-- [ ] re-export all core types (Client, RequestConfig, ResponseConfig, etc.)
-- [ ] re-export Middleware and MiddlewareContext types
-- [ ] re-export all middleware factories
-- [ ] write tests for default export (verify it's a Client instance)
-- [ ] write tests for named exports availability
-- [ ] run tests - must pass before task 10
+- [x] create `packages/kubb-client/src/middleware/index.ts`
+- [x] export all middleware factories (createRequestIdMiddleware, createAuthMiddleware, createSentryMiddleware)
+- [x] export all middleware option types
+- [x] create `packages/kubb-client/src/index.ts`
+- [x] call `getGlobalClient()` and export as default (for Kubb)
+- [x] export all singleton functions (createClient, getGlobalClient, setGlobalClient, resetGlobalClient)
+- [x] re-export all core types (Client, RequestConfig, ResponseConfig, etc.)
+- [x] re-export Middleware and MiddlewareContext types
+- [x] re-export all middleware factories
+- [x] write tests for default export (verify it's a Client instance)
+- [x] write tests for named exports availability
+- [x] run tests - must pass before task 10
 
 ### Task 10: Implement React integration
 
