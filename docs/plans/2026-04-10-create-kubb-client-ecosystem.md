@@ -292,11 +292,11 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 15: Update documentation
 
-- [ ] update root README.md if kubb-client is major addition
-- [ ] update CLAUDE.md with kubb-client package info
-- [ ] add kubb-client to "Project Overview" section
-- [ ] document middleware architecture and patterns
-- [ ] add known pitfalls for kubb-client if discovered during implementation
+- [x] update root README.md if kubb-client is major addition
+- [x] update CLAUDE.md with kubb-client package info
+- [x] add kubb-client to "Project Overview" section
+- [x] document middleware architecture and patterns
+- [x] add known pitfalls for kubb-client if discovered during implementation
 
 _Note: ralphex automatically moves completed plans to `docs/plans/completed/`_
 
