@@ -266,18 +266,18 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 13: Build and verify packages
 
-- [ ] run `pnpm build:lib` in packages/kubb-client
-- [ ] verify dist/index.js exists and is valid ESM
-- [ ] verify dist/index.d.ts exists with all type exports
-- [ ] verify dist/react.js exists and is valid ESM
-- [ ] verify dist/react.d.ts exists with React types
-- [ ] run `pnpm build:lib` in packages/kubb
-- [ ] verify updated kubb wrapper builds successfully
-- [ ] run full test suite for kubb-client (pnpm test)
-- [ ] run full test suite for kubb wrapper (pnpm test)
-- [ ] verify test coverage meets 80%+ threshold
-- [ ] run linter on both packages (pnpm lint)
-- [ ] fix any linting issues
+- [x] run `pnpm build:lib` in packages/kubb-client
+- [x] verify dist/index.js exists and is valid ESM
+- [x] verify dist/index.d.ts exists with all type exports
+- [x] verify dist/react.js exists and is valid ESM
+- [x] verify dist/react.d.ts exists with React types
+- [x] run `pnpm build:lib` in packages/kubb
+- [x] verify updated kubb wrapper builds successfully
+- [x] run full test suite for kubb-client (pnpm test)
+- [x] run full test suite for kubb wrapper (pnpm test)
+- [x] verify test coverage meets 80%+ threshold
+- [x] run linter on both packages (pnpm lint)
+- [x] fix any linting issues
 
 ### Task 14: Integration testing with Kubb code generation
 

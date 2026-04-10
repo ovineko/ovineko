@@ -2,6 +2,7 @@ import { config } from "./.datamitsu/cspell.config.js";
 
 export default {
   ...config,
+  ignorePaths: [...config.ignorePaths, "**/*.tsbuildinfo"],
   words: [
     ...config.words,
     "postpack",
