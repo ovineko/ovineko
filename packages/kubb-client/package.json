@@ -40,6 +40,7 @@
   ],
   "scripts": {
     "build:lib": "tsup",
+    "generate:test-fixtures": "node ../kubb/bin/cli.js generate --config test-integration/kubb.config.ts",
     "prepack": "clean-pkg-json clean",
     "postpack": "clean-pkg-json restore",
     "prepublishOnly": "pnpm build:lib",
@@ -52,6 +53,7 @@
   "devDependencies": {
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
+    "@ovineko/kubb": "workspace:*",
     "@shibanet0/datamitsu-config": "0.0.3-alpha-26",
     "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",

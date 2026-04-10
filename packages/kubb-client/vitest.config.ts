@@ -12,6 +12,8 @@ export default defineConfig({
     },
     environment: "happy-dom",
     globals: true,
+    globalSetup: "./test-integration/setup.ts",
+    include: ["src/**/*.test.{ts,tsx}", "test-integration/**/*.test.ts"],
     pool: "threads",
     setupFiles: "./test/setup.ts",
   },

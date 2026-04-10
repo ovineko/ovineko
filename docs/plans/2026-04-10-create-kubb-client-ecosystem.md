@@ -281,14 +281,14 @@ Generated code from @ovineko/kubb wrapper will import and use @ovineko/kubb-clie
 
 ### Task 14: Integration testing with Kubb code generation
 
-- [ ] create `packages/kubb-client/test-integration/` directory
-- [ ] add sample OpenAPI spec (petstore.yaml or minimal spec)
-- [ ] create kubb.config.ts using @ovineko/kubb wrapper with useOvinekoClient=true
-- [ ] run kubb generate to create test API client code
-- [ ] verify generated code imports from "@ovineko/kubb-client"
-- [ ] verify generated code can make requests (mock fetch in test)
-- [ ] write integration test that uses generated client + middleware
-- [ ] run integration tests - must pass
+- [x] create `packages/kubb-client/test-integration/` directory
+- [x] add sample OpenAPI spec (petstore.yaml or minimal spec)
+- [x] create kubb.config.ts using @ovineko/kubb wrapper with useOvinekoClient=true
+- [x] run kubb generate to create test API client code
+- [x] verify generated code imports from "@ovineko/kubb-client"
+- [x] verify generated code can make requests (mock fetch in test)
+- [x] write integration test that uses generated client + middleware
+- [x] run integration tests - must pass
 
 ### Task 15: Update documentation
 

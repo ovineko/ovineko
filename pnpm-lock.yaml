@@ -130,6 +130,9 @@ importers:
       "@ovineko/datamitsu-config":
         specifier: workspace:*
         version: link:../datamitsu-config
+      "@ovineko/kubb":
+        specifier: workspace:*
+        version: link:../kubb
       "@shibanet0/datamitsu-config":
         specifier: 0.0.3-alpha-26
         version: 0.0.3-alpha-26
