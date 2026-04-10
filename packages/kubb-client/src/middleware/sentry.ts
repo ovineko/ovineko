@@ -52,12 +52,9 @@ export function createSentryMiddleware(options: SentryMiddlewareOptions): Middle
     typeof Sentry.addBreadcrumb !== "function" ||
     typeof Sentry.captureException !== "function"
   ) {
-    console.warn(
-      "[@ovineko/kubb-client] Sentry SDK not available or invalid. Sentry middleware will be a no-op.",
+    throw new Error(
+      "[@ovineko/kubb-client] Sentry SDK is invalid: must implement addBreadcrumb and captureException methods.",
     );
-    return {
-      name: MIDDLEWARE_NAME,
-    };
   }
 
   return {

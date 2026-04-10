@@ -22,7 +22,9 @@
   },
   "license": "MIT",
   "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/index.js"
+  ],
   "type": "module",
   "exports": {
     ".": {

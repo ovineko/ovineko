@@ -7,7 +7,6 @@ import type {
   ClientSetup,
   ClientWithSetup,
   Middleware,
-  MiddlewareContext,
   RequestConfig,
   ResponseConfig,
   ResponseErrorConfig,
@@ -125,16 +124,8 @@ describe("type exports compile correctly", () => {
     const clientConfig: ClientConfiguration = { baseUrl: "http://localhost" };
     expect(clientConfig.baseUrl).toBe("http://localhost");
 
-    const context: MiddlewareContext = { config: { method: "GET" } };
-    expect(context.config.method).toBe("GET");
-
-    const errorConfig: ResponseErrorConfig<{ message: string }> = {
-      data: { message: "error" },
-      headers: new Headers(),
-      status: 500,
-      statusText: "Internal Server Error",
-    };
-    expect(errorConfig.status).toBe(500);
+    const errorConfig: ResponseErrorConfig<Error> = new Error("test error");
+    expect(errorConfig.message).toBe("test error");
 
     // Type-only checks (these are compile-time only but prove imports work)
     const clientAsType: Client = createClient();

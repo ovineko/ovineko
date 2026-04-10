@@ -13,7 +13,6 @@ export interface ClientConfiguration {
   baseUrl?: string;
   headers?: HeadersInit;
   middleware?: Middleware[];
-  timeout?: number;
 }
 
 /**
@@ -46,15 +45,6 @@ export interface Middleware {
 }
 
 /**
- * Context passed to middleware hooks.
- */
-export interface MiddlewareContext<TData = unknown, TVariables = unknown> {
-  config: RequestConfig<TVariables>;
-  error?: unknown;
-  response?: ResponseConfig<TData>;
-}
-
-/**
  * Request configuration matching Kubb's fetch client interface.
  */
 export interface RequestConfig<TData = unknown> {
@@ -64,7 +54,7 @@ export interface RequestConfig<TData = unknown> {
   headers?: [string, string][] | Record<string, string>;
   method?: "DELETE" | "GET" | "HEAD" | "OPTIONS" | "PATCH" | "POST" | "PUT";
   params?: unknown;
-  responseType?: "arraybuffer" | "blob" | "document" | "json" | "stream" | "text";
+  responseType?: "arraybuffer" | "blob" | "json" | "text";
   signal?: AbortSignal;
   url?: string;
 }
@@ -80,6 +70,7 @@ export interface ResponseConfig<TData = unknown> {
 }
 
 /**
- * Error response type for error handlers.
+ * Error response type matching Kubb's definition (passthrough alias).
+ * Kubb-generated code uses this as the TError parameter in client calls.
  */
-export type ResponseErrorConfig<TError = unknown> = ResponseConfig<TError>;
+export type ResponseErrorConfig<TError = unknown> = TError;

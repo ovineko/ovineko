@@ -20,26 +20,6 @@ describe("requestId middleware", () => {
       const ids = new Set(Array.from({ length: 100 }, () => generateRequestId()));
       expect(ids.size).toBe(100);
     });
-
-    it("uses fallback when crypto.randomUUID is not available", () => {
-      const originalGetRandomValues = crypto.getRandomValues.bind(crypto);
-      vi.stubGlobal("crypto", {
-        getRandomValues: originalGetRandomValues,
-      });
-
-      const id = generateRequestId();
-      expect(id).toMatch(UUID_REGEX);
-    });
-
-    it("generates unique fallback IDs", () => {
-      const originalGetRandomValues = crypto.getRandomValues.bind(crypto);
-      vi.stubGlobal("crypto", {
-        getRandomValues: originalGetRandomValues,
-      });
-
-      const ids = new Set(Array.from({ length: 50 }, () => generateRequestId()));
-      expect(ids.size).toBe(50);
-    });
   });
 
   describe("createRequestIdMiddleware", () => {

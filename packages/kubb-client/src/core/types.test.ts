@@ -6,7 +6,6 @@ import type {
   ClientSetup,
   ClientWithSetup,
   Middleware,
-  MiddlewareContext,
   RequestConfig,
   ResponseConfig,
   ResponseErrorConfig,
@@ -68,7 +67,7 @@ describe("core/types", () => {
     });
 
     it("accepts all response types", () => {
-      const types = ["arraybuffer", "blob", "document", "json", "text", "stream"] as const;
+      const types = ["arraybuffer", "blob", "json", "text"] as const;
       for (const responseType of types) {
         const config: RequestConfig = { method: "GET", responseType };
         expect(config.responseType).toBe(responseType);
@@ -90,14 +89,9 @@ describe("core/types", () => {
   });
 
   describe("ResponseErrorConfig", () => {
-    it("is same shape as ResponseConfig", () => {
-      const error: ResponseErrorConfig<{ message: string }> = {
-        data: { message: "Not Found" },
-        headers: new Headers(),
-        status: 404,
-        statusText: "Not Found",
-      };
-      expect(error.status).toBe(404);
+    it("is a passthrough alias matching Kubb definition", () => {
+      const error: ResponseErrorConfig<Error> = new Error("Not Found");
+      expect(error.message).toBe("Not Found");
     });
   });
 
@@ -148,10 +142,8 @@ describe("core/types", () => {
         baseUrl: "https://api.example.com",
         headers: { Authorization: "Bearer token" },
         middleware: [],
-        timeout: 5000,
       };
       expect(config.baseUrl).toBe("https://api.example.com");
-      expect(config.timeout).toBe(5000);
     });
 
     it("allows partial configuration", () => {
@@ -195,25 +187,6 @@ describe("core/types", () => {
       };
       const result = middleware.onError!(new Error("network error"));
       expect(result).toBeInstanceOf(Response);
-    });
-  });
-
-  describe("MiddlewareContext", () => {
-    it("carries request config", () => {
-      const ctx: MiddlewareContext = {
-        config: { method: "GET", url: "/test" },
-      };
-      expect(ctx.config.url).toBe("/test");
-    });
-
-    it("carries response and error optionally", () => {
-      const ctx: MiddlewareContext<{ id: number }> = {
-        config: { method: "GET" },
-        error: new Error("fail"),
-        response: { data: { id: 1 }, headers: new Headers(), status: 200, statusText: "OK" },
-      };
-      expect(ctx.response?.data.id).toBe(1);
-      expect(ctx.error).toBeInstanceOf(Error);
     });
   });
 

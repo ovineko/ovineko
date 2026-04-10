@@ -23,28 +23,18 @@ describe("sentry middleware", () => {
       expect(middleware.name).toBe("sentry");
     });
 
-    it("returns no-op middleware when Sentry is null", () => {
-      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-      const middleware = createSentryMiddleware({ Sentry: null as unknown as SentryLike });
-
-      expect(middleware.name).toBe("sentry");
-      expect(middleware.onRequest).toBeUndefined();
-      expect(middleware.onResponse).toBeUndefined();
-      expect(middleware.onError).toBeUndefined();
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Sentry SDK not available"));
-      warnSpy.mockRestore();
+    it("throws when Sentry is null", () => {
+      expect(() => createSentryMiddleware({ Sentry: null as unknown as SentryLike })).toThrow(
+        "Sentry SDK is invalid",
+      );
     });
 
-    it("returns no-op middleware when Sentry is missing methods", () => {
-      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-      const middleware = createSentryMiddleware({
-        Sentry: { addBreadcrumb: "not a function" } as unknown as SentryLike,
-      });
-
-      expect(middleware.onRequest).toBeUndefined();
-      expect(middleware.onResponse).toBeUndefined();
-      expect(middleware.onError).toBeUndefined();
-      warnSpy.mockRestore();
+    it("throws when Sentry is missing methods", () => {
+      expect(() =>
+        createSentryMiddleware({
+          Sentry: { addBreadcrumb: "not a function" } as unknown as SentryLike,
+        }),
+      ).toThrow("Sentry SDK is invalid");
     });
   });
 

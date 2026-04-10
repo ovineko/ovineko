@@ -10,7 +10,6 @@ export type {
   ClientSetup,
   ClientWithSetup,
   Middleware,
-  MiddlewareContext,
   RequestConfig,
   ResponseConfig,
   ResponseErrorConfig,

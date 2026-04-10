@@ -40,14 +40,28 @@ export function createClient(initialConfig?: ClientConfiguration): ClientWithSet
 
       // Handle early response from middleware (skip fetch)
       if (requestResult instanceof Response) {
-        const data = await parseResponse<TData>(requestResult, requestConfig.responseType);
-        const earlyResponse: ResponseConfig<TData> = {
-          data,
-          headers: requestResult.headers,
-          status: requestResult.status,
-          statusText: requestResult.statusText,
-        };
-        return orchestrator.executeOnResponse(earlyResponse);
+        try {
+          const data = await parseResponse<TData>(requestResult, requestConfig.responseType);
+          const earlyResponse: ResponseConfig<TData> = {
+            data,
+            headers: requestResult.headers,
+            status: requestResult.status,
+            statusText: requestResult.statusText,
+          };
+          return orchestrator.executeOnResponse(earlyResponse);
+        } catch (error) {
+          const recovery = await orchestrator.executeOnError(error);
+          if (recovery instanceof Response) {
+            const data = await parseResponse<TData>(recovery, requestConfig.responseType);
+            return orchestrator.executeOnResponse({
+              data,
+              headers: recovery.headers,
+              status: recovery.status,
+              statusText: recovery.statusText,
+            });
+          }
+          throw error;
+        }
       }
 
       const finalConfig = requestResult as RequestConfig<TVariables>;
@@ -90,19 +104,22 @@ export function createClient(initialConfig?: ClientConfiguration): ClientWithSet
         const recovery = await orchestrator.executeOnError(error);
         if (recovery instanceof Response) {
           const data = await parseResponse<TData>(recovery, requestConfig.responseType);
-          return {
+          return orchestrator.executeOnResponse({
             data,
             headers: recovery.headers,
             status: recovery.status,
             statusText: recovery.statusText,
-          };
+          });
         }
         throw error;
       }
     },
     {
       _setup: {
-        getConfig: () => ({ ...config }),
+        getConfig: () => ({
+          ...config,
+          ...(config.middleware ? { middleware: [...config.middleware] } : {}),
+        }),
         remove: (name: string) => {
           orchestrator.remove(name);
         },
@@ -179,6 +196,11 @@ async function parseResponse<TData>(
   response: Response,
   responseType?: RequestConfig["responseType"],
 ): Promise<TData> {
+  // Handle empty responses (204 No Content, 205 Reset Content, 304 Not Modified, or no body)
+  if ([204, 205, 304].includes(response.status) || !response.body) {
+    return {} as TData;
+  }
+
   switch (responseType) {
     case "arraybuffer": {
       return (await response.arrayBuffer()) as TData;

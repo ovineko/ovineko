@@ -1,4 +1,4 @@
-import type { BarrelType, UserConfig } from "@kubb/core";
+import type { BarrelType } from "@kubb/core";
 
 import { defineConfig as defineConfigLib } from "@kubb/core";
 
@@ -87,12 +87,7 @@ export const defineConfig = (options: ConfigOptions): ReturnType<typeof defineCo
                 ? { importPath: clientImportPath }
                 : { client: "fetch" as const }),
               dataReturnType: "full",
-              exclude: [
-                // {
-                //   pattern: "store",
-                //   type: "tag",
-                // },
-              ],
+              exclude: [],
               group: {
                 name: fixGroupName({ plugin: "client", suffix: "Service" }),
                 type: "tag",
@@ -182,11 +177,6 @@ export const defineConfig = (options: ConfigOptions): ReturnType<typeof defineCo
           ),
         ),
       ...(options.plugins?.additional || []),
-    ].reduce<Required<Pick<UserConfig, "plugins">>["plugins"]>((acc, el) => {
-      if (el) {
-        acc.push(el);
-      }
-      return acc;
-    }, []),
+    ].filter(Boolean),
   });
 };

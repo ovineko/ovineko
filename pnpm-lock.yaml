@@ -100,6 +100,9 @@ importers:
       "@faker-js/faker":
         specifier: 10.3.0
         version: 10.3.0
+      "@ovineko/clean-pkg-json":
+        specifier: workspace:*
+        version: link:../clean-pkg-json
       "@ovineko/datamitsu-config":
         specifier: workspace:*
         version: link:../datamitsu-config
