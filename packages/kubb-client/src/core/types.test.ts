@@ -67,7 +67,7 @@ describe("core/types", () => {
     });
 
     it("accepts all response types", () => {
-      const types = ["arraybuffer", "blob", "json", "text"] as const;
+      const types = ["arraybuffer", "blob", "document", "json", "stream", "text"] as const;
       for (const responseType of types) {
         const config: RequestConfig = { method: "GET", responseType };
         expect(config.responseType).toBe(responseType);

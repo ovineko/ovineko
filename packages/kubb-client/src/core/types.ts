@@ -54,7 +54,7 @@ export interface RequestConfig<TData = unknown> {
   headers?: [string, string][] | Record<string, string>;
   method?: "DELETE" | "GET" | "HEAD" | "OPTIONS" | "PATCH" | "POST" | "PUT";
   params?: unknown;
-  responseType?: "arraybuffer" | "blob" | "json" | "text";
+  responseType?: "arraybuffer" | "blob" | "document" | "json" | "stream" | "text";
   signal?: AbortSignal;
   url?: string;
 }

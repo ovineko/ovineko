@@ -118,7 +118,7 @@ export function createClient(initialConfig?: ClientConfiguration): ClientWithSet
       _setup: {
         getConfig: () => ({
           ...config,
-          ...(config.middleware ? { middleware: [...config.middleware] } : {}),
+          middleware: [...orchestrator.getMiddlewares()],
         }),
         remove: (name: string) => {
           orchestrator.remove(name);
@@ -126,6 +126,10 @@ export function createClient(initialConfig?: ClientConfiguration): ClientWithSet
         setConfig: (updated: Partial<ClientConfiguration>) => {
           config = { ...config, ...updated };
           if (updated.middleware) {
+            // Clear existing middleware and replace with new list
+            for (const mw of orchestrator.getMiddlewares()) {
+              orchestrator.remove(mw.name);
+            }
             for (const mw of updated.middleware) {
               orchestrator.use(mw);
             }
@@ -208,14 +212,22 @@ async function parseResponse<TData>(
     case "blob": {
       return (await response.blob()) as TData;
     }
-    case "json": {
-      return (await response.json()) as TData;
-    }
+    case "document":
     case "text": {
       return (await response.text()) as TData;
     }
-    default: {
+    case "json": {
       return (await response.json()) as TData;
+    }
+    case "stream": {
+      return response.body as TData;
+    }
+    default: {
+      const text = await response.text();
+      if (!text) {
+        return {} as TData;
+      }
+      return JSON.parse(text) as TData;
     }
   }
 }
