@@ -9,6 +9,8 @@
     "declaration": true,
     "declarationMap": false,
     "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@kubb/react-fabric",
     "types": ["node"]
   },
   "include": ["src"],

@@ -159,18 +159,18 @@ This enables migration from openapi-generator while preserving scope-based acces
 
 **Files:** `packages/kubb-plugin-scopes/src/generators/scopes.tsx`
 
-- [ ] create `scopesGenerator` using `createReactGenerator<PluginScopesOptions>`
-- [ ] implement `operation()` hook to generate `getXxxScopes()` function per endpoint
-- [ ] use `extractScopes(operation)` to get scopes list
-- [ ] generate File with imports: `ApiScope` and `scope` from importPath
-- [ ] generate Function: `export function get${capitalize(operationId)}Scopes(): ApiScope[]`
-- [ ] generate return statement: `return [${scopes.map(s => scope("${s}")).join(", ")}];`
-- [ ] handle grouping by tags if `options.group?.type === "tag"`
-- [ ] write integration test with mock Operation object (single scope)
-- [ ] write integration test with mock Operation object (multiple scopes)
-- [ ] write integration test with mock Operation object (no scopes)
-- [ ] verify generated code compiles (use TypeScript compiler API in test)
-- [ ] run `pnpm test` in `packages/kubb-plugin-scopes/` - must pass before Task 8
+- [x] create `scopesGenerator` using `createReactGenerator<PluginScopesOptions>`
+- [x] implement `operation()` hook to generate `getXxxScopes()` function per endpoint
+- [x] use `extractScopes(operation)` to get scopes list
+- [x] generate File with imports: `ApiScope` and `scope` from importPath
+- [x] generate Function: `export function get${capitalize(operationId)}Scopes(): ApiScope[]`
+- [x] generate return statement: `return [${scopes.map(s => scope("${s}")).join(", ")}];`
+- [x] handle grouping by tags if `options.group?.type === "tag"` (delegated to plugin resolvePath in Task 8, as per Kubb pattern)
+- [x] write integration test with mock Operation object (single scope)
+- [x] write integration test with mock Operation object (multiple scopes)
+- [x] write integration test with mock Operation object (no scopes)
+- [x] verify generated code compiles (use TypeScript compiler API in test)
+- [x] run `pnpm test` in `packages/kubb-plugin-scopes/` - must pass before Task 8
 
 ### Task 8: Implement plugin factory and register hooks
 
