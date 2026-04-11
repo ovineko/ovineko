@@ -430,6 +430,7 @@ Key architecture notes:
 - `useOvinekoClient: true` in config options sets `importPath: "@ovineko/kubb-client"` for both `@kubb/plugin-client` and SWR client configurations
 - When `useOvinekoClient` is false or omitted, no custom importPath is set (uses Kubb defaults)
 - `plugins.scopes: { enabled: true }` integrates `@ovineko/kubb-plugin-scopes` for OAuth scope code generation; when `useOvinekoClient: true`, scopes plugin importPath is set to `@ovineko/kubb-client/scopes`
+- `plugins.scopes.generateSwrWrappers` requires `plugins.swr` to not be disabled (SWR is enabled by default); if SWR is disabled, scoped hook generation will fail to resolve imports
 
 ### @ovineko/kubb-plugin-scopes
 
@@ -437,6 +438,12 @@ Key architecture notes:
 - Scope extraction (`src/utils/extractScopes.ts`) accesses `@kubb/oas` internal `_requirements` property — pin `@kubb/oas` version carefully
 - Default `importPath` is `@ovineko/kubb-client/scopes`; default output path is `scopes`
 - Integrated into `@ovineko/kubb` `defineConfig` via `plugins.scopes: { enabled: true }`
+- `generateSwrWrappers: true` enables generation of scoped SWR hook wrappers (`useXxxScoped`) that automatically check OAuth scopes via `useScopes().hasAccess()` before fetching
+- SWR wrapper output path defaults to `hooks-scoped`; configurable via `swrWrappersOutputPath`
+- `scopesReactImportPath` defaults to `@ovineko/kubb-client/scopes/react`; controls where `useScopes` is imported from in generated wrappers
+- Hook parameter detection: operations with path params (`{param}` in path) generate two-param wrappers `(params, options)`, operations without path params generate single-param wrappers `(options)`
+- SWR wrappers require `@kubb/plugin-swr` to be enabled; scoped hooks import from the SWR plugin's barrel files
+- Two-generator architecture: `scopesGenerator` creates scope getter functions, `swrScopesGenerator` creates scoped hook wrappers (runs conditionally)
 
 ### @ovineko/clean-pkg-json
 

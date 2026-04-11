@@ -49,18 +49,19 @@ export const swrScopesGenerator: Generator<PluginScopes> = createReactGenerator<
       path: scopesFile.path.replace(`/${outputPath}/`, `/${swrOutputPath}/`),
     };
 
-    const params =
-      result.hookType === "query"
-        ? `params?: Parameters<typeof originalHook>[0], options?: Omit<Parameters<typeof originalHook>[1], "shouldFetch"> & { shouldFetch?: boolean }`
-        : `options?: Omit<Parameters<typeof originalHook>[0], "shouldFetch"> & { shouldFetch?: boolean }`;
+    const importPrefix = plugin.options.group ? "../.." : "..";
+
+    const params = result.hasPathParams
+      ? `params?: Parameters<typeof originalHook>[0], options?: Omit<Parameters<typeof originalHook>[1], "shouldFetch"> & { shouldFetch?: boolean }`
+      : `options?: Omit<Parameters<typeof originalHook>[0], "shouldFetch"> & { shouldFetch?: boolean }`;
 
     return (
       <File baseName={file.baseName} path={file.path} {...(file.meta ? { meta: file.meta } : {})}>
         <File.Import
           name={[{ name: "originalHook", propertyName: originalHookName }]}
-          path="../hooks"
+          path={`${importPrefix}/hooks`}
         />
-        <File.Import name={[scopeGetterName]} path="../scopes" />
+        <File.Import name={[scopeGetterName]} path={`${importPrefix}/scopes`} />
         <File.Import name={["useScopes"]} path={scopesReactImportPath} />
 
         <File.Source isExportable isIndexable name={scopedHookName}>

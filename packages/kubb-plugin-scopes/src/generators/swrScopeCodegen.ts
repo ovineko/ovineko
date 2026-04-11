@@ -7,6 +7,7 @@ import { extractScopes } from "../utils/extractScopes.js";
 
 export interface SwrScopeCodegenResult {
   functionBody: string;
+  hasPathParams: boolean;
   hookType: HookType;
   scopeGetterName: string;
 }
@@ -33,32 +34,32 @@ export function generateSwrScopeCode(
   }
 
   const hookType = determineHookType(operation);
+  const hasPathParams = operation.path.includes("{");
 
-  const functionBody =
-    hookType === "query"
-      ? [
-          "const { hasAccess } = useScopes();",
-          `const requiredScopes = ${scopeGetterName}();`,
-          "const hasRequiredAccess = hasAccess(requiredScopes);",
-          "",
-          "return originalHook(params, {",
-          "  ...options,",
-          "  shouldFetch: hasRequiredAccess && (options?.shouldFetch ?? true),",
-          "});",
-        ].join("\n")
-      : [
-          "const { hasAccess } = useScopes();",
-          `const requiredScopes = ${scopeGetterName}();`,
-          "const hasRequiredAccess = hasAccess(requiredScopes);",
-          "",
-          "return originalHook({",
-          "  ...options,",
-          "  shouldFetch: hasRequiredAccess && (options?.shouldFetch ?? true),",
-          "});",
-        ].join("\n");
+  const sharedLines = [
+    "const { hasAccess } = useScopes();",
+    `const requiredScopes = ${scopeGetterName}();`,
+    "const hasRequiredAccess = hasAccess(requiredScopes);",
+    "",
+  ];
+
+  const callLines = hasPathParams
+    ? [
+        "return originalHook(params, {",
+        "  ...options,",
+        "  shouldFetch: hasRequiredAccess && (options?.shouldFetch ?? true),",
+        "});",
+      ]
+    : [
+        "return originalHook({",
+        "  ...options,",
+        "  shouldFetch: hasRequiredAccess && (options?.shouldFetch ?? true),",
+        "});",
+      ];
 
   return {
-    functionBody,
+    functionBody: [...sharedLines, ...callLines].join("\n"),
+    hasPathParams,
     hookType,
     scopeGetterName,
   };

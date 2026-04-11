@@ -165,12 +165,12 @@ describe("kubb-plugin-scopes SWR scoped hooks integration", () => {
   describe("query hook structure (GET operations)", () => {
     it("listPets imports originalHook aliased from hooks barrel", () => {
       const content = readFileSync(join(hooksScopedDir, "petScopes", "listPets.ts"), "utf8");
-      expect(content).toContain('import { useListPets as originalHook } from "../hooks"');
+      expect(content).toContain('import { useListPets as originalHook } from "../../hooks"');
     });
 
     it("listPets imports scope getter from scopes barrel", () => {
       const content = readFileSync(join(hooksScopedDir, "petScopes", "listPets.ts"), "utf8");
-      expect(content).toContain('import { getListPetsScopes } from "../scopes"');
+      expect(content).toContain('import { getListPetsScopes } from "../../scopes"');
     });
 
     it("listPets imports useScopes from configured path", () => {
@@ -178,15 +178,16 @@ describe("kubb-plugin-scopes SWR scoped hooks integration", () => {
       expect(content).toContain('import { useScopes } from "@ovineko/kubb-client/scopes/react"');
     });
 
-    it("listPets exports useListPetsScoped function with params and options", () => {
+    it("listPets exports useListPetsScoped function with only options (no path params)", () => {
       const content = readFileSync(join(hooksScopedDir, "petScopes", "listPets.ts"), "utf8");
-      expect(content).toContain("export function useListPetsScoped(params?:");
-      expect(content).toContain("options?:");
+      expect(content).toContain("export function useListPetsScoped(options?:");
+      expect(content).not.toMatch(/useListPetsScoped\(params\?/);
     });
 
-    it("listPets calls originalHook with params and options (query pattern)", () => {
+    it("listPets calls originalHook with only options (no path params)", () => {
       const content = readFileSync(join(hooksScopedDir, "petScopes", "listPets.ts"), "utf8");
-      expect(content).toContain("return originalHook(params, {");
+      expect(content).toContain("return originalHook({");
+      expect(content).not.toContain("return originalHook(params, {");
       expect(content).toContain("...options,");
       expect(content).toContain("shouldFetch: hasRequiredAccess && (options?.shouldFetch ?? true)");
     });
@@ -199,10 +200,23 @@ describe("kubb-plugin-scopes SWR scoped hooks integration", () => {
     });
   });
 
+  describe("query hook with path params structure (GET /pets/{petId})", () => {
+    it("getPetById uses two-param pattern (params + options)", () => {
+      const content = readFileSync(join(hooksScopedDir, "petScopes", "getPetById.ts"), "utf8");
+      expect(content).toContain("export function useGetPetByIdScoped(params?:");
+      expect(content).toContain("return originalHook(params, {");
+    });
+
+    it("getPetById imports from ../../hooks (correct depth with grouping)", () => {
+      const content = readFileSync(join(hooksScopedDir, "petScopes", "getPetById.ts"), "utf8");
+      expect(content).toContain('import { useGetPetById as originalHook } from "../../hooks"');
+    });
+  });
+
   describe("mutation hook structure (POST operations)", () => {
     it("createPet imports originalHook aliased from hooks barrel", () => {
       const content = readFileSync(join(hooksScopedDir, "petScopes", "createPet.ts"), "utf8");
-      expect(content).toContain('import { useCreatePet as originalHook } from "../hooks"');
+      expect(content).toContain('import { useCreatePet as originalHook } from "../../hooks"');
     });
 
     it("createPet exports useCreatePetScoped function with only options param", () => {
@@ -242,8 +256,14 @@ describe("kubb-plugin-scopes SWR scoped hooks integration", () => {
   });
 
   describe("type safety patterns in generated code", () => {
-    it("query hook uses Parameters<typeof originalHook> for type inference", () => {
+    it("query hook without path params uses Parameters<typeof originalHook>[0] for options", () => {
       const content = readFileSync(join(hooksScopedDir, "petScopes", "listPets.ts"), "utf8");
+      expect(content).toContain("Parameters<typeof originalHook>[0]");
+      expect(content).not.toContain("Parameters<typeof originalHook>[1]");
+    });
+
+    it("query hook with path params uses Parameters<typeof originalHook>[0] and [1]", () => {
+      const content = readFileSync(join(hooksScopedDir, "petScopes", "getPetById.ts"), "utf8");
       expect(content).toContain("Parameters<typeof originalHook>[0]");
       expect(content).toContain("Parameters<typeof originalHook>[1]");
     });

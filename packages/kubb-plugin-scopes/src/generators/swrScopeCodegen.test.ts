@@ -4,10 +4,15 @@ import { describe, expect, it } from "vitest";
 
 import { generateSwrScopeCode } from "./swrScopeCodegen.js";
 
-function mockOperation(method: string, securityWithTypes: unknown): Operation {
+function mockOperation(
+  method: string,
+  securityWithTypes: unknown,
+  operationPath = "/pets",
+): Operation {
   return {
     getSecurityWithTypes: () => securityWithTypes,
     method,
+    path: operationPath,
   } as unknown as Operation;
 }
 
@@ -31,58 +36,73 @@ describe("generateSwrScopeCode", () => {
   });
 
   describe("query hook generation (GET operations)", () => {
-    it("generates query hook body with scopes", () => {
-      const operation = mockOperation("GET", oauthScopes("pets:read"));
+    it("generates single-param body for GET without path params", () => {
+      const operation = mockOperation("GET", oauthScopes("pets:read"), "/pets");
       const result = generateSwrScopeCode(operation, "getListPetsScopes");
 
       expect(result).not.toBeNull();
       expect(result!.hookType).toBe("query");
+      expect(result!.hasPathParams).toBe(false);
       expect(result!.scopeGetterName).toBe("getListPetsScopes");
       expect(result!.functionBody).toContain("const { hasAccess } = useScopes();");
       expect(result!.functionBody).toContain("const requiredScopes = getListPetsScopes();");
       expect(result!.functionBody).toContain(
         "const hasRequiredAccess = hasAccess(requiredScopes);",
       );
-      expect(result!.functionBody).toContain("return originalHook(params, {");
-      expect(result!.functionBody).toContain("...options,");
+      expect(result!.functionBody).toContain("return originalHook({");
+      expect(result!.functionBody).not.toContain("return originalHook(params, {");
       expect(result!.functionBody).toContain(
         "shouldFetch: hasRequiredAccess && (options?.shouldFetch ?? true),",
       );
     });
+
+    it("generates two-param body for GET with path params", () => {
+      const operation = mockOperation("GET", oauthScopes("pets:read"), "/pets/{petId}");
+      const result = generateSwrScopeCode(operation, "getGetPetByIdScopes");
+
+      expect(result).not.toBeNull();
+      expect(result!.hookType).toBe("query");
+      expect(result!.hasPathParams).toBe(true);
+      expect(result!.functionBody).toContain("return originalHook(params, {");
+      expect(result!.functionBody).toContain("...options,");
+    });
   });
 
   describe("mutation hook generation (non-GET operations)", () => {
-    it("generates mutation hook body for POST", () => {
-      const operation = mockOperation("POST", oauthScopes("pets:write"));
+    it("generates single-param body for POST without path params", () => {
+      const operation = mockOperation("POST", oauthScopes("pets:write"), "/pets");
       const result = generateSwrScopeCode(operation, "getCreatePetScopes");
 
       expect(result).not.toBeNull();
       expect(result!.hookType).toBe("mutation");
+      expect(result!.hasPathParams).toBe(false);
       expect(result!.scopeGetterName).toBe("getCreatePetScopes");
       expect(result!.functionBody).toContain("return originalHook({");
       expect(result!.functionBody).not.toContain("return originalHook(params, {");
     });
 
-    it("generates mutation hook body for PUT", () => {
-      const operation = mockOperation("PUT", oauthScopes("pets:write"));
+    it("generates two-param body for PUT with path params", () => {
+      const operation = mockOperation("PUT", oauthScopes("pets:write"), "/pets/{petId}");
       const result = generateSwrScopeCode(operation, "getUpdatePetScopes");
 
       expect(result).not.toBeNull();
       expect(result!.hookType).toBe("mutation");
-      expect(result!.functionBody).toContain("return originalHook({");
+      expect(result!.hasPathParams).toBe(true);
+      expect(result!.functionBody).toContain("return originalHook(params, {");
     });
 
-    it("generates mutation hook body for DELETE", () => {
-      const operation = mockOperation("DELETE", oauthScopes("pets:delete"));
+    it("generates single-param body for DELETE without path params", () => {
+      const operation = mockOperation("DELETE", oauthScopes("pets:delete"), "/pets");
       const result = generateSwrScopeCode(operation, "getDeletePetScopes");
 
       expect(result).not.toBeNull();
       expect(result!.hookType).toBe("mutation");
+      expect(result!.hasPathParams).toBe(false);
       expect(result!.functionBody).toContain("return originalHook({");
     });
 
     it("generates mutation hook body for PATCH", () => {
-      const operation = mockOperation("PATCH", oauthScopes("pets:write"));
+      const operation = mockOperation("PATCH", oauthScopes("pets:write"), "/pets");
       const result = generateSwrScopeCode(operation, "getPatchPetScopes");
 
       expect(result).not.toBeNull();
