@@ -93,6 +93,29 @@ function MyComponent() {
 }
 ```
 
+### Scopes (access control)
+
+```ts
+import { scope } from "@ovineko/kubb-client/scopes";
+
+// Set user scopes after authentication
+client._setup.setScopes([scope("users:read"), scope("users:write")]);
+```
+
+```tsx
+import { ScopesProvider, RequireScopes, useScopes } from "@ovineko/kubb-client/scopes/react";
+
+function App() {
+  return (
+    <ScopesProvider scopes={userScopes}>
+      <RequireScopes scopes={[scope("admin")]}>
+        <AdminPanel />
+      </RequireScopes>
+    </ScopesProvider>
+  );
+}
+```
+
 ## Documentation
 
 Full documentation: [ovineko.com/docs/packages/kubb-client](https://ovineko.com/docs/packages/kubb-client)

@@ -231,12 +231,12 @@ This enables migration from openapi-generator while preserving scope-based acces
 
 ### Task 12: Update documentation
 
-- [ ] update `packages/kubb-client/README.md` with scopes usage section and example
-- [ ] update `packages/kubb/README.md` with scopes plugin configuration example
-- [ ] add JSDoc comments to all public APIs in scopes modules
-- [ ] create example in `packages/kubb-client/` showing setup: `client._setup.setScopes()`
-- [ ] create example showing React usage: `<RequireScopes>` and `useScopes()`
-- [ ] verify all code examples in README compile and run correctly
+- [x] update `packages/kubb-client/README.md` with scopes usage section and example
+- [x] update `packages/kubb/README.md` with scopes plugin configuration example
+- [x] add JSDoc comments to all public APIs in scopes modules
+- [x] create example in `packages/kubb-client/` showing setup: `client._setup.setScopes()`
+- [x] create example showing React usage: `<RequireScopes>` and `useScopes()`
+- [x] verify all code examples in README compile and run correctly
 
 ---
 
