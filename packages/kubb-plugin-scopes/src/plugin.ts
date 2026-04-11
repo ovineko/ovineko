@@ -16,9 +16,12 @@ export const pluginScopesName = "plugin-scopes" as const;
 
 export const pluginScopes = definePlugin<PluginScopes>((options) => {
   const {
+    generateSwrWrappers = false,
     group,
     importPath = "@ovineko/kubb-client/scopes",
     output = { barrelType: "named", path: "scopes" },
+    scopesReactImportPath = "@ovineko/kubb-client/scopes/react",
+    swrWrappersOutputPath = "hooks-scoped",
   } = options;
 
   return {
@@ -53,9 +56,12 @@ export const pluginScopes = definePlugin<PluginScopes>((options) => {
     },
     name: pluginScopesName,
     options: {
+      generateSwrWrappers,
       group,
       importPath,
       output,
+      scopesReactImportPath,
+      swrWrappersOutputPath,
     },
     pre: [pluginOasName],
     resolveName(name) {

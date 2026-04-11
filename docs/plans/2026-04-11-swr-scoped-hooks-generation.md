@@ -103,12 +103,12 @@ Add automatic SWR scoped hook generation to `@ovineko/kubb-plugin-scopes`. This 
 
 ### Task 3: Update types for new configuration options
 
-- [ ] modify `packages/kubb-plugin-scopes/src/types.ts` interface `Options`
-- [ ] add `generateSwrWrappers?: boolean` (default false for backward compatibility)
-- [ ] add `scopesReactImportPath?: string` (default "@ovineko/kubb-client/scopes/react")
-- [ ] add `swrWrappersOutputPath?: string` (default "hooks-scoped")
-- [ ] update resolved options passed to plugin to include these fields
-- [ ] no tests needed (type-only changes)
+- [x] modify `packages/kubb-plugin-scopes/src/types.ts` interface `Options`
+- [x] add `generateSwrWrappers?: boolean` (default false for backward compatibility)
+- [x] add `scopesReactImportPath?: string` (default "@ovineko/kubb-client/scopes/react")
+- [x] add `swrWrappersOutputPath?: string` (default "hooks-scoped")
+- [x] update resolved options passed to plugin to include these fields
+- [x] no tests needed (type-only changes)
 
 ### Task 4: Create SWR scopes generator (React component)
 

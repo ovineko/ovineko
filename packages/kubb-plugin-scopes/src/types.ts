@@ -4,6 +4,12 @@ import type { ResolvePathOptions } from "@kubb/plugin-oas";
 
 export interface Options {
   /**
+   * Generate SWR scoped hook wrappers that automatically check OAuth scopes.
+   * Requires `@kubb/plugin-swr` to be enabled.
+   * @default false
+   */
+  generateSwrWrappers?: boolean;
+  /**
    * Group the generated scopes files based on the provided name.
    */
   group?: {
@@ -24,6 +30,16 @@ export interface Options {
    * @default { path: 'scopes', barrelType: 'named' }
    */
   output?: Output<Oas>;
+  /**
+   * Import path for the `useScopes` hook used in generated SWR scoped wrappers.
+   * @default '@ovineko/kubb-client/scopes/react'
+   */
+  scopesReactImportPath?: string;
+  /**
+   * Output path for generated SWR scoped hook wrappers.
+   * @default 'hooks-scoped'
+   */
+  swrWrappersOutputPath?: string;
 }
 
 export type PluginScopes = PluginFactoryOptions<
@@ -35,7 +51,10 @@ export type PluginScopes = PluginFactoryOptions<
 >;
 
 interface ResolvedOptions {
+  generateSwrWrappers: boolean;
   group: Options["group"];
   importPath: string;
   output: Output<Oas>;
+  scopesReactImportPath: string;
+  swrWrappersOutputPath: string;
 }
