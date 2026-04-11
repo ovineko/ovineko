@@ -112,17 +112,17 @@ Add automatic SWR scoped hook generation to `@ovineko/kubb-plugin-scopes`. This 
 
 ### Task 4: Create SWR scopes generator (React component)
 
-- [ ] create `packages/kubb-plugin-scopes/src/generators/swrScopes.tsx` using `createReactGenerator<PluginScopes>`
-- [ ] implement Operation hook that calls `generateSwrScopeCode()` with operation and scopesReactImportPath
-- [ ] return null when `generateSwrScopeCode()` returns null (skip file generation for ops without scopes)
-- [ ] use `useOperationManager` to get `getName()` and `getFile()` utilities
-- [ ] generate File with 3 imports: `originalHook` from "../hooks", `scopeGetter` from "../scopes", `useScopes` from config path
-- [ ] generate Function with name `use{OperationName}Scoped`, params based on hookType, returnType from originalHook
-- [ ] for query hooks: params = `params?, options?` with types `Parameters<typeof originalHook>[0]` and omit shouldFetch from [1]
-- [ ] for mutation hooks: params = `options?` with type omit shouldFetch from `Parameters<typeof originalHook>[0]`
-- [ ] write tests for generator name ("plugin-scopes-swr"), type ("react"), version
-- [ ] write tests that Operation hook is defined
-- [ ] run tests - must pass before task 5
+- [x] create `packages/kubb-plugin-scopes/src/generators/swrScopes.tsx` using `createReactGenerator<PluginScopes>`
+- [x] implement Operation hook that calls `generateSwrScopeCode()` with operation and scopesReactImportPath
+- [x] return null when `generateSwrScopeCode()` returns null (skip file generation for ops without scopes)
+- [x] use `useOperationManager` to get `getName()` and `getFile()` utilities
+- [x] generate File with 3 imports: `originalHook` from "../hooks", `scopeGetter` from "../scopes", `useScopes` from config path
+- [x] generate Function with name `use{OperationName}Scoped`, params based on hookType, returnType from originalHook
+- [x] for query hooks: params = `params?, options?` with types `Parameters<typeof originalHook>[0]` and omit shouldFetch from [1]
+- [x] for mutation hooks: params = `options?` with type omit shouldFetch from `Parameters<typeof originalHook>[0]`
+- [x] write tests for generator name ("plugin-scopes-swr"), type ("react"), version
+- [x] write tests that Operation hook is defined
+- [x] run tests - must pass before task 5
 
 ### Task 5: Integrate second generator into plugin
 
