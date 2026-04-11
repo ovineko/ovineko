@@ -128,14 +128,14 @@ This enables migration from openapi-generator while preserving scope-based acces
 
 **New package:** `packages/kubb-plugin-scopes/`
 
-- [ ] create package directory and copy template files from similar package (e.g., kubb-client)
-- [ ] create `package.json` with dependencies: `@kubb/core`, `@kubb/oas`, `@kubb/plugin-react`
-- [ ] create `tsup.config.ts` for ESM build with entry `["src/index.ts"]`
-- [ ] create `vitest.config.ts` extending from `@ovineko/datamitsu-config`
-- [ ] create `tsconfig.json` extending from `@ovineko/datamitsu-config`
-- [ ] add workspace reference in root `pnpm-workspace.yaml` if not using glob pattern
-- [ ] run `pnpm install` at root to link workspace dependency
-- [ ] verify package structure with `pnpm list --depth=0` in new package directory
+- [x] create package directory and copy template files from similar package (e.g., kubb-client)
+- [x] create `package.json` with dependencies: `@kubb/core`, `@kubb/oas`, `@kubb/react-fabric` (updated from `@kubb/plugin-react` which doesn't exist at 4.37.2)
+- [x] create `tsup.config.ts` for ESM build with entry `["src/index.ts"]`
+- [x] create `vitest.config.ts` extending from `@ovineko/datamitsu-config`
+- [x] create `tsconfig.json` extending from `@ovineko/datamitsu-config`
+- [x] add workspace reference in root `pnpm-workspace.yaml` if not using glob pattern (already covered by `packages/*` glob)
+- [x] run `pnpm install` at root to link workspace dependency
+- [x] verify package structure with `pnpm list --depth=0` in new package directory
 
 ### Task 6: Implement scope extraction logic from OpenAPI security schemes
 
