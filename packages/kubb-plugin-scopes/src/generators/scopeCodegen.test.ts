@@ -30,7 +30,6 @@ describe("generateScopeCode", () => {
       const result = generateScopeCode(operation, "@ovineko/kubb-client/scopes");
 
       expect(result).not.toBeNull();
-      expect(result!.scopes).toEqual(["users:read"]);
       expect(result!.functionBody).toBe('return [scope("users:read")]');
       expect(result!.importPath).toBe("@ovineko/kubb-client/scopes");
     });
@@ -43,7 +42,6 @@ describe("generateScopeCode", () => {
       const result = generateScopeCode(operation, "@my-org/scopes");
 
       expect(result).not.toBeNull();
-      expect(result!.scopes).toEqual(["users:read", "users:write", "admin"]);
       expect(result!.functionBody).toBe(
         'return [scope("users:read"), scope("users:write"), scope("admin")]',
       );
@@ -59,7 +57,7 @@ describe("generateScopeCode", () => {
       const result = generateScopeCode(operation, "@ovineko/kubb-client/scopes");
 
       expect(result).not.toBeNull();
-      expect(result!.scopes).toEqual(["read", "write", "admin"]);
+      expect(result!.functionBody).toBe('return [scope("read"), scope("write"), scope("admin")]');
     });
 
     it("handles OpenID Connect security type (mapped to OAuth2 by oas library)", () => {
@@ -71,7 +69,31 @@ describe("generateScopeCode", () => {
       const result = generateScopeCode(operation, "@ovineko/kubb-client/scopes");
 
       expect(result).not.toBeNull();
-      expect(result!.scopes).toEqual(["openid", "profile"]);
+      expect(result!.functionBody).toBe('return [scope("openid"), scope("profile")]');
+    });
+  });
+
+  describe("escapes special characters in scope strings", () => {
+    it("escapes double quotes in scope names", () => {
+      const operation = mockOperation([
+        [{ security: { _requirements: ['read"admin'] }, type: "OAuth2" }],
+      ]);
+
+      const result = generateScopeCode(operation, "@ovineko/kubb-client/scopes");
+
+      expect(result).not.toBeNull();
+      expect(result!.functionBody).toBe('return [scope("read\\"admin")]');
+    });
+
+    it("escapes backslashes in scope names", () => {
+      const operation = mockOperation([
+        [{ security: { _requirements: ["read\\write"] }, type: "OAuth2" }],
+      ]);
+
+      const result = generateScopeCode(operation, "@ovineko/kubb-client/scopes");
+
+      expect(result).not.toBeNull();
+      expect(result!.functionBody).toBe('return [scope("read\\\\write")]');
     });
   });
 

@@ -5,7 +5,6 @@ import { extractScopes } from "../utils/extractScopes.js";
 export interface ScopeCodegenResult {
   functionBody: string;
   importPath: string;
-  scopes: string[];
 }
 
 /**
@@ -22,11 +21,12 @@ export function generateScopeCode(
     return null;
   }
 
-  const scopeValues = scopes.map((s) => `scope("${s}")`).join(", ");
+  const scopeValues = scopes
+    .map((s) => `scope("${s.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}")`)
+    .join(", ");
 
   return {
     functionBody: `return [${scopeValues}]`,
     importPath,
-    scopes,
   };
 }

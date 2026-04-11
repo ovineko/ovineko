@@ -58,11 +58,7 @@ export const pluginScopes = definePlugin<PluginScopes>((options) => {
       output,
     },
     pre: [pluginOasName],
-    resolveName(name, type) {
-      if (type === "file") {
-        return camelCase(name);
-      }
-
+    resolveName(name) {
       return camelCase(name);
     },
     resolvePath(baseName, pathMode, options) {

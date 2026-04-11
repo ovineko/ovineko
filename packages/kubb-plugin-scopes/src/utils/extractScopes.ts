@@ -1,11 +1,9 @@
 import type { Operation } from "@kubb/oas";
 
 /**
- * Scope-bearing security scheme types in the OpenAPI spec.
- * OAuth2 always carries scopes; openIdConnect may carry them too.
- * The `oas` library maps both to the `"OAuth2"` SecurityType.
+ * The `oas` library maps both OAuth2 and openIdConnect to the `"OAuth2"` SecurityType.
  */
-const SCOPE_BEARING_TYPES = new Set(["OAuth2"]);
+const SCOPE_BEARING_TYPE = "OAuth2";
 
 /**
  * Extracts deduplicated OAuth2 / OpenID Connect scopes from an operation's
@@ -18,26 +16,20 @@ export function extractScopes(operation: Operation): string[] {
   const grouped = operation.getSecurityWithTypes();
   const scopes = new Set<string>();
 
-  for (const orGroup of grouped) {
-    // `false` means the entire OR-group was invalid
-    if (orGroup === false) {
-      continue;
-    }
+  const validGroups = grouped.filter(
+    (orGroup): orGroup is Exclude<typeof orGroup, false> => orGroup !== false,
+  );
 
+  for (const orGroup of validGroups) {
     for (const andEntry of orGroup) {
-      // `false` means this specific scheme reference was invalid
-      if (andEntry === false) {
+      if (andEntry === false || andEntry.type !== SCOPE_BEARING_TYPE) {
+        // eslint-disable-next-line no-continue
         continue;
       }
-
-      if (!SCOPE_BEARING_TYPES.has(andEntry.type)) {
-        continue;
-      }
-
       const requirements = andEntry.security._requirements;
-      if (requirements) {
-        for (const scope of requirements) {
-          scopes.add(scope);
+      if (Array.isArray(requirements)) {
+        for (const req of requirements) {
+          scopes.add(req);
         }
       }
     }

@@ -41,6 +41,7 @@ This monorepo contains the following packages:
 - **@ovineko/fastify-base**: Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck, and other common integrations
 - **@ovineko/kubb-client**: Type-safe HTTP client for Kubb-generated code — pure fetch, middleware architecture (requestId, auth, sentry), global singleton + per-request override, React integration
 - **@ovineko/kubb**: Opinionated Kubb wrapper for OpenAPI code generation with `defineConfig` helper
+- **@ovineko/kubb-plugin-scopes**: Kubb plugin for generating type-safe OAuth scope functions from OpenAPI security schemes
 
 ## Repository Structure
 
@@ -57,6 +58,7 @@ ovineko/
 ├── packages/                    # Other publishable packages
 │   ├── kubb-client/            # Type-safe HTTP client for Kubb-generated code
 │   ├── kubb/                   # Opinionated Kubb wrapper for OpenAPI code generation
+│   ├── kubb-plugin-scopes/     # Kubb plugin for OAuth scope code generation
 │   ├── react-router/           # Type-safe React Router v7 wrapper (valibot validation)
 │   ├── clean-pkg-json/         # Package.json cleanup tool for publishing
 │   ├── datamitsu-config/       # Shared config for datamitsu tooling
@@ -416,12 +418,25 @@ Key architecture notes:
 - Null/undefined query params are silently filtered out (not stringified)
 - `onRequest` middleware can return a `Response` to bypass fetch (e.g., caching); `onError` can return `Response` to recover from errors
 - React integration (`src/react.ts`): `ApiClientProvider` and `useApiClient` hook — hook falls back to global singleton when no context provider is present
+- Scopes subsystem (`src/scopes/`): phantom-branded `ApiScope` type prevents arbitrary strings; `scope()` factory creates branded values
+- Scopes validation uses OR-of-ANDs logic: `[[A, B], [C]]` means "(A AND B) OR C"; `isAvailableScopes()` checks access, `getMissingScopes()` returns the closest unmet group
+- React scopes integration (`src/scopes/react.tsx`): `ScopesProvider`, `useScopes` hook, `RequireScopes` component for declarative scope-based access control
+- Subpath exports: `./scopes` (types + validation), `./scopes/react` (React components/hooks)
+- `_setup.setScopes()` / `getScopes()` provide passive scope storage on the client instance; scope enforcement is the user's responsibility (e.g., via `useScopes().hasAccess()` in React)
 
 ### @ovineko/kubb
 
 - Opinionated Kubb wrapper providing `defineConfig()` helper for OpenAPI code generation
 - `useOvinekoClient: true` in config options sets `importPath: "@ovineko/kubb-client"` for both `@kubb/plugin-client` and SWR client configurations
 - When `useOvinekoClient` is false or omitted, no custom importPath is set (uses Kubb defaults)
+- `plugins.scopes: { enabled: true }` integrates `@ovineko/kubb-plugin-scopes` for OAuth scope code generation; when `useOvinekoClient: true`, scopes plugin importPath is set to `@ovineko/kubb-client/scopes`
+
+### @ovineko/kubb-plugin-scopes
+
+- Kubb plugin generating type-safe `getXxxScopes()` functions from OAuth2/OpenID Connect security schemes in OpenAPI specs
+- Scope extraction (`src/utils/extractScopes.ts`) accesses `@kubb/oas` internal `_requirements` property — pin `@kubb/oas` version carefully
+- Default `importPath` is `@ovineko/kubb-client/scopes`; default output path is `scopes`
+- Integrated into `@ovineko/kubb` `defineConfig` via `plugins.scopes: { enabled: true }`
 
 ### @ovineko/clean-pkg-json
 

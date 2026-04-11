@@ -64,14 +64,15 @@ pnpm lint
 
 ### Utility packages
 
-| Package                                                  | Description                                                   |
-| -------------------------------------------------------- | ------------------------------------------------------------- |
-| [@ovineko/kubb-client](./packages/kubb-client)           | Type-safe HTTP client for Kubb-generated code with middleware |
-| [@ovineko/kubb](./packages/kubb)                         | Opinionated Kubb wrapper for OpenAPI code generation          |
-| [@ovineko/react-router](./packages/react-router)         | Type-safe wrapper for React Router v7 with valibot validation |
-| [@ovineko/clean-pkg-json](./packages/clean-pkg-json)     | Zero-config tool to clean package.json before publishing      |
-| [@ovineko/fastify-base](./packages/fastify-base)         | Pre-configured Fastify server with observability              |
-| [@ovineko/datamitsu-config](./packages/datamitsu-config) | Internal configuration for datamitsu tooling                  |
+| Package                                                      | Description                                                   |
+| ------------------------------------------------------------ | ------------------------------------------------------------- |
+| [@ovineko/kubb-client](./packages/kubb-client)               | Type-safe HTTP client for Kubb-generated code with middleware |
+| [@ovineko/kubb](./packages/kubb)                             | Opinionated Kubb wrapper for OpenAPI code generation          |
+| [@ovineko/kubb-plugin-scopes](./packages/kubb-plugin-scopes) | Kubb plugin for OAuth scope code generation                   |
+| [@ovineko/react-router](./packages/react-router)             | Type-safe wrapper for React Router v7 with valibot validation |
+| [@ovineko/clean-pkg-json](./packages/clean-pkg-json)         | Zero-config tool to clean package.json before publishing      |
+| [@ovineko/fastify-base](./packages/fastify-base)             | Pre-configured Fastify server with observability              |
+| [@ovineko/datamitsu-config](./packages/datamitsu-config)     | Internal configuration for datamitsu tooling                  |
 
 ## Contributing
 
