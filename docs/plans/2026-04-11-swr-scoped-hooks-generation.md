@@ -90,16 +90,16 @@ Add automatic SWR scoped hook generation to `@ovineko/kubb-plugin-scopes`. This 
 
 ### Task 2: Add SWR scope code generation utility
 
-- [ ] create `packages/kubb-plugin-scopes/src/generators/swrScopeCodegen.ts` with `generateSwrScopeCode()` function
-- [ ] implement query hook body generation (accepts params, spreads options, calls originalHook with params)
-- [ ] implement mutation hook body generation (no params, spreads options, calls originalHook with options only)
-- [ ] use existing `extractScopes()` to check for scopes, return null if none
-- [ ] generate `SwrScopeCodegenResult` with functionBody, imports, hookType, names
-- [ ] write tests for query hook generation with OAuth2 security (GET /pets with scopes)
-- [ ] write tests for mutation hook generation (POST /pets with scopes)
-- [ ] write tests for operations without scopes (returns null)
-- [ ] write tests for different HTTP methods (PUT, DELETE)
-- [ ] run tests - must pass before task 3
+- [x] create `packages/kubb-plugin-scopes/src/generators/swrScopeCodegen.ts` with `generateSwrScopeCode()` function
+- [x] implement query hook body generation (accepts params, spreads options, calls originalHook with params)
+- [x] implement mutation hook body generation (no params, spreads options, calls originalHook with options only)
+- [x] use existing `extractScopes()` to check for scopes, return null if none
+- [x] generate `SwrScopeCodegenResult` with functionBody, imports, hookType, names
+- [x] write tests for query hook generation with OAuth2 security (GET /pets with scopes)
+- [x] write tests for mutation hook generation (POST /pets with scopes)
+- [x] write tests for operations without scopes (returns null)
+- [x] write tests for different HTTP methods (PUT, DELETE)
+- [x] run tests - must pass before task 3
 
 ### Task 3: Update types for new configuration options
 
