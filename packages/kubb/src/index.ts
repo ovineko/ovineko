@@ -11,6 +11,7 @@ import { pluginOas } from "@kubb/plugin-oas";
 import { pluginSwr } from "@kubb/plugin-swr";
 import { pluginTs } from "@kubb/plugin-ts";
 import { pluginZod } from "@kubb/plugin-zod";
+import { pluginScopes } from "@ovineko/kubb-plugin-scopes";
 
 import type { ConfigOptions } from "./types";
 
@@ -174,6 +175,25 @@ export const defineConfig = (options: ConfigOptions): ReturnType<typeof defineCo
               unknownType: "unknown",
             },
             options.plugins.faker,
+          ),
+        ),
+      options.plugins?.scopes?.enabled &&
+        pluginScopes(
+          createPluginOptions(
+            {
+              group: {
+                name: fixGroupName({ plugin: "scopes", suffix: "Scopes" }),
+                type: "tag",
+              },
+              ...(clientImportPath ? { importPath: `${clientImportPath}/scopes` } : {}),
+              output: {
+                banner: outputBanner,
+                barrelType,
+                footer: outputFooter,
+                path: "./scopes",
+              },
+            },
+            options.plugins.scopes,
           ),
         ),
       ...(options.plugins?.additional || []),

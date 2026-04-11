@@ -25,14 +25,19 @@ vi.mock("@kubb/plugin-ts", () => ({
 vi.mock("@kubb/plugin-zod", () => ({
   pluginZod: vi.fn((opts) => ({ name: "pluginZod", opts })),
 }));
+vi.mock("@ovineko/kubb-plugin-scopes", () => ({
+  pluginScopes: vi.fn((opts) => ({ name: "pluginScopes", opts })),
+}));
 
 import { pluginClient } from "@kubb/plugin-client";
 import { pluginSwr } from "@kubb/plugin-swr";
+import { pluginScopes } from "@ovineko/kubb-plugin-scopes";
 
 import { defineConfig } from "./index";
 
 const pluginClientMock = vi.mocked(pluginClient);
 const pluginSwrMock = vi.mocked(pluginSwr);
+const pluginScopesMock = vi.mocked(pluginScopes);
 
 describe("defineConfig useOvinekoClient", () => {
   it("sets importPath to @ovineko/kubb-client when useOvinekoClient is true", () => {
@@ -101,5 +106,122 @@ describe("defineConfig useOvinekoClient", () => {
         }),
       }),
     );
+  });
+});
+
+describe("defineConfig scopes plugin", () => {
+  it("does not include scopes plugin when not enabled", () => {
+    pluginScopesMock.mockClear();
+
+    const result = defineConfig({
+      config: { input: { path: "spec.yaml" }, output: { path: "./gen" } },
+    }) as { plugins: unknown[] };
+
+    expect(pluginScopesMock).not.toHaveBeenCalled();
+    const scopesPlugin = result.plugins.find(
+      (p: unknown) => (p as { name: string })?.name === "pluginScopes",
+    );
+    expect(scopesPlugin).toBeUndefined();
+  });
+
+  it("includes scopes plugin when enabled", () => {
+    pluginScopesMock.mockClear();
+
+    const result = defineConfig({
+      config: { input: { path: "spec.yaml" }, output: { path: "./gen" } },
+      plugins: { scopes: { enabled: true } },
+    }) as { plugins: unknown[] };
+
+    expect(pluginScopesMock).toHaveBeenCalledTimes(1);
+    const scopesPlugin = result.plugins.find(
+      (p: unknown) => (p as { name: string })?.name === "pluginScopes",
+    );
+    expect(scopesPlugin).toBeDefined();
+  });
+
+  it("sets importPath to @ovineko/kubb-client/scopes when useOvinekoClient is true", () => {
+    pluginScopesMock.mockClear();
+
+    defineConfig({
+      config: { input: { path: "spec.yaml" }, output: { path: "./gen" } },
+      plugins: { scopes: { enabled: true } },
+      useOvinekoClient: true,
+    });
+
+    const scopesArgs = pluginScopesMock.mock.calls[0]![0];
+    expect(scopesArgs).toHaveProperty("importPath", "@ovineko/kubb-client/scopes");
+  });
+
+  it("does not set importPath when useOvinekoClient is false", () => {
+    pluginScopesMock.mockClear();
+
+    defineConfig({
+      config: { input: { path: "spec.yaml" }, output: { path: "./gen" } },
+      plugins: { scopes: { enabled: true } },
+      useOvinekoClient: false,
+    });
+
+    const scopesArgs = pluginScopesMock.mock.calls[0]![0];
+    expect(scopesArgs).not.toHaveProperty("importPath");
+  });
+
+  it("sets default output path to ./scopes", () => {
+    pluginScopesMock.mockClear();
+
+    defineConfig({
+      config: { input: { path: "spec.yaml" }, output: { path: "./gen" } },
+      plugins: { scopes: { enabled: true } },
+    });
+
+    const scopesArgs = pluginScopesMock.mock.calls[0]![0];
+    expect(scopesArgs).toHaveProperty("output.path", "./scopes");
+  });
+
+  it("sets default group type to tag", () => {
+    pluginScopesMock.mockClear();
+
+    defineConfig({
+      config: { input: { path: "spec.yaml" }, output: { path: "./gen" } },
+      plugins: { scopes: { enabled: true } },
+    });
+
+    const scopesArgs = pluginScopesMock.mock.calls[0]![0];
+    expect(scopesArgs).toHaveProperty("group.type", "tag");
+    expect(scopesArgs.group).toHaveProperty("name");
+    expect(typeof scopesArgs.group.name).toBe("function");
+  });
+
+  it("applies createOptions override for scopes plugin", () => {
+    pluginScopesMock.mockClear();
+
+    defineConfig({
+      config: { input: { path: "spec.yaml" }, output: { path: "./gen" } },
+      plugins: {
+        scopes: {
+          createOptions: (opts) => ({
+            ...opts,
+            output: { ...opts.output, path: "./custom-scopes" },
+          }),
+          enabled: true,
+        },
+      },
+    });
+
+    const scopesArgs = pluginScopesMock.mock.calls[0]![0];
+    expect(scopesArgs).toHaveProperty("output.path", "./custom-scopes");
+  });
+
+  it("includes output banner and footer in scopes config", () => {
+    pluginScopesMock.mockClear();
+
+    defineConfig({
+      config: { input: { path: "spec.yaml" }, output: { path: "./gen" } },
+      plugins: { scopes: { enabled: true } },
+    });
+
+    const scopesArgs = pluginScopesMock.mock.calls[0]![0];
+    expect(scopesArgs.output).toHaveProperty("banner");
+    expect(scopesArgs.output).toHaveProperty("footer");
+    expect(scopesArgs.output.banner).toContain("eslint-disable");
   });
 });

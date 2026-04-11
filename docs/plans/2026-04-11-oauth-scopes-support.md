@@ -190,17 +190,17 @@ This enables migration from openapi-generator while preserving scope-based acces
 
 **Files:** `packages/kubb/src/types.ts`, `src/index.ts`, `package.json`
 
-- [ ] add `"@ovineko/kubb-plugin-scopes": "workspace:*"` to kubb package.json dependencies
-- [ ] run `pnpm install` at root to link dependency
-- [ ] import `pluginScopes` in `src/index.ts`: `import { pluginScopes } from "@ovineko/kubb-plugin-scopes"`
-- [ ] extend `ConfigOptions` interface in `src/types.ts` with `scopes?: PluginOptionsEnabled<PluginScopesOptions>`
-- [ ] add `PluginScopesOptions` type alias: `Required<Parameters<typeof pluginScopes>>[0]`
-- [ ] add scopes plugin to plugins array in `defineConfig()` with conditional enable check
-- [ ] pass `clientImportPath` (from `useOvinekoClient` flag) to plugin options
-- [ ] set default output path: `{ path: "./scopes" }` and group: `{ type: "tag" }`
-- [ ] write integration test generating code from mock OpenAPI spec with scopes enabled
-- [ ] verify generated scopes files exist in output directory
-- [ ] run `pnpm test` in `packages/kubb/` - must pass before Task 10
+- [x] add `"@ovineko/kubb-plugin-scopes": "workspace:*"` to kubb package.json dependencies
+- [x] run `pnpm install` at root to link dependency
+- [x] import `pluginScopes` in `src/index.ts`: `import { pluginScopes } from "@ovineko/kubb-plugin-scopes"`
+- [x] extend `ConfigOptions` interface in `src/types.ts` with `scopes?: PluginOptionsEnabled<PluginScopesOptions>`
+- [x] add `PluginScopesOptions` type alias: `Required<Parameters<typeof pluginScopes>>[0]`
+- [x] add scopes plugin to plugins array in `defineConfig()` with conditional enable check
+- [x] pass `clientImportPath` (from `useOvinekoClient` flag) to plugin options
+- [x] set default output path: `{ path: "./scopes" }` and group: `{ type: "tag" }`
+- [x] write integration test generating code from mock OpenAPI spec with scopes enabled
+- [x] verify generated scopes files exist in output directory
+- [x] run `pnpm test` in `packages/kubb/` - must pass before Task 10
 
 ### Task 10: End-to-end integration test with real OpenAPI spec
 

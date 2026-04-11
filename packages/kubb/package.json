@@ -50,6 +50,7 @@
     "@kubb/plugin-swr": "4.37.2",
     "@kubb/plugin-ts": "4.37.2",
     "@kubb/plugin-zod": "4.37.2",
+    "@ovineko/kubb-plugin-scopes": "workspace:*",
     "change-case": "5.4.4"
   },
   "devDependencies": {
