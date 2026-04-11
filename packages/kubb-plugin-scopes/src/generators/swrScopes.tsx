@@ -30,8 +30,14 @@ export const swrScopesGenerator: Generator<PluginScopes> = createReactGenerator<
       suffix: "Scoped",
       type: "function",
     });
-    const file = getFile(operation);
+    const scopesFile = getFile(operation);
     const scopesReactImportPath = plugin.options.scopesReactImportPath;
+    const outputPath = plugin.options.output.path;
+    const swrOutputPath = plugin.options.swrWrappersOutputPath;
+    const file = {
+      ...scopesFile,
+      path: scopesFile.path.replace(`/${outputPath}/`, `/${swrOutputPath}/`),
+    };
 
     const params =
       result.hookType === "query"

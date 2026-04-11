@@ -62,6 +62,21 @@ describe("pluginScopes", () => {
       const plugin = pluginScopes();
       expect(plugin.options.group).toBeUndefined();
     });
+
+    it("sets generateSwrWrappers to false by default", () => {
+      const plugin = pluginScopes();
+      expect(plugin.options.generateSwrWrappers).toBe(false);
+    });
+
+    it("sets default scopesReactImportPath", () => {
+      const plugin = pluginScopes();
+      expect(plugin.options.scopesReactImportPath).toBe("@ovineko/kubb-client/scopes/react");
+    });
+
+    it("sets default swrWrappersOutputPath", () => {
+      const plugin = pluginScopes();
+      expect(plugin.options.swrWrappersOutputPath).toBe("hooks-scoped");
+    });
   });
 
   describe("plugin creation with custom options", () => {
@@ -92,6 +107,21 @@ describe("pluginScopes", () => {
       });
       expect(plugin.options.group?.name).toBeTypeOf("function");
       expect(plugin.options.group?.name?.({ group: "pet" })).toBe("petScopes");
+    });
+
+    it("accepts generateSwrWrappers option", () => {
+      const plugin = pluginScopes({ generateSwrWrappers: true });
+      expect(plugin.options.generateSwrWrappers).toBe(true);
+    });
+
+    it("accepts custom scopesReactImportPath", () => {
+      const plugin = pluginScopes({ scopesReactImportPath: "@my-org/scopes/react" });
+      expect(plugin.options.scopesReactImportPath).toBe("@my-org/scopes/react");
+    });
+
+    it("accepts custom swrWrappersOutputPath", () => {
+      const plugin = pluginScopes({ swrWrappersOutputPath: "custom-hooks-scoped" });
+      expect(plugin.options.swrWrappersOutputPath).toBe("custom-hooks-scoped");
     });
   });
 

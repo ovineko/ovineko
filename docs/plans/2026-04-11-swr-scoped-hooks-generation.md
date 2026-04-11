@@ -126,14 +126,14 @@ Add automatic SWR scoped hook generation to `@ovineko/kubb-plugin-scopes`. This 
 
 ### Task 5: Integrate second generator into plugin
 
-- [ ] modify `packages/kubb-plugin-scopes/src/plugin.ts` to extract `generateSwrWrappers`, `scopesReactImportPath`, `swrWrappersOutputPath` from options
-- [ ] add import for `swrScopesGenerator` from "./generators/swrScopes.js"
-- [ ] after first generator completes (after barrel files), add conditional block for `if (generateSwrWrappers)`
-- [ ] inside conditional: create second `OperationGenerator` instance with mode for `swrWrappersOutputPath`
-- [ ] call `.build(swrScopesGenerator)` and upsert files
-- [ ] generate barrel files for hooks-scoped directory using `getBarrelFiles()` with swrWrappersOutputPath
-- [ ] update plugin options object to include new config fields
-- [ ] run project tests in kubb-plugin-scopes - must pass before task 6
+- [x] modify `packages/kubb-plugin-scopes/src/plugin.ts` to extract `generateSwrWrappers`, `scopesReactImportPath`, `swrWrappersOutputPath` from options
+- [x] add import for `swrScopesGenerator` from "./generators/swrScopes.js"
+- [x] after first generator completes (after barrel files), add conditional block for `if (generateSwrWrappers)`
+- [x] inside conditional: create second `OperationGenerator` instance with mode for `swrWrappersOutputPath`
+- [x] call `.build(swrScopesGenerator)` and upsert files
+- [x] generate barrel files for hooks-scoped directory using `getBarrelFiles()` with swrWrappersOutputPath
+- [x] update plugin options object to include new config fields
+- [x] run project tests in kubb-plugin-scopes - must pass before task 6
 
 ### Task 6: Add integration tests for scoped hooks
 

@@ -5,6 +5,7 @@ import path from "node:path";
 import type { PluginScopes } from "./types.js";
 
 import { scopesGenerator } from "./generators/scopes.js";
+import { swrScopesGenerator } from "./generators/swrScopes.js";
 
 function camelCase(input: string): string {
   return input
@@ -53,6 +54,38 @@ export const pluginScopes = definePlugin<PluginScopes>((options) => {
       });
 
       await this.upsertFile(...barrelFiles);
+
+      if (generateSwrWrappers) {
+        const swrOutput = {
+          barrelType: output.barrelType ?? "named",
+          path: swrWrappersOutputPath,
+        } as const;
+        const swrMode = getMode(path.resolve(root, swrOutput.path));
+
+        const swrFiles = await new OperationGenerator<PluginScopes>(this.plugin.options, {
+          contentType: undefined,
+          events: this.events,
+          exclude: undefined,
+          fabric: this.fabric,
+          include: undefined,
+          mode: swrMode,
+          oas,
+          override: undefined,
+          plugin: this.plugin,
+          pluginManager: this.pluginManager,
+        }).build(swrScopesGenerator);
+
+        await this.upsertFile(...swrFiles);
+
+        const swrBarrelFiles = await getBarrelFiles(this.fabric.files, {
+          meta: { pluginKey: this.plugin.key },
+          output: swrOutput,
+          root,
+          type: swrOutput.barrelType,
+        });
+
+        await this.upsertFile(...swrBarrelFiles);
+      }
     },
     name: pluginScopesName,
     options: {
