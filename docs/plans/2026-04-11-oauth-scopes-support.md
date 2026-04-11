@@ -204,17 +204,17 @@ This enables migration from openapi-generator while preserving scope-based acces
 
 ### Task 10: End-to-end integration test with real OpenAPI spec
 
-**Files:** `packages/kubb-plugin-scopes/test/integration/`
+**Files:** `packages/kubb-plugin-scopes/test-integration/`
 
-- [ ] create minimal OpenAPI spec YAML with OAuth2 security scheme and scopes
-- [ ] create test kubb.config.ts using `defineConfig` with `scopes: { enabled: true }`
-- [ ] run Kubb generation programmatically in test (use Kubb API)
-- [ ] verify generated scopes file exists at expected path
-- [ ] read generated file and verify it contains `getXxxScopes()` function
-- [ ] verify generated code imports from `@ovineko/kubb-client`
-- [ ] compile generated code with TypeScript to verify no type errors
-- [ ] write assertion checking function returns correct scopes array
-- [ ] run `pnpm test` in `packages/kubb-plugin-scopes/` - must pass before Task 11
+- [x] create minimal OpenAPI spec YAML with OAuth2 security scheme and scopes
+- [x] create test kubb.config.ts using `defineConfig` with `scopes: { enabled: true }`
+- [x] run Kubb generation programmatically in test (use Kubb API)
+- [x] verify generated scopes file exists at expected path
+- [x] read generated file and verify it contains `getXxxScopes()` function
+- [x] verify generated code imports from `@ovineko/kubb-client`
+- [x] compile generated code with TypeScript to verify no type errors
+- [x] write assertion checking function returns correct scopes array
+- [x] run `pnpm test` in `packages/kubb-plugin-scopes/` - must pass before Task 11
 
 ### Task 11: Verify acceptance criteria
 

@@ -9,6 +9,8 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
     },
     globals: true,
+    globalSetup: "./test-integration/setup.ts",
+    include: ["src/**/*.test.{ts,tsx}", "test-integration/**/*.test.ts"],
     pool: "threads",
   },
 });

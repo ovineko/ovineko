@@ -6,6 +6,12 @@ import type { PluginScopes } from "./types.js";
 
 import { scopesGenerator } from "./generators/scopes.js";
 
+function camelCase(input: string): string {
+  return input
+    .replaceAll(/[^a-zA-Z0-9]+(.)/g, (_, char: string) => char.toUpperCase())
+    .replace(/^[A-Z]/, (char) => char.toLowerCase());
+}
+
 export const pluginScopesName = "plugin-scopes" as const;
 
 export const pluginScopes = definePlugin<PluginScopes>((options) => {
@@ -53,7 +59,11 @@ export const pluginScopes = definePlugin<PluginScopes>((options) => {
     },
     pre: [pluginOasName],
     resolveName(name, type) {
-      return name;
+      if (type === "file") {
+        return camelCase(name);
+      }
+
+      return camelCase(name);
     },
     resolvePath(baseName, pathMode, options) {
       const root = path.resolve(this.config.root, this.config.output.path);
