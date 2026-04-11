@@ -34,6 +34,14 @@
     "./react": {
       "types": "./dist/react.d.ts",
       "default": "./dist/react.js"
+    },
+    "./scopes": {
+      "types": "./dist/scopes.d.ts",
+      "default": "./dist/scopes.js"
+    },
+    "./scopes/react": {
+      "types": "./dist/scopes-react.d.ts",
+      "default": "./dist/scopes-react.js"
     }
   },
   "files": [

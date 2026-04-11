@@ -115,14 +115,14 @@ This enables migration from openapi-generator while preserving scope-based acces
 
 **Files:** `packages/kubb-client/src/scopes.ts`, `src/scopes-react.ts`, `package.json`, `tsup.config.ts`
 
-- [ ] create `src/scopes.ts` entry point exporting types and validation functions
-- [ ] create `src/scopes-react.ts` entry point exporting React components and hooks
-- [ ] update `package.json` exports to add `"./scopes"` and `"./scopes/react"` subpaths
-- [ ] update `tsup.config.ts` entry array to include `"src/scopes.ts"` and `"src/scopes-react.ts"`
-- [ ] run `pnpm build:lib` in `packages/kubb-client/` to verify build succeeds
-- [ ] manually verify generated `dist/scopes.d.ts` and `dist/scopes-react.d.ts` exist
-- [ ] write integration test importing from subpaths (`import { scope } from "@ovineko/kubb-client/scopes"`)
-- [ ] run `pnpm test` in `packages/kubb-client/` - must pass before Task 5
+- [x] create `src/scopes.ts` entry point exporting types and validation functions
+- [x] create `src/scopes-react.ts` entry point exporting React components and hooks
+- [x] update `package.json` exports to add `"./scopes"` and `"./scopes/react"` subpaths
+- [x] update `tsup.config.ts` entry array to include `"src/scopes.ts"` and `"src/scopes-react.ts"`
+- [x] run `pnpm build:lib` in `packages/kubb-client/` to verify build succeeds
+- [x] manually verify generated `dist/scopes.d.ts` and `dist/scopes-react.d.ts` exist
+- [x] write integration test importing from subpaths (`import { scope } from "@ovineko/kubb-client/scopes"`)
+- [x] run `pnpm test` in `packages/kubb-client/` - must pass before Task 5
 
 ### Task 5: Create kubb-plugin-scopes package structure
 

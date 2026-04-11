@@ -6,7 +6,7 @@ const execAsync = promisify(exec);
 
 export default tsup.defineConfig({
   clean: true,
-  entry: ["src/index.ts", "src/react.ts"],
+  entry: ["src/index.ts", "src/react.ts", "src/scopes.ts", "src/scopes-react.ts"],
   format: "esm",
   async onSuccess() {
     await execAsync("rm -f tsconfig.tsbuildinfo && pnpm exec tsc --emitDeclarationOnly");

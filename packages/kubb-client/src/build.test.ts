@@ -21,4 +21,20 @@ describe("package build configuration", () => {
   it("produces dist/react.d.ts", () => {
     expect(existsSync(resolve(distDir, "react.d.ts"))).toBe(true);
   });
+
+  it("produces dist/scopes.js", () => {
+    expect(existsSync(resolve(distDir, "scopes.js"))).toBe(true);
+  });
+
+  it("produces dist/scopes.d.ts", () => {
+    expect(existsSync(resolve(distDir, "scopes.d.ts"))).toBe(true);
+  });
+
+  it("produces dist/scopes-react.js", () => {
+    expect(existsSync(resolve(distDir, "scopes-react.js"))).toBe(true);
+  });
+
+  it("produces dist/scopes-react.d.ts", () => {
+    expect(existsSync(resolve(distDir, "scopes-react.d.ts"))).toBe(true);
+  });
 });
