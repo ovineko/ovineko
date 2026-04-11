@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Middleware } from "./types.js";
 
+import { scope } from "../scopes/types.js";
 import { createClient } from "./client.js";
 
 function mockFetchResponse(body: unknown, init?: ResponseInit): Response {
@@ -426,6 +427,52 @@ describe("createClient", () => {
         expect.any(String),
         expect.objectContaining({ signal: controller.signal }),
       );
+    });
+  });
+
+  describe("scopes state management", () => {
+    it("getScopes returns empty array by default", () => {
+      const client = createClient();
+      expect(client._setup.getScopes()).toEqual([]);
+    });
+
+    it("setScopes updates scopes state", () => {
+      const client = createClient();
+      const scopes = [scope("users:read"), scope("users:write")];
+      client._setup.setScopes(scopes);
+      expect(client._setup.getScopes()).toEqual(scopes);
+    });
+
+    it("setScopes accepts empty array", () => {
+      const client = createClient();
+      client._setup.setScopes([scope("users:read")]);
+      client._setup.setScopes([]);
+      expect(client._setup.getScopes()).toEqual([]);
+    });
+
+    it("getScopes returns a copy, not a reference", () => {
+      const client = createClient();
+      client._setup.setScopes([scope("users:read")]);
+      const scopes1 = client._setup.getScopes();
+      const scopes2 = client._setup.getScopes();
+      expect(scopes1).not.toBe(scopes2);
+      expect(scopes1).toEqual(scopes2);
+    });
+
+    it("setScopes stores a copy, not a reference to the input", () => {
+      const client = createClient();
+      const input = [scope("users:read")];
+      client._setup.setScopes(input);
+      input.push(scope("users:write"));
+      expect(client._setup.getScopes()).toEqual([scope("users:read")]);
+    });
+
+    it("scopes are isolated between client instances", () => {
+      const client1 = createClient();
+      const client2 = createClient();
+      client1._setup.setScopes([scope("admin")]);
+      expect(client1._setup.getScopes()).toEqual([scope("admin")]);
+      expect(client2._setup.getScopes()).toEqual([]);
     });
   });
 

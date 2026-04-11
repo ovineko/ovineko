@@ -1,3 +1,4 @@
+import type { ApiScope } from "../scopes/types.js";
 import type {
   ClientConfiguration,
   ClientWithSetup,
@@ -10,6 +11,7 @@ import { MiddlewareOrchestrator } from "./middleware.js";
 
 export function createClient(initialConfig?: ClientConfiguration): ClientWithSetup {
   let config: ClientConfiguration = { ...initialConfig };
+  let currentScopes: ApiScope[] = [];
   const orchestrator = new MiddlewareOrchestrator(config.middleware);
 
   const client: ClientWithSetup = Object.assign(
@@ -120,6 +122,7 @@ export function createClient(initialConfig?: ClientConfiguration): ClientWithSet
           ...config,
           middleware: [...orchestrator.getMiddlewares()],
         }),
+        getScopes: () => [...currentScopes],
         remove: (name: string) => {
           orchestrator.remove(name);
         },
@@ -134,6 +137,9 @@ export function createClient(initialConfig?: ClientConfiguration): ClientWithSet
               orchestrator.use(mw);
             }
           }
+        },
+        setScopes: (scopes: ApiScope[]) => {
+          currentScopes = [...scopes];
         },
         use: (middleware: Middleware) => {
           orchestrator.use(middleware);

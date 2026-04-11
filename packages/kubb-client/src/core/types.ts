@@ -1,3 +1,5 @@
+import type { ApiScope } from "../scopes/types.js";
+
 /**
  * Client function signature - MUST match Kubb's Client type exactly.
  * Generated code calls: client<TResponseData>({ method, url, ... })
@@ -20,8 +22,10 @@ export interface ClientConfiguration {
  */
 export interface ClientSetup {
   getConfig: () => ClientConfiguration;
+  getScopes: () => ApiScope[];
   remove: (name: string) => void;
   setConfig: (config: Partial<ClientConfiguration>) => void;
+  setScopes: (scopes: ApiScope[]) => void;
   use: (middleware: Middleware) => void;
 }
 
@@ -55,6 +59,7 @@ export interface RequestConfig<TData = unknown> {
   method?: "DELETE" | "GET" | "HEAD" | "OPTIONS" | "PATCH" | "POST" | "PUT";
   params?: unknown;
   responseType?: "arraybuffer" | "blob" | "document" | "json" | "stream" | "text";
+  scopes?: ApiScope[][];
   signal?: AbortSignal;
   url?: string;
 }

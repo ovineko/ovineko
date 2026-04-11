@@ -11,6 +11,8 @@ import type {
   ResponseErrorConfig,
 } from "./types.js";
 
+import { scope } from "../scopes/types.js";
+
 describe("core/types", () => {
   describe("RequestConfig", () => {
     it("accepts minimal config", () => {
@@ -72,6 +74,17 @@ describe("core/types", () => {
         const config: RequestConfig = { method: "GET", responseType };
         expect(config.responseType).toBe(responseType);
       }
+    });
+
+    it("accepts optional scopes field with OR-of-ANDs format", () => {
+      const config: RequestConfig = {
+        method: "GET",
+        scopes: [[scope("users:read")], [scope("admin:read"), scope("admin:write")]],
+        url: "/users",
+      };
+      expect(config.scopes).toHaveLength(2);
+      expect(config.scopes![0]).toHaveLength(1);
+      expect(config.scopes![1]).toHaveLength(2);
     });
   });
 
@@ -191,17 +204,21 @@ describe("core/types", () => {
   });
 
   describe("ClientSetup", () => {
-    it("defines use, remove, getConfig, setConfig methods", () => {
+    it("defines use, remove, getConfig, setConfig, getScopes, setScopes methods", () => {
       const setup: ClientSetup = {
         getConfig: () => ({}),
+        getScopes: () => [],
         remove: () => {},
         setConfig: () => {},
+        setScopes: () => {},
         use: () => {},
       };
       expect(typeof setup.use).toBe("function");
       expect(typeof setup.remove).toBe("function");
       expect(typeof setup.getConfig).toBe("function");
       expect(typeof setup.setConfig).toBe("function");
+      expect(typeof setup.getScopes).toBe("function");
+      expect(typeof setup.setScopes).toBe("function");
     });
   });
 
@@ -217,8 +234,10 @@ describe("core/types", () => {
         {
           _setup: {
             getConfig: () => ({}),
+            getScopes: () => [],
             remove: () => {},
             setConfig: () => {},
+            setScopes: () => {},
             use: () => {},
           },
         },

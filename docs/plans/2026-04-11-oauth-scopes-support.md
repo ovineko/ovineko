@@ -87,15 +87,15 @@ This enables migration from openapi-generator while preserving scope-based acces
 
 **Files:** `packages/kubb-client/src/core/types.ts`, `src/core/client.ts`
 
-- [ ] extend `ClientSetup` interface with `getScopes(): ApiScope[]` and `setScopes(scopes: ApiScope[]): void`
-- [ ] extend `RequestConfig` interface with optional `scopes?: ApiScope[][]` field
-- [ ] modify `createClient()` to add internal `currentScopes: ApiScope[] = []` state
-- [ ] implement `getScopes()` to return copy of current scopes
-- [ ] implement `setScopes()` to update scopes state
-- [ ] write tests for `getScopes()` (returns copy, not reference)
-- [ ] write tests for `setScopes()` (updates state, accepts empty array)
-- [ ] write tests for scopes isolation between client instances
-- [ ] run `pnpm test` in `packages/kubb-client/` - must pass before Task 3
+- [x] extend `ClientSetup` interface with `getScopes(): ApiScope[]` and `setScopes(scopes: ApiScope[]): void`
+- [x] extend `RequestConfig` interface with optional `scopes?: ApiScope[][]` field
+- [x] modify `createClient()` to add internal `currentScopes: ApiScope[] = []` state
+- [x] implement `getScopes()` to return copy of current scopes
+- [x] implement `setScopes()` to update scopes state
+- [x] write tests for `getScopes()` (returns copy, not reference)
+- [x] write tests for `setScopes()` (updates state, accepts empty array)
+- [x] write tests for scopes isolation between client instances
+- [x] run `pnpm test` in `packages/kubb-client/` - must pass before Task 3
 
 ### Task 3: Add React scopes integration (Provider, Hook, Component)
 
