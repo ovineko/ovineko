@@ -17,7 +17,7 @@ export interface SwrScopeCodegenResult {
  *
  * Returns null if the operation has no OAuth/OIDC scopes, since there is nothing to guard.
  *
- * For query hooks (GET): generates a wrapper accepting (params?, options?) that forwards
+ * For query hooks (GET): generates a wrapper accepting (params, options?) that forwards
  * both to the original hook with shouldFetch gated by scope access.
  *
  * For mutation hooks (POST/PUT/PATCH/DELETE): generates a wrapper accepting (options?)

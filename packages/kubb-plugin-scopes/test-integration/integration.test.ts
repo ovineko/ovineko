@@ -203,7 +203,7 @@ describe("kubb-plugin-scopes SWR scoped hooks integration", () => {
   describe("query hook with path params structure (GET /pets/{petId})", () => {
     it("getPetById uses two-param pattern (params + options)", () => {
       const content = readFileSync(join(hooksScopedDir, "petScopes", "getPetById.ts"), "utf8");
-      expect(content).toContain("export function useGetPetByIdScoped(params?:");
+      expect(content).toContain("export function useGetPetByIdScoped(params:");
       expect(content).toContain("return originalHook(params, {");
     });
 

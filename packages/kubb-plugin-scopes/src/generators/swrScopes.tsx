@@ -52,7 +52,7 @@ export const swrScopesGenerator: Generator<PluginScopes> = createReactGenerator<
     const importPrefix = plugin.options.group ? "../.." : "..";
 
     const params = result.hasPathParams
-      ? `params?: Parameters<typeof originalHook>[0], options?: Omit<Parameters<typeof originalHook>[1], "shouldFetch"> & { shouldFetch?: boolean }`
+      ? `params: Parameters<typeof originalHook>[0], options?: Omit<Parameters<typeof originalHook>[1], "shouldFetch"> & { shouldFetch?: boolean }`
       : `options?: Omit<Parameters<typeof originalHook>[0], "shouldFetch"> & { shouldFetch?: boolean }`;
 
     return (
