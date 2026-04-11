@@ -101,15 +101,15 @@ This enables migration from openapi-generator while preserving scope-based acces
 
 **Files:** `packages/kubb-client/src/scopes/react.tsx`
 
-- [ ] create `ScopesContext` with `createContext<ApiScope[] | null>(null)`
-- [ ] implement `ScopesProvider` component accepting `scopes: ApiScope[]` and `children`
-- [ ] implement `useScopes()` hook returning `{ userScopes, hasAccess, getMissingScopes }`
-- [ ] implement `RequireScopes` component with conditional rendering based on `hasAccess()`
-- [ ] write tests for `ScopesProvider` (provides scopes to children)
-- [ ] write tests for `useScopes()` (throws outside Provider, returns correct methods)
-- [ ] write tests for `hasAccess()` with various scope combinations
-- [ ] write tests for `RequireScopes` (shows children when has access, shows fallback when denied)
-- [ ] run `pnpm test` in `packages/kubb-client/` - must pass before Task 4
+- [x] create `ScopesContext` with `createContext<ApiScope[] | null>(null)`
+- [x] implement `ScopesProvider` component accepting `scopes: ApiScope[]` and `children`
+- [x] implement `useScopes()` hook returning `{ userScopes, hasAccess, getMissingScopes }`
+- [x] implement `RequireScopes` component with conditional rendering based on `hasAccess()`
+- [x] write tests for `ScopesProvider` (provides scopes to children)
+- [x] write tests for `useScopes()` (throws outside Provider, returns correct methods)
+- [x] write tests for `hasAccess()` with various scope combinations
+- [x] write tests for `RequireScopes` (shows children when has access, shows fallback when denied)
+- [x] run `pnpm test` in `packages/kubb-client/` - must pass before Task 4
 
 ### Task 4: Setup scopes subpath exports in kubb-client
 
