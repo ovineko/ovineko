@@ -176,15 +176,15 @@ This enables migration from openapi-generator while preserving scope-based acces
 
 **Files:** `packages/kubb-plugin-scopes/src/index.ts`, `src/types.ts`
 
-- [ ] create `PluginScopesOptions` interface with `output.path`, `importPath`, `group?`
-- [ ] implement `pluginScopes()` factory using `createPlugin<PluginScopesOptions>`
-- [ ] add `buildStart()` hook for initialization (can be empty for now)
-- [ ] add `operation({ operation })` hook calling `scopesGenerator.operation()`
-- [ ] export plugin factory as default export
-- [ ] write test creating plugin instance with minimal options
-- [ ] write test verifying plugin name is `"@ovineko/kubb-plugin-scopes"`
-- [ ] write test verifying operation hook is called for each operation
-- [ ] run `pnpm test` in `packages/kubb-plugin-scopes/` - must pass before Task 9
+- [x] create `PluginScopesOptions` interface with `output.path`, `importPath`, `group?`
+- [x] implement `pluginScopes()` factory using `definePlugin<PluginScopes>` (Kubb uses `definePlugin`, not `createPlugin`)
+- [x] add `install()` hook with `OperationGenerator` that runs `scopesGenerator` (Kubb uses `install` lifecycle, not separate `buildStart`/`operation` hooks)
+- [x] add `resolvePath()` and `resolveName()` hooks for file path resolution with group support
+- [x] export plugin factory and name constant from index
+- [x] write test creating plugin instance with minimal options
+- [x] write test verifying plugin name is `"plugin-scopes"`
+- [x] write tests for custom options, pre-dependencies, lifecycle hooks, and resolveName
+- [x] run `pnpm test` in `packages/kubb-plugin-scopes/` - must pass before Task 9
 
 ### Task 9: Integrate scopes plugin into @ovineko/kubb defineConfig
 

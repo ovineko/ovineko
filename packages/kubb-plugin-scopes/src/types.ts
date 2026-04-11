@@ -7,6 +7,10 @@ export interface Options {
    * Group the generated scopes files based on the provided name.
    */
   group?: {
+    /**
+     * Return the name of a group based on the group name.
+     */
+    name?: (context: { group: string }) => string;
     type: "tag";
   };
   /**
