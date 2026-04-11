@@ -160,13 +160,13 @@ Add automatic SWR scoped hook generation to `@ovineko/kubb-plugin-scopes`. This 
 
 ### Task 8: [Final] Update documentation
 
-- [ ] update `packages/kubb-plugin-scopes/README.md` with SWR scoped hooks section
-- [ ] add configuration example showing `generateSwrWrappers: true` option
-- [ ] add usage example comparing manual isPaused approach vs scoped hooks
-- [ ] document requirement: SWR plugin must be enabled (`swr: { disabled: false }`)
-- [ ] add JSDoc comments to `determineHookType()` explaining query vs mutation detection
-- [ ] add JSDoc comments to `generateSwrScopeCode()` explaining return value and null case
-- [ ] add JSDoc comments to `swrScopesGenerator` explaining purpose and when files are generated
+- [x] update `packages/kubb-plugin-scopes/README.md` with SWR scoped hooks section
+- [x] add configuration example showing `generateSwrWrappers: true` option
+- [x] add usage example comparing manual isPaused approach vs scoped hooks
+- [x] document requirement: SWR plugin must be enabled (`swr: { disabled: false }`)
+- [x] add JSDoc comments to `determineHookType()` explaining query vs mutation detection
+- [x] add JSDoc comments to `generateSwrScopeCode()` explaining return value and null case
+- [x] add JSDoc comments to `swrScopesGenerator` explaining purpose and when files are generated
 
 _Note: ralphex automatically moves completed plans to `docs/plans/completed/`_
 

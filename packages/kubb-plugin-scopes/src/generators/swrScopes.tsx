@@ -9,6 +9,15 @@ import type { PluginScopes } from "../types.js";
 
 import { generateSwrScopeCode } from "./swrScopeCodegen.js";
 
+/**
+ * Kubb React generator that creates SWR scoped hook wrappers for operations with OAuth/OIDC scopes.
+ *
+ * For each operation that has scopes (via extractScopes), generates a `use{OperationName}Scoped` hook
+ * that wraps the original SWR hook with automatic scope checking via `useScopes().hasAccess()`.
+ * Operations without scopes are skipped (no file generated).
+ *
+ * Only runs when `generateSwrWrappers: true` is set in plugin options.
+ */
 export const swrScopesGenerator: Generator<PluginScopes> = createReactGenerator<PluginScopes>({
   name: "plugin-scopes-swr",
   Operation({ generator, operation, plugin }) {
