@@ -22,7 +22,10 @@ export function generateScopeCode(
   }
 
   const scopeValues = scopes
-    .map((s) => `scope("${s.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}")`)
+    .map(
+      (s) =>
+        `scope("${s.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("\n", "\\n").replaceAll("\r", "\\r").replaceAll("\0", "\\0")}")`,
+    )
     .join(", ");
 
   return {
