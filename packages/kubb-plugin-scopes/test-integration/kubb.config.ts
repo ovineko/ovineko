@@ -3,6 +3,7 @@
 import { defineConfig } from "../../kubb/dist/index.js";
 
 export default defineConfig({
+  barrelType: "named",
   config: {
     input: {
       path: "./test-integration/petstore-oauth.yaml",
@@ -15,8 +16,11 @@ export default defineConfig({
     client: { enabled: true },
     faker: { enabled: false },
     msw: { enabled: false },
-    scopes: { enabled: true },
-    swr: { disabled: true },
+    scopes: {
+      createOptions: (opts) => ({ ...opts, generateSwrWrappers: true }),
+      enabled: true,
+    },
+    swr: { disabled: false },
     zod: { enabled: false },
   },
   useOvinekoClient: true,

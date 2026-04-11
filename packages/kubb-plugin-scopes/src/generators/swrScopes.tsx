@@ -3,6 +3,7 @@ import type { Generator } from "@kubb/plugin-oas/generators";
 import { createReactGenerator } from "@kubb/plugin-oas/generators";
 import { useOperationManager } from "@kubb/plugin-oas/hooks";
 import { File, Function } from "@kubb/react-fabric";
+import path from "node:path";
 
 import type { PluginScopes } from "../types.js";
 
@@ -32,7 +33,7 @@ export const swrScopesGenerator: Generator<PluginScopes> = createReactGenerator<
     });
     const scopesFile = getFile(operation);
     const scopesReactImportPath = plugin.options.scopesReactImportPath;
-    const outputPath = plugin.options.output.path;
+    const outputPath = path.normalize(plugin.options.output.path);
     const swrOutputPath = plugin.options.swrWrappersOutputPath;
     const file = {
       ...scopesFile,
@@ -46,7 +47,10 @@ export const swrScopesGenerator: Generator<PluginScopes> = createReactGenerator<
 
     return (
       <File baseName={file.baseName} path={file.path} {...(file.meta ? { meta: file.meta } : {})}>
-        <File.Import alias="originalHook" name={[originalHookName]} path="../hooks" />
+        <File.Import
+          name={[{ name: "originalHook", propertyName: originalHookName }]}
+          path="../hooks"
+        />
         <File.Import name={[scopeGetterName]} path="../scopes" />
         <File.Import name={["useScopes"]} path={scopesReactImportPath} />
 

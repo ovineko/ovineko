@@ -137,16 +137,16 @@ Add automatic SWR scoped hook generation to `@ovineko/kubb-plugin-scopes`. This 
 
 ### Task 6: Add integration tests for scoped hooks
 
-- [ ] modify `packages/kubb-plugin-scopes/test-integration/kubb.config.ts` to enable SWR: `swr: { disabled: false }`
-- [ ] set `generateSwrWrappers: true` in scopes plugin config
-- [ ] ensure test OpenAPI spec has operations with OAuth2 security (listPets, createPet, etc.)
-- [ ] write integration tests verifying hooks-scoped directory exists
-- [ ] write tests verifying query hook files exist (useListPetsScoped.ts)
-- [ ] write tests verifying mutation hook files exist (useCreatePetScoped.ts)
-- [ ] write tests checking query hook structure: imports originalHook, scopeGetter, useScopes; has params and options
-- [ ] write tests checking mutation hook structure: no params parameter, only options
-- [ ] write tests verifying barrel files generated in hooks-scoped/index.ts
-- [ ] run integration tests - must pass before task 7
+- [x] modify `packages/kubb-plugin-scopes/test-integration/kubb.config.ts` to enable SWR: `swr: { disabled: false }`
+- [x] set `generateSwrWrappers: true` in scopes plugin config
+- [x] ensure test OpenAPI spec has operations with OAuth2 security (listPets, createPet, etc.)
+- [x] write integration tests verifying hooks-scoped directory exists
+- [x] write tests verifying query hook files exist (useListPetsScoped.ts)
+- [x] write tests verifying mutation hook files exist (useCreatePetScoped.ts)
+- [x] write tests checking query hook structure: imports originalHook, scopeGetter, useScopes; has params and options
+- [x] write tests checking mutation hook structure: no params parameter, only options
+- [x] write tests verifying barrel files generated in hooks-scoped/index.ts
+- [x] run integration tests - must pass before task 7
 
 ### Task 7: Verify acceptance criteria
 
