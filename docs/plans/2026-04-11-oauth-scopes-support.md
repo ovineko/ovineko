@@ -141,19 +141,19 @@ This enables migration from openapi-generator while preserving scope-based acces
 
 **Files:** `packages/kubb-plugin-scopes/src/utils/extractScopes.ts`
 
-- [ ] create `extractScopes(operation: Operation): string[]` function
-- [ ] implement OAuth2 detection: check `scheme?.type === 'oauth2'`
-- [ ] implement OpenID Connect detection: check `scheme?.type === 'openIdConnect'`
-- [ ] extract scopes from `operation.security` array (iterate requirements)
-- [ ] deduplicate scopes using `new Set()` before returning
-- [ ] handle edge case: no security schemes (return empty array)
-- [ ] handle edge case: security schemes without scopes (return empty array)
-- [ ] write tests for extractScopes with OAuth2 security scheme
-- [ ] write tests for extractScopes with OpenID Connect security scheme
-- [ ] write tests for extractScopes with mixed security schemes (OAuth2 + API key)
-- [ ] write tests for extractScopes with no security (empty array)
-- [ ] write tests for extractScopes with duplicate scopes (deduplication)
-- [ ] run `pnpm test` in `packages/kubb-plugin-scopes/` - must pass before Task 7
+- [x] create `extractScopes(operation: Operation): string[]` function
+- [x] implement OAuth2 detection: check `scheme?.type === 'oauth2'`
+- [x] implement OpenID Connect detection: check `scheme?.type === 'openIdConnect'`
+- [x] extract scopes from `operation.security` array (iterate requirements)
+- [x] deduplicate scopes using `new Set()` before returning
+- [x] handle edge case: no security schemes (return empty array)
+- [x] handle edge case: security schemes without scopes (return empty array)
+- [x] write tests for extractScopes with OAuth2 security scheme
+- [x] write tests for extractScopes with OpenID Connect security scheme
+- [x] write tests for extractScopes with mixed security schemes (OAuth2 + API key)
+- [x] write tests for extractScopes with no security (empty array)
+- [x] write tests for extractScopes with duplicate scopes (deduplication)
+- [x] run `pnpm test` in `packages/kubb-plugin-scopes/` - must pass before Task 7
 
 ### Task 7: Implement React generator for scopes functions
 
