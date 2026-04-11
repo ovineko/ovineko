@@ -1,6 +1,28 @@
-import { describe, expect, it } from "vitest";
+import type * as kubbCore from "@kubb/core";
+
+import { getMode } from "@kubb/core";
+import path from "node:path";
+import { describe, expect, it, vi } from "vitest";
 
 import { pluginScopes, pluginScopesName } from "./plugin.js";
+
+function mockContext(root = "/project", outputPath = "gen") {
+  return {
+    config: {
+      output: { path: outputPath },
+      root,
+    },
+  };
+}
+
+// Mock getMode to control return value for resolvePath tests
+vi.mock("@kubb/core", async () => {
+  const original = await vi.importActual<typeof kubbCore>("@kubb/core");
+  return {
+    ...original,
+    getMode: vi.fn().mockReturnValue("split"),
+  };
+});
 
 describe("pluginScopes", () => {
   describe("plugin name", () => {
@@ -97,12 +119,146 @@ describe("pluginScopes", () => {
     });
   });
 
-  describe("resolveName", () => {
-    it("returns name unchanged", () => {
+  describe("resolveName (camelCase conversion)", () => {
+    it("returns simple camelCase name unchanged", () => {
       const plugin = pluginScopes();
-      // resolveName is called with `this` context, but for testing we can call it directly
       const result = plugin.resolveName!.call({} as never, "getUserScopes", "function");
       expect(result).toBe("getUserScopes");
+    });
+
+    it("converts kebab-case to camelCase", () => {
+      const plugin = pluginScopes();
+      const result = plugin.resolveName!.call({} as never, "get-user-scopes", "function");
+      expect(result).toBe("getUserScopes");
+    });
+
+    it("converts snake_case to camelCase", () => {
+      const plugin = pluginScopes();
+      const result = plugin.resolveName!.call({} as never, "get_user_scopes", "function");
+      expect(result).toBe("getUserScopes");
+    });
+
+    it("converts PascalCase to camelCase", () => {
+      const plugin = pluginScopes();
+      const result = plugin.resolveName!.call({} as never, "GetUserScopes", "function");
+      expect(result).toBe("getUserScopes");
+    });
+
+    it("handles single word name", () => {
+      const plugin = pluginScopes();
+      const result = plugin.resolveName!.call({} as never, "scopes", "function");
+      expect(result).toBe("scopes");
+    });
+
+    it("returns same result for file type as for function type", () => {
+      const plugin = pluginScopes();
+      const fnResult = plugin.resolveName!.call({} as never, "get-user", "function");
+      const fileResult = plugin.resolveName!.call({} as never, "get-user", "file");
+      expect(fnResult).toBe(fileResult);
+    });
+
+    it("handles names with multiple consecutive separators", () => {
+      const plugin = pluginScopes();
+      const result = plugin.resolveName!.call({} as never, "get--user", "function");
+      expect(result).toBe("getUser");
+    });
+  });
+
+  describe("resolvePath", () => {
+    it("resolves path in split mode without group", () => {
+      const plugin = pluginScopes();
+      vi.mocked(getMode).mockReturnValue("split");
+
+      const ctx = mockContext();
+      const result = plugin.resolvePath!.call(ctx as never, "getUserScopes.ts", undefined, {});
+      expect(result).toBe(path.resolve("/project", "gen", "scopes", "getUserScopes.ts"));
+    });
+
+    it("resolves path in single mode", () => {
+      const plugin = pluginScopes({ output: { path: "scopes.ts" } });
+      vi.mocked(getMode).mockReturnValue("single");
+
+      const ctx = mockContext();
+      const result = plugin.resolvePath!.call(ctx as never, "getUserScopes.ts", "single", {});
+      expect(result).toBe(path.resolve("/project", "gen", "scopes.ts"));
+    });
+
+    it("resolves path with pathMode override to single", () => {
+      const plugin = pluginScopes({ output: { path: "all-scopes.ts" } });
+
+      const ctx = mockContext();
+      const result = plugin.resolvePath!.call(ctx as never, "getUserScopes.ts", "single", {});
+      expect(result).toBe(path.resolve("/project", "gen", "all-scopes.ts"));
+    });
+
+    it("resolves path with group tag", () => {
+      const plugin = pluginScopes({
+        group: { type: "tag" },
+      });
+      vi.mocked(getMode).mockReturnValue("split");
+
+      const ctx = mockContext();
+      const result = plugin.resolvePath!.call(ctx as never, "getUserScopes.ts", undefined, {
+        group: { tag: "pets" },
+      });
+      expect(result).toBe(path.resolve("/project", "gen", "scopes", "pets", "getUserScopes.ts"));
+    });
+
+    it("resolves path with group tag and custom name function", () => {
+      const plugin = pluginScopes({
+        group: { name: (ctx) => `${ctx.group}Api`, type: "tag" },
+      });
+      vi.mocked(getMode).mockReturnValue("split");
+
+      const ctx = mockContext();
+      const result = plugin.resolvePath!.call(ctx as never, "getUserScopes.ts", undefined, {
+        group: { tag: "pets" },
+      });
+      expect(result).toBe(path.resolve("/project", "gen", "scopes", "petsApi", "getUserScopes.ts"));
+    });
+
+    it("resolves path without group tag in options (no grouping)", () => {
+      const plugin = pluginScopes({
+        group: { type: "tag" },
+      });
+      vi.mocked(getMode).mockReturnValue("split");
+
+      const ctx = mockContext();
+      const result = plugin.resolvePath!.call(ctx as never, "getUserScopes.ts", undefined, {});
+      expect(result).toBe(path.resolve("/project", "gen", "scopes", "getUserScopes.ts"));
+    });
+
+    it("uses getMode fallback when pathMode is undefined", () => {
+      const plugin = pluginScopes({ output: { path: "scopes.ts" } });
+      vi.mocked(getMode).mockReturnValue("single");
+
+      const ctx = mockContext();
+      const result = plugin.resolvePath!.call(ctx as never, "getUserScopes.ts", undefined, {});
+      // getMode returns "single", so it should return the output.path directly
+      expect(result).toBe(path.resolve("/project", "gen", "scopes.ts"));
+    });
+
+    it("resolves path with custom root and output", () => {
+      const plugin = pluginScopes({ output: { path: "api/scopes" } });
+      vi.mocked(getMode).mockReturnValue("split");
+
+      const ctx = mockContext("/custom/root", "output");
+      const result = plugin.resolvePath!.call(ctx as never, "file.ts", undefined, {});
+      expect(result).toBe(path.resolve("/custom/root", "output", "api/scopes", "file.ts"));
+    });
+
+    it("resolves group with default name function when group.name is undefined", () => {
+      const plugin = pluginScopes({
+        group: { type: "tag" },
+      });
+      vi.mocked(getMode).mockReturnValue("split");
+
+      const ctx = mockContext();
+      // When group.name is undefined, the default (ctx) => ctx.group is used
+      const result = plugin.resolvePath!.call(ctx as never, "file.ts", undefined, {
+        group: { tag: "users" },
+      });
+      expect(result).toBe(path.resolve("/project", "gen", "scopes", "users", "file.ts"));
     });
   });
 });

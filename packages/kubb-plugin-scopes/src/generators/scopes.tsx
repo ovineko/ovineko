@@ -6,33 +6,30 @@ import { File, Function } from "@kubb/react-fabric";
 
 import type { PluginScopes } from "../types.js";
 
-import { extractScopes } from "../utils/extractScopes.js";
+import { generateScopeCode } from "./scopeCodegen.js";
 
 export const scopesGenerator: Generator<PluginScopes> = createReactGenerator<PluginScopes>({
   name: "plugin-scopes",
   Operation({ generator, operation, plugin }) {
     const { getFile, getName } = useOperationManager(generator);
 
-    const scopes = extractScopes(operation);
+    const result = generateScopeCode(operation, plugin.options.importPath);
 
-    if (scopes.length === 0) {
+    if (!result) {
       return null;
     }
 
     const name = getName(operation, { prefix: "get", suffix: "Scopes", type: "function" });
     const file = getFile(operation);
-    const importPath = plugin.options.importPath;
-
-    const scopeValues = scopes.map((s) => `scope("${s}")`).join(", ");
 
     return (
       <File baseName={file.baseName} path={file.path} {...(file.meta ? { meta: file.meta } : {})}>
-        <File.Import isTypeOnly name={["ApiScope"]} path={importPath} />
-        <File.Import name={["scope"]} path={importPath} />
+        <File.Import isTypeOnly name={["ApiScope"]} path={result.importPath} />
+        <File.Import name={["scope"]} path={result.importPath} />
 
         <File.Source isExportable isIndexable name={name}>
           <Function export name={name} returnType="ApiScope[]">
-            {`return [${scopeValues}]`}
+            {result.functionBody}
           </Function>
         </File.Source>
       </File>

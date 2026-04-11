@@ -22,6 +22,9 @@ export default defineConfig({
     msw: {
       enabled: true,
     },
+    scopes: {
+      enabled: true,
+    },
     zod: {
       enabled: false,
     },

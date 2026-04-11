@@ -218,16 +218,16 @@ This enables migration from openapi-generator while preserving scope-based acces
 
 ### Task 11: Verify acceptance criteria
 
-- [ ] verify `client._setup.setScopes()` / `getScopes()` work as expected
-- [ ] verify `scope()` helper creates type-safe ApiScope values
-- [ ] verify `isAvailableScopes()` correctly handles OR-of-ANDs logic
-- [ ] verify React `RequireScopes` component shows/hides children based on scopes
-- [ ] verify React `useScopes()` hook returns correct access check functions
-- [ ] verify Kubb plugin generates `getXxxScopes()` functions from OpenAPI spec
-- [ ] verify generated functions return type-safe ApiScope arrays
-- [ ] run full test suite in all 3 packages (kubb-client, kubb-plugin-scopes, kubb)
-- [ ] run linter: `pnpm datamitsu lint` at root - all issues must be fixed
-- [ ] verify test coverage meets 80%+ in kubb-client, 85%+ in kubb-plugin-scopes
+- [x] verify `client._setup.setScopes()` / `getScopes()` work as expected
+- [x] verify `scope()` helper creates type-safe ApiScope values
+- [x] verify `isAvailableScopes()` correctly handles OR-of-ANDs logic
+- [x] verify React `RequireScopes` component shows/hides children based on scopes
+- [x] verify React `useScopes()` hook returns correct access check functions
+- [x] verify Kubb plugin generates `getXxxScopes()` functions from OpenAPI spec
+- [x] verify generated functions return type-safe ApiScope arrays
+- [x] run full test suite in all 3 packages (kubb-client, kubb-plugin-scopes, kubb)
+- [x] run linter: `pnpm datamitsu lint` at root - all issues must be fixed
+- [x] verify test coverage meets 80%+ in kubb-client, 85%+ in kubb-plugin-scopes
 
 ### Task 12: Update documentation
 
