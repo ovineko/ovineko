@@ -150,13 +150,13 @@ Add automatic SWR scoped hook generation to `@ovineko/kubb-plugin-scopes`. This 
 
 ### Task 7: Verify acceptance criteria
 
-- [ ] verify scoped hooks auto-check scopes without manual isPaused in user code
-- [ ] verify backward compatibility: `generateSwrWrappers: false` (default) produces no hooks-scoped directory
-- [ ] verify type safety: TypeScript infers types correctly from originalHook via Parameters/ReturnType
-- [ ] verify operations without scopes do not generate scoped hooks (no unnecessary files)
-- [ ] run full test suite (unit + integration tests)
-- [ ] run linter - all issues must be fixed
-- [ ] verify test coverage meets project standard (80%+)
+- [x] verify scoped hooks auto-check scopes without manual isPaused in user code
+- [x] verify backward compatibility: `generateSwrWrappers: false` (default) produces no hooks-scoped directory
+- [x] verify type safety: TypeScript infers types correctly from originalHook via Parameters/ReturnType
+- [x] verify operations without scopes do not generate scoped hooks (no unnecessary files)
+- [x] run full test suite (unit + integration tests)
+- [x] run linter - all issues must be fixed
+- [x] verify test coverage meets project standard (80%+)
 
 ### Task 8: [Final] Update documentation
 

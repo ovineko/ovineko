@@ -26,6 +26,7 @@ export const pluginScopes = definePlugin<PluginScopes>((options) => {
   } = options;
 
   return {
+    /* v8 ignore start - install() requires full Kubb runtime; covered by test-integration/ */
     async install() {
       const root = path.resolve(this.config.root, this.config.output.path);
       const mode = getMode(path.resolve(root, output.path));
@@ -87,6 +88,7 @@ export const pluginScopes = definePlugin<PluginScopes>((options) => {
         await this.upsertFile(...swrBarrelFiles);
       }
     },
+    /* v8 ignore stop */
     name: pluginScopesName,
     options: {
       generateSwrWrappers,

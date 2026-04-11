@@ -9,10 +9,11 @@ export default defineConfig({
         "src/test/**",
         "src/types.ts",
         "src/index.ts",
-        // JSX generator is a thin wrapper around scopeCodegen.ts using Kubb React fabric
-        // hooks (useOperationManager, File, Function). It cannot be unit tested without
+        // JSX generators are thin wrappers around *Codegen.ts using Kubb React fabric
+        // hooks (useOperationManager, File, Function). They cannot be unit tested without
         // the full Kubb runtime. Covered by test-integration/ instead.
         "src/generators/scopes.tsx",
+        "src/generators/swrScopes.tsx",
       ],
       include: ["src/**/*.{ts,tsx}"],
       reporter: ["text", "json", "html"],
