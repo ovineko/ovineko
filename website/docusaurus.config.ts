@@ -60,7 +60,13 @@ const config: Config = {
 
   tagline: "Tools born from friction. Solutions that stay.",
 
-  themeConfig: {
+  themeConfig: {algolia: {
+      // Public API key: it is safe to commit it
+      apiKey: "dd793495c9c3794f3194f6ca02d9a6c7", // pragma: allowlist secret
+      appId: "FPN2XZZKYU",
+      indexName: "ovineko_documentation_website",
+    },
+
     colorMode: {
       respectPrefersColorScheme: true,
     },
