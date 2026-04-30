@@ -1,0 +1,60 @@
+{
+  "name": "@ovineko/kubb",
+  "version": "0.0.0",
+  "description": "Opinionated Kubb wrapper with TypeScript code generation defaults",
+  "keywords": [],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/packages/kubb",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "packages/kubb"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "type": "module",
+  "bin": {
+    "kubb": "./bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build:lib": "tsup",
+    "dev": "pnpm build:lib && kubb generate",
+    "prepublishOnly": "pnpm build:lib",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@kubb/cli": "4.37.2",
+    "@kubb/core": "4.37.2",
+    "@kubb/plugin-client": "4.37.2",
+    "@kubb/plugin-faker": "4.37.2",
+    "@kubb/plugin-msw": "4.37.2",
+    "@kubb/plugin-oas": "4.37.2",
+    "@kubb/plugin-swr": "4.37.2",
+    "@kubb/plugin-ts": "4.37.2",
+    "@kubb/plugin-zod": "4.37.2",
+    "change-case": "5.4.4"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "10.3.0",
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-26",
+    "@types/node": "24.10.12",
+    "msw": "2.13.2",
+    "swr": "2.4.1",
+    "tsup": "8.5.1",
+    "vitest": "4.0.18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
