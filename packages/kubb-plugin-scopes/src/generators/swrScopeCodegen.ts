@@ -8,6 +8,7 @@ import { extractScopes } from "../utils/extractScopes.js";
 export interface SwrScopeCodegenResult {
   functionBody: string;
   hasPathParams: boolean;
+  hasQueryParams: boolean;
   hookType: HookType;
   scopeGetterName: string;
 }
@@ -17,11 +18,11 @@ export interface SwrScopeCodegenResult {
  *
  * Returns null if the operation has no OAuth/OIDC scopes, since there is nothing to guard.
  *
- * For query hooks (GET): generates a wrapper accepting (params, options?) that forwards
- * both to the original hook with shouldFetch gated by scope access.
+ * For hooks WITH params (query OR path params): generates a wrapper accepting (params, options?)
+ * that forwards both to the original hook with shouldFetch gated by scope access.
  *
- * For mutation hooks (POST/PUT/PATCH/DELETE): generates a wrapper accepting (options?)
- * that forwards to the original hook with shouldFetch gated by scope access.
+ * For hooks WITHOUT params: generates a wrapper accepting (options?) that forwards
+ * to the original hook with shouldFetch gated by scope access.
  */
 export function generateSwrScopeCode(
   operation: Operation,
@@ -34,7 +35,13 @@ export function generateSwrScopeCode(
   }
 
   const hookType = determineHookType(operation);
+
+  // Check for path params and query params
   const hasPathParams = operation.path.includes("{");
+  const hasQueryParams =
+    operation.schema?.parameters?.some(
+      (p: any) => typeof p === "object" && !("$ref" in p) && p.in === "query",
+    ) ?? false;
 
   const sharedLines = [
     "const { hasAccess } = useScopes();",
@@ -43,23 +50,39 @@ export function generateSwrScopeCode(
     "",
   ];
 
-  const callLines = hasPathParams
-    ? [
-        "return originalHook(params, {",
-        "  ...options,",
-        "  shouldFetch: hasRequiredAccess && (options?.shouldFetch ?? true),",
-        "});",
-      ]
-    : [
-        "return originalHook({",
-        "  ...options,",
-        "  shouldFetch: hasRequiredAccess && (options?.shouldFetch ?? true),",
-        "});",
-      ];
+  // Determine hook signature based on parameters and hook type
+  let callLines: string[];
+
+  if (hasPathParams && hasQueryParams && hookType === "mutation") {
+    // Mutation hooks with both params: 3-param (pathParams, queryParams, options)
+    callLines = [
+      "return originalHook(pathParams, queryParams, {",
+      "  ...options,",
+      "  shouldFetch: hasRequiredAccess && (options?.shouldFetch ?? true),",
+      "});",
+    ];
+  } else if (hasPathParams || hasQueryParams) {
+    // Query hooks OR mutation hooks with only one param type: 2-param (params, options)
+    callLines = [
+      "return originalHook(params, {",
+      "  ...options,",
+      "  shouldFetch: hasRequiredAccess && (options?.shouldFetch ?? true),",
+      "});",
+    ];
+  } else {
+    // No params: 1-param (options)
+    callLines = [
+      "return originalHook({",
+      "  ...options,",
+      "  shouldFetch: hasRequiredAccess && (options?.shouldFetch ?? true),",
+      "});",
+    ];
+  }
 
   return {
     functionBody: [...sharedLines, ...callLines].join("\n"),
     hasPathParams,
+    hasQueryParams,
     hookType,
     scopeGetterName,
   };

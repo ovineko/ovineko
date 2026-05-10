@@ -49,19 +49,46 @@ export const swrScopesGenerator: Generator<PluginScopes> = createReactGenerator<
       path: scopesFile.path.replace(`/${outputPath}/`, `/${swrOutputPath}/`),
     };
 
-    const importPrefix = plugin.options.group ? "../.." : "..";
+    // Calculate direct file paths (no barrel files)
+    const hooksBaseName = originalHookName;
+    const scopesBaseName = scopesFile.baseName.replace(/\.tsx?$/, "");
 
-    const params = result.hasPathParams
-      ? `params: Parameters<typeof originalHook>[0], options?: Omit<Parameters<typeof originalHook>[1], "shouldFetch"> & { shouldFetch?: boolean }`
-      : `options?: Omit<Parameters<typeof originalHook>[0], "shouldFetch"> & { shouldFetch?: boolean }`;
+    let hooksImportPath: string;
+    let scopesImportPath: string;
+
+    if (plugin.options.group) {
+      // Extract group from scopesFile path: "scopes/petScopes/addPet.ts" → "petScopes"
+      const scopesPathParts = scopesFile.path.split("/");
+      const scopesGroup = scopesPathParts.at(-2)!;
+      const hooksGroup = scopesGroup.replace(/Scopes$/, "Hooks");
+
+      hooksImportPath = `../../hooks/${hooksGroup}/${hooksBaseName}`;
+      scopesImportPath = `../../scopes/${scopesGroup}/${scopesBaseName}`;
+    } else {
+      hooksImportPath = `../hooks/${hooksBaseName}`;
+      scopesImportPath = `../scopes/${scopesBaseName}`;
+    }
+
+    // Generate parameters based on hook signature
+    let params: string;
+    if (result.hasPathParams && result.hasQueryParams && result.hookType === "mutation") {
+      // Mutation hook with both params: 3-param (pathParams, queryParams, options)
+      params = `pathParams: Parameters<typeof originalHook>[0], queryParams: Parameters<typeof originalHook>[1], options?: Omit<Parameters<typeof originalHook>[2], "shouldFetch"> & { shouldFetch?: boolean }`;
+    } else if (result.hasPathParams || result.hasQueryParams) {
+      // Query hook OR mutation with one param type: 2-param (params, options)
+      params = `params: Parameters<typeof originalHook>[0], options?: Omit<Parameters<typeof originalHook>[1], "shouldFetch"> & { shouldFetch?: boolean }`;
+    } else {
+      // No params: 1-param (options)
+      params = `options?: Omit<Parameters<typeof originalHook>[0], "shouldFetch"> & { shouldFetch?: boolean }`;
+    }
 
     return (
       <File baseName={file.baseName} path={file.path} {...(file.meta ? { meta: file.meta } : {})}>
         <File.Import
           name={[{ name: "originalHook", propertyName: originalHookName }]}
-          path={`${importPrefix}/hooks`}
+          path={hooksImportPath}
         />
-        <File.Import name={[scopeGetterName]} path={`${importPrefix}/scopes`} />
+        <File.Import name={[scopeGetterName]} path={scopesImportPath} />
         <File.Import name={["useScopes"]} path={scopesReactImportPath} />
 
         <File.Source isExportable isIndexable name={scopedHookName}>

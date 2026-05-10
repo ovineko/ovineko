@@ -6,9 +6,14 @@ export const createPluginOptions = <T = unknown>(
   options: T,
   optionsPlugin?: PluginOptions<T>,
 ): T => {
-  if (optionsPlugin?.createOptions) {
+  if (!optionsPlugin) {
+    return options;
+  }
+
+  if (optionsPlugin.createOptions) {
     return optionsPlugin.createOptions(options);
   }
+
   return options;
 };
 
