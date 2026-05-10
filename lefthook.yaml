@@ -4,6 +4,9 @@ commit-msg:
       run: "pnpm datamitsu exec commitlint -- --edit {1}"
 post-checkout:
   commands:
+    build libs:
+      priority: 3
+      run: pnpm turbo run build:lib
     init datamitsu:
       priority: 2
       run: pnpm datamitsu init

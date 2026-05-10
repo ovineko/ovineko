@@ -24,6 +24,27 @@
       "pinVersion": "^9 || ^10"
     },
     {
+      "dependencies": ["fastify", "fastify-plugin"],
+      "dependencyTypes": ["peer"],
+      "label": "spa-guard-fastify supports fastify v4 and v5",
+      "packages": ["@ovineko/spa-guard-fastify"],
+      "pinVersion": "^5 || ^4"
+    },
+    {
+      "dependencies": ["vite"],
+      "dependencyTypes": ["peer"],
+      "label": "spa-guard-vite supports vite v7 and v8",
+      "packages": ["@ovineko/spa-guard-vite"],
+      "pinVersion": "^8 || ^7"
+    },
+    {
+      "dependencies": ["@docusaurus/types"],
+      "dependencyTypes": ["peer"],
+      "label": "docusaurus-config supports docusaurus v3",
+      "packages": ["@ovineko/docusaurus-config"],
+      "pinVersion": "^3"
+    },
+    {
       "dependencies": ["$LOCAL"],
       "dependencyTypes": ["!local"],
       "label": "use workspace protocol for local packages",

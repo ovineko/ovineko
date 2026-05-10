@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@shibanet0/datamitsu-config/tsconfig/library.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "outDir": "dist",
+    "sourceMap": false,
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": false
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts"]
+}
