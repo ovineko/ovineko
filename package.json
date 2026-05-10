@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "preinstall": "npx only-allow@1.2.2 pnpm",
-    "prepare": "datamitsu init && turbo build:lib",
+    "prepare": "datamitsu init",
     "test": "turbo run test"
   },
   "devDependencies": {
