@@ -34,7 +34,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "prepack": "clean-pkg-json clean",
     "postpack": "clean-pkg-json restore",
     "prepublishOnly": "pnpm build",
@@ -52,7 +52,7 @@
     "@shibanet0/datamitsu-config": "0.0.3-alpha-27",
     "@types/node": "24.10.12",
     "@vitest/coverage-v8": "4.1.5",
-    "tsup": "8.5.1",
+    "tsdown": "0.22.0",
     "vitest": "4.1.5"
   },
   "peerDependencies": {

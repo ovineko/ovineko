@@ -31,7 +31,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "prepack": "clean-pkg-json clean",
     "postpack": "clean-pkg-json restore",
     "prepublishOnly": "pnpm build",
@@ -54,7 +54,7 @@
     "@vitejs/plugin-react": "5.2.0",
     "@vitest/coverage-v8": "4.1.5",
     "happy-dom": "20.9.0",
-    "tsup": "8.5.1",
+    "tsdown": "0.22.0",
     "vitest": "4.1.5"
   },
   "peerDependencies": {

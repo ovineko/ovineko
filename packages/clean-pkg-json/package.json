@@ -31,7 +31,7 @@
     "README.md"
   ],
   "scripts": {
-    "build:lib": "tsup",
+    "build:lib": "tsdown",
     "prepack": "./bin/cli.js clean",
     "postpack": "./bin/cli.js restore",
     "prepublishOnly": "pnpm build:lib",
@@ -44,7 +44,7 @@
     "@ovineko/datamitsu-config": "workspace:*",
     "@shibanet0/datamitsu-config": "0.0.3-alpha-27",
     "@types/node": "24.10.12",
-    "tsup": "8.5.1",
+    "tsdown": "0.22.0",
     "vitest": "4.1.5"
   },
   "publishConfig": {
