@@ -52,6 +52,13 @@
     },
     {
       "dependencies": ["react", "react-dom", "@types/react", "@types/react-dom"],
+      "dependencyTypes": ["peer"],
+      "label": "react peer dependency uses >=18 range",
+      "packages": ["**"],
+      "pinVersion": ">=18"
+    },
+    {
+      "dependencies": ["react", "react-dom", "@types/react", "@types/react-dom"],
       "isIgnored": true,
       "label": "allow website to use its own React version",
       "packages": ["website"]

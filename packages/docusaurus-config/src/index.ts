@@ -65,6 +65,7 @@ export function withOvinekoDocs(config: Config, options: OvinekoDocsOptions = {}
       attributes: {
         href: "/llms.txt",
         rel: "alternate",
+        title: "LLMs.txt",
         type: "text/markdown",
       },
       tagName: "link",
