@@ -34,5 +34,7 @@ export default {
     "neko",
     "ovis",
     "opengraph",
+    "umami",
+    "XZZKYU",
   ],
 };

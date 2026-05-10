@@ -1,6 +1,7 @@
 import type * as Preset from "@docusaurus/preset-classic";
 import type { Config } from "@docusaurus/types";
 
+import { withOvinekoDocs } from "@ovineko/docusaurus-config";
 import { themes as prismThemes } from "prism-react-renderer";
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
@@ -9,12 +10,6 @@ const config: Config = {
   baseUrl: "/",
   deploymentBranch: "gh-pages",
   favicon: "img/favicon.ico",
-
-  // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
-  future: {
-    faster: true, // Enable Rspack/SWC/LightningCSS build system
-    v4: true, // Improve compatibility with the upcoming Docusaurus v4
-  },
 
   i18n: {
     defaultLocale: "en",
@@ -47,20 +42,11 @@ const config: Config = {
   ],
 
   projectName: "ovineko",
-  scripts:
-    process.env.NODE_ENV === "production"
-      ? [
-          {
-            async: true,
-            "data-website-id": "2e3e97b4-82bf-4af6-aaad-8942d5ddf522",
-            src: "https://a.shibanet0.com/pzjlkgj6ujcurpo",
-          },
-        ]
-      : [],
 
   tagline: "Tools born from friction. Solutions that stay.",
 
-  themeConfig: {algolia: {
+  themeConfig: {
+    algolia: {
       // Public API key: it is safe to commit it
       apiKey: "dd793495c9c3794f3194f6ca02d9a6c7", // pragma: allowlist secret
       appId: "FPN2XZZKYU",
@@ -146,4 +132,16 @@ const config: Config = {
   url: "https://ovineko.com",
 };
 
-export default config;
+export default withOvinekoDocs(config, {
+  idealImage: {
+    disableInDev: false,
+    max: 1030,
+    min: 640,
+    quality: 70,
+    steps: 2,
+  },
+  umami: {
+    src: "https://a.shibanet0.com/pzjlkgj6ujcurpo",
+    websiteId: "2e3e97b4-82bf-4af6-aaad-8942d5ddf522",
+  },
+});
