@@ -31,7 +31,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "prepack": "clean-pkg-json clean",
     "postpack": "clean-pkg-json restore",
     "prepublishOnly": "pnpm build",
@@ -55,7 +55,7 @@
     "@types/node": "24.10.12",
     "@vitest/coverage-v8": "4.1.5",
     "terser": "5.47.1",
-    "tsup": "8.5.1",
+    "tsdown": "0.22.0",
     "vitest": "4.1.5"
   },
   "peerDependencies": {

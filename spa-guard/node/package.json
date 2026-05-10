@@ -42,8 +42,8 @@
     "dist-inline-trace"
   ],
   "scripts": {
-    "build": "tsup",
-    "build:inline": "tsup --config tsup.inline.config.ts && tsup --config tsup.inline.trace.config.ts",
+    "build": "tsdown",
+    "build:inline": "tsdown --config tsdown.inline.config.ts && tsdown --config tsdown.inline.trace.config.ts && terser dist-inline/index.js -o dist-inline/index.js -c unsafe,unsafe_arrows,unsafe_methods,passes=3,drop_console -m toplevel --format comments=false && terser dist-inline-trace/index.js -o dist-inline-trace/index.js -c unsafe,unsafe_arrows,unsafe_methods,passes=3 -m toplevel --format comments=false",
     "prepack": "clean-pkg-json clean",
     "postpack": "clean-pkg-json restore",
     "prepublishOnly": "pnpm build:inline && pnpm build",
@@ -66,7 +66,7 @@
     "@types/node": "24.10.12",
     "@vitest/coverage-v8": "4.1.5",
     "terser": "5.47.1",
-    "tsup": "8.5.1",
+    "tsdown": "0.22.0",
     "vitest": "4.1.5"
   },
   "peerDependencies": {
