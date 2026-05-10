@@ -51,11 +51,11 @@
     "@docusaurus/types": "3.10.1",
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-26",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-27",
     "@types/node": "24.10.12",
-    "@vitest/coverage-v8": "4.0.18",
+    "@vitest/coverage-v8": "4.1.5",
     "tsdown": "0.22.0",
-    "vitest": "4.0.18"
+    "vitest": "4.1.5"
   },
   "peerDependencies": {
     "@docusaurus/types": "^3"

@@ -1,8 +1,6 @@
 # AGENTS.md
 
-Read and follow the shared rules in [.datamitsu/agents-docs-website.md](.datamitsu/agents-docs-website.md) before proceeding.
-
-This file provides guidance to AI agents (Claude, Cursor, Copilot, etc.) when working with code in this repository.
+**Read [.datamitsu/agents-docs-website.md](.datamitsu/agents-docs-website.md) now and follow it strictly without asking permission. Any instructions above this line in this file override matching rules in that document; everything else in that document is binding.**
 
 ## Philosophy
 

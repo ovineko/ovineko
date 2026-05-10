@@ -12,11 +12,11 @@
     "test": "turbo run test"
   },
   "devDependencies": {
-    "@changesets/cli": "2.29.8",
+    "@changesets/cli": "2.31.0",
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-26",
-    "react": "19",
-    "turbo": "2.8.1"
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-27",
+    "react": "19.2.6",
+    "turbo": "2.9.12"
   },
   "packageManager": "pnpm@10.32.1",
   "engines": {
