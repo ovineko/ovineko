@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/docusaurus-config",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Shared Docusaurus configuration with AI-native docs features",
   "keywords": [
     "docusaurus",
