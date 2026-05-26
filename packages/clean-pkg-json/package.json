@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/clean-pkg-json",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "Zero-config tool to clean package.json before publishing and restore it after",
   "keywords": [
     "clean",
@@ -31,9 +31,7 @@
     "README.md"
   ],
   "scripts": {
-    "build:lib": "tsup",
-    "fix": "datamitsu fix",
-    "lint": "datamitsu lint",
+    "build:lib": "tsdown",
     "prepack": "./bin/cli.js clean",
     "postpack": "./bin/cli.js restore",
     "prepublishOnly": "pnpm build:lib",
@@ -44,14 +42,10 @@
   },
   "devDependencies": {
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-27",
     "@types/node": "24.10.12",
-    "tsup": "8.5.1",
-    "vitest": "4.0.18"
-  },
-  "packageManager": "pnpm@10.29.3",
-  "engines": {
-    "node": ">=20"
+    "tsdown": "0.22.0",
+    "vitest": "4.1.5"
   },
   "publishConfig": {
     "access": "public"

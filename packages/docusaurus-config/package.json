@@ -1,0 +1,66 @@
+{
+  "name": "@ovineko/docusaurus-config",
+  "version": "0.0.1",
+  "description": "Shared Docusaurus configuration with AI-native docs features",
+  "keywords": [
+    "docusaurus",
+    "config",
+    "llms-txt",
+    "ai-docs",
+    "documentation"
+  ],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/packages/docusaurus-config",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "packages/docusaurus-config"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "prepack": "clean-pkg-json clean",
+    "postpack": "clean-pkg-json restore",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@docusaurus/plugin-ideal-image": "3.10.1",
+    "docusaurus-plugin-copy-page-button": "0.5.0",
+    "docusaurus-plugin-llms": "0.4.0"
+  },
+  "devDependencies": {
+    "@docusaurus/types": "3.10.1",
+    "@ovineko/clean-pkg-json": "workspace:*",
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-27",
+    "@types/node": "24.10.12",
+    "@vitest/coverage-v8": "4.1.5",
+    "tsdown": "0.22.0",
+    "vitest": "4.1.5"
+  },
+  "peerDependencies": {
+    "@docusaurus/types": "^3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

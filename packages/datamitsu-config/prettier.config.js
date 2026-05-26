@@ -1,4 +1,4 @@
-import { defineConfig } from "@shibanet0/datamitsu-config/prettier";
+import { defineConfig } from "../../.datamitsu/prettier.config.js";
 
 const config = defineConfig();
 

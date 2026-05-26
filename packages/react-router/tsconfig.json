@@ -1,10 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "./node_modules/@shibanet0/datamitsu-config/tsconfig/react-library.json",
+  "extends": "@shibanet0/datamitsu-config/tsconfig/react-library.json",
   "compilerOptions": {
     "types": ["@testing-library/jest-dom/vitest"],
     "outDir": "dist",
     "sourceMap": false,
+    "noEmit": false,
+    "declaration": true,
     "declarationMap": false,
     "jsx": "react-jsx"
   },

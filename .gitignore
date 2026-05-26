@@ -7,8 +7,11 @@
 **/.vercel/
 **/.output/
 **/public/build/
+**/dist-inline/
+**/dist-inline-trace/
 
 # Cache & temporary files
+.datamitsu/
 **/tsconfig.tsbuildinfo
 **/.eslintcache
 **/.prettiercache
@@ -22,6 +25,9 @@
 **/.temp/
 **/.tmp/
 **/package.json.backup
+
+# Claude Code project files
+.claude/
 
 # Dependencies
 **/node_modules/
@@ -40,6 +46,7 @@
 .env.test.local
 .env.production.local
 **/.env
+**/.env*.bak
 **/.env.local
 **/.env.*.local
 
@@ -90,10 +97,13 @@
 **/.pulumi/**/*.json.tmp
 **/.pulumi/**/*.yaml.tmp
 !**/.pulumi/**/*.enc.json
+!**/.pulumi/**/*.json.enc
 **/.pulumi/**/*.yaml
 !**/.pulumi/**/*.enc.yaml
+!**/.pulumi/**/*.yaml.enc
 **/.pulumi/**/*.yml
 !**/.pulumi/**/*.enc.yml
+!**/.pulumi/**/*.yml.enc
 
 # Security & Secrets
 **/*.key
@@ -108,6 +118,7 @@
 # Testing
 **/coverage/
 **/*.cov
+**/coverage.out
 **/.cover/
 **/storybook-static/
 **/playwright-report/
@@ -118,6 +129,12 @@
 **/.nyc_output/
 **/e2e/screenshots/
 **/e2e/videos/
+
+# ralphex progress logs
+.ralphex/progress/
+**/progress.txt
+**/progress-*.txt
+.ralphex/worktrees/
 
 # Symbolic links
 CLAUDE.md

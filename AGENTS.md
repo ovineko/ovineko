@@ -1,20 +1,24 @@
 # AGENTS.md
 
-This file provides guidance to AI agents (Claude, Cursor, Copilot, etc.) when working with code in this repository.
+**Read [.datamitsu/agents-docs-website.md](.datamitsu/agents-docs-website.md) now and follow it strictly without asking permission. Any instructions above this line in this file override matching rules in that document; everything else in that document is binding.**
 
 ## Philosophy
 
-**This is an opinionated monorepo.** The packages here reflect personal preferences and workflows that have proven effective across multiple projects (both personal and professional).
+**ovineko is a collection of tools born from friction.**
 
-The goal is NOT to create universally appealing tools that please everyone. Instead, this monorepo exists to:
+Every package here exists because once upon a time, weeks were spent solving something you never wanted to rebuild. Setting up a server properly. Working through edge cases. Developing an approach that works.
+
+When the solution is found — it stays here. Not in notes, not in an old project, not in your head. Here.
+
+**This is an opinionated monorepo** reflecting personal preferences and workflows. The goal is NOT to create universally appealing tools that please everyone. Instead, this monorepo exists to:
 
 - **Consolidate proven solutions**: Stop manually copying and syncing code between projects
 - **Maintain consistency**: Use the same patterns and utilities across all work
 - **Iterate faster**: Update once, benefit everywhere
 
-If these opinions align with your needs — great! If not, these packages might not be the right fit, and that's perfectly fine.
+The monorepo isn't an architectural decision. It's a psychological trick. When all libraries live together, they're constantly in view. Whether you want to or not — you maintain them.
 
-This follows the same philosophy as `@shibanet0/datamitsu-config` (opinionated configs) built on top of `@datamitsu/datamitsu` (universal core).
+If these opinions align with your needs — great! If not, these packages might not be the right fit, and that's perfectly fine.
 
 **Note on contributions**: Since this reflects personal workflows, pull requests may be declined if they don't align with the project's direction. Forks are encouraged for different approaches.
 
@@ -22,8 +26,14 @@ This follows the same philosophy as `@shibanet0/datamitsu-config` (opinionated c
 
 This monorepo contains the following packages:
 
+- **@ovineko/spa-guard**: Core runtime, error handling, schema, i18n for SPAs — automatic retry with cache busting, beacon error reporting, debug test panel
+- **@ovineko/spa-guard-react**: React hooks, components (`lazyWithRetry`, `Spinner`), and error boundaries (`DefaultErrorFallback`, `ErrorBoundary`)
+- **@ovineko/spa-guard-react-router**: React Router v7 error boundary integration for spa-guard
+- **@ovineko/spa-guard-vite**: Vite plugin for spa-guard
+- **@ovineko/spa-guard-node**: Server-side HTML cache with ETag/304, pre-compression (gzip/brotli/zstd), and i18n for spa-guard (uses parse5 for DOM parsing)
+- **@ovineko/spa-guard-fastify**: Fastify plugin for spa-guard beacon endpoint and HTML cache handler with ETag/304 support
+- **@ovineko/spa-guard-eslint**: ESLint rules for spa-guard (no-direct-lazy, no-direct-error-boundary)
 - **@ovineko/react-router**: Type-safe wrapper for React Router v7 with valibot schema validation, automatic error handling, and typed params
-- **@ovineko/react-error-boundary**: Error boundary utilities for React with optional Sentry integration
 - **@ovineko/clean-pkg-json**: Zero-config tool to clean package.json before publishing and restore it after
 - **@ovineko/datamitsu-config**: Internal configuration package for datamitsu tooling (linting, formatting, etc.)
 - **@ovineko/fastify**: Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck, and other common integrations
@@ -32,13 +42,20 @@ This monorepo contains the following packages:
 
 ```plaintext
 ovineko/
-├── packages/                    # All publishable packages
+├── spa-guard/                   # spa-guard package family
+│   ├── spa-guard/              # Core: runtime, error handling, schema, i18n
+│   ├── react/                  # React hooks, components, error boundaries
+│   ├── react-router/           # React Router v7 error boundary integration
+│   ├── vite/                   # Vite plugin
+│   ├── node/                   # Server-side HTML cache, ETag/304, i18n (parse5)
+│   ├── fastify/                # Fastify beacon endpoint plugin and HTML cache handler
+│   └── eslint/                 # ESLint rules
+├── packages/                    # Other publishable packages
 │   ├── react-router/           # Type-safe React Router v7 wrapper (valibot validation)
-│   ├── react-error-boundary/   # Error boundaries with Sentry integration
 │   ├── clean-pkg-json/         # Package.json cleanup tool for publishing
 │   ├── datamitsu-config/       # Shared config for datamitsu tooling
-│   └── fastify/           # Pre-configured Fastify server with observability
-├── test/                       # Shared test utilities and setup files
+│   └── fastify/                # Pre-configured Fastify server with observability
+├── website/                     # Documentation site (Docusaurus)
 ├── turbo.json                  # Turborepo build orchestration config
 ├── pnpm-workspace.yaml         # pnpm workspace configuration
 ├── datamitsu.ts                # Centralized linting/formatting config
@@ -49,9 +66,9 @@ ovineko/
 **Key directories per package:**
 
 - `src/` - Source code (TypeScript)
-- `dist/` - Build output (gitignored, generated by tsup)
+- `dist/` - Build output (gitignored, generated by tsdown)
 - `test/` or colocated `*.test.ts` - Tests (vitest)
-- `tsup.config.ts` - Bundler configuration
+- `tsdown.config.ts` - Bundler configuration
 - `vitest.config.ts` - Test runner configuration
 - `tsconfig.json` - TypeScript configuration (extends from datamitsu-config)
 
@@ -66,7 +83,7 @@ ovineko/
 
 ### Build & Bundling
 
-- `tsup` - Fast TypeScript bundler with code splitting (uses esbuild)
+- `tsdown` - Fast TypeScript bundler with code splitting and built-in dts (uses rolldown)
 - `typescript` - TypeScript compiler (for declaration files)
 - `turbo` - Monorepo build orchestration from [Turborepo](https://turborepo.dev/)
 - `pnpm` - Fast, disk space efficient package manager (workspace support)
@@ -125,9 +142,11 @@ pnpm test                # Run tests once
 pnpm test:watch          # Run tests in watch mode
 pnpm test:coverage       # Run tests with coverage report
 pnpm test:ui             # Open Vitest UI
+pnpm test:debug          # Run tests with console output visible (DEBUG=1)
 
 # The test suite uses vitest with happy-dom environment
 # Tests are located alongside source files (*.test.ts, *.test.tsx)
+# Console output (log/warn/error) is suppressed by default; use test:debug to see it
 ```
 
 ### Building
@@ -138,13 +157,12 @@ turbo build
 
 # Build a specific package
 cd packages/<package-name>
-pnpm build              # For packages with 'build' script (react-router, react-error-boundary)
+pnpm build              # For packages with 'build' script (react-router)
 pnpm build:lib          # For packages with 'build:lib' script (clean-pkg-json)
 
 # Build process:
-# 1. tsup bundles the source code (ESM format)
-# 2. TypeScript compiler generates .d.ts declaration files
-# 3. Output goes to the 'dist' directory
+# 1. tsdown bundles the source code (ESM format) with built-in dts generation
+# 2. Output goes to the 'dist' directory
 ```
 
 ### Publishing
@@ -186,14 +204,6 @@ Before publishing any package:
 > **CRITICAL:** Follow syncpack rules for version ranges
 
 - **Internal packages** (workspace): Always use `workspace:*`
-
-  ```json
-  {
-    "dependencies": {
-      "@ovineko/react-error-boundary": "workspace:*"
-    }
-  }
-  ```
 
 - **Peer dependencies**: Always use caret (`^`) for compatibility range
 
@@ -250,15 +260,16 @@ After successful publishing:
 ### Monorepo Structure
 
 - **Root**: Contains shared configuration files (turbo.json, datamitsu.ts, eslint.config.js, etc.)
-- **Packages**: Each package in `packages/` is independently versioned and publishable
+- **spa-guard/**: The spa-guard package family, split into 7 separate packages (core, react, react-router, vite, node, fastify, eslint)
+- **packages/**: Other publishable packages (react-router, clean-pkg-json, datamitsu-config, fastify-base)
 - **Workspace protocol**: Internal dependencies use `workspace:*` for cross-package references
 
 ### Type Safety & Validation
 
 The codebase emphasizes runtime type safety:
 
-- **TypeBox** is the primary schema validation library used across most packages
-- **Valibot** is specifically used in @ovineko/react-router for URL params and search params validation
+- **Valibot** is used in @ovineko/react-router for URL params and search params validation
+- @ovineko/spa-guard uses plain TypeScript validation (no schema library dependency)
 - Type inference from schemas eliminates the need for duplicate TypeScript types
 
 Example from @ovineko/react-router (using valibot):
@@ -284,57 +295,22 @@ const route = createRouteWithParams("/users/:id", {
 - **Vitest + Testing Library**: Component tests use @testing-library/react
 - **happy-dom**: Lightweight DOM environment for tests
 - **Co-located tests**: Test files live alongside source files (_.test.tsx, _.test.ts)
-- **Setup files**: Vitest setup at `test/setup.ts` configures testing-library/jest-dom matchers
+- **Setup files**: Vitest setup at `test/setup.ts` configures testing-library/jest-dom matchers and globally suppresses `console.log`, `console.warn`, and `console.error` during test runs (restored after each test). Set `DEBUG=1` (or run `pnpm test:debug`) to disable suppression when diagnosing failures.
 
 ### Testing Safety Rules
 
-> **CRITICAL:** Tests must NEVER modify workspace root or shared state
-
-- All tests MUST be isolated to their package scope
-- Never run tests that modify workspace root `node_modules`
 - Each package must be tested independently: `cd packages/<name> && pnpm test`
 - Test coverage threshold: 80% (lines/branches/functions/statements)
 - Use `vitest.workspace.ts` for multi-package test orchestration if needed
-- Clean test artifacts in `afterEach`/`afterAll` hooks
-- Mock external dependencies to prevent network calls or file system mutations
-- Never commit `.only` or `skip` in test files
 
 ### Build Configuration
 
-- **tsup**: Bundles source code with code splitting enabled
-- **Entry pattern**: `src/**/*.tsx*` (excludes test files)
+- **tsdown**: Bundles source code with code splitting enabled (uses rolldown)
+- **Entry pattern**: explicit entry points or `src/**/*.tsx*` (excludes test files)
 - **Output**: ESM format only (`"type": "module"`)
-- **TypeScript**: Separate declaration generation after bundling
+- **TypeScript**: Built-in declaration generation via `dts: true`
 
-### Linting & Code Quality
-
-The project uses **datamitsu** as a unified linting orchestrator that runs:
-
-- **oxlint**: Fast Rust-based linter (primary linter)
-- **ESLint**: Additional rules with oxlint plugin integration
-- **Prettier**: Code formatting
-- **knip**: Unused exports/dependencies detection
-- **commitlint**: Conventional commit message validation
-- **editorconfig-checker**: EditorConfig compliance
-- **gitleaks**: Secret scanning
-- **syncpack**: Dependency version synchronization
-
-Configuration is centralized in `datamitsu.ts` with package-specific overrides.
-
-### Git Workflow
-
-Follow GitHub Flow with feature branches from main.
-
-**Commit message format** (Conventional Commits):
-
-- `feat:` new feature
-- `fix:` bug fix
-- `docs:` documentation
-- `refactor:` code refactoring
-- `test:` adding tests
-- `chore:` maintenance
-
-**Automated checks** (lefthook git hooks):
+### Git Hooks (lefthook)
 
 - **pre-commit**: Runs `datamitsu fix` and `datamitsu lint` on staged files only
 - **commit-msg**: Validates commit messages with commitlint
@@ -346,15 +322,6 @@ Follow GitHub Flow with feature branches from main.
 - **pnpm**: >= 10.25.0 (enforced by preinstall script)
 - **Package Manager**: Only pnpm is allowed (enforced via only-allow)
 
-## Package Dependencies
-
-When adding dependencies:
-
-- Use workspace references (`workspace:*`) for internal packages
-- peer dependencies define required external packages (e.g., React 19, React Router 7)
-- Use `pnpm add -D` for devDependencies, `pnpm add` for runtime dependencies
-- Run `pnpm datamitsu fix` after adding dependencies to sync versions across packages
-
 ## Working with Individual Packages
 
 Each package is self-contained with its own:
@@ -363,7 +330,7 @@ Each package is self-contained with its own:
 - `tsconfig.json` extending from `@shibanet0/datamitsu-config`
 - `.oxlintrc.json` and `eslint.config.js` (generated by datamitsu)
 - `vitest.config.ts` (for packages with tests)
-- `tsup.config.ts` (for packages with builds)
+- `tsdown.config.ts` (for packages with builds)
 
 When modifying a package, always run its tests and ensure the build succeeds before committing.
 
@@ -373,35 +340,167 @@ When modifying a package, always run its tests and ensure the build succeeds bef
 
 - Requires React Router v7 as peer dependency
 - URL params validated at runtime with valibot
-- Error boundaries require @ovineko/react-error-boundary
+- `GuardedRoute` component provides declarative route guards at the routing config level (complements `useRedirect` hook)
+- Guards use async data checks via custom hooks that return `GuardResult` (allowed, isLoading, redirectTo)
+- Default behavior (no `loadingFallback`) renders `<Outlet />` during loading to allow parallel lazy loading
+- Always uses `replace` for guard redirects (guards are access checks, not navigation)
+
+### @ovineko/spa-guard (package family)
+
+The spa-guard functionality is split into 7 separate packages under `spa-guard/`:
+
+- **@ovineko/spa-guard** (core): Runtime, error handling, schema validation, i18n — no peer dependencies
+- **@ovineko/spa-guard-react**: React hooks, components, error boundaries — peer: react@^19
+- **@ovineko/spa-guard-react-router**: React Router v7 error boundary — peer: react@^19, react-router@^7
+- **@ovineko/spa-guard-vite**: Vite plugin — peer: vite@^8||^7
+- **@ovineko/spa-guard-node**: Server-side HTML cache with ETag/304, pre-compression, and i18n (parse5) — peer: parse5@^8
+- **@ovineko/spa-guard-fastify**: Fastify beacon endpoint plugin and HTML cache handler — peer: fastify@^5||^4, fastify-plugin@^5||^4, @ovineko/spa-guard-node
+- **@ovineko/spa-guard-eslint**: ESLint rules — peer: eslint@^9||^10
+
+Key architecture notes:
+
+- Configuration flows from `spaGuardVitePlugin()` → injected as `window.__SPA_GUARD_OPTIONS__` at build time; all runtime code reads options exclusively from this global via `getOptions()`
+- Two-level retry strategy: `lazyWithRetry` (in spa-guard-react) retries the individual module import first (`lazyRetry.retryDelays`), then falls back to full page reload via `triggerRetry()` in `retryOrchestrator.ts` (`reloadDelays`)
+- **Retry orchestrator — single retry owner** (`src/common/retryOrchestrator.ts`): All reload scheduling, deduplication, and fallback transitions go through `triggerRetry(input)`. The orchestrator owns an explicit state machine stored on `window[Symbol.for(...)]` with three phases — `idle | scheduled | fallback` — and fields `attempt`, `retryId`, and `timer`. Once phase is `scheduled`, concurrent calls are deduplicated (first trigger wins). Once phase is `fallback`, all further triggers return immediately without scheduling a reload. The public API is: `triggerRetry(input): TriggerResult`, `markRetryHealthyBoot(): void`, `getRetrySnapshot(): RetrySnapshot`, `resetRetryOrchestratorForTests(): void`. The retry ownership rule: **only the orchestrator may advance retry state, schedule reloads, or transition to fallback — no other module may do this directly**.
+- **`recommendedSetup()` is idempotent with auto healthy-boot** (`src/runtime/recommendedSetup.ts`): repeated calls return the same cleanup and do not duplicate side effects. Default `healthyBoot: "auto"` schedules `markRetryHealthyBoot()` only when retry params are present and orchestrator remains `idle` through a dynamic grace window: `max(5000, max(reloadDelays)+1000, sum(lazyRetry.retryDelays)+1000)`. Use `healthyBoot: "manual"` or `"off"` to disable auto behavior.
+- **Fallback mode guard**: `isInFallbackMode()` / `setFallbackMode()` / `resetFallbackMode()` in `src/common/fallbackState.ts` use the window-singleton pattern (`fallbackModeKey` from `constants.ts`) to share a one-way boolean latch across all module instances. `setFallbackMode()` is called exclusively by `retryOrchestrator.ts` as part of the fallback transition — no other module sets it. Once fallback UI is shown, subsequent calls to `triggerRetry()` check `isInFallbackMode()` and return `{ status: "fallback" }` immediately, preventing an infinite reload loop from 404'd static assets. `isInFallbackMode` and `resetFallbackMode` are exported from the public `common` index.
+- `src/common/retryImport.ts` (in core) is framework-agnostic retry logic; `src/react/lazyWithRetry.tsx` (in spa-guard-react) wraps it for `React.lazy` compatibility
+- **Listener responsibilities are classification-only** (`src/common/listen/internal.ts`): Event handlers classify browser events (chunk error, unhandled rejection, vite:preloadError, static asset failure, CSP violation) and call `triggerRetry()` or `handleStaticAssetFailure()`. They do not schedule retries, manage timers, or own lifecycle state.
+- **Static asset recovery coalesces burst errors** (`src/common/staticAssetRecovery.ts`): Multiple 404'd asset errors within a short window are coalesced by a debounce timer (default 500 ms). After the timer fires, a single `triggerRetry({ cacheBust: true, source: "static-asset-error" })` is issued. The orchestrator's `scheduled` phase deduplication ensures storms cannot schedule multiple reloads.
+- **Strict URL retry param parsing**: `RETRY_ATTEMPT_PARAM` in the URL is parsed with `/^\d+$/` — only non-negative integers are accepted. Values like `-1`, `1foo`, `1.5`, `1e2` are rejected and treated as `null`. The `-1` sentinel is no longer used anywhere in the retry lifecycle.
+- **Fallback rendering is a pure renderer** (`src/common/fallbackRendering.ts`): `showFallbackUI()` only writes HTML to the DOM and emits `fallback-ui-shown`. It does not set fallback mode, does not check whether fallback is already active, and does not modify orchestrator state. The orchestrator calls `showFallbackUI()` after completing the fallback transition.
+- **Loading UI during retry delay** (`src/common/fallbackRendering.ts`): `showLoadingUI(attempt)` is a dedicated exported helper that renders the loading template (`options.html.loading.content`) into the target element before the reload timer fires. It is called by `retryOrchestrator.ts` immediately after setting the next attempt state and before `setTimeout`. If loading content is not configured or the target element is not found, it returns silently — fail-safe. It applies i18n, reveals `data-spa-guard-section="retrying"`, fills attempt numbers into `[data-spa-guard-content="attempt"]` elements, and handles spinner hide/replace. Never call `showLoadingUI` outside the orchestrator's retry scheduling path.
+- **Unhandledrejection serialization guardrails** (`src/common/serializeError.ts`): The `PromiseRejectionEvent` branch expands `reason` deeply with strict redaction. HTTP-like errors include only `status`, `statusText`, `url`, `method`, `response.type`, and `X-Request-ID` from response headers when present — **no body, no payload, no full headers**. Request wrappers (`reason.request` / `reason.config`) include only `method`, `url`, `baseURL`. Bounded by `MAX_DEPTH=4`, `MAX_KEYS=20`, `MAX_STRING_LEN=500`. Circular reference protection via a `WeakSet` visited tracker. Output includes `isTrusted`, `timeStamp` from the event and runtime context (`pageUrl`, `constructorName`). Do not relax these constraints — oversized or leaky beacons are a security and performance risk.
+- Event system uses `name` field as the discriminant (not `type`) in both internal `emitEvent()` calls and the public `events.subscribe()` API
+- Schema validation uses plain TypeScript (no TypeBox or other schema library dependency)
+- Test setup (`test/setup.ts`) globally suppresses `console.log/warn/error` to keep test output clean; run `pnpm test:debug` (sets `DEBUG=1`) to pass console output through when diagnosing test failures
+- ESLint plugin (spa-guard-eslint) rule names: `@ovineko/spa-guard-eslint/no-direct-lazy`, `@ovineko/spa-guard-eslint/no-direct-error-boundary`
+- ESLint v10 is supported (`^9 || ^10`); `@types/eslint` was removed because ESLint v10 ships its own types; the plugin uses `satisfies ESLint.Plugin` for type checking
+- Injectable Logger via DI: all console output uses a `Logger` interface (`src/common/logger.ts` in core). `listenInternal(serializeError, logger?)` accepts an optional logger. The production inline entry (in spa-guard-node `src/inline/index.ts`) passes no logger so tree-shaking eliminates all log strings from the bundle. The trace entry (`src/inline-trace/index.ts`) passes `createLogger()` for full logging
+- **Inline script rebuild requirement**: After any change to core code that could affect the inline scripts, you MUST rebuild inline scripts by running `pnpm build:inline && pnpm build` from `spa-guard/node/`
+- `ForceRetryError` uses a magic substring (`__SPA_GUARD_FORCE_RETRY__`) prepended to the error message; `shouldForceRetry()` in `src/common/shouldIgnore.ts` always checks for this substring regardless of `errors.forceRetry` config
+- `errors.ignore` early-return pattern: In all four event handlers in `src/common/listen/internal.ts`, when `shouldIgnoreMessages()` returns `true`, the handler returns immediately — no `sendBeacon()`, no `attemptReload()`, no `preventDefault()`, no `serializeError()`
+- `BeaconError` wraps `BeaconSchema` data into an `Error` subclass; exported from both core and spa-guard-fastify for use with error tracking services
+- Version detection uses a two-tier approach: the Vite plugin prepends `window.__SPA_GUARD_VERSION__="<version>"` before the options object. The regex logic is extracted into `extractVersionFromHtml(html)` in `src/common/parseVersion.ts` (core), shared by both client-side `fetchHtmlVersion()` and server-side `createHtmlCache()` (spa-guard-node)
+- Fallback/loading HTML templates use `data-spa-guard-*` attributes for all dynamic content manipulation and include built-in theme awareness (`color-scheme: light dark` + `@media (prefers-color-scheme: dark)`) with neutral defaults
+- HTML template generation pipeline: `scripts/generate-fallback.ts` (in spa-guard/spa-guard core) reads source HTML files, minifies them via `html-minifier-terser`, and writes exports to `src/common/html.generated.ts`. Run `pnpm generate:fallback` in spa-guard/spa-guard to regenerate
+- Spinner overlay is injected at build time by the Vite plugin as a `body-prepend` `HtmlTagDescriptor`
+- i18n uses a meta tag approach: server calls `patchHtmlI18n()` (spa-guard-node `src/node/index.ts`) to inject `<meta name="spa-guard-i18n" content="...">` into `<head>`. `patchHtmlI18n` uses parse5 for DOM parsing/serialization. Client-side, `getI18n()` (core `src/common/i18n.ts`) reads the meta tag. Runtime `setTranslations()` API allows dynamic i18n patching. Built-in translations for 38 languages live in `src/i18n/translations.ts` (core)
+- `createHtmlCache` (spa-guard-node) pre-generates all language variants at startup via `patchHtmlI18n` and pre-compresses each with gzip, brotli, and zstd. ETag is derived from `__SPA_GUARD_VERSION__` via `extractVersionFromHtml()`. Encoding negotiation uses `@fastify/accept-negotiator`
+- **Window singleton pattern for shared mutable state**: When code splitting creates multiple module instances via different entry points, module-level `let` variables become per-instance — each import path gets its own copy. To share mutable state across all instances, store it on `window[KEY]` with a unique string key defined in `src/common/constants.ts`. Initialize on module load with a guard (`if (!window[KEY]) { window[KEY] = initialState; }`), then access via a `getState()` function. Used in `checkVersion.ts` (`versionCheckStateWindowKey`) and `events/internal.ts` (`eventSubscribersWindowKey`, `internalConfigWindowKey`, `loggerWindowKey`). Always use this pattern instead of module-level mutable variables in spa-guard core
+- **`isLikely404` two-mode detection** (`src/common/isStaticAssetError.ts` in core): When called with a URL, queries `performance.getEntriesByName(url, "resource")` and inspects the last `PerformanceResourceTiming` entry — returns `true` (likely 404) if: (1) no entry found (Safari and truly failed loads produce no entry), (2) `responseStatus >= 400`, or (3) both `transferSize === 0` and `decodedBodySize === 0` (blocked/failed). Returns `false` for disk-cached hits where `transferSize` is 0 but `decodedBodySize` is non-zero. When called without a URL (time-based fallback), returns `true` only after 30 seconds since navigation. In `internal.ts`, always call `isLikely404(assetUrl)` with the URL so the Resource Timing path is taken — the time-based fallback is only used in tests or legacy call sites.
+- `createHTMLCacheStore` (spa-guard-node) manages multiple named `HtmlCache` instances via `getCache(key)`, `isLoaded()`, and `load()`. Keys are processed sequentially during `load()` to control CPU; `createHtmlCache` parallelizes language variants internally. Throws if accessed before `load()` completes
+- `HtmlCache.get()` supports conditional requests via `ifNoneMatch` option — returns `statusCode: 304` with empty body when the provided ETag matches, avoiding redundant response bodies
+- `spaGuardFastifyHandler` (spa-guard-fastify) wraps `HtmlCache` for Fastify routes: extracts `accept-encoding`, `accept-language`, `if-none-match` headers from the request, forwards `statusCode` from `HtmlCacheResponse` to the reply. Supports both pre-built `cache` and lazy `getHtml` options
+- **Builder API (spa-guard-node)**: `buildSpaGuardScript()` and `buildExternalScript()` in `spa-guard/node/src/builder.ts` read the pre-built inline script from `dist-inline/index.js` (or `dist-inline-trace/index.js` when `trace: true`) relative to `import.meta.dirname`. These directories are built directly in `spa-guard/node/` by running `pnpm build:inline` (or `pnpm prepublishOnly` to build everything). If builder tests fail with ENOENT, run `pnpm build:inline` in `spa-guard/node/`. The `./builder` subpath export in `node/package.json` exposes the builder API separately from the main index
+- **External script mode (spa-guard-vite)**: When `mode: 'external'`, `configResolved` hook captures `config.build.outDir` as the fallback `externalScriptDir`. `transformIndexHtml` computes and caches the script content and hash on first invocation (shared across all HTML entry points processed in the same build). The actual file write happens in `writeBundle`, not during transform. The injected tag is `<script src="...">` with a content-hashed filename (e.g., `spa-guard.<hash16>.js`). `HtmlTagDescriptor` in `builder.ts` is intentionally independent of Vite's type (same shape, structurally compatible) to keep spa-guard-node framework-agnostic
 
 ### @ovineko/clean-pkg-json
 
 - Automatically runs via npm lifecycle hooks
 - No manual invocation needed
 
-## Documentation Maintenance
+## Documentation Policy
 
-**CRITICAL**: Keep documentation in sync with code changes.
+**All user-facing documentation lives in the Docusaurus website (`website/docs/`). README.md files must remain minimal.**
 
-Whenever you make changes to the codebase, **immediately update**:
+### Documentation Requirements
 
-1. **AGENTS.md** (this file)
-   - Add to "Known Pitfalls" if you encountered issues
-   - Update commands if scripts change
-   - Add examples for new patterns introduced
-   - Update architecture notes for significant refactoring
+When implementing features or making changes, documentation MUST be updated in the same PR/commit:
 
-2. **README.md** (package-level)
-   - Update usage examples when APIs change
-   - Add new features to feature list
-   - Update installation instructions if peer deps change
-   - Refresh code examples to match current implementation
+- **User-facing features** → update `website/docs/` with examples and guides
+- **API changes** → update corresponding page in `website/docs/packages/` or `website/docs/spa-guard/`
+- **Configuration options** → update `website/docs/` reference pages
+- **New examples** → add to appropriate `website/docs/` section
+- **Breaking changes** → document migration path in docs
 
-3. **package.json** metadata
-   - `description`: Keep concise but accurate (< 120 chars)
-   - `keywords`: Add relevant searchable terms (npm/GitHub discovery)
-   - Update both when package functionality expands
+### Link Maintenance
+
+- **Internal links**: Use relative paths in documentation (e.g., `./spa-guard/core.md`)
+- **External links**: Verify links are not broken before committing
+- **Cross-package links**: Use Docusaurus links to other documentation pages
+- Run link checker in CI to catch broken links early
+
+### Installation Examples Standard
+
+All installation examples must show multiple package managers in a consistent format.
+
+**Package manager order**: pnpm, npm, yarn, bun, deno (always in this order)
+
+**Docusaurus docs** (`website/docs/*.md`): Use Docusaurus `Tabs` and `TabItem` components (MDX)
+
+- Import `Tabs` from `@theme/Tabs` and `TabItem` from `@theme/TabItem` at the top of the file
+- Set `default` prop on the pnpm `TabItem`
+- See `docs/templates/installation-tabs-example.md` for canonical format
+
+**README files**: Use bold markdown headers with separate code blocks
+
+- Mark pnpm as `(recommended)`
+- See `docs/templates/installation-readme-example.md` for canonical format
+
+**Package manager commands**:
+| Manager | Install | Dev Install |
+|---------|---------|-------------|
+| pnpm | `pnpm add <pkg>` | `pnpm add -D <pkg>` |
+| npm | `npm install <pkg>` | `npm install --save-dev <pkg>` |
+| yarn | `yarn add <pkg>` | `yarn add -D <pkg>` |
+| bun | `bun add <pkg>` | `bun add -d <pkg>` |
+| deno | `deno add npm:<pkg>` | `deno add npm:<pkg>` |
+
+**Peer dependencies**: Include in the same install command (e.g., `pnpm add @ovineko/spa-guard-react react`)
+
+### Website URL Migration
+
+The website has migrated from GitHub Pages to a custom domain:
+
+- **Old URL**: `https://ovineko.github.io/ovineko/` (with `/ovineko/` baseUrl)
+- **New URL**: `https://ovineko.com/` (with `/` baseUrl)
+
+When updating documentation links:
+
+- Use `https://ovineko.com/docs/...` for all documentation references
+- Local dev server runs at `http://localhost:3000/` (no prefix)
+- Footer includes links to GitHub, npm, and npmx registries
+
+### llms.txt Maintenance
+
+The website serves `/llms.txt` following the [llmstxt.org](https://llmstxt.org) specification for LLM-friendly documentation access.
+
+**File location**: `website/static/llms.txt`
+
+**Update triggers** - update llms.txt when:
+
+- Adding new packages to the monorepo
+- Adding major new documentation sections
+- Changing documentation structure significantly
+- Adding important resources or guides
+
+**Format requirements**:
+
+- Follow llmstxt.org specification strictly
+- Use markdown format with H1 heading (project name)
+- Include blockquote summary at top
+- Organize links in H2-delimited sections
+- Use "Optional" section for secondary resources
+- Keep descriptions brief and informative
+
+### README.md Scope
+
+**Root README.md** and **package-level README.md** must be kept **minimal** and focused on:
+
+1. **What is this package** - One paragraph description
+2. **Quick install** - Single command
+3. **Basic usage** - Minimal example (3-5 lines of code)
+4. **Link to full documentation** - Point to Docusaurus website
+
+**Do NOT add to README.md:**
+
+- Detailed usage guides (belongs in `website/docs/`)
+- Configuration examples (belongs in `website/docs/`)
+- Architecture explanations (belongs in `website/docs/`)
+- API reference (belongs in `website/docs/`)
+
+**Rationale:** Centralized documentation in Docusaurus provides better organization, search, navigation, and versioning. README is the landing page, not the manual.
 
 ### Documentation Update Triggers
 
@@ -414,18 +513,6 @@ Update docs when you:
 - ✅ Change build/test/lint workflows
 - ✅ Introduce new architectural patterns
 
-### Quick Documentation Check
-
-Before finalizing any change:
-
-```bash
-# 1. Does AGENTS.md mention this pattern/pitfall?
-# 2. Does package README show current usage?
-# 3. Do package.json keywords reflect new functionality?
-```
-
-**Golden Rule**: If you had to figure something out, document it so others (and future AI agents) don't have to.
-
 ## Known Pitfalls
 
 ### Workspace protocol
@@ -434,17 +521,33 @@ Before finalizing any change:
 
 ### Build output missing
 
-Check that `tsup.config.ts` entry patterns exclude test files
+Check that `tsdown.config.ts` entry patterns exclude test files
+
+### Retry orchestrator: do not bypass the single owner
+
+Never call `setFallbackMode()`, `clearLastReloadTime()`, or schedule a `setTimeout` for reload outside of `retryOrchestrator.ts`. All retry lifecycle transitions must go through `triggerRetry()`. Bypassing this creates race conditions and inconsistent state between the orchestrator phase, fallback flag, and URL params.
+
+### Retry orchestrator: deduplification relies on phase check
+
+The orchestrator transitions phase to `scheduled` before any async work. If an error in the try-block causes an exception, the phase is reset to `idle`. Do not add code between `setState({ phase: "scheduled" })` and the try-block — that would leave the orchestrator in `scheduled` indefinitely on failure.
+
+### URL retry params are stripped by markRetryHealthyBoot
+
+After a successful boot following a retry reload, call `markRetryHealthyBoot()`. This clears the `RETRY_ATTEMPT_PARAM`, `RETRY_ID_PARAM`, and `CACHE_BUST_PARAM` from the URL, resets orchestrator state, and clears `lastReloadTime`. Failing to call it leaves stale params in the URL.
+
+### markRetryHealthyBoot timing can cause retry loops
+
+Do not call `markRetryHealthyBoot()` during early app startup (for example immediately in runtime setup) before critical lazy chunks/routes load. If a chunk error occurs after that premature call, retry params are cleared and the next cycle restarts from attempt 0, which can prevent transition to fallback.
+
+### Non-chunk unhandledrejection can look like retry loops
+
+`handleUnhandledRejections.retry` defaults to `true`. This means regular app-level unhandled promise rejections (not only chunk errors) can trigger reload attempts. If a project has known non-chunk rejections, set `handleUnhandledRejections.retry = false` to avoid reload-loop-like behavior.
+
+### HTTP-like unhandledrejection must be checked before generic Error
+
+In `src/common/serializeError.ts`, keep the `reason.response` (HttpError) branch before the generic `reason instanceof Error` branch inside `serializeRejectionReason()`. Many client libraries throw `Error` subclasses (for example `ResponseError`) that also carry `response`. If the Error branch runs first, `status`/`statusText`/`url`/`method` are lost from serialized beacons.
 
 <!-- Add corrections here as you encounter issues -->
-
-## Verification
-
-Before completing any task:
-
-1. Run the test suite if tests exist
-2. Run linter to check for issues
-3. Verify changes work as expected
 
 ---
 

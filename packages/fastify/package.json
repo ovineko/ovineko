@@ -1,6 +1,7 @@
 {
   "name": "@ovineko/fastify",
   "version": "0.0.0",
+  "private": true,
   "description": "Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, and healthcheck integrations",
   "keywords": [
     "fastify",
@@ -39,9 +40,7 @@
   "scripts": {
     "build": "tsup",
     "build:example:swagger": "tsx example/buildSwagger.ts && pnpm dm fix example/swagger.json",
-    "dev": "tsx watch --clear-screen=true --include \"src\" --include \"example\" example/main.ts",
-    "fix": "datamitsu fix",
-    "lint": "datamitsu lint"
+    "dev": "tsx watch --clear-screen=true --include \"src\" --include \"example\" example/main.ts"
   },
   "dependencies": {
     "@fastify/compress": "8.3.1",
@@ -63,15 +62,11 @@
   },
   "devDependencies": {
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-27",
     "@types/node": "24.10.12",
     "tsup": "8.5.1"
   },
   "peerDependencies": {
     "typebox": "^1.0.81"
-  },
-  "packageManager": "pnpm@10.29.3",
-  "engines": {
-    "node": ">=20"
   }
 }

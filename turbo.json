@@ -4,22 +4,32 @@
   "tasks": {
     "build": {
       "dependsOn": ["build:lib", "^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": [
+        "dist/**",
+        "dist-inline/**",
+        "dist-inline-trace/**",
+        ".next/**",
+        "!.next/cache/**"
+      ]
+    },
+    "website#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["build/**"]
     },
     "build:lib": {
       "dependsOn": ["^build:lib"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
-    },
-    "lint": {
-      "dependsOn": ["^lint"]
+      "outputs": [
+        "dist/**",
+        "dist-inline/**",
+        "dist-inline-trace/**",
+        ".next/**",
+        "!.next/cache/**"
+      ]
     },
     "test": {
-      "dependsOn": ["^build:lib"],
+      "dependsOn": ["^build:lib", "^build"],
       "outputs": ["coverage/**"],
       "cache": false
-    },
-    "fix": {
-      "dependsOn": ["^fix"]
     }
   },
   "globalEnv": ["TZ", "PORT", "CI"]

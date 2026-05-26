@@ -5,11 +5,7 @@ import type { Logger } from "../types";
 
 import { getSafeOptions } from "../options.safe";
 
-const stringify = (v: any) => {
-  if (v) {
-    return String(v);
-  }
-};
+const stringify = (v: any): string | undefined => (v ? String(v) : undefined);
 
 export const createLogger = (options: ServerOptions): Logger =>
   pino({

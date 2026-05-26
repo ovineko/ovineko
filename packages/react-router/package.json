@@ -1,6 +1,6 @@
 {
   "name": "@ovineko/react-router",
-  "version": "0.0.4",
+  "version": "0.1.1",
   "description": "Type-safe wrapper for React Router v7 with typed params, query params, and Link components",
   "keywords": [
     "react",
@@ -39,9 +39,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup",
-    "fix": "datamitsu fix",
-    "lint": "datamitsu lint",
+    "build": "tsdown",
     "prepack": "clean-pkg-json clean",
     "postpack": "clean-pkg-json restore",
     "prepublishOnly": "pnpm build",
@@ -53,27 +51,23 @@
   "devDependencies": {
     "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.1-alpha-34",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-27",
     "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
     "@testing-library/user-event": "14.6.1",
-    "@types/react": "19.2.10",
-    "@vitejs/plugin-react": "5.1.3",
-    "@vitest/coverage-v8": "4.0.18",
-    "@vitest/ui": "4.0.18",
-    "happy-dom": "20.5.0",
-    "tsup": "8.5.1",
-    "vitest": "4.0.18"
+    "@types/react": "19.2.14",
+    "@vitejs/plugin-react": "5.2.0",
+    "@vitest/coverage-v8": "4.1.5",
+    "@vitest/ui": "4.1.5",
+    "happy-dom": "20.9.0",
+    "tsdown": "0.22.0",
+    "vitest": "4.1.5"
   },
   "peerDependencies": {
-    "react": "^19",
+    "react": ">=18",
     "react-router": "^7",
     "valibot": "^1"
-  },
-  "packageManager": "pnpm@10.29.3",
-  "engines": {
-    "node": ">=20"
   },
   "publishConfig": {
     "access": "public"

@@ -1,11 +1,19 @@
 {
-  "$schema": "./node_modules/@shibanet0/datamitsu-config/oxlint_configuration_schema.json",
-  "extends": ["./node_modules/@shibanet0/datamitsu-config/.oxlintrc.json"],
+  "$schema": "../../.datamitsu/oxlint_configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "pedantic": "error",
+    "perf": "error",
+    "style": "warn",
+    "suspicious": "error"
+  },
   "rules": {
     "new-cap": "off",
+    "max-statements": "off",
+    "no-shadow": "off",
     "no-duplicate-imports": "off",
     "unicorn/prefer-top-level-await": "off",
-    "max-statements": "off",
     "typescript/no-extraneous-class": "off"
-  }
+  },
+  "extends": ["../../.datamitsu/.oxlintrc.json"]
 }

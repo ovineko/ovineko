@@ -1,0 +1,33 @@
+/* eslint-disable react-refresh/only-export-components */
+import { useEffect, useState } from "react";
+
+import { getState, subscribeToState } from "@ovineko/spa-guard/runtime";
+
+export { DefaultErrorFallback } from "../DefaultErrorFallback";
+export { DebugSyncErrorTrigger } from "./DebugSyncErrorTrigger";
+export { lazyWithRetry } from "./lazyWithRetry";
+export { Spinner } from "./Spinner";
+export type { LazyRetryOptions } from "./types";
+export { useSPAGuardChunkError } from "./useSPAGuardChunkError";
+export { useSPAGuardEvents } from "./useSPAGuardEvents";
+export { ForceRetryError } from "@ovineko/spa-guard";
+export type { SpaGuardState } from "@ovineko/spa-guard/runtime";
+
+export const useSpaGuardState = () => {
+  const [state, setState] = useState(() => {
+    if (globalThis.window === undefined) {
+      return {
+        currentAttempt: 0,
+        isFallbackShown: false,
+        isWaiting: false,
+      };
+    }
+    return getState();
+  });
+
+  useEffect(() => {
+    return subscribeToState(setState);
+  }, []);
+
+  return state;
+};

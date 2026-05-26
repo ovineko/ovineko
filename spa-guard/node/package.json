@@ -1,0 +1,79 @@
+{
+  "name": "@ovineko/spa-guard-node",
+  "version": "0.0.4",
+  "description": "Server-side HTML cache with ETag/304, pre-compression, and i18n for spa-guard",
+  "keywords": [
+    "spa",
+    "node",
+    "i18n",
+    "html",
+    "server-side",
+    "etag",
+    "cache",
+    "compression"
+  ],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/spa-guard/node",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "spa-guard/node"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./builder": {
+      "types": "./dist/builder.d.ts",
+      "default": "./dist/builder.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "dist-inline",
+    "dist-inline-trace"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "build:inline": "tsdown --config tsdown.inline.config.ts && tsdown --config tsdown.inline.trace.config.ts && terser dist-inline/index.js -o dist-inline/index.js -c unsafe,unsafe_arrows,unsafe_methods,passes=3,drop_console -m toplevel --format comments=false && terser dist-inline-trace/index.js -o dist-inline-trace/index.js -c unsafe,unsafe_arrows,unsafe_methods,passes=3 -m toplevel --format comments=false",
+    "prepack": "clean-pkg-json clean",
+    "postpack": "clean-pkg-json restore",
+    "prepublishOnly": "pnpm build:inline && pnpm build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:debug": "DEBUG=1 vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fastify/accept-negotiator": "2.0.1",
+    "html-minifier-terser": "7.2.0"
+  },
+  "devDependencies": {
+    "@ovineko/clean-pkg-json": "workspace:*",
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@ovineko/spa-guard": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-27",
+    "@types/html-minifier-terser": "7.0.2",
+    "@types/node": "24.10.12",
+    "@vitest/coverage-v8": "4.1.5",
+    "terser": "5.47.1",
+    "tsdown": "0.22.0",
+    "vitest": "4.1.5"
+  },
+  "peerDependencies": {
+    "@ovineko/spa-guard": "workspace:*",
+    "parse5": "^8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
