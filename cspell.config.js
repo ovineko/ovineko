@@ -36,5 +36,6 @@ export default {
     "opengraph",
     "umami",
     "XZZKYU",
+    "APIV",
   ],
 };

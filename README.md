@@ -68,7 +68,7 @@ pnpm lint
 | -------------------------------------------------------- | ------------------------------------------------------------- |
 | [@ovineko/react-router](./packages/react-router)         | Type-safe wrapper for React Router v7 with valibot validation |
 | [@ovineko/clean-pkg-json](./packages/clean-pkg-json)     | Zero-config tool to clean package.json before publishing      |
-| [@ovineko/fastify-base](./packages/fastify-base)         | Pre-configured Fastify server with observability              |
+| [@ovineko/fastify](./packages/fastify)                   | Pre-configured Fastify server with observability              |
 | [@ovineko/datamitsu-config](./packages/datamitsu-config) | Internal configuration for datamitsu tooling                  |
 
 ## Contributing

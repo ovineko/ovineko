@@ -36,7 +36,7 @@ This monorepo contains the following packages:
 - **@ovineko/react-router**: Type-safe wrapper for React Router v7 with valibot schema validation, automatic error handling, and typed params
 - **@ovineko/clean-pkg-json**: Zero-config tool to clean package.json before publishing and restore it after
 - **@ovineko/datamitsu-config**: Internal configuration package for datamitsu tooling (linting, formatting, etc.)
-- **@ovineko/fastify-base**: Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck, and other common integrations
+- **@ovineko/fastify**: Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck, and other common integrations
 
 ## Repository Structure
 
@@ -54,7 +54,7 @@ ovineko/
 │   ├── react-router/           # Type-safe React Router v7 wrapper (valibot validation)
 │   ├── clean-pkg-json/         # Package.json cleanup tool for publishing
 │   ├── datamitsu-config/       # Shared config for datamitsu tooling
-│   └── fastify-base/           # Pre-configured Fastify server with observability
+│   └── fastify/                # Pre-configured Fastify server with observability
 ├── website/                     # Documentation site (Docusaurus)
 ├── turbo.json                  # Turborepo build orchestration config
 ├── pnpm-workspace.yaml         # pnpm workspace configuration
