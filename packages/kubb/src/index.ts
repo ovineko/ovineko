@@ -1,4 +1,4 @@
-import type { BarrelType, UserConfig } from "@kubb/core";
+import type { BarrelType } from "@kubb/core";
 
 import { defineConfig as defineConfigLib } from "@kubb/core";
 
@@ -11,6 +11,7 @@ import { pluginOas } from "@kubb/plugin-oas";
 import { pluginSwr } from "@kubb/plugin-swr";
 import { pluginTs } from "@kubb/plugin-ts";
 import { pluginZod } from "@kubb/plugin-zod";
+import { pluginScopes } from "@ovineko/kubb-plugin-scopes";
 
 import type { ConfigOptions } from "./types";
 
@@ -39,6 +40,8 @@ export const defineConfig = (options: ConfigOptions): ReturnType<typeof defineCo
 
   const barrelType: BarrelType | false =
     options.barrelType === undefined ? false : options.barrelType;
+
+  const clientImportPath = options.useOvinekoClient ? "@ovineko/kubb-client" : undefined;
 
   return defineConfigLib({
     ...options.config,
@@ -81,14 +84,11 @@ export const defineConfig = (options: ConfigOptions): ReturnType<typeof defineCo
         pluginClient(
           createPluginOptions(
             {
-              client: "fetch",
+              ...(clientImportPath
+                ? { importPath: clientImportPath }
+                : { client: "fetch" as const }),
               dataReturnType: "full",
-              exclude: [
-                // {
-                //   pattern: "store",
-                //   type: "tag",
-                // },
-              ],
+              exclude: [],
               group: {
                 name: fixGroupName({ plugin: "client", suffix: "Service" }),
                 type: "tag",
@@ -118,7 +118,7 @@ export const defineConfig = (options: ConfigOptions): ReturnType<typeof defineCo
             {
               client: {
                 dataReturnType: "full",
-                importPath: "@kubb/plugin-client/clients/fetch",
+                importPath: clientImportPath ?? "@kubb/plugin-client/clients/fetch",
               },
               group: {
                 name: fixGroupName({ plugin: "swr", suffix: "Hooks" }),
@@ -177,12 +177,26 @@ export const defineConfig = (options: ConfigOptions): ReturnType<typeof defineCo
             options.plugins.faker,
           ),
         ),
+      options.plugins?.scopes?.enabled &&
+        pluginScopes(
+          createPluginOptions(
+            {
+              group: {
+                name: fixGroupName({ plugin: "scopes", suffix: "Scopes" }),
+                type: "tag",
+              },
+              ...(clientImportPath ? { importPath: `${clientImportPath}/scopes` } : {}),
+              output: {
+                banner: outputBanner,
+                barrelType,
+                footer: outputFooter,
+                path: "./scopes",
+              },
+            },
+            options.plugins.scopes,
+          ),
+        ),
       ...(options.plugins?.additional || []),
-    ].reduce<Required<Pick<UserConfig, "plugins">>["plugins"]>((acc, el) => {
-      if (el) {
-        acc.push(el);
-      }
-      return acc;
-    }, []),
+    ].filter(Boolean),
   });
 };

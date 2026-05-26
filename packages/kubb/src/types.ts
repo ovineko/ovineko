@@ -6,6 +6,7 @@ import type { pluginOas } from "@kubb/plugin-oas";
 import type { pluginSwr } from "@kubb/plugin-swr";
 import type { pluginTs } from "@kubb/plugin-ts";
 import type { pluginZod } from "@kubb/plugin-zod";
+import type { pluginScopes } from "@ovineko/kubb-plugin-scopes";
 
 export interface ConfigOptions {
   barrelType?: BarrelType | false;
@@ -21,10 +22,12 @@ export interface ConfigOptions {
     faker?: PluginOptionsEnabled<PluginFakerOptions>;
     msw?: PluginOptionsEnabled<PluginMswOptions>;
     oas?: PluginOptionsDisabled<PluginOasOptions>;
+    scopes?: PluginOptionsEnabled<PluginScopesOptions>;
     swr?: PluginOptionsDisabled<PluginSwrOptions>;
     ts?: PluginOptionsDisabled<PluginTsOptions>;
     zod?: PluginOptionsEnabled<PluginZodOptions>;
   };
+  useOvinekoClient?: boolean;
 }
 export type PluginClientOptions = Required<Parameters<typeof pluginClient>>[0];
 export type PluginFakerOptions = Required<Parameters<typeof pluginFaker>>[0];
@@ -36,10 +39,11 @@ export interface PluginOptions<T = unknown> {
 export type PluginOptionsDisabled<T = unknown> = PluginOptions<T> & {
   disabled?: boolean;
 };
-
 export type PluginOptionsEnabled<T = unknown> = PluginOptions<T> & {
   enabled?: boolean;
 };
+
+export type PluginScopesOptions = Required<Parameters<typeof pluginScopes>>[0];
 
 export type PluginSwrOptions = Required<Parameters<typeof pluginSwr>>[0];
 

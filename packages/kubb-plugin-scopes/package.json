@@ -1,0 +1,65 @@
+{
+  "name": "@ovineko/kubb-plugin-scopes",
+  "version": "0.0.0",
+  "description": "Kubb plugin for generating type-safe OAuth scope functions from OpenAPI specs",
+  "keywords": [
+    "kubb",
+    "openapi",
+    "oauth",
+    "scopes",
+    "code-generation",
+    "typescript"
+  ],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/packages/kubb-plugin-scopes",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "packages/kubb-plugin-scopes"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build:lib": "tsup",
+    "prepack": "clean-pkg-json clean",
+    "postpack": "clean-pkg-json restore",
+    "prepublishOnly": "pnpm build:lib",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:debug": "DEBUG=1 vitest run",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@kubb/core": "4.37.2",
+    "@kubb/fabric-core": "0.14.0",
+    "@kubb/oas": "4.37.2",
+    "@kubb/plugin-oas": "4.37.2",
+    "@kubb/react-fabric": "0.14.0"
+  },
+  "devDependencies": {
+    "@ovineko/clean-pkg-json": "workspace:*",
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-26",
+    "@types/node": "24.10.12",
+    "@vitest/coverage-v8": "4.0.18",
+    "tsup": "8.5.1",
+    "vitest": "4.0.18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

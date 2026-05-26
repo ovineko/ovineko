@@ -1,0 +1,92 @@
+{
+  "name": "@ovineko/kubb-client",
+  "version": "0.0.0",
+  "description": "Type-safe HTTP client for Kubb-generated code with middleware architecture",
+  "keywords": [
+    "kubb",
+    "openapi",
+    "http-client",
+    "fetch",
+    "middleware",
+    "typescript",
+    "code-generation"
+  ],
+  "homepage": "https://github.com/ovineko/ovineko/tree/main/packages/kubb-client",
+  "bugs": {
+    "url": "https://github.com/ovineko/ovineko/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovineko/ovineko.git",
+    "directory": "packages/kubb-client"
+  },
+  "license": "MIT",
+  "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
+  "sideEffects": [
+    "./dist/index.js"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    },
+    "./scopes": {
+      "types": "./dist/scopes.d.ts",
+      "default": "./dist/scopes.js"
+    },
+    "./scopes/react": {
+      "types": "./dist/scopes-react.d.ts",
+      "default": "./dist/scopes-react.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build:lib": "tsup",
+    "generate:test-fixtures": "node ../kubb/bin/cli.js generate --config test-integration/kubb.config.ts",
+    "prepack": "clean-pkg-json clean",
+    "postpack": "clean-pkg-json restore",
+    "prepublishOnly": "pnpm build:lib",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:debug": "DEBUG=1 vitest run",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@ovineko/clean-pkg-json": "workspace:*",
+    "@ovineko/datamitsu-config": "workspace:*",
+    "@ovineko/kubb": "workspace:*",
+    "@shibanet0/datamitsu-config": "0.0.3-alpha-26",
+    "@testing-library/dom": "10.4.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@types/react": "19.2.10",
+    "@vitejs/plugin-react": "5.1.3",
+    "@vitest/coverage-v8": "4.0.18",
+    "@vitest/ui": "4.0.18",
+    "happy-dom": "20.7.0",
+    "react": "19",
+    "react-dom": "19",
+    "tsup": "8.5.1",
+    "vitest": "4.0.18"
+  },
+  "peerDependencies": {
+    "react": "^19"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

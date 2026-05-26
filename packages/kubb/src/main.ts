@@ -6,4 +6,7 @@ import { run } from "@kubb/cli";
 // process.argv[0] = node
 // process.argv[1] = /path/to/bin/cli.js
 // process.argv[2+] = actual CLI arguments
-run(process.argv);
+run(process.argv).catch((error: unknown) => {
+  console.error(error);
+  process.exit(1);
+});

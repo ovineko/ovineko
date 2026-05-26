@@ -39,6 +39,9 @@ This monorepo contains the following packages:
 - **@ovineko/clean-pkg-json**: Zero-config tool to clean package.json before publishing and restore it after
 - **@ovineko/datamitsu-config**: Internal configuration package for datamitsu tooling (linting, formatting, etc.)
 - **@ovineko/fastify-base**: Pre-configured Fastify server with Sentry, Prometheus, OpenTelemetry, healthcheck, and other common integrations
+- **@ovineko/kubb-client**: Type-safe HTTP client for Kubb-generated code — pure fetch, middleware architecture (requestId, auth, sentry), global singleton + per-request override, React integration
+- **@ovineko/kubb**: Opinionated Kubb wrapper for OpenAPI code generation with `defineConfig` helper
+- **@ovineko/kubb-plugin-scopes**: Kubb plugin for generating type-safe OAuth scope functions from OpenAPI security schemes
 
 ## Repository Structure
 
@@ -53,6 +56,9 @@ ovineko/
 │   ├── fastify/                # Fastify beacon endpoint plugin and HTML cache handler
 │   └── eslint/                 # ESLint rules
 ├── packages/                    # Other publishable packages
+│   ├── kubb-client/            # Type-safe HTTP client for Kubb-generated code
+│   ├── kubb/                   # Opinionated Kubb wrapper for OpenAPI code generation
+│   ├── kubb-plugin-scopes/     # Kubb plugin for OAuth scope code generation
 │   ├── react-router/           # Type-safe React Router v7 wrapper (valibot validation)
 │   ├── clean-pkg-json/         # Package.json cleanup tool for publishing
 │   ├── datamitsu-config/       # Shared config for datamitsu tooling
@@ -398,6 +404,47 @@ Key architecture notes:
 - **Builder API (spa-guard-node)**: `buildSpaGuardScript()` and `buildExternalScript()` in `spa-guard/node/src/builder.ts` read the pre-built inline script from `dist-inline/index.js` (or `dist-inline-trace/index.js` when `trace: true`) relative to `import.meta.dirname`. These directories are built directly in `spa-guard/node/` by running `pnpm build:inline` (or `pnpm prepublishOnly` to build everything). If builder tests fail with ENOENT, run `pnpm build:inline` in `spa-guard/node/`. The `./builder` subpath export in `node/package.json` exposes the builder API separately from the main index
 - **External script mode (spa-guard-vite)**: When `mode: 'external'`, `configResolved` hook captures `config.build.outDir` as the fallback `externalScriptDir`. `transformIndexHtml` computes and caches the script content and hash on first invocation (shared across all HTML entry points processed in the same build). The actual file write happens in `writeBundle`, not during transform. The injected tag is `<script src="...">` with a content-hashed filename (e.g., `spa-guard.<hash16>.js`). `HtmlTagDescriptor` in `builder.ts` is intentionally independent of Vite's type (same shape, structurally compatible) to keep spa-guard-node framework-agnostic
 
+### @ovineko/kubb-client
+
+- Pure fetch HTTP client with zero runtime dependencies (no axios/ufetch)
+- Default export is a global singleton `Client` — Kubb-generated code imports it as `import client from "@ovineko/kubb-client"`
+- `Client` type signature MUST match Kubb's expectations: `<TData, TError, TVariables>(config: RequestConfig<TVariables>) => Promise<ResponseConfig<TData>>`
+- Middleware architecture with three hooks: `onRequest` (first→last), `onResponse` (last→first), `onError` (first→last, stops on first recovery)
+- Built-in middleware: `createRequestIdMiddleware()` (X-Request-Id), `createAuthMiddleware()` (Bearer token), `createSentryMiddleware()` (breadcrumbs + error capture)
+- `_setup` API on the client for runtime configuration: `use()`, `remove()`, `getConfig()`, `setConfig()`
+- `getConfig()` returns a copy, not a reference — prevents external mutation of internal state
+- Do NOT set Content-Type header when sending FormData — fetch handles multipart boundary automatically
+- Request-level `baseURL` takes precedence over client-level configuration
+- Null/undefined query params are silently filtered out (not stringified)
+- `onRequest` middleware can return a `Response` to bypass fetch (e.g., caching); `onError` can return `Response` to recover from errors
+- React integration (`src/react.ts`): `ApiClientProvider` and `useApiClient` hook — hook falls back to global singleton when no context provider is present
+- Scopes subsystem (`src/scopes/`): phantom-branded `ApiScope` type prevents arbitrary strings; `scope()` factory creates branded values
+- Scopes validation uses OR-of-ANDs logic: `[[A, B], [C]]` means "(A AND B) OR C"; `isAvailableScopes()` checks access, `getMissingScopes()` returns the closest unmet group
+- React scopes integration (`src/scopes/react.tsx`): `ScopesProvider`, `useScopes` hook, `RequireScopes` component for declarative scope-based access control
+- Subpath exports: `./scopes` (types + validation), `./scopes/react` (React components/hooks)
+- `_setup.setScopes()` / `getScopes()` provide passive scope storage on the client instance; scope enforcement is the user's responsibility (e.g., via `useScopes().hasAccess()` in React)
+
+### @ovineko/kubb
+
+- Opinionated Kubb wrapper providing `defineConfig()` helper for OpenAPI code generation
+- `useOvinekoClient: true` in config options sets `importPath: "@ovineko/kubb-client"` for both `@kubb/plugin-client` and SWR client configurations
+- When `useOvinekoClient` is false or omitted, no custom importPath is set (uses Kubb defaults)
+- `plugins.scopes: { enabled: true }` integrates `@ovineko/kubb-plugin-scopes` for OAuth scope code generation; when `useOvinekoClient: true`, scopes plugin importPath is set to `@ovineko/kubb-client/scopes`
+- `plugins.scopes.generateSwrWrappers` requires `plugins.swr` to not be disabled (SWR is enabled by default); if SWR is disabled, scoped hook generation will fail to resolve imports
+
+### @ovineko/kubb-plugin-scopes
+
+- Kubb plugin generating type-safe `getXxxScopes()` functions from OAuth2/OpenID Connect security schemes in OpenAPI specs
+- Scope extraction (`src/utils/extractScopes.ts`) accesses `@kubb/oas` internal `_requirements` property — pin `@kubb/oas` version carefully
+- Default `importPath` is `@ovineko/kubb-client/scopes`; default output path is `scopes`
+- Integrated into `@ovineko/kubb` `defineConfig` via `plugins.scopes: { enabled: true }`
+- `generateSwrWrappers: true` enables generation of scoped SWR hook wrappers (`useXxxScoped`) that automatically check OAuth scopes via `useScopes().hasAccess()` before fetching
+- SWR wrapper output path defaults to `hooks-scoped`; configurable via `swrWrappersOutputPath`
+- `scopesReactImportPath` defaults to `@ovineko/kubb-client/scopes/react`; controls where `useScopes` is imported from in generated wrappers
+- Hook parameter detection: operations with path params (`{param}` in path) generate two-param wrappers `(params, options)`, operations without path params generate single-param wrappers `(options)`
+- SWR wrappers require `@kubb/plugin-swr` to be enabled; scoped hooks import from the SWR plugin's barrel files
+- Two-generator architecture: `scopesGenerator` creates scope getter functions, `swrScopesGenerator` creates scoped hook wrappers (runs conditionally)
+
 ### @ovineko/clean-pkg-json
 
 - Automatically runs via npm lifecycle hooks
@@ -549,6 +596,14 @@ Do not call `markRetryHealthyBoot()` during early app startup (for example immed
 ### HTTP-like unhandledrejection must be checked before generic Error
 
 In `src/common/serializeError.ts`, keep the `reason.response` (HttpError) branch before the generic `reason instanceof Error` branch inside `serializeRejectionReason()`. Many client libraries throw `Error` subclasses (for example `ResponseError`) that also carry `response`. If the Error branch runs first, `status`/`statusText`/`url`/`method` are lost from serialized beacons.
+
+### kubb-client: FormData must not have explicit Content-Type
+
+When sending `FormData` via kubb-client, do not set `Content-Type: application/json` or any other Content-Type header. The fetch API automatically generates the correct `multipart/form-data` boundary. Explicitly setting it will corrupt the request.
+
+### kubb-client: middleware onError stops at first recovery
+
+In `MiddlewareOrchestrator.executeOnError()`, when a middleware's `onError` hook returns a `Response`, execution stops immediately. Subsequent error middleware hooks are not called. Design error recovery middleware with this ordering dependency in mind.
 
 <!-- Add corrections here as you encounter issues -->
 

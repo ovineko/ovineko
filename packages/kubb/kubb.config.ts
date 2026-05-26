@@ -22,8 +22,16 @@ export default defineConfig({
     msw: {
       enabled: true,
     },
+    scopes: {
+      enabled: true,
+      generateSwrWrappers: true,
+    },
+    swr: {
+      disabled: false,
+    },
     zod: {
       enabled: false,
     },
   },
+  useOvinekoClient: true,
 });

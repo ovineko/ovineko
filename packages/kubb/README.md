@@ -78,11 +78,29 @@ kubb --help
 kubb --version
 ```
 
+### Scopes plugin
+
+Generate type-safe scope functions from OpenAPI OAuth2 security schemes:
+
+```typescript
+export default defineConfig({
+  config: {
+    root: ".",
+    input: { path: "./petstore.yaml" },
+    output: { path: "./src/gen" },
+  },
+  plugins: {
+    scopes: { enabled: true },
+  },
+  useOvinekoClient: true,
+});
+```
+
 ## What's Included
 
 - **Pre-configured plugins**: OAS, TypeScript, and SWR enabled by default
 - **Consistent defaults**: Standardized output banners, ESLint rule disabling, and file organization
-- **Optional plugins**: Client, Zod, MSW, and Faker (opt-in via config)
+- **Optional plugins**: Client, Zod, MSW, Faker, and Scopes (opt-in via config)
 - **Customization**: Override defaults via `patch` option in config
 
 ## Documentation

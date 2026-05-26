@@ -15,6 +15,12 @@
   "license": "MIT",
   "author": "Alexander Svinarev <shibanet0@gmail.com> (shibanet0.com)",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "bin": {
     "kubb": "./bin/cli.js"
   },
@@ -26,6 +32,8 @@
   "scripts": {
     "build:lib": "tsup",
     "dev": "pnpm build:lib && kubb generate",
+    "prepack": "clean-pkg-json clean",
+    "postpack": "clean-pkg-json restore",
     "prepublishOnly": "pnpm build:lib",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -42,10 +50,12 @@
     "@kubb/plugin-swr": "4.37.2",
     "@kubb/plugin-ts": "4.37.2",
     "@kubb/plugin-zod": "4.37.2",
+    "@ovineko/kubb-plugin-scopes": "workspace:*",
     "change-case": "5.4.4"
   },
   "devDependencies": {
     "@faker-js/faker": "10.3.0",
+    "@ovineko/clean-pkg-json": "workspace:*",
     "@ovineko/datamitsu-config": "workspace:*",
     "@shibanet0/datamitsu-config": "0.0.3-alpha-26",
     "@types/node": "24.10.12",

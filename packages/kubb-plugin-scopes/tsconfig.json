@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@shibanet0/datamitsu-config/tsconfig/library.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "module": "preserve",
+    "sourceMap": false,
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": false,
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@kubb/react-fabric",
+    "types": ["node"]
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts*"]
+}
