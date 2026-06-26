@@ -28,19 +28,21 @@
     "./.oxlintrc.json": {
       "default": "./.oxlintrc.json"
     },
-    "./eslint-override-config.js": {
-      "default": "./eslint-override-config.js"
+    "./eslint-override-config.mjs": {
+      "default": "./eslint-override-config.mjs"
     },
-    "./eslint.config.js": {
-      "default": "./eslint.config.js"
+    "./eslint.config.mjs": {
+      "default": "./eslint.config.mjs"
     },
     "./prettier.config.js": {
       "default": "./prettier.config.js"
     }
   },
-  "scripts": {},
   "devDependencies": {
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-27",
+    "@shibanet0/datamitsu-config": "catalog:",
     "react": "19.2.6"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

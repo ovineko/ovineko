@@ -24,7 +24,12 @@
 **/.tmp/
 
 # Claude Code project files
-.claude/
+.claude/*
+!.claude/skills/
+
+# Codex CLI project files
+.codex/*
+!.codex/prompts/
 
 # Dependencies
 **/node_modules/
@@ -111,6 +116,17 @@
 **/*.crt
 **/secrets.yml
 **/secrets.json
+
+# Terraform & Terragrunt
+**/.terraform/
+**/.terragrunt-cache/
+**/*.tfstate
+**/*.tfstate.backup
+**/crash.log
+**/override.tf
+**/override.tf.json
+**/*_override.tf
+**/*_override.tf.json
 
 # Testing
 **/coverage/

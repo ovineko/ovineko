@@ -1,38 +1,49 @@
-/// <reference path="./node_modules/@shibanet0/datamitsu-config/dist/datamitsu.config.d.ts" />
+/// <reference path="./.datamitsu/datamitsu.config.d.ts" />
 
-function getConfig(config: config.Config) {
-  const init: config.MapOfConfigInit = {
+// Project layer on top of the default @shibanet0/datamitsu-config. The engine loads the
+// upstream config first and passes its output here as `config`; this function overrides
+// only what the monorepo needs and leaves every other managed file to the upstream layer.
+
+const DATAMITSU_CONFIG_PACKAGE = "packages/datamitsu-config";
+
+// @ovineko/datamitsu-config is itself a config package, so a handful of rules that the
+// shared preset enforces don't make sense for its own source.
+const datamitsuConfigOxlintRules: Record<string, "off"> = {
+  "max-statements": "off",
+  "new-cap": "off",
+  "no-duplicate-imports": "off",
+  "no-shadow": "off",
+  "typescript/no-extraneous-class": "off",
+  "unicorn/prefer-top-level-await": "off",
+};
+
+function getConfig(config: config.Config): config.Config {
+  const baseSetup = config.setup ?? {};
+
+  const setup: config.MapOfConfigSetup = {
+    ...baseSetup,
     ".oxlintrc.json": {
-      ...config.init?.[".oxlintrc.json"],
-      content: (context: config.ConfigContext) => {
-        const relativePath = tools.Path.rel(context.cwdPath, context.rootPath);
-        const previousConfig = JSON.parse(context.existingContent || "");
+      ...baseSetup[".oxlintrc.json"],
+      content: (context) => {
+        // packages/datamitsu-config owns the single oxlint ruleset for the whole monorepo: it
+        // extends the upstream preset and relaxes a few rules. Every other package extends THIS
+        // file (not the upstream preset directly) so the categories and disables are shared once
+        // instead of re-derived per package.
+        if (tools.Path.rel(context.cwdPath, context.rootPath) === DATAMITSU_CONFIG_PACKAGE) {
+          const base =
+            baseSetup[".oxlintrc.json"]?.content?.(context) ?? context.originalContent ?? "{}";
+          const parsed = JSON.parse(base);
 
-        if (relativePath === "packages/datamitsu-config") {
           return (
             JSON.stringify(
-              {
-                ...previousConfig,
-                $schema: tools.Path.forImport(
-                  tools.Path.join(context.datamitsuDir, "oxlint_configuration_schema.json"),
-                ),
-                extends: [
-                  tools.Path.forImport(tools.Path.join(context.datamitsuDir, ".oxlintrc.json")),
-                ],
-                rules: {
-                  ...previousConfig.rules,
-                  "max-statements": "off",
-                  "new-cap": "off",
-                  "no-duplicate-imports": "off",
-                  "typescript/no-extraneous-class": "off",
-                  "unicorn/prefer-top-level-await": "off",
-                },
-              },
+              { ...parsed, rules: { ...parsed.rules, ...datamitsuConfigOxlintRules } },
               null,
               2,
             ) + "\n"
           );
         }
+
+        const previousConfig = JSON.parse(context.originalContent || "{}");
 
         return (
           JSON.stringify(
@@ -44,7 +55,7 @@ function getConfig(config: config.Config) {
                 tools.Path.forImport(
                   tools.Path.join(
                     tools.Path.rel(context.rootPath, context.cwdPath),
-                    "packages/datamitsu-config",
+                    DATAMITSU_CONFIG_PACKAGE,
                     ".oxlintrc.json",
                   ),
                 ),
@@ -58,77 +69,97 @@ function getConfig(config: config.Config) {
       },
     },
     ".syncpackrc.json": {
-      ...config.init?.[".syncpackrc.json"],
-      content: (context) => {
-        const previousConfig = JSON.parse(context.existingContent || "");
-
+      ...baseSetup[".syncpackrc.json"],
+      content: () => {
         return (
-          JSON.stringify({
-            ...previousConfig,
-            semverGroups: [
-              {
-                dependencies: ["**"],
-                dependencyTypes: ["peer"],
-                label: "use caret range for all peerDependencies",
-                packages: ["**"],
-                range: "^",
-              },
-              {
-                dependencies: ["**"],
-                dependencyTypes: ["!peer", "!local"],
-                label: "use exact versions for regular dependencies",
-                packages: ["**"],
-                range: "",
-              },
-            ],
-            versionGroups: [
-              {
-                dependencies: ["eslint"],
-                dependencyTypes: ["peer"],
-                label: "spa-guard-eslint supports eslint v9 and v10",
-                packages: ["@ovineko/spa-guard-eslint"],
-                pinVersion: "^9 || ^10",
-              },
-              {
-                dependencies: ["$LOCAL"],
-                dependencyTypes: ["!local"],
-                label: "use workspace protocol for local packages",
-                pinVersion: "workspace:*",
-              },
-              {
-                dependencies: ["react", "react-dom", "@types/react", "@types/react-dom"],
-                isIgnored: true,
-                label: "allow website to use its own React version",
-                packages: ["website"],
-              },
-            ],
-          }) + "\n"
+          JSON.stringify(
+            {
+              semverGroups: [
+                {
+                  dependencies: ["**"],
+                  dependencyTypes: ["peer"],
+                  label: "use caret range for all peerDependencies",
+                  packages: ["**"],
+                  range: "^",
+                },
+                {
+                  dependencies: ["**"],
+                  dependencyTypes: ["!peer", "!local"],
+                  label: "use exact versions for regular dependencies",
+                  packages: ["**"],
+                  range: "",
+                },
+              ],
+              versionGroups: [
+                {
+                  dependencies: ["eslint"],
+                  dependencyTypes: ["peer"],
+                  label: "spa-guard-eslint supports eslint v9 and v10",
+                  packages: ["@ovineko/spa-guard-eslint"],
+                  pinVersion: "^9 || ^10",
+                },
+                {
+                  dependencies: ["fastify", "fastify-plugin"],
+                  dependencyTypes: ["peer"],
+                  label: "spa-guard-fastify supports fastify v4 and v5",
+                  packages: ["@ovineko/spa-guard-fastify"],
+                  pinVersion: "^5 || ^4",
+                },
+                {
+                  dependencies: ["vite"],
+                  dependencyTypes: ["peer"],
+                  label: "spa-guard-vite supports vite v7 and v8",
+                  packages: ["@ovineko/spa-guard-vite"],
+                  pinVersion: "^8 || ^7",
+                },
+                {
+                  dependencies: ["@docusaurus/types"],
+                  dependencyTypes: ["peer"],
+                  label: "docusaurus-config supports docusaurus v3",
+                  packages: ["@ovineko/docusaurus-config"],
+                  pinVersion: "^3",
+                },
+                {
+                  dependencies: ["$LOCAL"],
+                  dependencyTypes: ["!local"],
+                  label: "use workspace protocol for local packages",
+                  pinVersion: "workspace:*",
+                },
+                {
+                  dependencies: ["react", "react-dom", "@types/react", "@types/react-dom"],
+                  dependencyTypes: ["peer"],
+                  label: "react peer dependency uses >=18 range",
+                  packages: ["**"],
+                  pinVersion: ">=18",
+                },
+                {
+                  dependencies: ["react", "react-dom", "@types/react", "@types/react-dom"],
+                  isIgnored: true,
+                  label: "allow website to use its own React version",
+                  packages: ["website"],
+                },
+              ],
+            },
+            null,
+            2,
+          ) + "\n"
         );
       },
+      scope: "git-root",
     },
-    "eslint.config.js": {
-      ...config.init?.["eslint.config.js"],
-      content: (context: config.ConfigContext) => {
-        const relativePath = tools.Path.rel(context.cwdPath, context.rootPath);
-
-        const filepath = tools.Path.join(relativePath, "eslint.config.js");
-
-        tools.Hash.assert({
-          content: context.existingContent ?? "",
-          file: filepath,
-          hash:
-            filepath === "packages/datamitsu-config/eslint.config.js"
-              ? "ed1fb85f639a7c87a9fccbd5d77ddf209f84288561f51baf5c561d46ee8d4c5e"
-              : "92b0dcd4a5b3d12e3fb8a1ad2b74d03bff029b447bb06a92994ccd4331518745",
-        });
-
-        if (relativePath === "packages/datamitsu-config") {
+    "eslint.config.mjs": {
+      ...baseSetup["eslint.config.mjs"],
+      content: (context) => {
+        // Every package consumes @ovineko/datamitsu-config's defineConfig wrapper instead of
+        // the upstream preset directly. The config package itself can't import by its own name,
+        // so it self-references the wrapper via a relative path and re-exports it.
+        if (tools.Path.rel(context.cwdPath, context.rootPath) === DATAMITSU_CONFIG_PACKAGE) {
           return `import { join } from "node:path";
 
 import packageJSON from "./package.json" with { type: "json" };
-import { defineConfig } from "./eslint-override-config.js";
+import { defineConfig } from "./eslint-override-config.mjs";
 
-export * from "./eslint-override-config.js";
+export * from "./eslint-override-config.mjs";
 
 export default defineConfig(
   /** @type {import('@shibanet0/datamitsu-config/type-fest').PackageJson} */ (packageJSON),
@@ -146,7 +177,7 @@ export default defineConfig(
 
         return `import { join } from "node:path";
 
-import { defineConfig } from "@ovineko/datamitsu-config/eslint-override-config.js";
+import { defineConfig } from "@ovineko/datamitsu-config/eslint-override-config.mjs";
 
 import packageJSON from "./package.json" with { type: "json" };
 
@@ -166,38 +197,15 @@ export default config;
 `;
       },
     },
-    "pnpm-workspace.yaml": {
-      ...config.init?.["pnpm-workspace.yaml"],
-      content: (context) => {
-        return `packages:
-  - apps/*
-  - packages/*
-  - spa-guard/*
-enableGlobalVirtualStore: true
-enablePrePostScripts: false
-hoistPattern: []
-ignorePatchFailures: false
-optimisticRepeatInstall: true
-resolutionMode: lowest-direct
-verifyDepsBeforeRun: install
-overrides:
-  vite: npm:rolldown-vite@7.2.5
-`;
-      },
-    },
   };
 
-  return {
-    ...config,
-    init: {
-      ...config.init,
-      ...init,
-    },
-  };
+  return { ...config, setup };
 }
 
 globalThis.getConfig = getConfig;
 
-const getMinVersion = () => "0.0.0";
+function getMinVersion(): string {
+  return "0.1.9";
+}
 
 globalThis.getMinVersion = getMinVersion;

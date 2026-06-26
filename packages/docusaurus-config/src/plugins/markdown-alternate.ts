@@ -90,7 +90,7 @@ async function waitForMdFiles(outDir: string, maxWaitMs: number, intervalMs: num
   const deadline = Date.now() + maxWaitMs;
   let results = collectHtmlWithMd(outDir);
   while (results.length === 0 && Date.now() < deadline) {
-    await new Promise((r) => setTimeout(r, intervalMs));
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
     results = collectHtmlWithMd(outDir);
   }
   return results;

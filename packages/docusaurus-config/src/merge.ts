@@ -8,7 +8,9 @@ export function appendArray<T>(existing: T[] | undefined, toAdd: T[]): T[] | und
 }
 
 export function appendPlugins(existing: PluginConfig[], toAdd: PluginConfig[]): PluginConfig[] {
-  const existingIds = new Set(existing.map(getPluginIdentity).filter(Boolean) as string[]);
+  const existingIds = new Set(
+    existing.map((plugin) => getPluginIdentity(plugin)).filter(Boolean) as string[],
+  );
 
   const filtered = toAdd.filter((p) => {
     const id = getPluginIdentity(p);

@@ -12,17 +12,20 @@ post-checkout:
       run: pnpm datamitsu init
     install deps:
       priority: 1
-      run: pnpm i
+      run: pnpm i -y
 pre-commit:
   commands:
     build:lib:
       priority: 2
       run: pnpm turbo run build:lib
     datamitsu-check:
-      priority: 1
+      priority: 2
       run: pnpm datamitsu check --file-scoped
       stage_fixed: true
     test:
-      priority: 3
+      priority: 4
       run: pnpm turbo run test
+    datamitsu-init:
+      priority: 1
+      run: pnpm datamitsu init
   parallel: false
