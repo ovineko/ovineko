@@ -37,9 +37,11 @@
     "dist",
     "README.md"
   ],
-  "scripts": {},
   "devDependencies": {
     "@ovineko/datamitsu-config": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-27"
+    "@shibanet0/datamitsu-config": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

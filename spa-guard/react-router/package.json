@@ -46,7 +46,7 @@
     "@ovineko/datamitsu-config": "workspace:*",
     "@ovineko/spa-guard": "workspace:*",
     "@ovineko/spa-guard-react": "workspace:*",
-    "@shibanet0/datamitsu-config": "0.0.3-alpha-27",
+    "@shibanet0/datamitsu-config": "catalog:",
     "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
@@ -62,6 +62,9 @@
     "@ovineko/spa-guard-react": "workspace:*",
     "react": ">=18",
     "react-router": "^7"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   },
   "publishConfig": {
     "access": "public"

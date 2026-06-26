@@ -43,7 +43,7 @@ describe("withOvinekoDocs", () => {
   it("does not add idealImage or umami scripts by default", () => {
     const result = withOvinekoDocs(baseConfig);
 
-    const pluginIds = result.plugins!.map(getPluginId);
+    const pluginIds = result.plugins!.map((plugin) => getPluginId(plugin));
     expect(pluginIds).not.toContain("@docusaurus/plugin-ideal-image");
     expect(result.scripts).toBeUndefined();
   });
@@ -93,7 +93,7 @@ describe("withOvinekoDocs", () => {
     it("skips llms plugin and headTag when llms: false", () => {
       const result = withOvinekoDocs(baseConfig, { llms: false });
 
-      const pluginIds = result.plugins!.map(getPluginId);
+      const pluginIds = result.plugins!.map((plugin) => getPluginId(plugin));
       expect(pluginIds).not.toContain("docusaurus-plugin-llms");
       expect(result.headTags).toBeUndefined();
     });

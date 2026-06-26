@@ -21,8 +21,8 @@ Provides shared configuration files for code quality tools across all packages i
 
 JavaScript and TypeScript linting rules with oxlint plugin integration:
 
-- `eslint.config.js` — Main ESLint configuration
-- `eslint-override-config.js` — Project-specific overrides
+- `eslint.config.mjs` — Main ESLint configuration
+- `eslint-override-config.mjs` — Project-specific overrides
 
 ### Prettier
 
