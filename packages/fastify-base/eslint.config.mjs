@@ -1,5 +1,6 @@
-import { defineConfig } from "@ovineko/datamitsu-config/eslint-override-config.mjs";
 import { join } from "node:path";
+
+import { defineConfig } from "@ovineko/datamitsu-config/eslint-override-config.mjs";
 
 import packageJSON from "./package.json" with { type: "json" };
 

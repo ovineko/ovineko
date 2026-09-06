@@ -41,8 +41,7 @@ export interface HtmlCacheResponse {
 }
 
 export type HTMLCacheStoreInput<K extends string> =
-  | (() => Promise<HTMLCacheStoreMap<K>>)
-  | HTMLCacheStoreMap<K>;
+  (() => Promise<HTMLCacheStoreMap<K>>) | HTMLCacheStoreMap<K>;
 
 export type HTMLCacheStoreMap<K extends string> = Record<K, (() => Promise<string>) | string>;
 

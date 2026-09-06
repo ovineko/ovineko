@@ -3,8 +3,9 @@ allowBuilds:
   core-js: false
   esbuild: false
   sharp: true
+audit: {}
 catalog:
-  "@shibanet0/datamitsu-config": 0.1.7
+  "@shibanet0/datamitsu-config": 0.0.0-unstable.20260831.76a29c2
 enableGlobalVirtualStore: true
 enablePrePostScripts: false
 hoistPattern: []

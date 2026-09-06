@@ -1,7 +1,7 @@
 import { join } from "node:path";
 
-import { defineConfig } from "./eslint-override-config.mjs";
 import packageJSON from "./package.json" with { type: "json" };
+import { defineConfig } from "./eslint-override-config.mjs";
 
 export * from "./eslint-override-config.mjs";
 

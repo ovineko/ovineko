@@ -1,9 +1,14 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env.*local"],
+  "globalDependencies": [
+    "**/.env.*local"
+  ],
   "tasks": {
     "build": {
-      "dependsOn": ["build:lib", "^build"],
+      "dependsOn": [
+        "build:lib",
+        "^build"
+      ],
       "outputs": [
         "dist/**",
         "dist-inline/**",
@@ -13,11 +18,17 @@
       ]
     },
     "website#build": {
-      "dependsOn": ["^build"],
-      "outputs": ["build/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "build/**"
+      ]
     },
     "build:lib": {
-      "dependsOn": ["^build:lib"],
+      "dependsOn": [
+        "^build:lib"
+      ],
       "outputs": [
         "dist/**",
         "dist-inline/**",
@@ -27,10 +38,19 @@
       ]
     },
     "test": {
-      "dependsOn": ["^build:lib", "^build"],
-      "outputs": ["coverage/**"],
+      "dependsOn": [
+        "^build:lib",
+        "^build"
+      ],
+      "outputs": [
+        "coverage/**"
+      ],
       "cache": false
     }
   },
-  "globalEnv": ["TZ", "PORT", "CI"]
+  "globalEnv": [
+    "TZ",
+    "PORT",
+    "CI"
+  ]
 }

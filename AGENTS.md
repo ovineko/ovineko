@@ -439,13 +439,14 @@ All installation examples must show multiple package managers in a consistent fo
 - See `docs/templates/installation-readme-example.md` for canonical format
 
 **Package manager commands**:
-| Manager | Install | Dev Install |
-|---------|---------|-------------|
-| pnpm | `pnpm add <pkg>` | `pnpm add -D <pkg>` |
-| npm | `npm install <pkg>` | `npm install --save-dev <pkg>` |
-| yarn | `yarn add <pkg>` | `yarn add -D <pkg>` |
-| bun | `bun add <pkg>` | `bun add -d <pkg>` |
-| deno | `deno add npm:<pkg>` | `deno add npm:<pkg>` |
+
+| Manager | Install              | Dev Install                    |
+| ------- | -------------------- | ------------------------------ |
+| pnpm    | `pnpm add <pkg>`     | `pnpm add -D <pkg>`            |
+| npm     | `npm install <pkg>`  | `npm install --save-dev <pkg>` |
+| yarn    | `yarn add <pkg>`     | `yarn add -D <pkg>`            |
+| bun     | `bun add <pkg>`      | `bun add -d <pkg>`             |
+| deno    | `deno add npm:<pkg>` | `deno add npm:<pkg>`           |
 
 **Peer dependencies**: Include in the same install command (e.g., `pnpm add @ovineko/spa-guard-react react`)
 

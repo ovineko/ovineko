@@ -15,5 +15,7 @@
     "unicorn/prefer-top-level-await": "off",
     "typescript/no-extraneous-class": "off"
   },
-  "extends": ["../../.datamitsu/.oxlintrc.json"]
+  "extends": [
+    "../../.datamitsu/.oxlintrc.json"
+  ]
 }

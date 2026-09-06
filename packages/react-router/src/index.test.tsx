@@ -1,5 +1,3 @@
-/* eslint-disable react-perf/jsx-no-new-object-as-prop */
-/* eslint-disable react-perf/jsx-no-new-array-as-prop */
 import { createMemoryRouter, MemoryRouter, RouterProvider } from "react-router";
 
 import { render, screen } from "@testing-library/react";

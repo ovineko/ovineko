@@ -14,8 +14,7 @@ import { handleErrorWithSpaGuard, isChunkError } from "@ovineko/spa-guard/_inter
 export interface ErrorBoundaryReactRouterProps {
   autoRetryChunkErrors?: boolean;
   fallback?:
-    | ((props: RouterFallbackProps) => React.ReactElement)
-    | React.ComponentType<RouterFallbackProps>;
+    ((props: RouterFallbackProps) => React.ReactElement) | React.ComponentType<RouterFallbackProps>;
   onError?: (error: unknown) => void;
   sendBeacon?: boolean;
 }

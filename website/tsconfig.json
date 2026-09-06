@@ -1,9 +1,32 @@
 {
   // This file is not used in compilation. It is here just for a nice editor experience.
-  "extends": "@docusaurus/tsconfig",
+  // Inlined from @docusaurus/tsconfig@3.10.1 minus `baseUrl`: removed in TS7, rejected by
+  // oxlint/tsgolint. `paths` is declared here so `@site/*` resolves against website/ instead
+  // of the directory of the extended config.
   "compilerOptions": {
-    "types": ["node"],
-    "ignoreDeprecations": "6.0"
+    "allowJs": true,
+    "esModuleInterop": true,
+    "jsx": "preserve",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "@site/*": [
+        "./*"
+      ]
+    },
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "types": [
+      "node"
+    ]
   },
-  "exclude": [".docusaurus", "build"]
+  "exclude": [
+    ".docusaurus",
+    "build"
+  ]
 }

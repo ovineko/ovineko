@@ -1,4 +1,9 @@
 {
   "$schema": "../../.datamitsu/oxlint_configuration_schema.json",
-  "extends": ["../../packages/datamitsu-config/.oxlintrc.json"]
+  "extends": [
+    "../../packages/datamitsu-config/.oxlintrc.json"
+  ],
+  "rules": {
+    "typescript/unbound-method": "off"
+  }
 }

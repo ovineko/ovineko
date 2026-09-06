@@ -1,67 +1,125 @@
 {
   "semverGroups": [
     {
-      "dependencies": ["**"],
-      "dependencyTypes": ["peer"],
+      "dependencies": [
+        "**"
+      ],
+      "dependencyTypes": [
+        "peer"
+      ],
       "label": "use caret range for all peerDependencies",
-      "packages": ["**"],
+      "packages": [
+        "**"
+      ],
       "range": "^"
     },
     {
-      "dependencies": ["**"],
-      "dependencyTypes": ["!peer", "!local"],
+      "dependencies": [
+        "**"
+      ],
+      "dependencyTypes": [
+        "!peer",
+        "!local"
+      ],
       "label": "use exact versions for regular dependencies",
-      "packages": ["**"],
+      "packages": [
+        "**"
+      ],
       "range": ""
     }
   ],
   "versionGroups": [
     {
-      "dependencies": ["eslint"],
-      "dependencyTypes": ["peer"],
+      "dependencies": [
+        "eslint"
+      ],
+      "dependencyTypes": [
+        "peer"
+      ],
       "label": "spa-guard-eslint supports eslint v9 and v10",
-      "packages": ["@ovineko/spa-guard-eslint"],
+      "packages": [
+        "@ovineko/spa-guard-eslint"
+      ],
       "pinVersion": "^9 || ^10"
     },
     {
-      "dependencies": ["fastify", "fastify-plugin"],
-      "dependencyTypes": ["peer"],
+      "dependencies": [
+        "fastify",
+        "fastify-plugin"
+      ],
+      "dependencyTypes": [
+        "peer"
+      ],
       "label": "spa-guard-fastify supports fastify v4 and v5",
-      "packages": ["@ovineko/spa-guard-fastify"],
+      "packages": [
+        "@ovineko/spa-guard-fastify"
+      ],
       "pinVersion": "^5 || ^4"
     },
     {
-      "dependencies": ["vite"],
-      "dependencyTypes": ["peer"],
+      "dependencies": [
+        "vite"
+      ],
+      "dependencyTypes": [
+        "peer"
+      ],
       "label": "spa-guard-vite supports vite v7 and v8",
-      "packages": ["@ovineko/spa-guard-vite"],
+      "packages": [
+        "@ovineko/spa-guard-vite"
+      ],
       "pinVersion": "^8 || ^7"
     },
     {
-      "dependencies": ["@docusaurus/types"],
-      "dependencyTypes": ["peer"],
+      "dependencies": [
+        "@docusaurus/types"
+      ],
+      "dependencyTypes": [
+        "peer"
+      ],
       "label": "docusaurus-config supports docusaurus v3",
-      "packages": ["@ovineko/docusaurus-config"],
+      "packages": [
+        "@ovineko/docusaurus-config"
+      ],
       "pinVersion": "^3"
     },
     {
-      "dependencies": ["$LOCAL"],
-      "dependencyTypes": ["!local"],
+      "dependencies": [
+        "$LOCAL"
+      ],
+      "dependencyTypes": [
+        "!local"
+      ],
       "label": "use workspace protocol for local packages",
       "pinVersion": "workspace:*"
     },
     {
-      "dependencies": ["react", "react-dom", "@types/react", "@types/react-dom"],
-      "dependencyTypes": ["peer"],
+      "dependencies": [
+        "react",
+        "react-dom",
+        "@types/react",
+        "@types/react-dom"
+      ],
+      "dependencyTypes": [
+        "peer"
+      ],
       "label": "react peer dependency uses >=18 range",
-      "packages": ["**"],
+      "packages": [
+        "**"
+      ],
       "pinVersion": ">=18"
     },
     {
-      "dependencies": ["react", "react-dom", "@types/react", "@types/react-dom"],
+      "dependencies": [
+        "react",
+        "react-dom",
+        "@types/react",
+        "@types/react-dom"
+      ],
       "isIgnored": true,
       "label": "allow website to use its own React version",
-      "packages": ["website"]
+      "packages": [
+        "website"
+      ]
     }
   ]
 }

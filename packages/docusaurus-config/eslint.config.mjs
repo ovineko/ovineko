@@ -1,18 +1,12 @@
-import { defineConfig } from "@ovineko/datamitsu-config/eslint-override-config.mjs";
 import { join } from "node:path";
+
+import { defineConfig } from "@ovineko/datamitsu-config/eslint-override-config.mjs";
 
 import packageJSON from "./package.json" with { type: "json" };
 
 const config = await defineConfig(
   /** @type {import('@shibanet0/datamitsu-config/type-fest').PackageJson} */ (packageJSON),
-  [
-    {
-      rules: {
-        "promise/param-names": "off",
-        "unicorn/no-array-callback-reference": "off",
-      },
-    },
-  ],
+  undefined,
   {
     plugins: {
       oxlint: {

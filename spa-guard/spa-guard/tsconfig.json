@@ -2,14 +2,16 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "@shibanet0/datamitsu-config/tsconfig/library.json",
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "types": [],
-    "outDir": "dist",
-    "sourceMap": false,
-    "noEmit": false,
     "declaration": true,
-    "declarationMap": false
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "noEmit": false
   },
-  "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx*"]
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx*"
+  ]
 }
