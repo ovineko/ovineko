@@ -12,6 +12,11 @@ React Router v7 error boundary integration for [spa-guard](./core).
 
 Catches route errors via `useRouteError()` and automatically retries chunk loading failures with spa-guard integration.
 
+React Router can surface a stale lazy-route manifest as an engine-specific access to an undefined
+module's `default` export instead of a standard dynamic-import failure. The boundary treats the
+Chromium, WebKit, and Firefox forms of that error as retryable chunk failures. Set
+`autoRetryChunkErrors={false}` to disable both standard chunk retries and this lazy-route recovery.
+
 ## Install
 
 <Tabs>

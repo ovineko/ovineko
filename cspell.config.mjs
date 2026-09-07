@@ -35,6 +35,15 @@ export default defineConfig((prev) => {
     "umami",
     "XZZKYU",
     "bierner",
+    "unstringifiable",
+    "recognises",
+    "unparseable",
+    "accesstoken",
+    "apikey",
+    "clientsecret",
+    "refreshtoken",
+    "setcookie",
+    "UNTHROTTLED",
   ];
 
   return {

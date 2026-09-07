@@ -13,9 +13,11 @@ vi.mock("./shouldIgnore", () => ({
 }));
 
 import { getLogger } from "./events/internal";
+import { resetBeaconThrottle } from "./beaconThrottle";
 import { getOptions } from "./options";
 import { sendBeacon } from "./sendBeacon";
 import { shouldIgnoreBeacon } from "./shouldIgnore";
+import { parseBeacon } from "../schema/parse";
 
 const mockGetLogger = vi.mocked(getLogger);
 const mockGetOptions = vi.mocked(getOptions);
@@ -63,6 +65,7 @@ describe("sendBeacon", () => {
   let mockLogger: ReturnType<typeof createMockLogger>;
 
   beforeEach(() => {
+    resetBeaconThrottle();
     mockShouldIgnoreBeacon.mockReturnValue(false);
     mockGetOptions.mockReturnValue({
       reportBeacon: { endpoint: DEFAULT_ENDPOINT },
@@ -168,7 +171,7 @@ describe("sendBeacon", () => {
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it("calls getOptions exactly once per sendBeacon call (when not ignored)", () => {
+    it("reads options once when not ignored", () => {
       sendBeacon(makeBeacon());
 
       expect(mockGetOptions).toHaveBeenCalledTimes(1);
@@ -250,6 +253,69 @@ describe("sendBeacon", () => {
       expect(sendBeaconSpy).toHaveBeenCalledWith(DEFAULT_ENDPOINT, JSON.stringify(beacon));
     });
 
+    it("clamps serialized payloads to the schema limit", () => {
+      const beacon = { ...makeBeacon(), serialized: "x".repeat(20_000) };
+
+      sendBeacon(beacon);
+
+      expect(JSON.parse(String(sendBeaconSpy.mock.calls[0]?.[1])).serialized).toHaveLength(10_000);
+    });
+
+    it("normalizes every field before transport so parseBeacon accepts the payload", () => {
+      mockGetOptions.mockReturnValue({
+        appName: "a".repeat(700),
+        reportBeacon: { endpoint: DEFAULT_ENDPOINT },
+      });
+
+      sendBeacon({
+        errorContext: "c".repeat(700),
+        errorMessage: "m".repeat(700),
+        eventName: "e".repeat(700),
+        httpStatus: Infinity,
+        retryAttempt: NaN,
+        url: "u".repeat(700),
+      });
+
+      const body = JSON.parse(String(sendBeaconSpy.mock.calls[0]?.[1]));
+      expect(() => parseBeacon(body)).not.toThrow();
+      expect(body.appName).toHaveLength(500);
+      expect(body.errorContext).toHaveLength(500);
+      expect(body.errorMessage).toHaveLength(500);
+      expect(body.eventName).toHaveLength(500);
+      expect(body.url).toHaveLength(500);
+      expect(body.httpStatus).toBeUndefined();
+      expect(body.retryAttempt).toBeUndefined();
+    });
+
+    it("never suppresses an exhausted-retry report", () => {
+      mockGetOptions.mockReturnValue({
+        reportBeacon: { dedupe: false, endpoint: DEFAULT_ENDPOINT, maxPerPageLoad: 1 },
+      });
+      sendBeacon(makeBeacon({ errorMessage: "first" }));
+
+      sendBeacon({
+        errorMessage: "Exceeded maximum reload attempts",
+        eventName: "chunk_error_max_reloads",
+      });
+
+      expect(sendBeaconSpy).toHaveBeenCalledTimes(2);
+      expect(JSON.parse(String(sendBeaconSpy.mock.calls[1]?.[1]))).toMatchObject({
+        eventName: "chunk_error_max_reloads",
+      });
+    });
+
+    it("falls back to fetch when navigator.sendBeacon throws", () => {
+      const error = new Error("invalid endpoint");
+      sendBeaconSpy.mockImplementation(() => {
+        throw error;
+      });
+
+      expect(() => sendBeacon(makeBeacon())).not.toThrow();
+
+      expect(mockLogger.beaconSendFailed).toHaveBeenCalledWith(error);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
     it("does not call fetch when navigator.sendBeacon succeeds (returns true)", () => {
       sendBeaconSpy.mockReturnValue(true);
 
@@ -310,6 +376,16 @@ describe("sendBeacon", () => {
         expect(mockLogger.beaconSendFailed).toHaveBeenCalled();
       });
     });
+
+    it("does not throw when a fetch implementation throws synchronously", () => {
+      const fetchError = new Error("invalid fetch implementation");
+      fetchMock.mockImplementation(() => {
+        throw fetchError;
+      });
+
+      expect(() => sendBeacon(makeBeacon())).not.toThrow();
+      expect(mockLogger.beaconSendFailed).toHaveBeenCalledWith(fetchError);
+    });
   });
 
   describe("transport fallback and edge cases", () => {
@@ -357,7 +433,7 @@ describe("sendBeacon", () => {
         sendBeacon(beacon);
 
         const fetchCall = fetchMock.mock.calls[0]?.[1];
-        expect(fetchCall?.body).toBe(JSON.stringify(beacon));
+        expect(JSON.parse(fetchCall?.body)).toEqual(beacon);
       });
     });
 

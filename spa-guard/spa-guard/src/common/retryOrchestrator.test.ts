@@ -418,6 +418,70 @@ describe("retryOrchestrator", () => {
       );
     });
 
+    it("includes the retry source in the exhausted beacon", () => {
+      setupMockLocation("http://localhost/?spaGuardRetryId=r1&spaGuardRetryAttempt=3");
+      triggerRetry({ error: new Error("chunk error"), source: "static-asset-error" });
+      const beacon = mockSendBeacon.mock.calls.at(-1)?.[0];
+      expect(beacon).toEqual(expect.objectContaining({ errorType: "static-asset-error" }));
+    });
+
+    it("reaches fallback when an exhausted retry receives a bigint error", () => {
+      setupMockLocation("http://localhost/?spaGuardRetryId=r1&spaGuardRetryAttempt=3");
+
+      const result = triggerRetry({ error: 42n, source: "force-retry" });
+
+      expect(result).toEqual({ status: "fallback" });
+      const beacon = mockSendBeacon.mock.calls.at(-1)?.[0];
+      expect(() => JSON.parse(beacon?.serialized ?? "")).not.toThrow();
+      expect(beacon?.serialized).toContain('"value":"42"');
+    });
+
+    it("keeps exhausted retry details valid and bounded after adding metadata", () => {
+      const retryId = "r".repeat(1000);
+      setupMockLocation(`http://localhost/?spaGuardRetryId=${retryId}&spaGuardRetryAttempt=3`);
+      const error = Object.fromEntries(
+        Array.from({ length: 18 }, (_, index) => [`field${index}`, "x".repeat(500)]),
+      );
+
+      const result = triggerRetry({ error, source: "s".repeat(1000) });
+
+      expect(result).toEqual({ status: "fallback" });
+      const serialized = mockSendBeacon.mock.calls.at(-1)?.[0].serialized ?? "";
+      expect(serialized.length).toBeLessThanOrEqual(10_000);
+      const details = JSON.parse(serialized);
+      expect(details.retryId).toHaveLength(500);
+      expect(details.errorType).toHaveLength(500);
+    });
+
+    it("reaches fallback when error coercion throws", () => {
+      setupMockLocation("http://localhost/?spaGuardRetryId=r1&spaGuardRetryAttempt=3");
+      const error = {
+        toString: () => {
+          throw new Error("cannot stringify");
+        },
+      };
+
+      expect(triggerRetry({ error })).toEqual({ status: "fallback" });
+      expect(getRetrySnapshot().phase).toBe("fallback");
+    });
+
+    it("reaches fallback when terminal beacon reporting throws", () => {
+      setupMockLocation("http://localhost/?spaGuardRetryId=r1&spaGuardRetryAttempt=3");
+      const reportError = new Error("reporting failed");
+      mockSendBeacon.mockImplementationOnce(() => {
+        throw reportError;
+      });
+
+      expect(triggerRetry({ error: new Error("chunk error") })).toEqual({ status: "fallback" });
+      expect(getRetrySnapshot().phase).toBe("fallback");
+      expect(mockSetFallbackMode).toHaveBeenCalledTimes(1);
+      expect(mockShowFallbackUI).toHaveBeenCalledTimes(1);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "triggerRetry fallback beacon failed",
+        reportError,
+      );
+    });
+
     it("does not navigate when exhausted", () => {
       setupMockLocation("http://localhost/?spaGuardRetryId=id&spaGuardRetryAttempt=3");
       triggerRetry({ error: new Error("chunk error") });

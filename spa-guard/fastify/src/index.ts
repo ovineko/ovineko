@@ -13,12 +13,44 @@ import { parseBeacon } from "@ovineko/spa-guard/schema/parse";
 
 import { name } from "../package.json";
 
+const MAX_BODY_PREVIEW_LENGTH = 200;
+
 const parseStringBody = (body: string): unknown => {
   try {
     return JSON.parse(body);
   } catch {
     return body;
   }
+};
+
+const previewBody = (body: unknown): string => {
+  let preview: string;
+  try {
+    const serialized = typeof body === "string" ? body : JSON.stringify(body);
+    preview = typeof serialized === "string" ? serialized : String(body);
+  } catch {
+    try {
+      preview = String(body);
+    } catch {
+      preview = "Unstringifiable body";
+    }
+  }
+  return preview.length > MAX_BODY_PREVIEW_LENGTH
+    ? `${preview.slice(0, MAX_BODY_PREVIEW_LENGTH - 1)}…`
+    : preview;
+};
+
+const bodyLength = (body: unknown): number =>
+  typeof body === "string" || Buffer.isBuffer(body) ? body.length : 0;
+
+const parseBody = (body: unknown): unknown => {
+  if (typeof body === "string") {
+    return parseStringBody(body);
+  }
+  if (Buffer.isBuffer(body)) {
+    return parseStringBody(body.toString("utf8"));
+  }
+  return body;
 };
 
 export interface BeaconHandlerResult {
@@ -29,6 +61,9 @@ export interface BeaconHandlerResult {
 }
 
 export interface FastifySPAGuardOptions {
+  /** Enables the bounded invalid-body preview in the default warning. @default false */
+  logUnknownBeaconBody?: boolean;
+
   /**
    * Custom handler for beacon data
    * @param beacon - Parsed beacon data
@@ -64,34 +99,57 @@ export interface FastifySPAGuardOptions {
 
 const handleBeaconRequest = async (params: {
   body: unknown;
-  options: Pick<FastifySPAGuardOptions, "onBeacon" | "onUnknownBeacon">;
+  options: Pick<FastifySPAGuardOptions, "logUnknownBeaconBody" | "onBeacon" | "onUnknownBeacon">;
+  rawBody: unknown;
   reply: FastifyReply;
   request: FastifyRequest;
 }): Promise<boolean> => {
-  const { body, options, reply, request } = params;
+  const { body, options, rawBody, reply, request } = params;
 
   let beacon: BeaconSchema;
   try {
     beacon = parseBeacon(body);
-  } catch {
+  } catch (error) {
     if (options.onUnknownBeacon) {
       const result = await options.onUnknownBeacon(body, request, reply);
 
       if (!result?.skipDefaultLog) {
-        request.log.warn({ bodyType: typeof body }, logMessage("Unknown beacon format"));
+        request.log.warn(
+          {
+            ...(options.logUnknownBeaconBody && { bodyPreview: previewBody(rawBody) }),
+            bodyLength: bodyLength(rawBody),
+            bodyType: typeof body,
+            reason: String(error),
+          },
+          logMessage("Unknown beacon format"),
+        );
       }
     } else {
-      request.log.warn({ bodyType: typeof body }, logMessage("Unknown beacon format"));
+      request.log.warn(
+        {
+          ...(options.logUnknownBeaconBody && { bodyPreview: previewBody(rawBody) }),
+          bodyLength: bodyLength(rawBody),
+          bodyType: typeof body,
+          reason: String(error),
+        },
+        logMessage("Unknown beacon format"),
+      );
     }
     return false;
   }
 
   const logPayload = {
-    ...(beacon.appName && { appName: beacon.appName }),
+    appName: beacon.appName,
+    errorContext: beacon.errorContext,
     errorMessage: beacon.errorMessage,
+    errorType: beacon.errorType,
     eventMessage: beacon.eventMessage,
     eventName: beacon.eventName,
+    httpStatus: beacon.httpStatus,
+    retryAttempt: beacon.retryAttempt,
+    retryId: beacon.retryId,
     serialized: beacon.serialized,
+    url: beacon.url,
   };
 
   if (options.onBeacon) {
@@ -138,39 +196,19 @@ const fastifySPAGuardPlugin: FastifyPluginAsync<FastifySPAGuardOptions> = async 
   fastify,
   options,
 ) => {
-  const { onBeacon, onUnknownBeacon, path } = options;
+  const { logUnknownBeaconBody = false, onBeacon, onUnknownBeacon, path } = options;
 
   fastify.post(path, async (request, reply) => {
-    if (typeof request.body !== "string") {
-      if (onUnknownBeacon) {
-        const result = await onUnknownBeacon(request.body, request, reply);
-
-        if (!result?.skipDefaultLog) {
-          request.log.warn(
-            { bodyType: typeof request.body },
-            logMessage("Invalid beacon body type, expected string"),
-          );
-        }
-      } else {
-        request.log.warn(
-          { bodyType: typeof request.body },
-          logMessage("Invalid beacon body type, expected string"),
-        );
-      }
-
-      if (!reply.sent) {
-        return reply.status(400).send({ error: "Invalid body type" });
-      }
-      return reply;
-    }
-
-    const body = parseStringBody(request.body);
+    const rawBody = request.body;
+    const body = parseBody(rawBody);
     const success = await handleBeaconRequest({
       body,
       options: {
         ...(onBeacon !== undefined && { onBeacon }),
         ...(onUnknownBeacon !== undefined && { onUnknownBeacon }),
+        logUnknownBeaconBody,
       },
+      rawBody,
       reply,
       request,
     });

@@ -15,6 +15,36 @@ describe("shouldIgnoreMessages", () => {
     vi.clearAllMocks();
   });
 
+  it("ignores known browser noise when enabled while composing user patterns", () => {
+    mockGetOptions.mockReturnValue({
+      errors: { ignore: ["custom noise"], ignoreKnownNoise: true },
+    });
+    expect(shouldIgnoreMessages(["ResizeObserver loop limit exceeded"])).toBe(true);
+    expect(shouldIgnoreMessages(["custom noise observed"])).toBe(true);
+  });
+
+  it("ignores known browser noise by default while preserving user patterns", () => {
+    mockGetOptions.mockReturnValue({ errors: { ignore: ["custom noise"] } });
+    expect(shouldIgnoreMessages(["ResizeObserver loop limit exceeded"])).toBe(true);
+    expect(shouldIgnoreMessages(["custom noise observed"])).toBe(true);
+  });
+
+  it("can explicitly disable known browser noise without disabling user patterns", () => {
+    mockGetOptions.mockReturnValue({
+      errors: { ignore: ["custom noise"], ignoreKnownNoise: false },
+    });
+    expect(shouldIgnoreMessages(["ResizeObserver loop limit exceeded"])).toBe(false);
+    expect(shouldIgnoreMessages(["custom noise observed"])).toBe(true);
+  });
+
+  it("does not ignore cross-origin error markers unless explicitly configured", () => {
+    mockGetOptions.mockReturnValue({ errors: { ignore: [] } });
+    expect(shouldIgnoreMessages(["Script error."])).toBe(false);
+
+    mockGetOptions.mockReturnValue({ errors: { ignore: ["Script error."] } });
+    expect(shouldIgnoreMessages(["Script error."])).toBe(true);
+  });
+
   describe("empty errors.ignore array (nothing ignored)", () => {
     beforeEach(() => {
       mockGetOptions.mockReturnValue({ errors: { ignore: [] } });

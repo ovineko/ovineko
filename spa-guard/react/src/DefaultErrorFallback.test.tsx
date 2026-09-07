@@ -147,6 +147,20 @@ describe("DefaultErrorFallback", () => {
       expect(screen.getByText("plain string error")).toBeInTheDocument();
     });
 
+    it("does not expose the force-retry marker", () => {
+      render(
+        <DefaultErrorFallback
+          error={new Error("__SPA_GUARD_FORCE_RETRY__retry now")}
+          isChunkError={false}
+          isRetrying={false}
+          spaGuardState={defaultState}
+        />,
+      );
+
+      expect(screen.getByText("retry now")).toBeInTheDocument();
+      expect(document.body.textContent).not.toContain("__SPA_GUARD_FORCE_RETRY__");
+    });
+
     it("escapes HTML in error messages", () => {
       const { container } = render(
         <DefaultErrorFallback

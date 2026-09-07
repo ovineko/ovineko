@@ -153,6 +153,46 @@ window.__SPA_GUARD_OPTIONS__ = {
 
 Note: enabling `retry` for generic rejections can cause reload loops if your app has non-chunk unhandled rejections unrelated to stale assets.
 
+Resource failures produce `resource-error` beacons for code resources by default: scripts,
+stylesheets, module preloads, and code-bearing preloads or prefetches. Font, image, icon, and other
+non-code failures are excluded. Worker and document preload destinations count as code. When a
+link's kind is not recognized, its URL extension is used (`.js`, `.mjs`, `.cjs`, and `.css` are
+treated as code). Set `resources.report` to `"all"` to report every resource element or `"none"` to
+disable resource beacons.
+
+Beacon deduplication and a 20-report per-page cap are enabled by default. `dedupeWindowMs` controls
+how long a report with the same stable identifying fields is suppressed; the default is five
+minutes. Serialized diagnostics are not part of the dedupe key because they can contain volatile
+event data such as timestamps. The retained dedupe keys are bounded. Set `dedupe` to `false` to
+disable deduplication. `maxPerPageLoad` accepts non-negative values; `0` or `Infinity` disables the
+cap, while a negative value uses the default safety cap of 20.
+When the cap is reached, one `beacon-throttled` notice is sent without a stale interim total.
+A final report with the total suppressed during the page load is attempted on `pagehide`, with
+`visibilitychange` as a fallback. Exhausted-retry reports bypass this cap.
+
+### Known browser noise
+
+Known browser-noise filtering is enabled by default. Set `errors.ignoreKnownNoise` to `false` to
+disable it. User-provided `errors.ignore` patterns are added to the built-in list rather than
+replacing it. The list is exported as `KNOWN_BROWSER_NOISE`.
+It contains only the ResizeObserver loop messages and non-error rejection noise. Cross-origin
+`"Script error."` messages are intentionally not in that default list; add the exported
+`CROSS_ORIGIN_ERROR` pattern to `errors.ignore` only when that signal is unwanted.
+
+### Retry source and resource status
+
+The exhausted-retry beacon retains the historical `eventName: "chunk_error_max_reloads"`.
+Its `errorType` identifies the retry source, and the same value is included in `serialized`.
+
+Resource failure beacons populate `httpStatus` from Resource Timing when the browser provides it.
+The browser-reported value can be `0` when an HTTP status is unavailable or opaque, so it should
+not be interpreted as a specific HTTP response. When the API or status field is unavailable,
+`httpStatus` is omitted; the context records a no-byte signal when that signal is available.
+
+Before transport, all beacon strings are capped to the limits enforced by `parseBeacon`, and
+non-finite numeric fields are omitted. This prevents an otherwise valid report from being rejected
+as a whole because one client-derived field is too long or invalid.
+
 ### Static asset burst coalescing
 
 Multiple 404'd asset errors within a short window (default 500 ms) are coalesced into a single `triggerRetry({ cacheBust: true, source: "static-asset-error" })`. The orchestrator's deduplication ensures only one reload is scheduled.
@@ -173,17 +213,23 @@ Only `retryOrchestrator.ts` may schedule reloads, advance retry state, or transi
 - `resetFallbackMode` — clears the fallback flag; use in tests or programmatic recovery flows
 - `BeaconError` — error class for beacon failures
 - `ForceRetryError` — error class to force a retry
+- `stripForceRetryMagic(message)` — remove the internal force-retry marker before rendering or
+  persisting an error message
+- `isCodeResource(target)` — classify a script or link element for `resources.report: "code"`
+- `resetBeaconThrottle()` — clear dedupe/cap state and lifecycle listeners; intended for tests or
+  an explicit host-managed page lifecycle
+- `KNOWN_BROWSER_NOISE` / `CROSS_ORIGIN_ERROR` — reusable error-message filter patterns
 
 **Retry orchestrator (single owner of retry lifecycle):**
 
 - `triggerRetry(input?)` — trigger a retry from any source; returns `TriggerResult`:
   - `{ status: "accepted" }` — reload scheduled
-  - `{ status: "deduped", reason: string }` — ignored because another retry is already scheduled or an internal error occurred
+  - `{ status: "deduped", reason: string }` — ignored because another retry is already scheduled
   - `{ status: "fallback" }` — already in fallback mode; no retry scheduled
+  - `{ status: "internal-error" }` — retry setup failed and the orchestrator returned to `idle`
   - `{ status: "retry-disabled" }` — retry is disabled via `disableDefaultRetry()`
 - `markRetryHealthyBoot()` — call after a successful boot following a retry reload; clears URL params, cancels timers, resets orchestrator state and fallback flag
 - `getRetrySnapshot()` — returns current orchestrator state: `{ phase, attempt, retryId, lastSource, lastTriggerTime }`
-- `resetRetryOrchestratorForTests()` — resets all orchestrator state including fallback flag; use in test teardown
 
 ### `@ovineko/spa-guard/runtime`
 
@@ -218,7 +264,8 @@ Available error scenarios:
 - `dispatchFinallyError` — unhandled rejection from Promise.finally
 - `dispatchForceRetryError` — ForceRetryError to exercise the force-retry path
 - `dispatchUnhandledRejection` — generic unhandled promise rejection
-- `dispatchRetryExhausted` — renders fallback UI directly (bypasses orchestrator; orchestrator phase remains `idle`)
+- `dispatchRetryExhausted` — emits exhaustion and uses the debug transition to render fallback UI
+  with orchestrator phase `fallback`
 - `dispatchStaticAsset404` — appends a hashed `<script>` that 404s, exercising the Resource Timing API-based static asset detection path
 
 ## Related packages

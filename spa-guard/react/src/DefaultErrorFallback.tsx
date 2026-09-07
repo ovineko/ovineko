@@ -8,6 +8,7 @@ import {
   defaultLoadingFallbackHtml,
   getI18n,
   getOptions,
+  stripForceRetryMagic,
 } from "@ovineko/spa-guard/_internal";
 
 interface DefaultErrorFallbackProps {
@@ -120,7 +121,10 @@ export const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
     }
 
     const heading = isChunk ? "Failed to load module" : "Something went wrong";
-    const message = error instanceof Error ? error.message : String(error);
+    const message =
+      error instanceof Error
+        ? stripForceRetryMagic(error.message)
+        : stripForceRetryMagic(String(error));
     const errorTemplate = opts.html?.fallback?.content ?? defaultErrorFallbackHtml;
 
     return buildHtml(errorTemplate, {

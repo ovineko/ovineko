@@ -51,6 +51,12 @@ describe("isChunkError", () => {
       expect(isChunkError(new TypeError("Cannot read property 'x' of undefined"))).toBe(false);
     });
 
+    it("does not treat a missing default export as a transport failure", () => {
+      expect(
+        isChunkError(new TypeError("Cannot read properties of undefined (reading 'default')")),
+      ).toBe(false);
+    });
+
     it("does not match CSP SecurityError", () => {
       const err = new Error("Refused to load because it violates the Content Security Policy");
       err.name = "SecurityError";

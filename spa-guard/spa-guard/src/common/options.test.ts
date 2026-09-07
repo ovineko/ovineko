@@ -41,6 +41,13 @@ describe("getOptions", () => {
     });
     expect(result.reloadDelays).toEqual([1000, 2000, 5000]);
     expect(result.enableRetryReset).toBe(true);
+    expect(result.errors?.ignoreKnownNoise).toBe(true);
+    expect(result.reportBeacon).toEqual({
+      dedupe: true,
+      dedupeWindowMs: 300_000,
+      maxPerPageLoad: 20,
+    });
+    expect(result.resources).toEqual({ report: "code" });
   });
 
   describe("html namespace merge", () => {

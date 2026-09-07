@@ -1,5 +1,7 @@
 import { name } from "../../package.json";
+import { clampBeaconField, MAX_SERIALIZED_LENGTH } from "../schema/parse";
 import { CACHE_BUST_PARAM, RETRY_ATTEMPT_PARAM, RETRY_ID_PARAM } from "./constants";
+import { stripForceRetryMagic } from "./errors/ForceRetryError";
 import { emitEvent, getLogger, isDefaultRetryEnabled } from "./events/internal";
 import { showFallbackUI, showLoadingUI } from "./fallbackRendering";
 import { isInFallbackMode, resetFallbackMode, setFallbackMode } from "./fallbackState";
@@ -14,6 +16,7 @@ import {
 import { getOptions } from "./options";
 import { generateRetryId } from "./retryState";
 import { sendBeacon } from "./sendBeacon";
+import { serializeErrorObject } from "./serializeError";
 import { shouldIgnoreMessages } from "./shouldIgnore";
 
 const retryOrchestratorKey = Symbol.for(`${name}:retry-orchestrator`);
@@ -56,6 +59,42 @@ const createFreshState = (): OrchestratorState => ({
   retryId: null,
   timer: null,
 });
+
+const stringifyError = (error: unknown): string => {
+  try {
+    return stripForceRetryMagic(String(error));
+  } catch {
+    return "Unstringifiable error";
+  }
+};
+
+const serializeRetryBeacon = (
+  error: unknown,
+  retryAttempt: number,
+  retryId: string,
+  source?: string,
+): string => {
+  const errorDetails = serializeErrorObject(error);
+  const normalizedRetryId = clampBeaconField(retryId);
+  const normalizedSource = source === undefined ? undefined : clampBeaconField(source);
+  const details = {
+    ...errorDetails,
+    retryAttempt,
+    retryId: normalizedRetryId,
+    ...(normalizedSource !== undefined && { errorType: normalizedSource }),
+  };
+  const serialized = JSON.stringify(details);
+  if (serialized.length <= MAX_SERIALIZED_LENGTH) {
+    return serialized;
+  }
+  return JSON.stringify({
+    error: "Serialized error exceeded maximum length",
+    ...(typeof errorDetails?.type === "string" && { type: errorDetails.type }),
+    retryAttempt,
+    retryId: normalizedRetryId,
+    ...(normalizedSource !== undefined && { errorType: normalizedSource }),
+  });
+};
 
 const getState = (): OrchestratorState => {
   if (globalThis.window === undefined) {
@@ -189,7 +228,7 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
         clearLastReloadTime();
         setLastRetryResetInfo(urlRetryId);
 
-        const errorMsg = String(input.error);
+        const errorMsg = stringifyError(input.error);
         emitEvent(
           {
             name: "retry-reset",
@@ -214,7 +253,7 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
 
     // Attempts exhausted — transition to fallback
     if (currentAttempt >= reloadDelays.length) {
-      const errorMsg = String(input.error);
+      const errorMsg = stringifyError(input.error);
       emitEvent(
         {
           finalAttempt: currentAttempt,
@@ -224,17 +263,18 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
         { silent: shouldIgnoreMessages([errorMsg]) },
       );
 
-      sendBeacon({
-        errorMessage: "Exceeded maximum reload attempts",
-        eventName: "chunk_error_max_reloads",
-        retryAttempt: currentAttempt,
-        retryId,
-        serialized: JSON.stringify({
-          error: String(input.error),
+      try {
+        sendBeacon({
+          errorMessage: "Exceeded maximum reload attempts",
+          ...(input.source !== undefined && { errorType: input.source }),
+          eventName: "chunk_error_max_reloads",
           retryAttempt: currentAttempt,
           retryId,
-        }),
-      });
+          serialized: serializeRetryBeacon(input.error, currentAttempt, retryId, input.source),
+        });
+      } catch (reportError) {
+        getLogger()?.error("triggerRetry fallback beacon failed", reportError);
+      }
 
       setState({ attempt: currentAttempt, phase: "fallback", retryId });
       setFallbackMode();
@@ -245,7 +285,7 @@ export const triggerRetry = (input: TriggerInput = {}): TriggerResult => {
 
     const nextAttempt = currentAttempt + 1;
     const delay = reloadDelays[currentAttempt] ?? 1000;
-    const errorMsg = String(input.error);
+    const errorMsg = stringifyError(input.error);
 
     emitEvent(
       {

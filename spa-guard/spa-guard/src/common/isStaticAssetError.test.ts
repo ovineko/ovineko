@@ -21,6 +21,13 @@ const makeLinkErrorEvent = (href: string): Event => {
 
 describe("isStaticAssetError", () => {
   describe("script element with hashed filename", () => {
+    it.each([
+      "https://cdn.example.com/assets/main.BCmQ-jq-.js?cache=1#fragment",
+      "https://cdn.example.com/assets/index.D-_Wbi-G.js",
+      "https://cdn.example.com/assets/index.abcdef.js",
+    ])("recognises a base64url hash in %s", (url) => {
+      expect(isStaticAssetError(makeScriptErrorEvent(url))).toBe(true);
+    });
     it("returns true for Vite-style hashed JS (dash separator)", () => {
       expect(
         isStaticAssetError(makeScriptErrorEvent("https://example.com/assets/index-Bd0Ef7jk.js")),
@@ -47,6 +54,13 @@ describe("isStaticAssetError", () => {
   });
 
   describe("link element with hashed CSS filename", () => {
+    it("recognises a base64url hash with an underscore", () => {
+      expect(
+        isStaticAssetError(
+          makeLinkErrorEvent("https://cdn.example.com/assets/styles.Bbi_G6nD.css#x"),
+        ),
+      ).toBe(true);
+    });
     it("returns true for hashed CSS via link element", () => {
       expect(
         isStaticAssetError(makeLinkErrorEvent("https://example.com/assets/vendor-abc12345.css")),
@@ -61,6 +75,17 @@ describe("isStaticAssetError", () => {
   });
 
   describe("non-hashed filenames (false cases)", () => {
+    it.each([
+      "my-vendor-bundle.js",
+      "chunk-vendors.js",
+      "runtime.js",
+      "service-worker.js",
+      "app.min.js",
+    ])("rejects ordinary filename %s", (filename) => {
+      expect(isStaticAssetError(makeScriptErrorEvent(`https://cdn.example.com/${filename}`))).toBe(
+        false,
+      );
+    });
     it("returns false for script without hash (plain main.js)", () => {
       expect(isStaticAssetError(makeScriptErrorEvent("https://example.com/main.js"))).toBe(false);
     });

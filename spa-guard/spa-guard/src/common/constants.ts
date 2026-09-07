@@ -25,3 +25,5 @@ export const debugSyncErrorEventType = "spa-guard:debug-sync-error";
 export const spinnerStateWindowKey = Symbol.for(`${name}:spinner-state`);
 
 export const fallbackModeKey = Symbol.for(`${name}:fallback-mode`);
+
+export const beaconThrottleKey = Symbol.for(`${name}:beacon-throttle`);

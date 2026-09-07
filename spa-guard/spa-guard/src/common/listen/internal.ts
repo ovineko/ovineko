@@ -1,5 +1,6 @@
 import type { Logger } from "../logger";
 
+import { describeError } from "../describeError";
 import {
   emitEvent,
   getLogger,
@@ -8,13 +9,36 @@ import {
   setLogger,
 } from "../events/internal";
 import { isChunkError } from "../isChunkError";
-import { getAssetUrl, isLikely404, isStaticAssetError } from "../isStaticAssetError";
+import {
+  getAssetUrl,
+  getResourceTimingInfo,
+  getResourceUrl,
+  isLikely404,
+  isStaticAssetError,
+} from "../isStaticAssetError";
+import {
+  clampBeaconField,
+  clampSerializedBeaconField,
+  MAX_STRING_FIELD_LENGTH,
+} from "../../schema/parse";
 import { getOptions } from "../options";
 import { triggerRetry } from "../retryOrchestrator";
 import { getRetryInfoForBeacon } from "../retryState";
 import { sendBeacon } from "../sendBeacon";
 import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
 import { handleStaticAssetFailure } from "../staticAssetRecovery";
+import { isCodeResource } from "../isCodeResource";
+import { getPageUrl } from "../pageUrl";
+
+const isErrorEvent = (event: Event): boolean =>
+  typeof ErrorEvent !== "undefined" && event instanceof ErrorEvent;
+
+const NO_BYTES_SUFFIX = " (resource status unknown; no bytes delivered)";
+
+const noBytesContextFrom = (pageUrl: string | undefined): string => {
+  const room = MAX_STRING_FIELD_LENGTH - NO_BYTES_SUFFIX.length;
+  return `${(pageUrl ?? "").slice(0, room)}${NO_BYTES_SUFFIX}`;
+};
 
 export const listenInternal = (serializeError: (error: unknown) => string, logger?: Logger) => {
   if (globalThis.window === undefined) {
@@ -42,6 +66,27 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
           return;
         }
         event.preventDefault();
+        const resourceReport = getOptions().resources?.report ?? "code";
+        const shouldReport =
+          resourceReport !== "none" && (resourceReport !== "code" || isCodeResource(event.target));
+        if (shouldReport) {
+          const timing = getResourceTimingInfo(assetUrl);
+          const pageUrl = getPageUrl();
+          const noBytesContext = noBytesContextFrom(pageUrl);
+          sendBeacon({
+            ...(pageUrl !== undefined && { errorContext: clampBeaconField(pageUrl) }),
+            errorMessage: clampBeaconField(`Failed to load ${assetUrl}`),
+            ...(timing.responseStatus !== undefined && { httpStatus: timing.responseStatus }),
+            ...(timing.noBytesDelivered && timing.responseStatus === undefined
+              ? { errorContext: noBytesContext }
+              : {}),
+            errorType: "asset",
+            eventName: "resource-error",
+            serialized: clampSerializedBeaconField(serializeError(event)),
+            url: clampBeaconField(assetUrl),
+            ...getRetryInfoForBeacon(),
+          });
+        }
         emitEvent({ name: "static-asset-load-failed", url: assetUrl });
         if (getOptions().staticAssets?.autoRecover !== false) {
           handleStaticAssetFailure(assetUrl);
@@ -49,9 +94,27 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
         return;
       }
 
-      if (shouldIgnoreMessages([event.message])) {
+      const resource = !isErrorEvent(event) && event.target instanceof Element;
+      const resourceUrl = resource ? getResourceUrl(event) : "";
+      const resourceTag = resource ? event.target.tagName.toLowerCase() : "";
+      const resourceMessage = resource
+        ? clampBeaconField(
+            `Failed to load ${event.target.tagName}${resourceUrl ? `: ${resourceUrl}` : ""}`,
+          )
+        : undefined;
+
+      if (shouldIgnoreMessages(resource ? [resourceUrl, resourceMessage] : [event.message])) {
         return;
       }
+
+      const resourceReport = getOptions().resources?.report ?? "code";
+      if (
+        resource &&
+        (resourceReport === "none" || (resourceReport === "code" && !isCodeResource(event.target)))
+      ) {
+        return;
+      }
+      const timing = resource ? getResourceTimingInfo(resourceUrl) : undefined;
 
       getLogger()?.capturedError("error", event);
 
@@ -68,10 +131,23 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
       }
 
       const serialized = serializeError(event);
+      const pageUrl = getPageUrl();
+      const noBytesContext = noBytesContextFrom(pageUrl);
       sendBeacon({
-        errorMessage: event.message,
-        eventName: "error",
-        serialized,
+        ...(resourceMessage
+          ? { errorMessage: resourceMessage }
+          : {
+              errorMessage:
+                typeof event.message === "string" ? clampBeaconField(event.message) : event.message,
+            }),
+        ...(resource && { errorType: resourceTag, url: clampBeaconField(resourceUrl) }),
+        ...(resource && pageUrl !== undefined && { errorContext: clampBeaconField(pageUrl) }),
+        ...(timing?.responseStatus !== undefined && { httpStatus: timing.responseStatus }),
+        ...(timing?.noBytesDelivered && timing.responseStatus === undefined
+          ? { errorContext: noBytesContext }
+          : {}),
+        eventName: resource ? "resource-error" : "error",
+        serialized: clampSerializedBeaconField(serialized),
         ...getRetryInfoForBeacon(),
       });
     },
@@ -79,9 +155,22 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
   );
 
   wa("unhandledrejection", (event) => {
-    const errorMessage = String(event.reason);
+    let stringifiedReason: string | undefined;
+    try {
+      stringifiedReason = String(event.reason);
+    } catch {}
+    let rawErrorMessage = stringifiedReason;
+    if (event.reason instanceof Error) {
+      try {
+        rawErrorMessage = event.reason.message;
+      } catch {}
+    }
+    const matchingMessages =
+      rawErrorMessage === stringifiedReason
+        ? [rawErrorMessage]
+        : [rawErrorMessage, stringifiedReason];
 
-    if (shouldIgnoreMessages([errorMessage])) {
+    if (shouldIgnoreMessages(matchingMessages)) {
       return;
     }
 
@@ -93,20 +182,21 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
       return;
     }
 
-    if (shouldForceRetry([errorMessage])) {
+    if (shouldForceRetry(matchingMessages)) {
       event.preventDefault();
       triggerRetry({ error: event.reason, source: "force-retry" });
       return;
     }
 
     const rejectionConfig = getOptions().handleUnhandledRejections;
+    const errorMessage = describeError(event.reason);
 
     if (rejectionConfig?.sendBeacon !== false) {
       const serialized = serializeError(event);
       sendBeacon({
         errorMessage,
         eventName: "unhandledrejection",
-        serialized,
+        serialized: clampSerializedBeaconField(serialized),
         ...getRetryInfoForBeacon(),
       });
     }
@@ -118,7 +208,7 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
   });
 
   wa("securitypolicyviolation", (event) => {
-    const eventMessage = `${event.violatedDirective}: ${event.blockedURI}`;
+    const eventMessage = clampBeaconField(`${event.violatedDirective}: ${event.blockedURI}`);
 
     if (shouldIgnoreMessages([eventMessage])) {
       return;
@@ -130,7 +220,7 @@ export const listenInternal = (serializeError: (error: unknown) => string, logge
     sendBeacon({
       eventMessage,
       eventName: "securitypolicyviolation",
-      serialized,
+      serialized: clampSerializedBeaconField(serialized),
       ...getRetryInfoForBeacon(),
     });
   });

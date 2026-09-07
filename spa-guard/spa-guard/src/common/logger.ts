@@ -1,6 +1,7 @@
 import type { SPAGuardEvent } from "./events/types";
 
 export interface Logger {
+  beaconEndpointFailed?(status: number): void;
   beaconSendFailed(error: unknown): void;
   capturedError(type: string, ...args: unknown[]): void;
   error(msg: string, ...args: unknown[]): void;
@@ -86,6 +87,9 @@ const formatEvent = (event: SPAGuardEvent): string => {
 };
 
 export const createLogger = (): Logger => ({
+  beaconEndpointFailed(status: number): void {
+    console.error(`${PREFIX} Beacon endpoint returned HTTP ${status}`);
+  },
   beaconSendFailed(error: unknown): void {
     console.error(`${PREFIX} Failed to send beacon:`, error);
   },

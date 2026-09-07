@@ -543,6 +543,15 @@ describe("handleErrorWithSpaGuard", () => {
       expect(mockShouldForceRetry).toHaveBeenCalledWith(["my custom error message"]);
     });
 
+    it("matches forceRetry against the raw magic marker", () => {
+      const error = new Error("retry this __SPA_GUARD_FORCE_RETRY__");
+
+      handleErrorWithSpaGuard(error, { eventName: "test-event" });
+
+      expect(mockShouldIgnoreMessages).toHaveBeenCalledWith([error.message]);
+      expect(mockShouldForceRetry).toHaveBeenCalledWith([error.message]);
+    });
+
     it("calls shouldForceRetry with String(error) for non-Error values", () => {
       handleErrorWithSpaGuard("string error", { eventName: "test-event" });
 

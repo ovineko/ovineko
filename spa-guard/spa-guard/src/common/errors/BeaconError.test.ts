@@ -43,9 +43,9 @@ describe("BeaconError", () => {
     expect(error.message).toBe("Something happened");
   });
 
-  it("falls back to default message when both errorMessage and eventMessage are undefined", () => {
+  it("builds a descriptive message from eventName when message fields are absent", () => {
     const error = new BeaconError({ eventName: "event" });
-    expect(error.message).toBe("Unknown beacon error");
+    expect(error.message).toBe("spa-guard: event");
   });
 
   it("exposes all beacon fields as typed properties from a full beacon", () => {
@@ -83,14 +83,18 @@ describe("BeaconError", () => {
       const json = error.toJSON();
       expect(json).toEqual({
         appName: "my-app",
+        errorContext: undefined,
         errorMessage: "Failed to fetch module",
+        errorType: undefined,
         eventMessage: "Module load error detected",
         eventName: "module-error",
+        httpStatus: undefined,
         message: "Failed to fetch module",
         name: "BeaconError",
         retryAttempt: 2,
         retryId: "abc-123",
         serialized: '{"url":"https://example.com/chunk.js"}',
+        url: undefined,
       });
     });
 
@@ -99,14 +103,18 @@ describe("BeaconError", () => {
       const json = error.toJSON();
       expect(json).toEqual({
         appName: undefined,
+        errorContext: undefined,
         errorMessage: undefined,
+        errorType: undefined,
         eventMessage: undefined,
         eventName: "init",
-        message: "Unknown beacon error",
+        httpStatus: undefined,
+        message: "spa-guard: init",
         name: "BeaconError",
         retryAttempt: undefined,
         retryId: undefined,
         serialized: undefined,
+        url: undefined,
       });
     });
 

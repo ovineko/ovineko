@@ -37,6 +37,8 @@ vi.mock("../events/internal", () => ({
 
 vi.mock("../isStaticAssetError", () => ({
   getAssetUrl: vi.fn(),
+  getResourceTimingInfo: vi.fn(),
+  getResourceUrl: vi.fn(),
   isLikely404: vi.fn(),
   isStaticAssetError: vi.fn(),
 }));
@@ -47,13 +49,20 @@ vi.mock("../staticAssetRecovery", () => ({
 
 import { emitEvent, getLogger, isInitialized, setLogger } from "../events/internal";
 import { isChunkError } from "../isChunkError";
-import { getAssetUrl, isLikely404, isStaticAssetError } from "../isStaticAssetError";
+import {
+  getAssetUrl,
+  getResourceTimingInfo,
+  getResourceUrl,
+  isLikely404,
+  isStaticAssetError,
+} from "../isStaticAssetError";
 import { getOptions } from "../options";
 import { triggerRetry } from "../retryOrchestrator";
 import { getRetryInfoForBeacon } from "../retryState";
 import { sendBeacon } from "../sendBeacon";
 import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
 import { handleStaticAssetFailure } from "../staticAssetRecovery";
+import { parseBeacon } from "../../schema/parse";
 import { listenInternal } from "./internal";
 
 const mockEmitEvent = vi.mocked(emitEvent);
@@ -64,6 +73,8 @@ const mockIsChunkError = vi.mocked(isChunkError);
 const mockIsStaticAssetError = vi.mocked(isStaticAssetError);
 const mockIsLikely404 = vi.mocked(isLikely404);
 const mockGetAssetUrl = vi.mocked(getAssetUrl);
+const mockGetResourceTimingInfo = vi.mocked(getResourceTimingInfo);
+const mockGetResourceUrl = vi.mocked(getResourceUrl);
 const mockGetOptions = vi.mocked(getOptions);
 const mockTriggerRetry = vi.mocked(triggerRetry);
 const mockGetRetryInfoForBeacon = vi.mocked(getRetryInfoForBeacon);
@@ -140,6 +151,11 @@ describe("listenInternal", () => {
     mockIsStaticAssetError.mockReturnValue(false);
     mockIsLikely404.mockReturnValue(false);
     mockGetAssetUrl.mockReturnValue("");
+    mockGetResourceTimingInfo.mockReturnValue({ hasEntry: false, noBytesDelivered: false });
+    mockGetResourceUrl.mockImplementation((event) => {
+      const target = event.target as HTMLLinkElement | HTMLScriptElement | null;
+      return target?.src || target?.href || "";
+    });
     mockShouldForceRetry.mockReturnValue(false);
     mockShouldIgnoreMessages.mockReturnValue(false);
     mockGetLogger.mockReturnValue(mockLogger);
@@ -433,10 +449,54 @@ describe("listenInternal", () => {
       mockGetAssetUrl.mockReturnValue("https://example.com/app.abc123.js");
       mockIsChunkError.mockReturnValue(true);
       const { handlers } = captureListeners();
-      handlers.error!({ message: "", preventDefault: vi.fn() });
-      // Static asset 404 path returns early — no triggerRetry or sendBeacon
+      const target = document.createElement("script");
+      target.src = "https://example.com/app.abc123.js";
+      const event = new Event("error");
+      Object.defineProperty(event, "target", { value: target });
+      handlers.error!(event);
+      // Static asset 404 path reports the failure and returns without retry delegation.
       expect(mockTriggerRetry).not.toHaveBeenCalled();
+      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps static asset recovery and events active when resource reports are disabled", () => {
+      mockGetOptions.mockReturnValue({
+        ...DEFAULT_OPTIONS,
+        resources: { report: "none" },
+      });
+      mockIsStaticAssetError.mockReturnValue(true);
+      mockIsLikely404.mockReturnValue(true);
+      mockGetAssetUrl.mockReturnValue("/assets/app-hash.js");
+      const { handlers } = captureListeners();
+      handlers.error!({ message: "", preventDefault: vi.fn() });
+
       expect(mockSendBeacon).not.toHaveBeenCalled();
+      expect(mockGetResourceTimingInfo).not.toHaveBeenCalled();
+      expect(mockEmitEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "static-asset-load-failed" }),
+      );
+      expect(mockHandleStaticAssetFailure).toHaveBeenCalledWith("/assets/app-hash.js");
+    });
+
+    it("applies the code-resource gate before inspecting a likely static 404", () => {
+      mockGetOptions.mockReturnValue({ ...DEFAULT_OPTIONS, resources: { report: "code" } });
+      mockIsStaticAssetError.mockReturnValue(true);
+      mockIsLikely404.mockReturnValue(true);
+      mockGetAssetUrl.mockReturnValue("https://example.com/icon.abc123.css");
+      const target = document.createElement("link");
+      target.rel = "icon";
+      target.href = "https://example.com/icon.abc123.css";
+      const event = new Event("error");
+      Object.defineProperty(event, "target", { value: target });
+      const { handlers } = captureListeners();
+
+      handlers.error!(event);
+
+      expect(mockSendBeacon).not.toHaveBeenCalled();
+      expect(mockGetResourceTimingInfo).not.toHaveBeenCalled();
+      expect(mockHandleStaticAssetFailure).toHaveBeenCalledWith(
+        "https://example.com/icon.abc123.css",
+      );
     });
 
     it("falls through to normal error handling when isLikely404 returns false", () => {
@@ -449,6 +509,151 @@ describe("listenInternal", () => {
       expect(mockHandleStaticAssetFailure).not.toHaveBeenCalled();
       expect(mockEmitEvent).not.toHaveBeenCalled();
       expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+    });
+
+    it("reports resource context and a known timing status", () => {
+      const target = document.createElement("script");
+      target.src = "https://cdn.example.com/assets/main.BCmQ-jq-.js";
+      mockGetResourceTimingInfo.mockReturnValue({
+        hasEntry: true,
+        noBytesDelivered: false,
+        responseStatus: 404,
+      });
+      const event = new Event("error");
+      Object.defineProperty(event, "target", { value: target });
+      const { handlers } = captureListeners();
+      handlers.error!(event);
+      expect(mockSendBeacon).toHaveBeenCalledWith(
+        expect.objectContaining({
+          errorMessage: expect.stringContaining("Failed to load"),
+          errorType: "script",
+          eventName: "resource-error",
+          httpStatus: 404,
+          url: target.src,
+        }),
+      );
+    });
+
+    it("uses a distinct context for a resource that delivered no bytes", () => {
+      mockGetResourceTimingInfo.mockReturnValue({ hasEntry: true, noBytesDelivered: true });
+      mockIsStaticAssetError.mockReturnValue(false);
+      const target = document.createElement("script");
+      target.src = "https://cdn.example.com/assets/main.BCmQ-jq-.js";
+      const event = new Event("error");
+      Object.defineProperty(event, "target", { value: target });
+      const { handlers } = captureListeners();
+      handlers.error!(event);
+      expect(mockSendBeacon).toHaveBeenCalledWith(
+        expect.objectContaining({
+          errorContext: expect.stringContaining("no bytes delivered"),
+          eventName: "resource-error",
+        }),
+      );
+    });
+
+    it.each([
+      ["code", "script", true],
+      ["code", "img", false],
+      ["all", "img", true],
+      ["none", "script", false],
+    ] as const)("applies resources.report=%s to %s failures", (report, tag, reported) => {
+      mockGetOptions.mockReturnValue({ ...DEFAULT_OPTIONS, resources: { report } });
+      const target = document.createElement(tag);
+      if (tag === "script") target.src = "https://cdn.example.com/assets/app.js";
+      const event = new Event("error");
+      Object.defineProperty(event, "target", { value: target });
+      const { handlers } = captureListeners();
+      handlers.error!(event);
+      expect(mockSendBeacon).toHaveBeenCalledTimes(reported ? 1 : 0);
+    });
+
+    it("reports only code links when resources.report is code", () => {
+      mockGetOptions.mockReturnValue({ ...DEFAULT_OPTIONS, resources: { report: "code" } });
+      const font = document.createElement("link");
+      font.rel = "preload";
+      font.as = "font";
+      font.href = "/font.woff2";
+      const fontEvent = new Event("error");
+      Object.defineProperty(fontEvent, "target", { value: font });
+      const { handlers } = captureListeners();
+      handlers.error!(fontEvent);
+      expect(mockSendBeacon).not.toHaveBeenCalled();
+
+      const stylesheet = document.createElement("link");
+      stylesheet.rel = "stylesheet";
+      stylesheet.href = "/styles.css";
+      const stylesheetEvent = new Event("error");
+      Object.defineProperty(stylesheetEvent, "target", { value: stylesheet });
+      handlers.error!(stylesheetEvent);
+      expect(mockSendBeacon).toHaveBeenCalledTimes(1);
+    });
+
+    it("clamps URL-derived fields to the schema boundary", () => {
+      const target = document.createElement("script");
+      target.src = `https://cdn.example.com/${"x".repeat(700)}.js`;
+      const event = new Event("error");
+      Object.defineProperty(event, "target", { value: target });
+      const { handlers } = captureListeners();
+      handlers.error!(event);
+      const beacon = mockSendBeacon.mock.calls[0]?.[0] as Record<string, unknown>;
+      expect(() => parseBeacon(beacon)).not.toThrow();
+      expect(String(beacon.url).length).toBeLessThanOrEqual(500);
+    });
+
+    it("does not read Resource Timing for a resource excluded by the report gate", () => {
+      mockGetOptions.mockReturnValue({ ...DEFAULT_OPTIONS, resources: { report: "none" } });
+      const target = document.createElement("img");
+      target.src = "https://cdn.example.com/image.png";
+      const event = new Event("error");
+      Object.defineProperty(event, "target", { value: target });
+      const { handlers } = captureListeners();
+
+      handlers.error!(event);
+
+      expect(mockGetResourceTimingInfo).not.toHaveBeenCalled();
+    });
+
+    it("clamps the page URL context for regular resource reports", () => {
+      const originalUrl = window.location.href;
+      window.history.replaceState(null, "", `/?query=${"x".repeat(700)}`);
+      const target = document.createElement("script");
+      target.src = "https://cdn.example.com/app.js";
+      const event = new Event("error");
+      Object.defineProperty(event, "target", { value: target });
+      const { handlers } = captureListeners();
+
+      try {
+        handlers.error!(event);
+
+        const beacon = mockSendBeacon.mock.calls[0]?.[0];
+        expect(() => parseBeacon(beacon)).not.toThrow();
+        expect(beacon?.errorContext).toHaveLength(500);
+      } finally {
+        window.history.replaceState(null, "", originalUrl);
+      }
+    });
+
+    it("clamps the page URL context for static asset reports", () => {
+      const originalUrl = window.location.href;
+      window.history.replaceState(null, "", `/?query=${"x".repeat(700)}`);
+      mockIsStaticAssetError.mockReturnValue(true);
+      mockIsLikely404.mockReturnValue(true);
+      mockGetAssetUrl.mockReturnValue("https://cdn.example.com/app.abc123.js");
+      const { handlers } = captureListeners();
+      const target = document.createElement("script");
+      target.src = "https://cdn.example.com/app.abc123.js";
+      const event = new Event("error");
+      Object.defineProperty(event, "target", { value: target });
+
+      try {
+        handlers.error!(event);
+
+        const beacon = mockSendBeacon.mock.calls[0]?.[0];
+        expect(() => parseBeacon(beacon)).not.toThrow();
+        expect(beacon?.errorContext).toHaveLength(500);
+      } finally {
+        window.history.replaceState(null, "", originalUrl);
+      }
     });
   });
 
@@ -472,13 +677,13 @@ describe("listenInternal", () => {
       );
     });
 
-    it("sends beacon with String(event.reason) as errorMessage", () => {
+    it("sends beacon with describeError(event.reason) as errorMessage", () => {
       mockIsChunkError.mockReturnValue(false);
       const { handlers } = captureListeners();
       const reason = new Error("Promise rejection message");
       handlers.unhandledrejection!({ preventDefault: vi.fn(), reason });
       expect(mockSendBeacon).toHaveBeenCalledWith(
-        expect.objectContaining({ errorMessage: String(reason) }),
+        expect.objectContaining({ errorMessage: "Error: Promise rejection message" }),
       );
     });
 
@@ -604,11 +809,31 @@ describe("listenInternal", () => {
       );
     });
 
-    it("checks shouldIgnoreMessages with String(event.reason)", () => {
+    it("handles an Error whose message getter throws", () => {
+      const reason = new Error("hidden");
+      Object.defineProperty(reason, "message", {
+        get: () => {
+          throw new Error("blocked");
+        },
+      });
       const { handlers } = captureListeners();
-      const reason = new Error("my rejection");
+
+      expect(() => {
+        handlers.unhandledrejection!({ preventDefault: vi.fn(), reason });
+      }).not.toThrow();
+      expect(mockSendBeacon).toHaveBeenCalledWith(
+        expect.objectContaining({ errorMessage: "Error rejection" }),
+      );
+    });
+
+    it("checks ignore patterns against both the raw message and Error prefix", () => {
+      const { handlers } = captureListeners();
+      const reason = new TypeError("my rejection");
       handlers.unhandledrejection!({ preventDefault: vi.fn(), reason });
-      expect(mockShouldIgnoreMessages).toHaveBeenCalledWith([String(reason)]);
+      expect(mockShouldIgnoreMessages).toHaveBeenCalledWith([
+        "my rejection",
+        "TypeError: my rejection",
+      ]);
     });
   });
 
@@ -983,7 +1208,7 @@ describe("listenInternal", () => {
       }).not.toThrow();
     });
 
-    it("sends 'null' as errorMessage for null rejection reason", () => {
+    it("preserves the historical string description for null rejection reason", () => {
       mockIsChunkError.mockReturnValue(false);
       const { handlers } = captureListeners();
       handlers.unhandledrejection!({ preventDefault: vi.fn(), reason: null });
@@ -1120,12 +1345,15 @@ describe("listenInternal", () => {
       expect(mockSendBeacon).not.toHaveBeenCalled();
     });
 
-    it("checks shouldForceRetry with String(event.reason) for unhandledrejection", () => {
+    it("checks shouldForceRetry with the raw rejection message", () => {
       mockIsChunkError.mockReturnValue(false);
       const { handlers } = captureListeners();
-      const reason = new Error("my rejection");
+      const reason = new Error("my rejection __SPA_GUARD_FORCE_RETRY__");
       handlers.unhandledrejection!({ preventDefault: vi.fn(), reason });
-      expect(mockShouldForceRetry).toHaveBeenCalledWith([String(reason)]);
+      expect(mockShouldForceRetry).toHaveBeenCalledWith([
+        reason.message,
+        `Error: ${reason.message}`,
+      ]);
     });
 
     it("chunk errors take priority over forceRetry (isChunkError checked first)", () => {
@@ -1177,7 +1405,10 @@ describe("listenInternal", () => {
       });
       expect(mockSendBeacon).toHaveBeenCalledTimes(1);
       expect(mockSendBeacon).toHaveBeenCalledWith(
-        expect.objectContaining({ errorMessage: String(reason), eventName: "unhandledrejection" }),
+        expect.objectContaining({
+          errorMessage: "Error: test rejection",
+          eventName: "unhandledrejection",
+        }),
       );
       expect(mockTriggerRetry).toHaveBeenCalledWith(
         expect.objectContaining({ error: reason, source: "unhandled-rejection" }),
@@ -1226,7 +1457,10 @@ describe("listenInternal", () => {
       });
       expect(mockSendBeacon).toHaveBeenCalledTimes(1);
       expect(mockSendBeacon).toHaveBeenCalledWith(
-        expect.objectContaining({ errorMessage: String(reason), eventName: "unhandledrejection" }),
+        expect.objectContaining({
+          errorMessage: "Error: test rejection",
+          eventName: "unhandledrejection",
+        }),
       );
       expect(mockTriggerRetry).not.toHaveBeenCalled();
       expect(mockPreventDefault).not.toHaveBeenCalled();

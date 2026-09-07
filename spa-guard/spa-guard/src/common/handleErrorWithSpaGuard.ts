@@ -1,3 +1,4 @@
+import { stripForceRetryMagic } from "./errors/ForceRetryError";
 import { isChunkError } from "./isChunkError";
 import { triggerRetry } from "./retryOrchestrator";
 import { getRetryInfoForBeacon } from "./retryState";
@@ -39,20 +40,21 @@ export const handleErrorWithSpaGuard = (error: unknown, options: HandleErrorOpti
     // User callback must not break core retry/reporting flow
   }
 
-  const errorMessage = error instanceof Error ? error.message : String(error);
+  const rawErrorMessage = error instanceof Error ? error.message : String(error);
 
-  if (shouldIgnoreMessages([errorMessage])) {
+  if (shouldIgnoreMessages([rawErrorMessage])) {
     return;
   }
 
   const isChunk = isChunkError(error);
-  const isForceRetry = shouldForceRetry([errorMessage]);
+  const isForceRetry = shouldForceRetry([rawErrorMessage]);
+  const errorMessage = stripForceRetryMagic(rawErrorMessage);
 
   if ((isChunk || isForceRetry) && autoRetryChunkErrors) {
     triggerRetry({ error, source: "error-boundary" });
   } else if (sendBeaconOnError) {
     sendBeacon({
-      errorMessage: error instanceof Error ? error.message : String(error),
+      errorMessage,
       eventName,
       serialized: serializeError(errorInfo ? { error, errorInfo } : error),
       ...getRetryInfoForBeacon(),

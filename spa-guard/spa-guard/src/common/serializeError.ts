@@ -1,36 +1,157 @@
+import { MAX_SERIALIZED_LENGTH } from "../schema/parse";
+import { stripForceRetryMagic } from "./errors/ForceRetryError";
+import { getPageUrl } from "./pageUrl";
+
 export const serializeError = (error: unknown): string => {
   try {
-    const serialized = serializeErrorInternal(error);
-    return JSON.stringify(serialized, null, 2);
+    return JSON.stringify(serializeErrorObject(error));
   } catch {
     return JSON.stringify({
       error: "Failed to serialize error",
-      fallback: String(error),
+      fallback: safeFallback(error),
     });
+  }
+};
+
+export const serializeErrorObject = (error: unknown): any => {
+  try {
+    const result = serializeErrorInternal(error);
+    if (JSON.stringify(result).length > MAX_SERIALIZED_LENGTH) {
+      return {
+        error: "Serialized error exceeded maximum length",
+        ...(typeof result?.type === "string" && { type: result.type }),
+      };
+    }
+    return result;
+  } catch {
+    return {
+      error: "Failed to serialize error",
+      fallback: safeFallback(error),
+    };
   }
 };
 
 // Guardrail constants
 const MAX_DEPTH = 4;
 const MAX_KEYS = 20;
+const MAX_TOTAL_KEYS = 100;
 const MAX_STRING_LEN = 500;
 
 const truncate = (str: string): string =>
-  str.length > MAX_STRING_LEN ? str.slice(0, MAX_STRING_LEN) + "\u2026" : str;
+  str.length > MAX_STRING_LEN ? `${str.slice(0, MAX_STRING_LEN - 1)}\u2026` : str;
+
+const safeString = (value: unknown): string => {
+  try {
+    return truncate(stripForceRetryMagic(String(value)));
+  } catch {
+    return "Unstringifiable value";
+  }
+};
+
+const safeFallback = (value: unknown): string => {
+  if (value === null || (typeof value !== "object" && typeof value !== "function")) {
+    return safeString(value);
+  }
+  try {
+    if (value instanceof Error) {
+      return safeString(value);
+    }
+  } catch {}
+  return "Unserializable object";
+};
+
+const optionalString = (value: unknown): string | undefined =>
+  typeof value === "string" ? safeString(value) : undefined;
+
+const serializePrimitive = (value: unknown): unknown => {
+  if (typeof value === "string") {
+    return safeString(value);
+  }
+  if (typeof value === "bigint" || typeof value === "symbol") {
+    return safeString(value);
+  }
+  if (typeof value === "function") {
+    return `[function${value.name ? ` ${truncate(value.name)}` : ""}]`;
+  }
+  if (typeof value === "number" && !Number.isFinite(value)) {
+    return String(value);
+  }
+  return value;
+};
+
+const getSerializedPageUrl = (): string | undefined => {
+  const pageUrl = getPageUrl();
+  return pageUrl === undefined ? undefined : truncate(pageUrl);
+};
+
+const getConstructorName = (value: unknown): string | undefined => {
+  try {
+    return meaningfulConstructorName((value as any)?.constructor?.name);
+  } catch {
+    return undefined;
+  }
+};
+
+const SENSITIVE_KEYS = new Set([
+  "accesstoken",
+  "apikey",
+  "auth",
+  "authorization",
+  "body",
+  "clientsecret",
+  "cookie",
+  "credentials",
+  "data",
+  "formdata",
+  "headers",
+  "passphrase",
+  "passwd",
+  "password",
+  "payload",
+  "privatekey",
+  "refreshtoken",
+  "secret",
+  "setcookie",
+  "token",
+]);
+
+const isSensitiveKey = (key: string): boolean => {
+  const normalized = key.replaceAll(/[^a-z]/gi, "").toLowerCase();
+  return (
+    SENSITIVE_KEYS.has(normalized) ||
+    /apikey|authorization|cookie|credential|passphrase|passwd|password|secret|token/.test(
+      normalized,
+    ) ||
+    normalized.endsWith("body") ||
+    normalized.endsWith("headers") ||
+    normalized.endsWith("payload")
+  );
+};
+
+const meaningfulConstructorName = (value: unknown): string | undefined => {
+  if (typeof value !== "string" || /^[A-Za-z_$]{1,3}$/.test(value)) {
+    return undefined;
+  }
+  return safeString(value);
+};
+
+interface SerializationBudget {
+  remainingKeys: number;
+}
 
 const serializeErrorInternal = (error: unknown): any => {
   if (error === null || error === undefined) {
     return { type: "null", value: error };
   }
   if (typeof error !== "object") {
-    return { type: typeof error, value: error };
+    return { type: typeof error, value: serializePrimitive(error) };
   }
 
   if (error instanceof Error) {
     return {
-      message: error.message,
-      name: error.name,
-      stack: error.stack ? truncate(error.stack) : undefined,
+      message: safeString(error.message),
+      name: safeString(error.name),
+      stack: error.stack ? safeString(error.stack) : undefined,
       type: "Error",
       ...extractErrorProperties(error),
     };
@@ -39,27 +160,31 @@ const serializeErrorInternal = (error: unknown): any => {
   if ("reason" in error && "promise" in error) {
     const evt = error as any;
     const reason = evt.reason;
-    const pageUrl =
-      typeof window !== "undefined" && typeof window.location?.href === "string"
-        ? window.location.href
-        : undefined;
+    const constructorName = getConstructorName(reason);
     return {
-      constructorName: reason?.constructor?.name,
-      isTrusted: evt.isTrusted,
-      pageUrl,
-      reason: serializeRejectionReason(reason, new WeakSet(), 0),
-      timeStamp: evt.timeStamp,
+      ...(constructorName ? { constructorName } : {}),
+      isTrusted: serializePrimitive(evt.isTrusted),
+      pageUrl: getSerializedPageUrl(),
+      reason: serializeRejectionReason(reason, new WeakSet(), 0, {
+        remainingKeys: MAX_TOTAL_KEYS,
+      }),
+      timeStamp: serializePrimitive(evt.timeStamp),
       type: "PromiseRejectionEvent",
     };
   }
 
   if ("error" in error && "message" in error && "filename" in error) {
+    const evt = error as any;
+    const message = typeof evt.message === "string" ? safeString(evt.message) : undefined;
+    const crossOrigin = message === "Script error." && !evt.filename;
     return {
-      colno: (error as any).colno,
-      error: serializeErrorInternal((error as any).error),
-      filename: (error as any).filename,
-      lineno: (error as any).lineno,
-      message: (error as any).message,
+      colno: serializePrimitive(evt.colno),
+      error: serializeErrorInternal(evt.error),
+      filename: typeof evt.filename === "string" ? truncate(evt.filename) : undefined,
+      lineno: serializePrimitive(evt.lineno),
+      ...(crossOrigin ? { crossOrigin: true } : {}),
+      message,
+      pageUrl: getSerializedPageUrl(),
       type: "ErrorEvent",
     };
   }
@@ -67,23 +192,24 @@ const serializeErrorInternal = (error: unknown): any => {
   if ("violatedDirective" in error && "blockedURI" in error) {
     const evt = error as SecurityPolicyViolationEvent;
     return {
-      blockedURI: evt.blockedURI,
-      columnNumber: evt.columnNumber,
-      effectiveDirective: evt.effectiveDirective,
-      lineNumber: evt.lineNumber,
-      originalPolicy: evt.originalPolicy,
-      sourceFile: evt.sourceFile,
+      blockedURI: optionalString(evt.blockedURI),
+      columnNumber: serializePrimitive(evt.columnNumber),
+      effectiveDirective: optionalString(evt.effectiveDirective),
+      lineNumber: serializePrimitive(evt.lineNumber),
+      originalPolicy: optionalString(evt.originalPolicy),
+      sourceFile: optionalString(evt.sourceFile),
       type: "SecurityPolicyViolationEvent",
-      violatedDirective: evt.violatedDirective,
+      violatedDirective: optionalString(evt.violatedDirective),
     };
   }
 
   if ("type" in error && "target" in error) {
     const evt = error as Event;
     return {
-      eventType: evt.type,
+      eventType: optionalString(evt.type),
+      pageUrl: getSerializedPageUrl(),
       target: extractEventTarget(evt.target),
-      timeStamp: evt.timeStamp,
+      timeStamp: serializePrimitive(evt.timeStamp),
       type: "Event",
     };
   }
@@ -98,13 +224,13 @@ const serializeRejectionReason = (
   reason: unknown,
   visited: WeakSet<object>,
   depth: number,
+  budget: SerializationBudget,
 ): any => {
   if (reason === null || reason === undefined) {
     return { type: "null", value: reason };
   }
   if (typeof reason !== "object") {
-    const val = typeof reason === "string" ? truncate(reason) : reason;
-    return { type: typeof reason, value: val };
+    return { type: typeof reason, value: serializePrimitive(reason) };
   }
   if (visited.has(reason as object)) {
     return { type: "circular" };
@@ -116,10 +242,10 @@ const serializeRejectionReason = (
     return {
       errors: reason.errors
         .slice(0, 3)
-        .map((e: unknown) => serializeSafeError(e, visited, depth + 1)),
-      message: truncate(reason.message),
-      name: reason.name,
-      stack: reason.stack ? truncate(reason.stack) : undefined,
+        .map((e: unknown) => serializeSafeError(e, visited, depth + 1, budget)),
+      message: safeString(reason.message),
+      name: safeString(reason.name),
+      stack: reason.stack ? safeString(reason.stack) : undefined,
       type: "Error",
     };
   }
@@ -128,8 +254,8 @@ const serializeRejectionReason = (
   if (typeof DOMException !== "undefined" && reason instanceof DOMException) {
     return {
       code: (reason as DOMException).code,
-      message: truncate((reason as DOMException).message),
-      name: (reason as DOMException).name,
+      message: safeString((reason as DOMException).message),
+      name: safeString((reason as DOMException).name),
       type: "Error",
     };
   }
@@ -141,23 +267,28 @@ const serializeRejectionReason = (
     const result: Record<string, any> = {
       type: "HttpError",
     };
-    if (response.status !== undefined) {
+    if (typeof response.status === "number" && Number.isFinite(response.status)) {
       result.status = response.status;
     }
-    if (response.statusText !== undefined) {
-      result.statusText =
-        typeof response.statusText === "string"
-          ? truncate(response.statusText)
-          : response.statusText;
+    if (typeof response.statusText === "string" && response.statusText) {
+      result.statusText = safeString(response.statusText);
     }
-    if (response.url !== undefined) {
-      result.url = typeof response.url === "string" ? truncate(response.url) : response.url;
+    if (typeof response.url === "string") {
+      result.url = safeString(response.url);
     }
-    if (response.method !== undefined) {
-      result.method = response.method;
+    if (typeof response.type === "string") {
+      result.responseType = safeString(response.type);
     }
-    if (response.type !== undefined) {
-      result.responseType = response.type;
+
+    const reqSource = reasonObj.config ?? reasonObj.request ?? reasonObj.options;
+    const methodSource = [reasonObj.config, reasonObj.request, reasonObj.options].find(
+      (source) => source?.method !== undefined,
+    );
+    if (typeof methodSource?.method === "string") {
+      result.method = safeString(methodSource.method);
+    } else if (typeof response.method === "string") {
+      // Preserve support for client-specific response wrappers.
+      result.method = safeString(response.method);
     }
 
     // X-Request-ID header ONLY if present
@@ -173,24 +304,22 @@ const serializeRejectionReason = (
             (headers as Record<string, string>)["x-request-id"];
         }
         if (xRequestId) {
-          result.xRequestId = truncate(String(xRequestId));
+          result.xRequestId = safeString(xRequestId);
         }
       }
     } catch {}
 
     // Request wrapper: ONLY method, url, baseURL - no body/payload/headers
-    const reqSource = reasonObj.config ?? reasonObj.request;
     if (reqSource != null) {
       const req: Record<string, any> = {};
-      if (reqSource.method !== undefined) {
-        req.method = reqSource.method;
+      if (typeof reqSource.method === "string") {
+        req.method = safeString(reqSource.method);
       }
-      if (reqSource.url !== undefined) {
-        req.url = typeof reqSource.url === "string" ? truncate(reqSource.url) : reqSource.url;
+      if (typeof reqSource.url === "string") {
+        req.url = safeString(reqSource.url);
       }
-      if (reqSource.baseURL !== undefined) {
-        req.baseURL =
-          typeof reqSource.baseURL === "string" ? truncate(reqSource.baseURL) : reqSource.baseURL;
+      if (typeof reqSource.baseURL === "string") {
+        req.baseURL = safeString(reqSource.baseURL);
       }
       result.request = req;
     }
@@ -200,34 +329,39 @@ const serializeRejectionReason = (
 
   // Error
   if (reason instanceof Error) {
-    return serializeSafeError(reason, visited, depth);
+    return serializeSafeError(reason, visited, depth, budget);
   }
 
   // Non-Error object: safe bounded preview
   return {
     type: "object",
-    value: extractBoundedObject(reasonObj, visited, depth),
+    value: extractBoundedObject(reasonObj, visited, depth, budget),
   };
 };
 
-const serializeSafeError = (error: unknown, visited: WeakSet<object>, depth: number): any => {
+const serializeSafeError = (
+  error: unknown,
+  visited: WeakSet<object>,
+  depth: number,
+  budget: SerializationBudget,
+): any => {
   if (!(error instanceof Error)) {
-    return serializeRejectionReason(error, visited, depth + 1);
+    return serializeRejectionReason(error, visited, depth + 1, budget);
   }
   const result: Record<string, any> = {
-    message: truncate(error.message),
-    name: error.name,
-    stack: error.stack ? truncate(error.stack) : undefined,
+    message: safeString(error.message),
+    name: safeString(error.name),
+    stack: error.stack ? safeString(error.stack) : undefined,
     type: "Error",
   };
   if (depth < MAX_DEPTH && (error as any).cause !== undefined) {
     const cause = (error as any).cause;
     if (typeof cause === "object" && cause !== null) {
       if (!visited.has(cause as object)) {
-        result.cause = serializeRejectionReason(cause, visited, depth + 1);
+        result.cause = serializeRejectionReason(cause, visited, depth + 1, budget);
       }
     } else {
-      result.cause = cause;
+      result.cause = serializePrimitive(cause);
     }
   }
   return result;
@@ -237,22 +371,30 @@ const extractBoundedObject = (
   obj: object,
   visited: WeakSet<object>,
   depth: number,
+  budget: SerializationBudget,
 ): Record<string, any> => {
   const result: Record<string, any> = {};
   let keyCount = 0;
   for (const key of Object.keys(obj)) {
-    if (keyCount >= MAX_KEYS) {
+    if (keyCount >= MAX_KEYS || budget.remainingKeys <= 0) {
       break;
+    }
+    budget.remainingKeys -= 1;
+    const resultKey = truncate(key);
+    if (isSensitiveKey(key)) {
+      result[resultKey] = "[redacted]";
+      keyCount++;
+      continue;
     }
     try {
       const value = (obj as any)[key];
       if (value === null || value === undefined || typeof value !== "object") {
-        result[key] = typeof value === "string" ? truncate(value) : value;
+        result[resultKey] = serializePrimitive(value);
       } else if (depth < MAX_DEPTH && !visited.has(value as object)) {
         visited.add(value as object);
-        result[key] = extractBoundedObject(value as object, visited, depth + 1);
+        result[resultKey] = extractBoundedObject(value as object, visited, depth + 1, budget);
       } else {
-        result[key] = "[object]";
+        result[resultKey] = "[object]";
       }
     } catch {}
     keyCount++;
@@ -268,12 +410,18 @@ const extractErrorProperties = (error: Error): Record<string, any> => {
       break;
     }
     if (!["message", "name", "stack"].includes(key)) {
+      const resultKey = truncate(key);
+      if (isSensitiveKey(key)) {
+        props[resultKey] = "[redacted]";
+        keyCount++;
+        continue;
+      }
       try {
         const value = (error as any)[key];
         if (value === null || value === undefined || typeof value !== "object") {
-          props[key] = typeof value === "string" ? truncate(value) : value;
+          props[resultKey] = serializePrimitive(value);
         } else {
-          props[key] = "[object]";
+          props[resultKey] = "[object]";
         }
       } catch {}
       keyCount++;
@@ -287,15 +435,29 @@ const extractEventTarget = (target: EventTarget | null): any => {
     return null;
   }
   if (target instanceof HTMLElement) {
+    const getAttribute = (name: string): string | undefined => {
+      try {
+        const value = target.getAttribute(name);
+        return value === null ? undefined : value;
+      } catch {
+        return undefined;
+      }
+    };
+    const as = getAttribute("as");
+    const href = optionalString((target as any).href);
+    const rel = getAttribute("rel");
+    const src = optionalString((target as any).src);
     return {
-      className: target.className,
-      href: (target as any).href,
-      id: target.id,
-      src: (target as any).src,
-      tagName: target.tagName,
+      className: optionalString(target.className),
+      ...(href !== undefined && { href }),
+      id: optionalString(target.id),
+      ...(rel !== undefined && { rel: safeString(rel) }),
+      ...(as !== undefined && { as: safeString(as) }),
+      ...(src !== undefined && { src }),
+      tagName: optionalString(target.tagName),
     };
   }
-  return { type: String(target) };
+  return { type: safeString(target) };
 };
 
 const extractOwnProperties = (obj: any): Record<string, any> => {
@@ -305,12 +467,18 @@ const extractOwnProperties = (obj: any): Record<string, any> => {
     if (keyCount >= MAX_KEYS) {
       break;
     }
+    const resultKey = truncate(key);
+    if (isSensitiveKey(key)) {
+      props[resultKey] = "[redacted]";
+      keyCount++;
+      continue;
+    }
     try {
       const value = obj[key];
       if (value === null || value === undefined || typeof value !== "object") {
-        props[key] = typeof value === "string" ? truncate(value) : value;
+        props[resultKey] = serializePrimitive(value);
       } else {
-        props[key] = "[object]";
+        props[resultKey] = "[object]";
       }
     } catch {}
     keyCount++;

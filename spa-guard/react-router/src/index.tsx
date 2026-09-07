@@ -6,7 +6,21 @@ import {
   type SpaGuardState,
   useSpaGuardState,
 } from "@ovineko/spa-guard-react";
-import { handleErrorWithSpaGuard, isChunkError } from "@ovineko/spa-guard/_internal";
+import {
+  ForceRetryError,
+  handleErrorWithSpaGuard,
+  isChunkError,
+} from "@ovineko/spa-guard/_internal";
+
+const lazyRouteModuleErrorPatterns = [
+  /Cannot read properties of undefined \(reading ['"]default['"]\)/i,
+  /undefined is not an object \(evaluating ['"][^'"]*\.default['"]\)/i,
+  /can't access property ["']default["'], .+ is undefined/i,
+];
+
+const isLazyRouteModuleError = (error: unknown): error is TypeError =>
+  error instanceof TypeError &&
+  lazyRouteModuleErrorPatterns.some((pattern) => pattern.test(error.message));
 
 /**
  * Props for the ErrorBoundaryReactRouter component
@@ -56,18 +70,24 @@ export const ErrorBoundaryReactRouter: React.FC<ErrorBoundaryReactRouterProps> =
 }) => {
   const routeError = useRouteError();
   const spaGuardState = useSpaGuardState();
+  const isLazyRouteError = isLazyRouteModuleError(routeError);
+  const handledError = isLazyRouteError
+    ? new ForceRetryError(routeError.message, { cause: routeError })
+    : routeError;
+  const handleOnError =
+    isLazyRouteError && onError !== undefined ? () => onError(routeError) : onError;
 
   useEffect(() => {
-    handleErrorWithSpaGuard(routeError, {
+    handleErrorWithSpaGuard(handledError, {
       autoRetryChunkErrors,
       eventName: "react-router-error",
-      ...(onError !== undefined && { onError }),
+      ...(handleOnError !== undefined && { onError: handleOnError }),
       sendBeaconOnError: shouldSendBeacon,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routeError]);
 
-  const isChunk = isChunkError(routeError);
+  const isChunk = isChunkError(routeError) || isLazyRouteError;
   const isRetrying = spaGuardState.isWaiting && spaGuardState.currentAttempt > 0;
 
   const fallbackProps: RouterFallbackProps = {

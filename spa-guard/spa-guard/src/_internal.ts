@@ -1,7 +1,9 @@
 // Internal exports for sibling packages. Not part of the public API.
 // This module is consumed by @ovineko/spa-guard-react, -react-router, -fastify, -node, -vite.
 
+export { resetBeaconThrottle } from "./common/beaconThrottle";
 export { debugSyncErrorEventType } from "./common/constants";
+export { ForceRetryError, stripForceRetryMagic } from "./common/errors/ForceRetryError";
 export {
   disableDefaultRetry,
   emitEvent,

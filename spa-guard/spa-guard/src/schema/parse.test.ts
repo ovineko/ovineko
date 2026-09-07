@@ -1,8 +1,37 @@
 import { describe, expect, it } from "vitest";
 
-import { parseBeacon } from "./parse";
+import { normalizeBeacon, parseBeacon } from "./parse";
 
 describe("parseBeacon", () => {
+  it("normalizes client payloads to the same limits enforced by the parser", () => {
+    const normalized = normalizeBeacon({
+      appName: "a".repeat(501),
+      errorContext: "c".repeat(501),
+      errorMessage: "m".repeat(501),
+      errorType: "t".repeat(501),
+      eventMessage: "v".repeat(501),
+      eventName: "e".repeat(501),
+      httpStatus: Infinity,
+      retryAttempt: NaN,
+      retryId: "r".repeat(501),
+      serialized: "s".repeat(10_001),
+      url: "u".repeat(501),
+    });
+
+    expect(() => parseBeacon(normalized)).not.toThrow();
+    expect(normalized.appName).toHaveLength(500);
+    expect(normalized.errorContext).toHaveLength(500);
+    expect(normalized.errorMessage).toHaveLength(500);
+    expect(normalized.errorType).toHaveLength(500);
+    expect(normalized.eventMessage).toHaveLength(500);
+    expect(normalized.eventName).toHaveLength(500);
+    expect(normalized.retryId).toHaveLength(500);
+    expect(normalized.serialized).toHaveLength(10_000);
+    expect(normalized.url).toHaveLength(500);
+    expect(normalized.httpStatus).toBeUndefined();
+    expect(normalized.retryAttempt).toBeUndefined();
+  });
+
   describe("valid beacon parsing (all fields provided)", () => {
     it("parses a beacon with all optional fields present", () => {
       const input = {

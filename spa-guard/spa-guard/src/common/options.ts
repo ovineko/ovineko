@@ -14,6 +14,7 @@ const defaultOptions: Options = {
   errors: {
     forceRetry: [],
     ignore: [],
+    ignoreKnownNoise: true,
   },
   handleUnhandledRejections: {
     retry: false,
@@ -38,6 +39,14 @@ const defaultOptions: Options = {
   },
   minTimeBetweenResets: 5000,
   reloadDelays: [1000, 2000, 5000],
+  reportBeacon: {
+    dedupe: true,
+    dedupeWindowMs: 300_000,
+    maxPerPageLoad: 20,
+  },
+  resources: {
+    report: "code",
+  },
   staticAssets: {
     autoRecover: true,
     recoveryDelay: 500,
@@ -115,6 +124,8 @@ export interface Options {
      * @default []
      */
     ignore?: string[];
+    /** Ignore the built-in list of benign browser error messages. @default true */
+    ignoreKnownNoise?: boolean;
   };
 
   /**
@@ -207,7 +218,19 @@ export interface Options {
   reloadDelays?: number[];
 
   reportBeacon?: {
+    /** Suppress repeated beacons with the same diagnostic key. @default true */
+    dedupe?: boolean;
+    /** Milliseconds before the same beacon key can be reported again. @default 300000 */
+    dedupeWindowMs?: number;
     endpoint?: string;
+    /** Non-negative cap per page load; zero and Infinity disable the cap. @default 20 */
+    maxPerPageLoad?: number;
+  };
+
+  /** Controls which non-ErrorEvent resource failures are reported. */
+  resources?: {
+    /** `code` reports code resource failures, `all` reports every element, `none` reports none. @default "code" */
+    report?: "all" | "code" | "none";
   };
 
   /**
@@ -278,6 +301,10 @@ export const getOptions = (): Options => {
     reportBeacon: {
       ...defaultOptions.reportBeacon,
       ...windowOptions?.reportBeacon,
+    },
+    resources: {
+      ...defaultOptions.resources,
+      ...windowOptions?.resources,
     },
     staticAssets: {
       ...defaultOptions.staticAssets,

@@ -96,11 +96,19 @@ app.get("/*", async (request, reply) => {
 
 Registers a `POST` route at `options.path` to receive beacon payloads.
 
+The route uses Fastify's existing `text/plain` parser and also accepts object bodies produced by an
+application or custom parser. The plugin does not replace or add content-type parsers. Invalid
+beacon warnings include the body type, length, and schema parse reason. Set
+`logUnknownBeaconBody: true` to include a bounded body preview; leave it disabled when payloads may
+contain sensitive data. Valid beacons are logged as structured data with every schema field
+preserved.
+
 Options:
 
 - `path` (required) - Route path for the beacon endpoint, e.g. `"/api/beacon"`
 - `onBeacon(beacon, request, reply)` - Called with parsed beacon data. Return `{ skipDefaultLog: true }` to suppress default logging.
 - `onUnknownBeacon(body, request, reply)` - Called when beacon fails schema validation. Return `{ skipDefaultLog: true }` to suppress default warning.
+- `logUnknownBeaconBody` - Include a bounded invalid-body preview in the default warning.
 
 ### `spaGuardFastifyHandler(request, reply, options)`
 

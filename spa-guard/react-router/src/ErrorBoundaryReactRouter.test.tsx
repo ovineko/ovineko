@@ -26,6 +26,7 @@ vi.mock("@ovineko/spa-guard/_internal", async (importOriginal) => {
 
 import { useRouteError } from "react-router";
 
+import { ForceRetryError } from "@ovineko/spa-guard";
 import { type SpaGuardState, useSpaGuardState } from "@ovineko/spa-guard-react";
 import { handleErrorWithSpaGuard, isChunkError } from "@ovineko/spa-guard/_internal";
 
@@ -158,6 +159,22 @@ describe("ErrorBoundaryReactRouter", () => {
 
       expect(screen.getByText("Failed to load module")).toBeInTheDocument();
     });
+
+    it.each([
+      "Cannot read properties of undefined (reading 'default')",
+      "undefined is not an object (evaluating 'lazyRouteModule.default')",
+      `can't access property "default", lazyRouteModule is undefined`,
+    ])("treats a lazy route module mismatch as a chunk error: %s", (message) => {
+      const routeError = new TypeError(message);
+      mockUseRouteError.mockReturnValue(routeError);
+
+      render(<ErrorBoundaryReactRouter fallback={CapturingFallback} />);
+
+      expect(CapturingFallback.captured.at(-1)?.isChunkError).toBe(true);
+      const handledError = mockHandleErrorWithSpaGuard.mock.calls[0]?.[0];
+      expect(handledError).toBeInstanceOf(ForceRetryError);
+      expect((handledError as Error).cause).toBe(routeError);
+    });
   });
 
   describe("auto-retry on route chunk errors", () => {
@@ -185,6 +202,19 @@ describe("ErrorBoundaryReactRouter", () => {
       expect(mockHandleErrorWithSpaGuard).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({ autoRetryChunkErrors: true }),
+      );
+    });
+
+    it("keeps autoRetryChunkErrors=false as the opt-out for lazy route module mismatches", () => {
+      mockUseRouteError.mockReturnValue(
+        new TypeError("Cannot read properties of undefined (reading 'default')"),
+      );
+
+      render(<ErrorBoundaryReactRouter autoRetryChunkErrors={false} />);
+
+      expect(mockHandleErrorWithSpaGuard).toHaveBeenCalledWith(
+        expect.any(ForceRetryError),
+        expect.objectContaining({ autoRetryChunkErrors: false }),
       );
     });
   });

@@ -3,12 +3,23 @@ import type { BeaconSchema } from "../schema";
 import { FORCE_RETRY_MAGIC } from "./errors/ForceRetryError";
 import { getOptions } from "./options";
 
+export const KNOWN_BROWSER_NOISE = [
+  "ResizeObserver loop completed with undelivered notifications",
+  "ResizeObserver loop limit exceeded",
+  "Non-Error promise rejection captured",
+] as const;
+
+export const CROSS_ORIGIN_ERROR = "Script error.";
+
 /**
  * Checks if any of the provided messages should be ignored based on errors.ignore option.
  */
 export const shouldIgnoreMessages = (messages: (string | undefined)[]): boolean => {
   const options = getOptions();
-  const ignorePatterns = (options.errors?.ignore ?? []).filter((p) => p !== "");
+  const ignorePatterns = [
+    ...(options.errors?.ignoreKnownNoise !== false ? KNOWN_BROWSER_NOISE : []),
+    ...(options.errors?.ignore ?? []),
+  ].filter((p) => p !== "");
 
   if (ignorePatterns.length === 0) {
     return false;

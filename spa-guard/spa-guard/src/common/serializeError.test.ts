@@ -33,6 +33,11 @@ describe("serializeError", () => {
       const result = parse(serializeError(true));
       expect(result).toEqual({ type: "boolean", value: true });
     });
+
+    it("keeps bigint values JSON-safe", () => {
+      const result = parse(serializeError(42n));
+      expect(result).toEqual({ type: "bigint", value: "42" });
+    });
   });
 
   describe("Error instances", () => {
@@ -53,6 +58,11 @@ describe("serializeError", () => {
       expect(result.message).toBe("type error");
     });
 
+    it("removes the force-retry marker from the message and stack", () => {
+      const serialized = serializeError(new Error("__SPA_GUARD_FORCE_RETRY__retry now"));
+      expect(serialized).not.toContain("__SPA_GUARD_FORCE_RETRY__");
+    });
+
     it("extracts additional own properties from Error", () => {
       const error = new Error("with extras");
       (error as any).code = "ERR_CUSTOM";
@@ -60,6 +70,19 @@ describe("serializeError", () => {
       const result = parse(serializeError(error));
       expect(result.code).toBe("ERR_CUSTOM");
       expect(result.statusCode).toBe(500);
+    });
+
+    it("redacts a sensitive Error property without invoking its getter", () => {
+      const error = new Error("with secret metadata");
+      Object.defineProperty(error, "sessionToken", {
+        get: () => {
+          throw new Error("sensitive getter must not run");
+        },
+      });
+
+      const result = parse(serializeError(error));
+
+      expect(result.sessionToken).toBe("[redacted]");
     });
 
     it("serializes Error with cause", () => {
@@ -87,6 +110,69 @@ describe("serializeError", () => {
       expect(result.type).toBe("PromiseRejectionEvent");
       expect(result.reason.type).toBe("string");
       expect(result.reason.value).toBe("string rejection");
+    });
+
+    it("removes the force-retry marker from a string reason", () => {
+      const event = {
+        promise: Promise.resolve(),
+        reason: "retry __SPA_GUARD_FORCE_RETRY__ now",
+      };
+      expect(serializeError(event)).not.toContain("__SPA_GUARD_FORCE_RETRY__");
+    });
+
+    it("keeps bigint rejection details JSON-safe", () => {
+      const event = { promise: Promise.resolve(), reason: { code: 42n } };
+      const result = parse(serializeError(event));
+      expect(result.reason.value.code).toBe("42");
+    });
+
+    it("redacts sensitive rejection fields recursively", () => {
+      const event = {
+        promise: Promise.resolve(),
+        reason: { context: { password: "secret-password" }, token: "secret-token" },
+      };
+      const result = parse(serializeError(event));
+      expect(result.reason.value.token).toBe("[redacted]");
+      expect(result.reason.value.context.password).toBe("[redacted]");
+      expect(JSON.stringify(result)).not.toContain("secret-");
+    });
+
+    it("redacts compound sensitive keys without reading their values", () => {
+      const reason: Record<string, unknown> = {
+        auth: "secret-auth-short",
+        authToken: "secret-auth",
+        nested: { xApiKey: "secret-key" },
+        requestHeaders: { custom: "secret-header" },
+      };
+      Object.defineProperty(reason, "sessionCredential", {
+        enumerable: true,
+        get: () => {
+          throw new Error("sensitive getter must not run");
+        },
+      });
+      const event = { promise: Promise.resolve(), reason };
+
+      const result = parse(serializeError(event));
+
+      expect(result.reason.value).toMatchObject({
+        auth: "[redacted]",
+        authToken: "[redacted]",
+        nested: { xApiKey: "[redacted]" },
+        requestHeaders: "[redacted]",
+        sessionCredential: "[redacted]",
+      });
+      expect(JSON.stringify(result)).not.toContain("secret-");
+    });
+
+    it("keeps oversized rejection serialization valid and within the beacon limit", () => {
+      const reason = Object.fromEntries(
+        Array.from({ length: 20 }, (_, index) => [`field${index}`, "x".repeat(500)]),
+      );
+      const serialized = serializeError({ promise: Promise.resolve(), reason });
+
+      expect(serialized.length).toBeLessThanOrEqual(10_000);
+      expect(() => JSON.parse(serialized)).not.toThrow();
+      expect(parse(serialized).error).toBe("Serialized error exceeded maximum length");
     });
   });
 
@@ -337,8 +423,8 @@ describe("serializeError", () => {
       const event = { promise: Promise.resolve(), reason: longStr };
       const result = parse(serializeError(event));
       expect(result.reason.type).toBe("string");
-      // truncated to exactly 500 chars + 1 ellipsis character
-      expect(result.reason.value.length).toBe(501);
+      expect(result.reason.value.length).toBe(500);
+      expect(result.reason.value.endsWith("…")).toBe(true);
       expect(result.reason.value.endsWith("\u2026")).toBe(true);
     });
 
@@ -386,6 +472,10 @@ describe("serializeError", () => {
   });
 
   describe("ErrorEvent-like objects", () => {
+    it("marks an opaque cross-origin script error", () => {
+      const result = parse(serializeError({ error: null, filename: "", message: "Script error." }));
+      expect(result.crossOrigin).toBe(true);
+    });
     it("serializes object with error, message, and filename", () => {
       const event = {
         colno: 10,
@@ -449,6 +539,22 @@ describe("serializeError", () => {
       expect(result.target.href).toBe("https://example.com/");
     });
 
+    it("includes link resource metadata when present", () => {
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "font";
+      const result = parse(serializeError({ target: link, timeStamp: 0, type: "error" }));
+      expect(result.target.rel).toBe("preload");
+      expect(result.target.as).toBe("font");
+    });
+
+    it("omits absent link resource metadata", () => {
+      const link = document.createElement("link");
+      const result = parse(serializeError({ target: link, timeStamp: 0, type: "error" }));
+      expect(result.target).not.toHaveProperty("rel");
+      expect(result.target).not.toHaveProperty("as");
+    });
+
     it("serializes with non-HTMLElement target", () => {
       const target = { toString: () => "[object XMLHttpRequest]" } as any as EventTarget;
       const event = { target, timeStamp: 0, type: "error" };
@@ -479,6 +585,26 @@ describe("serializeError", () => {
       expect(result.type).toBe("object");
       expect(typeof result.value.nested).toBe("string");
     });
+
+    it("redacts sensitive own properties", () => {
+      const result = parse(
+        serializeError({
+          accessToken: "secret-token",
+          apiKeyValue: "secret-key",
+          code: "NETWORK_ERROR",
+          payload: "secret",
+          requestHeaders: { authorization: "secret-header" },
+        }),
+      );
+      expect(result.value).toEqual({
+        accessToken: "[redacted]",
+        apiKeyValue: "[redacted]",
+        code: "NETWORK_ERROR",
+        payload: "[redacted]",
+        requestHeaders: "[redacted]",
+      });
+      expect(JSON.stringify(result)).not.toContain("secret-token");
+    });
   });
 
   describe("fallback on serialization failure", () => {
@@ -496,6 +622,27 @@ describe("serializeError", () => {
       const result = parse(serializeError(evil));
       // extractOwnProperties catches per-property errors, so this still serializes
       expect(result.type).toBe("object");
+    });
+
+    it("does not invoke arbitrary object coercion in the failure fallback", () => {
+      const value = new Proxy(
+        {
+          toString: () => "secret-from-coercion",
+        },
+        {
+          ownKeys: () => {
+            throw new Error("cannot enumerate");
+          },
+        },
+      );
+
+      const serialized = serializeError(value);
+
+      expect(parse(serialized)).toEqual({
+        error: "Failed to serialize error",
+        fallback: "Unserializable object",
+      });
+      expect(serialized).not.toContain("secret-from-coercion");
     });
   });
 });
