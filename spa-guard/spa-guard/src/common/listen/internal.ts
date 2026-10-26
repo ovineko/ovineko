@@ -1,5 +1,10 @@
 import type { Logger } from "../logger";
 
+import {
+  clampBeaconField,
+  clampSerializedBeaconField,
+  MAX_STRING_FIELD_LENGTH,
+} from "../../schema/parse";
 import { describeError } from "../describeError";
 import {
   emitEvent,
@@ -9,6 +14,7 @@ import {
   setLogger,
 } from "../events/internal";
 import { isChunkError } from "../isChunkError";
+import { isCodeResource } from "../isCodeResource";
 import {
   getAssetUrl,
   getResourceTimingInfo,
@@ -16,19 +22,13 @@ import {
   isLikely404,
   isStaticAssetError,
 } from "../isStaticAssetError";
-import {
-  clampBeaconField,
-  clampSerializedBeaconField,
-  MAX_STRING_FIELD_LENGTH,
-} from "../../schema/parse";
 import { getOptions } from "../options";
+import { getPageUrl } from "../pageUrl";
 import { triggerRetry } from "../retryOrchestrator";
 import { getRetryInfoForBeacon } from "../retryState";
 import { sendBeacon } from "../sendBeacon";
 import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
 import { handleStaticAssetFailure } from "../staticAssetRecovery";
-import { isCodeResource } from "../isCodeResource";
-import { getPageUrl } from "../pageUrl";
 
 const isErrorEvent = (event: Event): boolean =>
   typeof ErrorEvent !== "undefined" && event instanceof ErrorEvent;

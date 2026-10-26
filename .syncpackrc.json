@@ -7,7 +7,6 @@
       "dependencyTypes": [
         "peer"
       ],
-      "label": "use caret range for all peerDependencies",
       "packages": [
         "**"
       ],
@@ -18,10 +17,8 @@
         "**"
       ],
       "dependencyTypes": [
-        "!peer",
-        "!local"
+        "!peer"
       ],
-      "label": "use exact versions for regular dependencies",
       "packages": [
         "**"
       ],

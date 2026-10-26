@@ -49,7 +49,7 @@ describe("recommendedSetup", () => {
 
   it("calls startVersionCheck by default", () => {
     cleanup = recommendedSetup();
-    expect(startVersionCheck).toHaveBeenCalledOnce();
+    expect(startVersionCheck).toHaveBeenCalledTimes(1);
   });
 
   it("does not call startVersionCheck when versionCheck is false", () => {
@@ -59,7 +59,7 @@ describe("recommendedSetup", () => {
 
   it("calls dismissSpinner at setup", () => {
     cleanup = recommendedSetup();
-    expect(dismissSpinner).toHaveBeenCalledOnce();
+    expect(dismissSpinner).toHaveBeenCalledTimes(1);
   });
 
   it("is idempotent: repeated setup does not re-run side effects", () => {
@@ -68,8 +68,8 @@ describe("recommendedSetup", () => {
     cleanup = cleanup1;
 
     expect(cleanup2).toBe(cleanup1);
-    expect(dismissSpinner).toHaveBeenCalledOnce();
-    expect(startVersionCheck).toHaveBeenCalledOnce();
+    expect(dismissSpinner).toHaveBeenCalledTimes(1);
+    expect(startVersionCheck).toHaveBeenCalledTimes(1);
   });
 
   it("cleanup calls stopVersionCheck once", () => {
@@ -77,7 +77,7 @@ describe("recommendedSetup", () => {
     cleanup();
     cleanup = undefined;
 
-    expect(stopVersionCheck).toHaveBeenCalledOnce();
+    expect(stopVersionCheck).toHaveBeenCalledTimes(1);
   });
 
   it("cleanup is idempotent", () => {
@@ -86,7 +86,7 @@ describe("recommendedSetup", () => {
     cleanup();
     cleanup = undefined;
 
-    expect(stopVersionCheck).toHaveBeenCalledOnce();
+    expect(stopVersionCheck).toHaveBeenCalledTimes(1);
   });
 
   it("supports re-initialization after cleanup", () => {
@@ -123,7 +123,7 @@ describe("recommendedSetup", () => {
     expect(markRetryHealthyBoot).not.toHaveBeenCalled();
 
     vi.advanceTimersByTime(1);
-    expect(markRetryHealthyBoot).toHaveBeenCalledOnce();
+    expect(markRetryHealthyBoot).toHaveBeenCalledTimes(1);
   });
 
   it("does not auto-mark when orchestrator phase is scheduled", () => {
@@ -179,7 +179,7 @@ describe("recommendedSetup", () => {
     vi.advanceTimersByTime(5999);
     expect(markRetryHealthyBoot).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
-    expect(markRetryHealthyBoot).toHaveBeenCalledOnce();
+    expect(markRetryHealthyBoot).toHaveBeenCalledTimes(1);
   });
 
   it("uses max(reloadDelays)+buffer when reload delay is larger than minimum", () => {
@@ -194,7 +194,7 @@ describe("recommendedSetup", () => {
     vi.advanceTimersByTime(7999);
     expect(markRetryHealthyBoot).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
-    expect(markRetryHealthyBoot).toHaveBeenCalledOnce();
+    expect(markRetryHealthyBoot).toHaveBeenCalledTimes(1);
   });
 
   it("uses sum(lazyRetry.retryDelays)+buffer when lazy retry total is larger", () => {
@@ -209,7 +209,7 @@ describe("recommendedSetup", () => {
     vi.advanceTimersByTime(9999);
     expect(markRetryHealthyBoot).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
-    expect(markRetryHealthyBoot).toHaveBeenCalledOnce();
+    expect(markRetryHealthyBoot).toHaveBeenCalledTimes(1);
   });
 
   it("cleanup cancels pending auto healthy boot timer", () => {

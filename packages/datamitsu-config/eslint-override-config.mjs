@@ -31,8 +31,6 @@ const packageRules = {
     "unicorn/require-css-escape": "off",
   },
   "@ovineko/spa-guard-node": {
-    // The inline entries are injected into HTML as a <script>; the IIFE is their isolation
-    // wrapper, not incidental scoping.
     "unicorn/no-useless-coercion": "off",
     "unicorn/prefer-block-statement-over-iife": "off",
     "unicorn/prefer-unicode-code-point-escapes": "off",

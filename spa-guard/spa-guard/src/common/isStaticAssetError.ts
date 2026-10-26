@@ -1,5 +1,5 @@
 /** Base64url hashes use letters, digits, `-`, and `_` in the filename token. */
-const HASHED_ASSET_RE = /[-._]([a-zA-Z0-9_-]{6,})\.(js|mjs|css|cjs)$/i;
+const HASHED_ASSET_RE = /[._-]([a-z0-9_-]{6,})\.(js|mjs|css|cjs)$/i;
 
 const isHashLike = (token: string | undefined): boolean =>
   token !== undefined &&

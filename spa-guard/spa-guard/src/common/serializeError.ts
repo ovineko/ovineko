@@ -38,7 +38,7 @@ const MAX_TOTAL_KEYS = 100;
 const MAX_STRING_LEN = 500;
 
 const truncate = (str: string): string =>
-  str.length > MAX_STRING_LEN ? `${str.slice(0, MAX_STRING_LEN - 1)}\u2026` : str;
+  str.length > MAX_STRING_LEN ? `${str.slice(0, MAX_STRING_LEN - 1)}\u{2026}` : str;
 
 const safeString = (value: unknown): string => {
   try {

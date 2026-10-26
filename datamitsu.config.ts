@@ -6,70 +6,31 @@
 
 const DATAMITSU_CONFIG_PACKAGE = "packages/datamitsu-config";
 
-// @ovineko/datamitsu-config is itself a config package, so a handful of rules that the
-// shared preset enforces don't make sense for its own source.
-const datamitsuConfigOxlintRules: Record<string, "off"> = {
-  "max-statements": "off",
-  "new-cap": "off",
-  "no-duplicate-imports": "off",
-  "no-shadow": "off",
-  "typescript/no-extraneous-class": "off",
-  "unicorn/prefer-top-level-await": "off",
-};
-
 function getConfig(config: config.Config): config.Config {
-  const baseSetup = config.setup ?? {};
+  const baseManagedConfigs = config.managedConfigs ?? {};
 
-  const setup: config.MapOfConfigSetup = {
-    ...baseSetup,
-    ".oxlintrc.json": {
-      ...baseSetup[".oxlintrc.json"],
+  const managedConfigs: config.MapOfManagedConfigs = {
+    ...baseManagedConfigs,
+    "oxlint.config.mts": {
+      ...baseManagedConfigs["oxlint.config.mts"],
       content: (context) => {
-        // packages/datamitsu-config owns the single oxlint ruleset for the whole monorepo: it
-        // extends the upstream preset and relaxes a few rules. Every other package extends THIS
-        // file (not the upstream preset directly) so the categories and disables are shared once
-        // instead of re-derived per package.
-        if (tools.Path.rel(context.cwdPath, context.rootPath) === DATAMITSU_CONFIG_PACKAGE) {
-          const base =
-            baseSetup[".oxlintrc.json"]?.content?.(context) ?? context.originalContent ?? "{}";
-          const parsed = JSON.parse(base);
-
-          return (
-            JSON.stringify(
-              { ...parsed, rules: { ...parsed.rules, ...datamitsuConfigOxlintRules } },
-              null,
-              2,
-            ) + "\n"
-          );
-        }
-
-        const previousConfig = JSON.parse(context.originalContent || "{}");
-
-        return (
-          JSON.stringify(
-            {
-              $schema: tools.Path.forImport(
-                tools.Path.join(context.datamitsuDir, "oxlint_configuration_schema.json"),
-              ),
-              extends: [
-                tools.Path.forImport(
-                  tools.Path.join(
-                    tools.Path.rel(context.rootPath, context.cwdPath),
-                    DATAMITSU_CONFIG_PACKAGE,
-                    ".oxlintrc.json",
-                  ),
-                ),
-              ],
-              rules: previousConfig.rules,
-            },
-            null,
-            2,
-          ) + "\n"
+        const importPath = tools.Path.forImport(
+          tools.Path.join(
+            tools.Path.rel(context.rootPath, context.cwdPath),
+            DATAMITSU_CONFIG_PACKAGE,
+            "oxlint-override-config.mjs",
+          ),
         );
+
+        return `import { defineConfig } from "${importPath}";
+import packageJSON from "./package.json" with { type: "json" };
+
+export default defineConfig(packageJSON);
+`;
       },
     },
     ".syncpackrc.json": {
-      ...baseSetup[".syncpackrc.json"],
+      ...baseManagedConfigs[".syncpackrc.json"],
       content: () => {
         return (
           JSON.stringify(
@@ -148,58 +109,28 @@ function getConfig(config: config.Config): config.Config {
       scope: "git-root",
     },
     "eslint.config.mjs": {
-      ...baseSetup["eslint.config.mjs"],
+      ...baseManagedConfigs["eslint.config.mjs"],
       content: (context) => {
-        // Every package consumes @ovineko/datamitsu-config's defineConfig wrapper instead of
-        // the upstream preset directly. The config package itself can't import by its own name,
-        // so it self-references the wrapper via a relative path and re-exports it.
-        if (tools.Path.rel(context.cwdPath, context.rootPath) === DATAMITSU_CONFIG_PACKAGE) {
-          return `import { join } from "node:path";
+        const importPath = tools.Path.forImport(
+          tools.Path.join(
+            tools.Path.rel(context.rootPath, context.cwdPath),
+            DATAMITSU_CONFIG_PACKAGE,
+            "eslint-override-config.mjs",
+          ),
+        );
 
-import packageJSON from "./package.json" with { type: "json" };
-import { defineConfig } from "./eslint-override-config.mjs";
-
-export * from "./eslint-override-config.mjs";
-
-export default defineConfig(
-  /** @type {import('@shibanet0/datamitsu-config/type-fest').PackageJson} */ (packageJSON),
-  undefined,
-  {
-    plugins: {
-      oxlint: {
-        configFilePath: join(import.meta.dirname, ".oxlintrc.json"),
-      },
-    },
-  },
-)
-`;
-        }
-
-        return `import { join } from "node:path";
-
-import { defineConfig } from "@ovineko/datamitsu-config/eslint-override-config.mjs";
-
+        return `import { defineConfig } from "${importPath}";
 import packageJSON from "./package.json" with { type: "json" };
 
-const config = await defineConfig(
-  /** @type {import('@shibanet0/datamitsu-config/type-fest').PackageJson} */ (packageJSON),
-  undefined,
-  {
-    plugins: {
-      oxlint: {
-        configFilePath: join(import.meta.dirname, ".oxlintrc.json"),
-      },
-    },
-  },
+export default await defineConfig(
+  /** @type {import("@shibanet0/datamitsu-config/type-fest").PackageJson} */ (packageJSON),
 );
-
-export default config;
 `;
       },
     },
   };
 
-  return { ...config, setup };
+  return { ...config, managedConfigs };
 }
 
 globalThis.getConfig = getConfig;

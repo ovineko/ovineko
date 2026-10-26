@@ -54,7 +54,7 @@ function buildHtml(
 
   if (patches.content) {
     for (const [key, value] of Object.entries(patches.content)) {
-      const el = container.querySelector(`[data-spa-guard-content="${key}"]`);
+      const el = container.querySelector(`[data-spa-guard-content="${CSS.escape(key)}"]`);
       if (el) {
         el.innerHTML = value;
       }
@@ -63,7 +63,7 @@ function buildHtml(
 
   if (patches.sections) {
     for (const [key, visible] of Object.entries(patches.sections)) {
-      const el = container.querySelector<HTMLElement>(`[data-spa-guard-section="${key}"]`);
+      const el = container.querySelector<HTMLElement>(`[data-spa-guard-section="${CSS.escape(key)}"]`);
       if (el) {
         el.style.display = visible ? "block" : "none";
       }
@@ -72,7 +72,7 @@ function buildHtml(
 
   if (patches.actions) {
     for (const [key, visible] of Object.entries(patches.actions)) {
-      const el = container.querySelector<HTMLElement>(`[data-spa-guard-action="${key}"]`);
+      const el = container.querySelector<HTMLElement>(`[data-spa-guard-action="${CSS.escape(key)}"]`);
       if (el) {
         el.style.display = visible ? "inline-block" : "none";
       }
@@ -84,7 +84,7 @@ function buildHtml(
     applyI18n(container, t);
   }
 
-  return container.innerHTML;
+  return container.getHTML();
 }
 
 /**

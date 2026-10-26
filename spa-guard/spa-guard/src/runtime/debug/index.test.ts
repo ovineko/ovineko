@@ -56,7 +56,7 @@ const defaultState: SpaGuardState = {
 };
 
 function getButton(key: string): HTMLButtonElement | null {
-  return document.querySelector(`[data-testid="debug-btn-${key}"]`);
+  return document.querySelector(`[data-testid="debug-btn-${CSS.escape(key)}"]`);
 }
 
 function getContent(): HTMLElement | null {
@@ -201,9 +201,9 @@ describe("createDebugger - toggle", () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create({ defaultOpen: true });
 
-    expect(getHeader()!.textContent).toContain("\u25B2");
+    expect(getHeader()!.textContent).toContain("\u{25B2}");
     getHeader()!.click();
-    expect(getHeader()!.textContent).toContain("\u25BC");
+    expect(getHeader()!.textContent).toContain("\u{25BC}");
 
     destroy();
   });
@@ -243,7 +243,7 @@ describe("createDebugger - buttons", () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     getButton("chunk-load-error")!.click();
-    expect(mockDispatchChunkLoadError).toHaveBeenCalledOnce();
+    expect(mockDispatchChunkLoadError).toHaveBeenCalledTimes(1);
     destroy();
   });
 
@@ -259,7 +259,7 @@ describe("createDebugger - buttons", () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     getButton("sync-runtime-error")!.click();
-    expect(mockDispatchSyncRuntimeError).toHaveBeenCalledOnce();
+    expect(mockDispatchSyncRuntimeError).toHaveBeenCalledTimes(1);
     destroy();
   });
 
@@ -267,7 +267,7 @@ describe("createDebugger - buttons", () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     getButton("async-runtime-error")!.click();
-    expect(mockDispatchAsyncRuntimeError).toHaveBeenCalledOnce();
+    expect(mockDispatchAsyncRuntimeError).toHaveBeenCalledTimes(1);
     destroy();
   });
 
@@ -275,7 +275,7 @@ describe("createDebugger - buttons", () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     getButton("finally-error")!.click();
-    expect(mockDispatchFinallyError).toHaveBeenCalledOnce();
+    expect(mockDispatchFinallyError).toHaveBeenCalledTimes(1);
     destroy();
   });
 
@@ -283,7 +283,7 @@ describe("createDebugger - buttons", () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     getButton("force-retry-error")!.click();
-    expect(mockDispatchForceRetryError).toHaveBeenCalledOnce();
+    expect(mockDispatchForceRetryError).toHaveBeenCalledTimes(1);
     destroy();
   });
 
@@ -291,7 +291,7 @@ describe("createDebugger - buttons", () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     getButton("unhandled-rejection")!.click();
-    expect(mockDispatchUnhandledRejection).toHaveBeenCalledOnce();
+    expect(mockDispatchUnhandledRejection).toHaveBeenCalledTimes(1);
     destroy();
   });
 
@@ -299,7 +299,7 @@ describe("createDebugger - buttons", () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     getButton("exhaust-retries")!.click();
-    expect(mockDispatchRetryExhausted).toHaveBeenCalledOnce();
+    expect(mockDispatchRetryExhausted).toHaveBeenCalledTimes(1);
     destroy();
   });
 
@@ -307,7 +307,7 @@ describe("createDebugger - buttons", () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     getButton("static-asset-404")!.click();
-    expect(mockDispatchStaticAsset404).toHaveBeenCalledOnce();
+    expect(mockDispatchStaticAsset404).toHaveBeenCalledTimes(1);
     destroy();
   });
 
@@ -343,7 +343,7 @@ describe("createDebugger - buttons", () => {
     const destroy = create();
     getButton("chunk-load-error")!.click();
     await Promise.resolve();
-    expect(getButton("chunk-load-error")!.textContent).toBe("ChunkLoadError \u2713");
+    expect(getButton("chunk-load-error")!.textContent).toBe("ChunkLoadError \u{2713}");
     destroy();
   });
 
@@ -528,8 +528,8 @@ describe("createDebugger - destroy and dedup", () => {
     const { createDebugger: create } = await import("./index");
     const destroy = create();
     destroy();
-    expect(unsubState).toHaveBeenCalledOnce();
-    expect(unsubEvents).toHaveBeenCalledOnce();
+    expect(unsubState).toHaveBeenCalledTimes(1);
+    expect(unsubEvents).toHaveBeenCalledTimes(1);
   });
 
   it("returns the same destroy function on duplicate call", async () => {

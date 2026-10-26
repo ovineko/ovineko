@@ -1,4 +1,0 @@
-title = "Custom Gitleaks configuration"
-
-[extend]
-path = ".datamitsu/gitleaks-managed.toml"

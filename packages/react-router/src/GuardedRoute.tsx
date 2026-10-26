@@ -11,6 +11,8 @@ export interface GuardedRouteProps {
 }
 
 export function GuardedRoute({ loadingFallback, useGuard }: GuardedRouteProps) {
+  // oxlint cannot infer that useGuard is a hook provided by the caller.
+  // oxlint-disable-next-line react/hooks
   const { allowed, isLoading, redirectTo } = useGuard();
 
   if (!isLoading && !allowed) {

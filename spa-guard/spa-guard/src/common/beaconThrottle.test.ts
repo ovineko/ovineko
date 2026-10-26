@@ -2,15 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("./options", () => ({ getOptions: vi.fn() }));
 
-import { getOptions } from "./options";
-import { internalConfig } from "./events/internal";
-import { listenInternal } from "./listen/internal";
-import { serializeError } from "./serializeError";
 import {
   getBeaconThrottleDecision,
   registerBeaconThrottleFlush,
   resetBeaconThrottle,
 } from "./beaconThrottle";
+import { internalConfig } from "./events/internal";
+import { listenInternal } from "./listen/internal";
+import { getOptions } from "./options";
+import { serializeError } from "./serializeError";
 
 const mockGetOptions = vi.mocked(getOptions);
 const beacon = { errorMessage: "same", eventName: "error", url: "https://cdn.example.com/a.js" };
@@ -67,21 +67,21 @@ describe("beacon throttle", () => {
     mockGetOptions.mockReturnValue({ reportBeacon: { dedupe: false, maxPerPageLoad: 1 } });
     const flush = vi.fn();
     registerBeaconThrottleFlush(flush);
-    expect(getBeaconThrottleDecision(beacon)).toMatchObject({ send: true, dropped: 0 });
+    expect(getBeaconThrottleDecision(beacon)).toMatchObject({ dropped: 0, send: true });
     expect(getBeaconThrottleDecision({ ...beacon, errorMessage: "next" })).toMatchObject({
+      dropped: 1,
       send: true,
       throttled: true,
-      dropped: 1,
     });
     expect(getBeaconThrottleDecision({ ...beacon, errorMessage: "last" })).toMatchObject({
-      send: false,
       dropped: 2,
+      send: false,
     });
     window.dispatchEvent(new Event("pagehide"));
     expect(flush).toHaveBeenCalledWith(2);
     expect(getBeaconThrottleDecision({ ...beacon, errorMessage: "later" })).toMatchObject({
-      send: false,
       dropped: 3,
+      send: false,
     });
     window.dispatchEvent(new Event("pagehide"));
     expect(flush).toHaveBeenCalledWith(3);

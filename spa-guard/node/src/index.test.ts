@@ -170,9 +170,9 @@ describe("node", () => {
       // < and > may remain unescaped (valid HTML in quoted attributes)
       expect(result).toContain("&amp;");
       expect(result).toContain("&quot;");
-      // Verify the content is preserved (parseable from the attribute)
       const match = result.match(/content="([^"]*)"/);
-      expect(match).toBeTruthy();
+      const content = match?.[1]?.replaceAll("&quot;", '"').replaceAll("&amp;", "&");
+      expect(JSON.parse(content ?? "{}").heading).toBe('He said "hello" & <goodbye>');
     });
 
     it("handles HTML without lang attribute", () => {
@@ -310,7 +310,7 @@ describe("node", () => {
     });
 
     it("patches HTML with leading BOM (parse5 strips BOM and DOCTYPE)", () => {
-      const htmlWithBom = `\uFEFF<!DOCTYPE html><html lang="en"><head></head><body></body></html>`;
+      const htmlWithBom = `\u{FEFF}<!DOCTYPE html><html lang="en"><head></head><body></body></html>`;
       const result = patchHtmlI18n({ html: htmlWithBom, lang: "ko" });
       // parse5 strips the BOM from the start and may not preserve DOCTYPE
       expect(result).toContain('lang="ko"');

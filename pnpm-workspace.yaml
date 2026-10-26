@@ -3,13 +3,20 @@ allowBuilds:
   core-js: false
   esbuild: false
   sharp: true
-audit: {}
+audit:
+  level: high
+autoInstallPeers: true
+blockExoticSubdeps: true
 catalog:
-  "@shibanet0/datamitsu-config": 0.0.0-unstable.20260831.76a29c2
+  "@shibanet0/datamitsu-config": 0.6.3
+dangerouslyAllowAllBuilds: false
+dedupeDirectDeps: true
+dedupePeerDependents: true
 enableGlobalVirtualStore: true
 enablePrePostScripts: false
+engineStrict: true
 hoistPattern: []
-ignorePatchFailures: false
+lockfile: true
 minimumReleaseAge: 10080
 minimumReleaseAgeExclude:
   - "@datamitsu/*"
@@ -29,5 +36,14 @@ packages:
   - packages/*
   - website
   - spa-guard/*
+preferFrozenLockfile: true
 resolutionMode: lowest-direct
+savePrefix: ""
+strictDepBuilds: true
+strictSsl: true
+trustLockfile: true
+trustPolicy: no-downgrade
+unsafePerm: false
+updateNotifier: false
 verifyDepsBeforeRun: install
+verifyStoreIntegrity: true

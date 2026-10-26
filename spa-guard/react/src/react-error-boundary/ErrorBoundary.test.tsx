@@ -33,8 +33,10 @@ const defaultSpaGuardState: SpaGuardState = {
   isWaiting: false,
 };
 
+const defaultThrowingError = new Error("Test error");
+
 const ThrowingComponent: FC<{ error?: Error; shouldThrow?: boolean }> = ({
-  error = new Error("Test error"),
+  error = defaultThrowingError,
   shouldThrow = true,
 }) => {
   if (shouldThrow) {

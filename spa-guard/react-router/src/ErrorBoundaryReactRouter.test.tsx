@@ -197,7 +197,7 @@ describe("ErrorBoundaryReactRouter", () => {
     });
 
     it("passes autoRetryChunkErrors=true when explicitly enabled", () => {
-      render(<ErrorBoundaryReactRouter autoRetryChunkErrors={true} />);
+      render(<ErrorBoundaryReactRouter autoRetryChunkErrors />);
 
       expect(mockHandleErrorWithSpaGuard).toHaveBeenCalledWith(
         expect.anything(),

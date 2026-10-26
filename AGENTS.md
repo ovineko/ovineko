@@ -121,17 +121,14 @@ pnpm install
 ### Linting & Fixing
 
 ```bash
-# Lint all packages
-pnpm lint
+# Auto-fix and check all packages
+pnpm dm check
 
-# Auto-fix linting issues across all packages
-pnpm fix
-
-# Lint/fix in a specific package
-cd packages/<package-name>
-pnpm lint
-pnpm fix
+# Collect every diagnostic
+pnpm dm check --fail-fast=false --output agent
 ```
+
+Project config generators use `config.managedConfigs` and `config.MapOfManagedConfigs`; the removed `setup` API does not apply project overrides. Generated ESLint and Oxlint entry points must import the shared wrappers in `packages/datamitsu-config/`. After editing `datamitsu.config.ts`, run `pnpm dm init`.
 
 ### Testing
 

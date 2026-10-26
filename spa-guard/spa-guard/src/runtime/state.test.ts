@@ -431,7 +431,7 @@ describe("runtime/state", () => {
         ? never[]
         : Array<{ currentAttempt: number; isFallbackShown: boolean; isWaiting: boolean }> = [];
       subscribeToState((s) => stateHistory.push({ ...s }));
-      stateHistory.splice(0); // discard initial call
+      stateHistory.length = 0; // discard initial call
 
       emitEvent({ attempt: 1, delay: 500, name: "retry-attempt", retryId: "r1" });
       emitEvent({ attempt: 2, delay: 1000, name: "retry-attempt", retryId: "r1" });

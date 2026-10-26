@@ -52,7 +52,7 @@ describe("i18n", () => {
     });
 
     it("all translations have required fields", () => {
-      for (const [, t] of Object.entries(translations)) {
+      for (const t of Object.values(translations)) {
         expect(t.heading).toBeDefined();
         expect(t.loading).toBeDefined();
         expect(t.message).toBeDefined();
@@ -77,7 +77,7 @@ describe("i18n", () => {
 
     it("all languages have exactly 6 required string keys", () => {
       const requiredKeys = ["heading", "loading", "message", "reload", "retrying", "tryAgain"];
-      for (const [, t] of Object.entries(translations)) {
+      for (const t of Object.values(translations)) {
         const keys = Object.keys(t).filter((k) => k !== "rtl");
         expect(keys.sort()).toEqual(requiredKeys.sort());
 

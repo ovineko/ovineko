@@ -12,12 +12,12 @@ vi.mock("./shouldIgnore", () => ({
   shouldIgnoreBeacon: vi.fn(),
 }));
 
-import { getLogger } from "./events/internal";
+import { parseBeacon } from "../schema/parse";
 import { resetBeaconThrottle } from "./beaconThrottle";
+import { getLogger } from "./events/internal";
 import { getOptions } from "./options";
 import { sendBeacon } from "./sendBeacon";
 import { shouldIgnoreBeacon } from "./shouldIgnore";
-import { parseBeacon } from "../schema/parse";
 
 const mockGetLogger = vi.mocked(getLogger);
 const mockGetOptions = vi.mocked(getOptions);

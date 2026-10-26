@@ -18,28 +18,29 @@ const setupMockLocation = (url = "http://localhost/"): void => {
   mockLocationSearch = parsedUrl.search;
   mockHistoryReplaceState = vi.fn();
 
-  Object.defineProperty(globalThis, "location", {
-    configurable: true,
-    value: {
-      get href() {
-        return mockLocationHref;
+  Object.defineProperties(globalThis, {
+    history: {
+      configurable: true,
+      value: {
+        replaceState: mockHistoryReplaceState,
       },
-      set href(val: string) {
-        mockLocationHref = val;
-      },
-      get search() {
-        return mockLocationSearch;
-      },
+      writable: true,
     },
-    writable: true,
-  });
-
-  Object.defineProperty(globalThis, "history", {
-    configurable: true,
-    value: {
-      replaceState: mockHistoryReplaceState,
+    location: {
+      configurable: true,
+      value: {
+        get href() {
+          return mockLocationHref;
+        },
+        set href(val: string) {
+          mockLocationHref = val;
+        },
+        get search() {
+          return mockLocationSearch;
+        },
+      },
+      writable: true,
     },
-    writable: true,
   });
 };
 
@@ -300,7 +301,7 @@ describe("generateRetryId", () => {
     const id = generateRetryId();
     expect(typeof id).toBe("string");
     expect(id.length).toBeGreaterThan(0);
-    expect(mockGetRandomValues).toHaveBeenCalledOnce();
+    expect(mockGetRandomValues).toHaveBeenCalledTimes(1);
     Object.defineProperty(globalThis, "crypto", {
       configurable: true,
       value: originalCrypto,

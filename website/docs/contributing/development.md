@@ -48,14 +48,14 @@ Console output (`console.log`, `console.warn`, `console.error`) is suppressed du
 ### Linting
 
 ```bash
-# Lint all packages
-pnpm lint
+# Auto-fix issues, then run all checks
+pnpm dm check
 
-# Auto-fix issues
-pnpm fix
+# Collect all diagnostics without stopping at the first failed tool
+pnpm dm check --fail-fast=false --output agent
 ```
 
-The project uses **datamitsu** as a unified linting orchestrator that runs oxlint, ESLint, Prettier, knip, commitlint, syncpack, and gitleaks.
+The project uses **datamitsu** to manage linting, formatting, spelling, dependency consistency, and TypeScript checks. Run the tools through `pnpm dm check` rather than invoking individual linters or formatters.
 
 ## Monorepo Structure
 
@@ -78,7 +78,7 @@ Each package is self-contained with its own `package.json`, `tsconfig.json`, `vi
 ## Publishing a Package
 
 1. Update version in `package.json` following [semver](https://semver.org/)
-2. Run tests and linter: `pnpm test && pnpm lint`
+2. Run tests and checks: `pnpm test && pnpm dm check`
 3. Build: `pnpm build`
 4. Publish: `pnpm publish --access public`
 

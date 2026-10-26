@@ -50,10 +50,7 @@ const clearWindowLogger = () => {
   delete (globalThis.window as any)[loggerWindowKey];
 };
 
-const loadModule = async () => {
-  const m = await import("./checkVersion");
-  return m;
-};
+const loadModule = async () => import("./checkVersion");
 
 const simulateVisibilityChange = (state: "hidden" | "visible") => {
   Object.defineProperty(document, "visibilityState", {
@@ -63,13 +60,12 @@ const simulateVisibilityChange = (state: "hidden" | "visible") => {
   document.dispatchEvent(new Event("visibilitychange"));
 };
 
-const simulateFocus = () => {
-  globalThis.dispatchEvent(new Event("focus"));
+const dispatchWindowEvent = (type: "blur" | "focus") => {
+  globalThis.dispatchEvent(new Event(type));
 };
+const simulateFocus = () => dispatchWindowEvent("focus");
 
-const simulateBlur = () => {
-  globalThis.dispatchEvent(new Event("blur"));
-};
+const simulateBlur = () => dispatchWindowEvent("blur");
 
 describe("common/checkVersion", () => {
   let mod: Awaited<ReturnType<typeof loadModule>>;

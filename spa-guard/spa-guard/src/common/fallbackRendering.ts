@@ -34,7 +34,7 @@ export const showLoadingUI = (attempt: number): void => {
       applyI18n(container, t);
     }
 
-    targetElement.innerHTML = container.innerHTML;
+    targetElement.innerHTML = container.getHTML();
 
     const retrySection = targetElement.querySelector('[data-spa-guard-section="retrying"]');
     if (retrySection) {
@@ -101,7 +101,7 @@ export const showFallbackUI = (override?: { retryId?: string }): void => {
       applyI18n(container, t);
     }
 
-    targetElement.innerHTML = container.innerHTML;
+    targetElement.innerHTML = container.getHTML();
 
     const reloadBtn = targetElement.querySelector('[data-spa-guard-action="reload"]');
     if (reloadBtn) {

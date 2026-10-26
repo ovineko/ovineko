@@ -1,6 +1,6 @@
 import Fastify from "fastify";
-import { PassThrough } from "node:stream";
 
+import { PassThrough } from "node:stream";
 import { describe, expect, it, vi } from "vitest";
 
 import { fastifySPAGuard } from "./index";

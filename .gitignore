@@ -36,6 +36,7 @@
 
 # Dependencies
 **/node_modules/
+**/.pnpm-store/
 **/vendor/
 **/.pnp.*
 **/.yarn/cache
@@ -151,6 +152,3 @@
 **/progress.txt
 **/progress-*.txt
 .ralphex/worktrees/
-
-# Symbolic links
-CLAUDE.md

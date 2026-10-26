@@ -622,7 +622,7 @@ describe("vite-plugin/spaGuardVitePlugin", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (plugin.configureServer as (server: any) => void)(mockServer);
 
-      expect(mockServer.middlewares.use).toHaveBeenCalledOnce();
+      expect(mockServer.middlewares.use).toHaveBeenCalledTimes(1);
     });
 
     it("does not register middleware when mode is inline", async () => {
