@@ -12,6 +12,22 @@ import {
   URLParseError,
 } from "./index";
 
+function SearchParamsDisplay({
+  route,
+}: {
+  route: { useSearchParams: () => readonly [{ filter?: string; sort?: string }, unknown] };
+}) {
+  // Each test mounts this component with one immutable route definition.
+  // oxlint-disable-next-line react/hooks
+  const [searchParams] = route.useSearchParams();
+  return (
+    <div>
+      <div data-testid="filter">{searchParams.filter ?? "none"}</div>
+      <div data-testid="sort">{searchParams.sort ?? "none"}</div>
+    </div>
+  );
+}
+
 describe("searchParamsToString", () => {
   const route = createRouteWithParams("/users/:id", {
     params: v.object({ id: v.string() }),
@@ -406,6 +422,8 @@ describe("Edge cases", () => {
 });
 
 function TestComponent({ route }: { route: any }) {
+  // oxlint cannot infer the hook returned by a route factory; this is always a React hook.
+  // oxlint-disable-next-line react/hooks
   const [searchParams] = route.useSearchParams();
   return (
     <div>
@@ -667,7 +685,7 @@ describe("useSearchParamsRaw error handling", () => {
       }),
     });
 
-    function TestComponent() {
+    function ValidSearchParamsTestComponent() {
       const { data, error } = route.useSearchParamsRaw();
       return (
         <div>
@@ -677,7 +695,7 @@ describe("useSearchParamsRaw error handling", () => {
       );
     }
 
-    const routes = [{ element: <TestComponent />, path: "/users/:id" }];
+    const routes = [{ element: <ValidSearchParamsTestComponent />, path: "/users/:id" }];
     const router = createMemoryRouter(routes, {
       initialEntries: ["/users/123?page=5"],
     });
@@ -919,25 +937,12 @@ describe("optionalSearchParams", () => {
   it("should work with useSearchParams hook", () => {
     const route = createRouteWithParams("/users/:id", {
       params: v.object({ id: v.string() }),
-      searchParams: optionalSearchParams({
-        filter: v.string(),
-        sort: v.string(),
-      }),
+      searchParams: optionalSearchParams({ filter: v.string(), sort: v.string() }),
     });
-
-    function TestComponent() {
-      const [searchParams] = route.useSearchParams();
-      return (
-        <div>
-          <div data-testid="filter">{searchParams.filter ?? "none"}</div>
-          <div data-testid="sort">{searchParams.sort ?? "none"}</div>
-        </div>
-      );
-    }
 
     render(
       <MemoryRouter initialEntries={["/users/123?filter=active&sort=name"]}>
-        <TestComponent />
+        <SearchParamsDisplay route={route} />
       </MemoryRouter>,
     );
 
@@ -950,26 +955,13 @@ describe("optionalSearchParams", () => {
   it("should handle missing optional params gracefully", () => {
     const route = createRouteWithParams("/users/:id", {
       params: v.object({ id: v.string() }),
-      searchParams: optionalSearchParams({
-        filter: v.string(),
-        sort: v.string(),
-      }),
+      searchParams: optionalSearchParams({ filter: v.string(), sort: v.string() }),
     });
-
-    function TestComponent() {
-      const [searchParams] = route.useSearchParams();
-      return (
-        <div>
-          <div data-testid="filter">{searchParams.filter ?? "none"}</div>
-          <div data-testid="sort">{searchParams.sort ?? "none"}</div>
-        </div>
-      );
-    }
 
     // No search params provided
     render(
       <MemoryRouter initialEntries={["/users/123"]}>
-        <TestComponent />
+        <SearchParamsDisplay route={route} />
       </MemoryRouter>,
     );
 

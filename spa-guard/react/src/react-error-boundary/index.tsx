@@ -46,11 +46,15 @@ const DefaultFallback: React.FC<FallbackProps> = ({
   />
 );
 
+/* oxlint-disable react/no-set-state -- React error boundaries require class state. */
 class ErrorBoundaryImpl extends Component<
   ErrorBoundaryProps & { spaGuardState: SpaGuardState },
   { error: Error | null; errorInfo: null | React.ErrorInfo }
 > {
-  override state = { error: null, errorInfo: null };
+  constructor(props: ErrorBoundaryProps & { spaGuardState: SpaGuardState }) {
+    super(props);
+    this.state = { error: null, errorInfo: null };
+  }
 
   static getDerivedStateFromError(error: Error) {
     return { error };

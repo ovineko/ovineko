@@ -44,6 +44,9 @@ export default defineConfig((prev) => {
     "refreshtoken",
     "setcookie",
     "UNTHROTTLED",
+    "ktfmt",
+    "decorder",
+    "FEFF",
   ];
 
   return {

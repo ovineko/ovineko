@@ -487,7 +487,7 @@ describe("showLoadingUI", () => {
     showLoadingUI(1);
 
     const spinnerEl = targetEl.querySelector("[data-spa-guard-spinner]") as HTMLElement;
-    expect(spinnerEl?.innerHTML).toBe("<svg>custom-spinner</svg>");
+    expect(spinnerEl?.getHTML()).toBe("<svg>custom-spinner</svg>");
   });
 
   it("applies i18n when i18n is configured", () => {

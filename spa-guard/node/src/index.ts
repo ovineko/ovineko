@@ -231,7 +231,7 @@ export const createHTMLCacheStore = <K extends string>(
     const cache = cacheMap.get(key);
     if (!cache) {
       const availableKeys = [...cacheMap.keys()].join(", ");
-      throw new Error(`Cache not found for key: ${String(key)}. Available keys: ${availableKeys}`);
+      throw new Error(`Cache not found for key: ${key}. Available keys: ${availableKeys}`);
     }
     return cache;
   };

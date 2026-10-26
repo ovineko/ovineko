@@ -47,6 +47,7 @@ vi.mock("../staticAssetRecovery", () => ({
   handleStaticAssetFailure: vi.fn(),
 }));
 
+import { parseBeacon } from "../../schema/parse";
 import { emitEvent, getLogger, isInitialized, setLogger } from "../events/internal";
 import { isChunkError } from "../isChunkError";
 import {
@@ -62,7 +63,6 @@ import { getRetryInfoForBeacon } from "../retryState";
 import { sendBeacon } from "../sendBeacon";
 import { shouldForceRetry, shouldIgnoreMessages } from "../shouldIgnore";
 import { handleStaticAssetFailure } from "../staticAssetRecovery";
-import { parseBeacon } from "../../schema/parse";
 import { listenInternal } from "./internal";
 
 const mockEmitEvent = vi.mocked(emitEvent);
@@ -95,7 +95,7 @@ interface CapturedHandlers {
   "vite:preloadError"?: (event: any) => void;
 }
 
-const createMockLogger = (): Logger => ({
+const createMockLogger = () => ({
   beaconSendFailed: vi.fn(),
   capturedError: vi.fn(),
   error: vi.fn(),
@@ -122,9 +122,9 @@ const createMockLogger = (): Logger => ({
   versionCheckStarted: vi.fn(),
   versionCheckStopped: vi.fn(),
   warn: vi.fn(),
-});
+} satisfies Logger);
 
-let mockLogger: Logger;
+let mockLogger: ReturnType<typeof createMockLogger>;
 
 function captureListeners(mockSerialize = vi.fn().mockReturnValue('{"serialized":"error"}')): {
   handlers: CapturedHandlers;

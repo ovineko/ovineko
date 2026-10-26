@@ -41,14 +41,13 @@ Commit messages are validated by commitlint via a git hook.
 Code style is enforced automatically by the toolchain:
 
 - **oxlint** and **ESLint** for linting
-- **Prettier** for formatting
+- **oxfmt** for formatting
 - **lefthook** runs `datamitsu fix` and `datamitsu lint` on staged files before each commit
 
 Run these commands to check your code:
 
 ```bash
-pnpm lint    # Check for issues
-pnpm fix     # Auto-fix issues
+pnpm dm check    # Auto-fix issues, then run all checks
 ```
 
 ## Testing

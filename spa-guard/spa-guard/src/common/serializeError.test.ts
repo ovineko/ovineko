@@ -425,7 +425,7 @@ describe("serializeError", () => {
       expect(result.reason.type).toBe("string");
       expect(result.reason.value.length).toBe(500);
       expect(result.reason.value.endsWith("…")).toBe(true);
-      expect(result.reason.value.endsWith("\u2026")).toBe(true);
+      expect(result.reason.value.endsWith("\u{2026}")).toBe(true);
     });
 
     it("bounds object with more than MAX_KEYS keys", () => {

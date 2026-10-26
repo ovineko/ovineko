@@ -73,7 +73,7 @@ describe("DefaultErrorFallback", () => {
         <DefaultErrorFallback
           error={new Error("test")}
           isChunkError={false}
-          isRetrying={true}
+          isRetrying
           spaGuardState={retryingStateAttempt1}
         />,
       );
@@ -112,7 +112,7 @@ describe("DefaultErrorFallback", () => {
       render(
         <DefaultErrorFallback
           error={new Error("chunk error")}
-          isChunkError={true}
+          isChunkError
           isRetrying={false}
           spaGuardState={defaultState}
         />,
@@ -241,7 +241,7 @@ describe("DefaultErrorFallback", () => {
         <DefaultErrorFallback
           error={new Error("test")}
           isChunkError={false}
-          isRetrying={true}
+          isRetrying
           spaGuardState={retryingStateAttempt1}
         />,
       );
@@ -254,7 +254,7 @@ describe("DefaultErrorFallback", () => {
         <DefaultErrorFallback
           error={new Error("test")}
           isChunkError={false}
-          isRetrying={true}
+          isRetrying
           spaGuardState={retryingStateAttempt2}
         />,
       );
@@ -268,7 +268,7 @@ describe("DefaultErrorFallback", () => {
         <DefaultErrorFallback
           error={new Error("test")}
           isChunkError={false}
-          isRetrying={true}
+          isRetrying
           spaGuardState={retryingStateAttempt1}
         />,
       );
@@ -284,7 +284,7 @@ describe("DefaultErrorFallback", () => {
         <DefaultErrorFallback
           error={new Error("test")}
           isChunkError={false}
-          isRetrying={true}
+          isRetrying
           spaGuardState={retryingStateAttempt1}
         />,
       );
@@ -350,7 +350,7 @@ describe("DefaultErrorFallback", () => {
       const { container } = render(
         <DefaultErrorFallback
           error={new Error("test")}
-          isChunkError={true}
+          isChunkError
           isRetrying={false}
           spaGuardState={defaultState}
         />,
@@ -410,7 +410,7 @@ describe("DefaultErrorFallback", () => {
         <DefaultErrorFallback
           error={new Error("test")}
           isChunkError={false}
-          isRetrying={true}
+          isRetrying
           spaGuardState={retryingStateAttempt1}
         />,
       );
@@ -424,7 +424,7 @@ describe("DefaultErrorFallback", () => {
         <DefaultErrorFallback
           error={new Error("test")}
           isChunkError={false}
-          isRetrying={true}
+          isRetrying
           spaGuardState={retryingStateAttempt5}
         />,
       );
@@ -473,7 +473,7 @@ describe("DefaultErrorFallback", () => {
         <DefaultErrorFallback
           error={new Error("test")}
           isChunkError={false}
-          isRetrying={true}
+          isRetrying
           spaGuardState={retryingStateAttempt2}
         />,
       );
@@ -509,7 +509,7 @@ describe("DefaultErrorFallback", () => {
         <DefaultErrorFallback
           error={new Error("test")}
           isChunkError={false}
-          isRetrying={true}
+          isRetrying
           spaGuardState={retryingStateAttempt1}
         />,
       );
@@ -530,14 +530,14 @@ describe("DefaultErrorFallback", () => {
         <DefaultErrorFallback
           error={new Error("test")}
           isChunkError={false}
-          isRetrying={true}
+          isRetrying
           spaGuardState={retryingStateAttempt1}
         />,
       );
 
       const spinnerEl = container.querySelector("[data-spa-guard-spinner]");
       expect(spinnerEl).toBeInTheDocument();
-      expect(spinnerEl?.innerHTML).toContain("Custom Spinner");
+      expect(spinnerEl?.getHTML()).toContain("Custom Spinner");
     });
 
     it("keeps default spinner when no custom content in options", () => {
@@ -547,7 +547,7 @@ describe("DefaultErrorFallback", () => {
         <DefaultErrorFallback
           error={new Error("test")}
           isChunkError={false}
-          isRetrying={true}
+          isRetrying
           spaGuardState={retryingStateAttempt1}
         />,
       );
@@ -567,7 +567,7 @@ describe("DefaultErrorFallback", () => {
         <DefaultErrorFallback
           error={new Error("test")}
           isChunkError={false}
-          isRetrying={true}
+          isRetrying
           spaGuardState={retryingStateAttempt1}
         />,
       );

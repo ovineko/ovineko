@@ -1,5 +1,4 @@
-import { defineConfig } from "./.datamitsu/eslint.config.mjs";
-
+import { defineConfig } from "./packages/datamitsu-config/eslint-override-config.mjs";
 import packageJSON from "./package.json" with { type: "json" };
 
 export default await defineConfig(

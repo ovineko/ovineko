@@ -191,7 +191,7 @@ describe("dispatchSyncRuntimeError", () => {
     handlers.push(spy);
     globalThis.addEventListener(debugSyncErrorEventType, spy);
     dispatchSyncRuntimeError();
-    expect(spy).toHaveBeenCalledOnce();
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   it("passes an Error in event.detail.error", () => {
@@ -361,7 +361,7 @@ describe("dispatchStaticAsset404", () => {
 
   it("appends a script element to document.head", () => {
     dispatchStaticAsset404();
-    expect(appendSpy).toHaveBeenCalledOnce();
+    expect(appendSpy).toHaveBeenCalledTimes(1);
     const appended = appendSpy.mock.calls[0]![0] as HTMLScriptElement;
     expect(appended).toBeInstanceOf(HTMLScriptElement);
   });

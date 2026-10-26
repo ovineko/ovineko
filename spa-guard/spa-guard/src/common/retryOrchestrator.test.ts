@@ -977,7 +977,7 @@ describe("retryOrchestrator", () => {
     it("resets retryId to null in snapshot", () => {
       triggerRetry({ error: new Error("chunk error") });
       markRetryHealthyBoot();
-      expect(getRetrySnapshot().retryId).toBe(null);
+      expect(getRetrySnapshot().retryId).toBeNull();
     });
 
     it("resets lastSource to undefined in snapshot", () => {
@@ -998,7 +998,7 @@ describe("retryOrchestrator", () => {
     });
 
     it("returns retryId=null initially", () => {
-      expect(getRetrySnapshot().retryId).toBe(null);
+      expect(getRetrySnapshot().retryId).toBeNull();
     });
 
     it("returns scheduled phase after trigger", () => {

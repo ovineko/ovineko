@@ -71,21 +71,21 @@ export const ErrorBoundaryReactRouter: React.FC<ErrorBoundaryReactRouterProps> =
   const routeError = useRouteError();
   const spaGuardState = useSpaGuardState();
   const isLazyRouteError = isLazyRouteModuleError(routeError);
-  const handledError = isLazyRouteError
-    ? new ForceRetryError(routeError.message, { cause: routeError })
-    : routeError;
-  const handleOnError =
-    isLazyRouteError && onError !== undefined ? () => onError(routeError) : onError;
 
   useEffect(() => {
+    const handledError = isLazyRouteError
+      ? new ForceRetryError(routeError.message, { cause: routeError })
+      : routeError;
+    const handleOnError =
+      isLazyRouteError && onError !== undefined ? () => onError(routeError) : onError;
+
     handleErrorWithSpaGuard(handledError, {
       autoRetryChunkErrors,
       eventName: "react-router-error",
       ...(handleOnError !== undefined && { onError: handleOnError }),
       sendBeaconOnError: shouldSendBeacon,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [routeError]);
+  }, [routeError, isLazyRouteError, autoRetryChunkErrors, onError, shouldSendBeacon]);
 
   const isChunk = isChunkError(routeError) || isLazyRouteError;
   const isRetrying = spaGuardState.isWaiting && spaGuardState.currentAttempt > 0;

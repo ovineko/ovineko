@@ -27,7 +27,9 @@ function createFsTree(files: Record<string, string>) {
   vi.mocked(fs.readdirSync).mockImplementation((dir) => {
     const dirStr = String(dir);
     const entries: ReturnType<typeof fs.readdirSync> = [];
-    for (const filePath of existingPaths) {
+    const initialPaths = [...existingPaths];
+    const discoveredPaths = new Set<string>();
+    for (const filePath of initialPaths) {
       const relative = filePath.startsWith(dirStr + "/") ? filePath.slice(dirStr.length + 1) : null;
       if (relative && !relative.includes("/")) {
         entries.push({
@@ -37,9 +39,8 @@ function createFsTree(files: Record<string, string>) {
         } as unknown as ReturnType<typeof fs.readdirSync>[number]);
       } else if (relative && relative.includes("/")) {
         const subdir = relative.split("/")[0]!;
-        const subdirPath = `${dirStr}/${subdir}`;
-        if (!entries.some((e) => (e as unknown as { name: string }).name === subdir)) {
-          existingPaths.add(subdirPath);
+        if (!discoveredPaths.has(`${dirStr}/${subdir}`)) {
+          discoveredPaths.add(`${dirStr}/${subdir}`);
           entries.push({
             isDirectory: () => true,
             isFile: () => false,
@@ -48,6 +49,7 @@ function createFsTree(files: Record<string, string>) {
         }
       }
     }
+    for (const path of discoveredPaths) existingPaths.add(path);
     return entries;
   });
 }

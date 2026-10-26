@@ -83,7 +83,7 @@ export function createDebugger(options?: {
   panel.append(header);
   header.addEventListener("click", () => {
     isOpen = !isOpen;
-    arrow.textContent = isOpen ? "\u25B2" : "\u25BC";
+    arrow.textContent = isOpen ? "\u{25B2}" : "\u{25BC}";
     if (isOpen) {
       panel.append(content);
     } else {
@@ -197,7 +197,7 @@ function createHeader(isOpen: boolean): {
   const label = document.createElement("span");
   label.textContent = "spa-guard debug";
   const arrow = document.createElement("span");
-  arrow.textContent = isOpen ? "\u25B2" : "\u25BC";
+  arrow.textContent = isOpen ? "\u{25B2}" : "\u{25BC}";
   header.append(label, arrow);
   return { arrow, header };
 }
@@ -286,7 +286,7 @@ function getButtonLabel(label: string, status: ButtonStatus): string {
       return `${label}...`;
     }
     case "triggered": {
-      return `${label} \u2713`;
+      return `${label} \u{2713}`;
     }
     default: {
       return label;

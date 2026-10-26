@@ -1,10 +1,12 @@
 <style>
-  .spa-guard-error-id:has(.spa-guard-retry-id:empty) {
-    display: none;
-  }
   .spa-guard-error-id {
     font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
   }
+
+  .spa-guard-error-id:has(.spa-guard-retry-id:empty) {
+    display: none;
+  }
+
   .spa-guard-fallback-root {
     display: flex;
     align-items: center;
@@ -16,44 +18,55 @@
     color: #1a1a1a;
     color-scheme: light dark;
   }
+
   .spa-guard-fallback-icon {
     stroke: #b0b0b0;
   }
+
   .spa-guard-fallback-message {
     color: #666;
   }
+
   .spa-guard-fallback-muted {
     color: #999;
   }
+
   .spa-guard-btn-secondary {
     border: 1px solid #d0d0d0;
     background: #fff;
     color: #333;
   }
+
   .spa-guard-btn-primary {
     border: 1px solid transparent;
     background: #111;
     color: #fff;
   }
+
   @media (prefers-color-scheme: dark) {
     .spa-guard-fallback-root {
       background: #111318;
       color: #e7eaf0;
     }
+
     .spa-guard-fallback-icon {
       stroke: #8b95a7;
     }
+
     .spa-guard-fallback-message {
       color: #b8bfca;
     }
+
     .spa-guard-fallback-muted {
       color: #8b95a7;
     }
+
     .spa-guard-btn-secondary {
       border-color: #3b4351;
       background: #1a1f28;
       color: #d8deea;
     }
+
     .spa-guard-btn-primary {
       background: #e7eaf0;
       color: #151922;
